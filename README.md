@@ -221,6 +221,18 @@ public function boot(): void
 
 ### 4. Chat With Your Agent! 💬
 
+#### Try It Out in Your Terminal! 🖥️✨
+
+Want to test your agent super quick? Fire up your terminal and chat with your agent directly - just like Laravel Tinker but with your agent! 🔥
+
+```bash
+php artisan agent:chat weather_reporter
+```
+
+This opens up an interactive chat session right in your terminal! Type your messages, hit enter, and watch your agent respond. Perfect for testing and debugging your agents without building any frontend. To exit, just type `exit` or press `Ctrl+C`.
+
+Pretty handy for those "does this actually work?" moments! 😄
+
 #### Use Our Built-In API! 🌐✨
 
 Too lazy to write your own controller? (We get it!) Laravel Agent ADK comes with a super convenient built-in API endpoint that's ready to rock! 🎸
