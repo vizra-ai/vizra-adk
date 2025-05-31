@@ -66,8 +66,9 @@ php artisan migrate
 Pop your LLM API key in your `.env` file:
 
 ```dotenv
-PRISM_API_KEY=your_super_secret_api_key
-# or use specific ones like OPENAI_API_KEY, GOOGLE_API_KEY etc.
+OPENAI_URL=
+GEMINI_API_KEY=
+ANTHROPIC_API_KEY=
 ```
 
 ## Let's Build Something Cool! 🛠️
