@@ -204,7 +204,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     $context->addMessage([
                         'role' => 'tool',
                         'tool_name' => $tool->definition()['name'],
-                        'content' => $result,
+                        'content' => $result ?: '',
                         'timestamp' => now()
                     ]);
 
@@ -222,7 +222,7 @@ abstract class BaseLlmAgent extends BaseAgent
     public function run(mixed $input, AgentContext $context): mixed
     {
         $context->setUserInput($input);
-        $context->addMessage(['role' => 'user', 'content' => $input, 'timestamp' => now()]);
+        $context->addMessage(['role' => 'user', 'content' => $input ?: '', 'timestamp' => now()]);
 
         // Since Prism handles tool execution internally with maxSteps,
         // we don't need the manual tool execution loop
@@ -271,7 +271,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
         $context->addMessage([
             'role' => 'assistant',
-            'content' => $assistantResponseContent,
+            'content' => $assistantResponseContent ?: '',
             'timestamp' => now()
         ]);
 
@@ -292,8 +292,10 @@ abstract class BaseLlmAgent extends BaseAgent
 
             switch ($message['role']) {
                 case 'user':
-                    if (isset($message['content']) && $message['content'] !== null) {
-                        $messages[] = new UserMessage($message['content']);
+                    $content = $message['content'] ?? '';
+                    // Only add user messages if they have actual content
+                    if (!empty(trim($content))) {
+                        $messages[] = new UserMessage($content);
                     }
                     break;
 
@@ -301,24 +303,15 @@ abstract class BaseLlmAgent extends BaseAgent
                     // For assistant messages, we need to handle both regular content and tool calls
                     $content = $message['content'] ?? '';
 
-                    // If there are tool calls but no content, we still need to create the message
-                    // Prism will handle the tool calls through its own mechanisms
-                    if (!empty($content) || (isset($message['tool_calls']) && !empty($message['tool_calls']))) {
-                        $assistantMessage = new AssistantMessage($content);
-                        // Note: Tool calls are handled separately by Prism's tool system
-                        $messages[] = $assistantMessage;
+                    // Only add assistant messages if they have content
+                    if (!empty(trim($content))) {
+                        $messages[] = new AssistantMessage($content);
                     }
                     break;
 
                 case 'tool':
-                    // For tool results, we need to create ToolResultMessage
-                    if (isset($message['content']) && isset($message['tool_call_id'])) {
-                        $messages[] = new ToolResultMessage(
-                            $message['content'],
-                            $message['tool_call_id'],
-                            $message['name'] ?? ''
-                        );
-                    }
+                    // Skip tool messages for now as Prism handles tools differently
+                    // Tool results are handled internally by Prism's tool system
                     break;
             }
         }

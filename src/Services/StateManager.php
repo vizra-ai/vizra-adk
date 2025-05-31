@@ -34,9 +34,9 @@ class StateManager
         $history = AgentMessage::where('agent_session_id', $agentSession->id)
             ->orderBy('timestamp', 'asc')
             ->get()
-            ->map(fn($msg) => [
+            ->map(fn ($msg) => [
                 'role' => $msg->role,
-                'content' => is_string($msg->content) ? $msg->content : json_decode($msg->content, true), // Ensure content is array if json
+                'content' => is_array($msg->content) ? $msg->content : (is_string($msg->content) ? json_decode($msg->content, true) : $msg->content),
                 'tool_name' => $msg->tool_name,
                 'timestamp' => $msg->timestamp,
             ]);
@@ -69,10 +69,19 @@ class StateManager
             AgentMessage::where('agent_session_id', $agentSession->id)->delete();
 
             $messagesToInsert = $context->getConversationHistory()->map(function ($message) use ($agentSession) {
+                $content = $message['content'] ?? '';
+
+                // Ensure content is never null - convert arrays/objects to JSON, ensure strings are not null
+                if (is_array($content) || is_object($content)) {
+                    $content = json_encode($content);
+                } elseif ($content === null) {
+                    $content = '';
+                }
+
                 return [
                     'agent_session_id' => $agentSession->id,
                     'role' => $message['role'],
-                    'content' => is_array($message['content']) || is_object($message['content']) ? json_encode($message['content']) : $message['content'],
+                    'content' => $content,
                     'tool_name' => $message['tool_name'] ?? null,
                     'timestamp' => $message['timestamp'] ?? now(),
                 ];
