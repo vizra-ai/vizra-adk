@@ -1,32 +1,32 @@
 {
-    "name": "aaronlumsden/laravel-agent-adk",
-    "description": "A Laravel package for building AI-driven agents, inspired by Google ADK.",
-    "type": "laravel-package",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Aaron Lumsden",
-            "email": "your-email@example.com"
-        }
-    ],
-    "require": {
-        "php": "^8.1",
-        "laravel/framework": "^10.0|^11.0",
-        "prism-php/prism": "^0.8"
-    },
-    "autoload": {
-        "psr-4": {
-            "AaronLumsden\\LaravelAgentADK\\": "src/"
-        }
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "AaronLumsden\\LaravelAgentADK\\Providers\\AgentServiceProvider"
-            ],
-            "aliases": {
-                "Agent": "AaronLumsden\\LaravelAgentADK\\Facades\\Agent"
-            }
-        }
+  "name": "aaronlumsden/laravel-agent-adk",
+  "description": "A Laravel package for building AI-driven agents, inspired by Google ADK.",
+  "type": "laravel-package",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Aaron Lumsden",
+      "email": "aaronlumsden@me.com"
     }
+  ],
+  "require": {
+    "php": "^8.1",
+    "laravel/framework": "^12.0",
+    "prism-php/prism": "^0.68.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "AaronLumsden\\LaravelAgentADK\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "AaronLumsden\\LaravelAgentADK\\Providers\\AgentServiceProvider"
+      ],
+      "aliases": {
+        "Agent": "AaronLumsden\\LaravelAgentADK\\Facades\\Agent"
+      }
+    }
+  }
 }

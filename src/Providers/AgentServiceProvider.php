@@ -2,6 +2,7 @@
 
 namespace AaronLumsden\LaravelAgentADK\Providers;
 
+use Illuminate\Support\Facades\Route;
 use AaronLumsden\LaravelAgentADK\Services\AgentBuilder;
 use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
 use AaronLumsden\LaravelAgentADK\Services\StateManager;
