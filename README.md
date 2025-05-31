@@ -221,6 +221,46 @@ public function boot(): void
 
 ### 4. Chat With Your Agent! 💬
 
+#### Use Our Built-In API! 🌐✨
+
+Too lazy to write your own controller? (We get it!) Laravel Agent ADK comes with a super convenient built-in API endpoint that's ready to rock! 🎸
+
+**Default endpoint:** `POST /api/agent-adk/interact`
+
+Want to customize it? Just tweak the config in `config/agent-adk.php`:
+
+```php
+'routes' => [
+    'enabled' => true, // Master switch for package routes
+    'prefix' => 'api/agent-adk', // Default prefix for all package API routes
+    'middleware' => ['api'], // Default middleware group for package routes
+],
+```
+
+**POST Request Example:**
+
+```json
+{
+  "agent_name": "weather_reporter_agent",
+  "input": "What's the weather like in Leeds?",
+  "session_id": "91" // Optional session ID for tracking conversations
+}
+```
+
+**Response Example:**
+
+```json
+{
+  "agent_name": "weather_reporter_agent",
+  "session_id": "91",
+  "response": "The weather in Leeds is absolutely gorgeous! ☀️ It's currently 22°C with 55% humidity. Perfect weather for a nice walk or maybe even a BBQ! 🍖"
+}
+```
+
+Pretty sweet, right? Just POST to the endpoint and your agents start doing their thing! 🚀
+
+#### Or Build Your Own Controller 🎛️
+
 In your controller:
 
 ```php

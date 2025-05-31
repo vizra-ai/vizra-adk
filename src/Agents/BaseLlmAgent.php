@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Arr;
 use Prism\Prism\Prism;
 use Prism\Prism\Enums\Provider;
-use Prism\Prism\Tools\Tool;
+use Prism\Prism\Facades\Tool; // Use the Tool facade instead of Tool class
 use Prism\Prism\ValueObjects\Usage;
 use Prism\Prism\Text\Response;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
@@ -114,133 +114,173 @@ abstract class BaseLlmAgent extends BaseAgent
     }
 
     /**
-     * @return array<Tool>
+     * @return array<\Prism\Prism\Tool>
      */
-    protected function getToolsForPrism(): array
+    protected function getToolsForPrism(AgentContext $context): array
     {
         $tools = [];
         foreach ($this->loadedTools as $tool) {
             $definition = $tool->definition();
 
-            // Create Prism Tool using the correct API
-            $tools[] = Tool::make(
-                name: $definition['name'],
-                description: $definition['description'],
-                parameters: $definition['parameters']
-            );
+            // Create Prism Tool using the correct facade API
+            $prismTool = Tool::as($definition['name'])
+                ->for($definition['description']);
+
+            // Keep track of parameter order for the callback
+            $parameterOrder = [];
+
+            // Add parameters based on the definition
+            if (isset($definition['parameters']['properties']) && !empty($definition['parameters']['properties'])) {
+                ray('Processing parameters...');
+                foreach ($definition['parameters']['properties'] as $paramName => $paramDef) {
+                    $description = $paramDef['description'] ?? '';
+                    $parameterOrder[] = $paramName;
+
+                    switch ($paramDef['type'] ?? 'string') {
+                        case 'string':
+                            $prismTool = $prismTool->withStringParameter($paramName, $description);
+                            break;
+                        case 'number':
+                        case 'integer':
+                            $prismTool = $prismTool->withNumberParameter($paramName, $description);
+                            break;
+                        case 'boolean':
+                            $prismTool = $prismTool->withBooleanParameter($paramName, $description);
+                            break;
+                        case 'array':
+                            $prismTool = $prismTool->withArrayParameter($paramName, $description);
+                            break;
+                        default:
+                            $prismTool = $prismTool->withStringParameter($paramName, $description);
+                    }
+                }
+            }
+
+
+            // Set the tool execution callback - handle tools with or without parameters
+            $prismTool = $prismTool->using(function (...$args) use ($tool, $context, $parameterOrder) {
+                try {
+
+                    // Check if we have named parameters vs indexed parameters
+                    $hasNamedKeys = !empty($args) && !array_is_list($args);
+
+
+                    // Handle different argument formats from Prism
+                    $arguments = [];
+
+                    if ($hasNamedKeys) {
+                        // Prism passed named parameters directly
+                        $arguments = $args;
+                    } elseif (count($args) === 1 && is_array($args[0])) {
+                        // Prism passed a single associative array
+                        $arguments = $args[0];
+                    } else {
+                        // Prism passed indexed arguments - map them using parameter order
+                        foreach ($parameterOrder as $index => $paramName) {
+                            if (isset($args[$index])) {
+                                $arguments[$paramName] = $args[$index];
+                            }
+                        }
+                    }
+
+
+                    // Only validate required parameters if the tool has parameters
+                    if (!empty($parameterOrder)) {
+                        $definition = $tool->definition();
+                        $required = $definition['parameters']['required'] ?? [];
+                        foreach ($required as $requiredParam) {
+                            if (!isset($arguments[$requiredParam]) || $arguments[$requiredParam] === null) {
+                                throw new ToolExecutionException("Required parameter '{$requiredParam}' is missing or null");
+                            }
+                        }
+                    }
+
+                    Event::dispatch(new ToolCallInitiating($context, $this->getName(), $tool->definition()['name'], $arguments));
+
+                    $result = $tool->execute($arguments, $context);
+
+                    Event::dispatch(new ToolCallCompleted($context, $this->getName(), $tool->definition()['name'], $result));
+
+                    // Add tool execution to conversation history
+                    $context->addMessage([
+                        'role' => 'tool',
+                        'tool_name' => $tool->definition()['name'],
+                        'content' => $result,
+                        'timestamp' => now()
+                    ]);
+
+                    return $result;
+                } catch (\Throwable $e) {
+                    ray('Tool execution error:', $e->getMessage());
+                    throw new ToolExecutionException("Error executing tool '{$tool->definition()['name']}': " . $e->getMessage(), 0, $e);
+                }
+            });
+
+            $tools[] = $prismTool;
         }
         return $tools;
     }
 
     public function run(mixed $input, AgentContext $context): mixed
     {
+        ray('running agent: ' . $this->getName());
         $context->setUserInput($input);
         $context->addMessage(['role' => 'user', 'content' => $input, 'timestamp' => now()]);
 
-        // Maximum interaction cycles to prevent infinite loops
-        $maxCycles = 10;
-        $currentCycle = 0;
+        // Since Prism handles tool execution internally with maxSteps,
+        // we don't need the manual tool execution loop
+        $messages = $this->prepareMessagesForPrism($context);
+        $messages = $this->beforeLlmCall($messages, $context);
 
-        while($currentCycle++ < $maxCycles) {
-            $messages = $this->prepareMessagesForPrism($context);
-            $messages = $this->beforeLlmCall($messages, $context);
+        Event::dispatch(new LlmCallInitiating($context, $this->getName(), $messages));
 
-            Event::dispatch(new LlmCallInitiating($context, $this->getName(), $messages));
+        try {
+            // Build Prism request using the correct fluent API
+            $prismRequest = Prism::text()
+                ->using($this->getProvider(), $this->getModel());
 
-            try {
-                // Build Prism request using the correct fluent API
-                $prismRequest = Prism::text()
-                    ->using($this->getProvider(), $this->getModel());
-
-                // Add system prompt if available
-                if (!empty($this->getInstructions())) {
-                    $prismRequest = $prismRequest->withSystemPrompt($this->getInstructions());
-                }
-
-                // Add messages for conversation history
-                $prismRequest = $prismRequest->withMessages($messages);
-
-                // Add tools if available
-                if (!empty($this->loadedTools)) {
-                    $prismRequest = $prismRequest->withTools($this->getToolsForPrism());
-                }
-
-                // Execute the request
-                /** @var TextResponse $llmResponse */
-                $llmResponse = $prismRequest->asText();
-
-            } catch (\Throwable $e) {
-                throw new \RuntimeException("LLM API call failed: " . $e->getMessage(), 0, $e);
+            // Add system prompt if available
+            if (!empty($this->getInstructions())) {
+                ray('system prompt', $this->getInstructions());
+                $prismRequest = $prismRequest->withSystemPrompt($this->getInstructions());
             }
 
-            Event::dispatch(new LlmResponseReceived($context, $this->getName(), $llmResponse));
-            $processedResponse = $this->afterLlmResponse($llmResponse, $context);
+            // Add messages for conversation history
+            $prismRequest = $prismRequest->withMessages($messages);
 
-            ray($processedResponse->toolCalls);
-
-            if (!($processedResponse instanceof Response)) {
-                throw new \RuntimeException("afterLlmResponse hook modified the response to an incompatible type.");
+            // Add tools if available
+            if (!empty($this->loadedTools)) {
+                $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
+                    ->withMaxSteps(5); // Prism will handle tool execution internally
             }
 
-            $toolCalls = $processedResponse->toolCalls ?? [];
+            // Execute the request - Prism handles all tool calls internally
+            /** @var Response $llmResponse */
+            $llmResponse = $prismRequest->asText();
 
-            // Check if the response contains tool calls
-            if (!empty($toolCalls)) {
-                $context->addMessage([
-                    'role' => 'assistant',
-                    'content' => null,
-                    'tool_calls' => $processedResponse->toolCalls,
-                    'timestamp' => now()
-                ]);
-
-                foreach ($processedResponse->toolCalls as $toolCall) {
-                    $toolName = $toolCall->name;
-                    $toolArguments = $toolCall->arguments();
-
-                    if (!isset($this->loadedTools[$toolName])) {
-                        throw new ToolExecutionException("Agent '{$this->getName()}' attempted to call unregistered tool '{$toolName}'.");
-                    }
-
-                    $toolInstance = $this->loadedTools[$toolName];
-                    $modifiedArgs = $this->beforeToolCall($toolName, $toolArguments, $context);
-
-                    Event::dispatch(new ToolCallInitiating($context, $this->getName(), $toolName, $modifiedArgs));
-
-                    try {
-                        $toolResultString = $toolInstance->execute($modifiedArgs, $context);
-                    } catch (\Throwable $e) {
-                        throw new ToolExecutionException("Error executing tool '{$toolName}': " . $e->getMessage(), 0, $e);
-                    }
-
-                    $processedResultString = $this->afterToolResult($toolName, $toolResultString, $context);
-                    Event::dispatch(new ToolCallCompleted($context, $this->getName(), $toolName, $processedResultString));
-
-                    $context->addMessage([
-                        'role' => 'tool',
-                        'tool_call_id' => $toolCall->id,
-                        'name' => $toolName,
-                        'content' => $processedResultString,
-                        'timestamp' => now()
-                    ]);
-                }
-                // Continue loop to get final response from LLM
-                continue;
-            } else {
-                // No tool calls, this is the final response
-                $assistantResponseContent = $processedResponse->text;
-                $context->addMessage([
-                    'role' => 'assistant',
-                    'content' => $assistantResponseContent,
-                    'timestamp' => now()
-                ]);
-
-                Event::dispatch(new AgentResponseGenerated($context, $this->getName(), $assistantResponseContent));
-                return $assistantResponseContent;
-            }
+        } catch (\Throwable $e) {
+            throw new \RuntimeException("LLM API call failed: " . $e->getMessage(), 0, $e);
         }
 
-        // Reached max cycles
-        throw new \RuntimeException("Agent '{$this->getName()}' exceeded maximum interaction cycles.");
+        Event::dispatch(new LlmResponseReceived($context, $this->getName(), $llmResponse));
+        $processedResponse = $this->afterLlmResponse($llmResponse, $context);
+
+        if (!($processedResponse instanceof Response)) {
+            throw new \RuntimeException("afterLlmResponse hook modified the response to an incompatible type.");
+        }
+
+        // Get the final response text - Prism has already executed any tools
+        $assistantResponseContent = $processedResponse->text ?: '';
+
+
+        $context->addMessage([
+            'role' => 'assistant',
+            'content' => $assistantResponseContent,
+            'timestamp' => now()
+        ]);
+
+        Event::dispatch(new AgentResponseGenerated($context, $this->getName(), $assistantResponseContent));
+        return $assistantResponseContent;
     }
 
     protected function prepareMessagesForPrism(AgentContext $context): array
@@ -295,7 +335,7 @@ abstract class BaseLlmAgent extends BaseAgent
         return $inputMessages;
     }
 
-    public function afterLlmResponse(Response $response, AgentContext $context): mixed
+    public function afterLlmResponse(Response $response, AgentContext $context): mixed // Back to original type hint
     {
         return $response;
     }
