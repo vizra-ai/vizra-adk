@@ -117,7 +117,7 @@ class WeatherReporterAgent extends BaseLlmAgent
     public function afterLlmResponse(mixed $response, AgentContext $context): mixed
     {
         // Do something with the result if you want ✨
-       return parent::beforeLlmCall($response, $context);
+       return parent::afterLlmResponse($response, $context);
     }
 
     public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array
@@ -127,7 +127,7 @@ class WeatherReporterAgent extends BaseLlmAgent
 
     public function afterToolResult(string $toolName, string $result, AgentContext $context): string
     {
-        return parent::beforeToolCall($toolName, $result, $context);
+        return parent::afterToolResult($toolName, $result, $context);
     }
 
 
