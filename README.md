@@ -8,36 +8,36 @@ AI agents are like digital assistants that can think, decide, and take action. P
 
 Here's what makes this package awesome:
 
-*   **🎯 Easy Agent Creation:** Build agents with simple PHP classes or use our fluent builder - no PhD required!
-*   **🛠️ Tool Integration:** Let your agents use custom tools (APIs, databases, whatever!) - they'll figure out when to use them
-*   **💾 Smart State Management:** We handle all the session stuff and conversation history automatically
-*   **🌐 LLM Integration:** Talk to any AI model (OpenAI, Gemini, Claude) through the sweet [Prism-PHP](https://prismphp.com/) library
-*   **💎 Laravel Native:** Built for Laravel developers, by Laravel developers
-*   **🔧 Super Extensible:** Events, hooks, and overrides everywhere - customize to your heart's content!
+- **🎯 Easy Agent Creation:** Build agents with simple PHP classes or use our fluent builder - no PhD required!
+- **🛠️ Tool Integration:** Let your agents use custom tools (APIs, databases, whatever!) - they'll figure out when to use them
+- **💾 Smart State Management:** We handle all the session stuff and conversation history automatically
+- **🌐 LLM Integration:** Talk to any AI model (OpenAI, Gemini, Claude) through the sweet [Prism-PHP](https://prismphp.com/) library
+- **💎 Laravel Native:** Built for Laravel developers, by Laravel developers
+- **🔧 Super Extensible:** Events, hooks, and overrides everywhere - customize to your heart's content!
 
 Whether you're building a chatbot, data analyzer, or the next AI assistant, this package has your back! 💪
 
 ## Why Choose Laravel Agent ADK? 🌟
 
-*   **📐 Structured Approach:** No more messy API calls - build proper, stateful agents
-*   **🎭 LLM Abstraction:** One interface for all the major AI providers
-*   **⚡ Tool Power:** Your agents can actually DO things, not just chat
-*   **🏃‍♂️ Rapid Development:** Artisan commands to scaffold everything super fast
-*   **🏠 Feels Like Home:** Pure Laravel goodness
+- **📐 Structured Approach:** No more messy API calls - build proper, stateful agents
+- **🎭 LLM Abstraction:** One interface for all the major AI providers
+- **⚡ Tool Power:** Your agents can actually DO things, not just chat
+- **🏃‍♂️ Rapid Development:** Artisan commands to scaffold everything super fast
+- **🏠 Feels Like Home:** Pure Laravel goodness
 
 ## Cool Features (What You Get Right Now) ✨
 
-*   **📚 Class-Based Agents:** Extend `BaseLlmAgent` and you're golden
-*   **🎨 Fluent Builder:** `Agent::define('my_agent')->instructions(...)` - so smooth!
-*   **🔨 Tool System:** Implement `ToolInterface` and watch the magic happen
-*   **🌟 Prism-PHP Power:** All your favorite LLMs in one place
-*   **📝 Auto-History:** Conversations remembered automatically
-*   **🎉 Laravel Events:** Hook into everything with events
-*   **⚡ Artisan Commands:**
-    *   `php artisan agent:install` - Get everything set up
-    *   `php artisan agent:make:agent <AgentName>` - Scaffold new agents
-    *   `php artisan agent:make:tool <ToolName>` - Create new tools
-*   **⚙️ Configurable:** Tweak everything in `config/agent-adk.php`
+- **📚 Class-Based Agents:** Extend `BaseLlmAgent` and you're golden
+- **🎨 Fluent Builder:** `Agent::define('my_agent')->instructions(...)` - so smooth!
+- **🔨 Tool System:** Implement `ToolInterface` and watch the magic happen
+- **🌟 Prism-PHP Power:** All your favorite LLMs in one place
+- **📝 Auto-History:** Conversations remembered automatically
+- **🎉 Laravel Events:** Hook into everything with events
+- **⚡ Artisan Commands:**
+  - `php artisan agent:install` - Get everything set up
+  - `php artisan agent:make:agent <AgentName>` - Scaffold new agents
+  - `php artisan agent:make:tool <ToolName>` - Create new tools
+- **⚙️ Configurable:** Tweak everything in `config/agent-adk.php`
 
 ## Getting Started 🚀
 
@@ -53,7 +53,7 @@ composer require aaronlumsden/laravel-agent-adk
 php artisan agent:install
 ```
 
-This creates your config file and database tables - pretty neat! 
+This creates your config file and database tables - pretty neat!
 
 ### 3. Run Those Migrations 📊
 
@@ -113,6 +113,25 @@ class WeatherReporterAgent extends BaseLlmAgent
         $context->setState('current_time_zone', config('app.timezone'));
         return parent::beforeLlmCall($inputMessages, $context);
     }
+
+    public function afterLlmResponse(mixed $response, AgentContext $context): mixed
+    {
+        // Do something with the result if you want ✨
+       return parent::beforeLlmCall($response, $context);
+    }
+
+    public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array
+    {
+        return parent::beforeToolCall($toolName, $arguments, $context);
+    }
+
+    public function afterToolResult(string $toolName, string $result, AgentContext $context): string
+    {
+        return parent::beforeToolCall($toolName, $result, $context);
+    }
+
+
+
 }
 ```
 
@@ -192,7 +211,7 @@ public function boot(): void
          // ->withInstructionOverride('Also mention if it\'s good weather for a BBQ! 🍖')
          ->register();
 
-    // Or create a quick agent on the fly! 
+    // Or create a quick agent on the fly!
     Agent::define('greeting_agent')
          ->description('The friendliest greeter in town! 👋')
          ->instructions('Say hi like you mean it! Ask how you can help and keep it under 30 words. Spread those good vibes! ✨')
@@ -269,11 +288,11 @@ protected $listen = [
 
 ## What's Coming Next? 🚀
 
-*   More advanced examples and tutorials
-*   Dynamic tool loading
-*   Multi-provider LLM strategies
-*   UI integration guides
-*   And much more cool stuff!
+- More advanced examples and tutorials
+- Dynamic tool loading
+- Multi-provider LLM strategies
+- UI integration guides
+- And much more cool stuff!
 
 ## Troubleshooting 🔧
 
@@ -291,7 +310,7 @@ Check out the [Prism-PHP docs](https://prismphp.com/) for the latest troubleshoo
 
 ## Want to Contribute? 🤝
 
-We'd love your help! Pull requests, issues, and wild ideas are all welcome. Let's make this thing even more awesome together! 
+We'd love your help! Pull requests, issues, and wild ideas are all welcome. Let's make this thing even more awesome together!
 
 ## License 📄
 
