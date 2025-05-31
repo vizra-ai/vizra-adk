@@ -322,37 +322,50 @@ $weatherAgent = Agent::named('weather_reporter');
 
 ### 6. Listen to Events 👂
 
-Hook into events in your `EventServiceProvider.php`:
+To hook into the events dispatched by the `Laravel Agent ADK` package, you'll need to register your event listeners. In modern Laravel applications (Laravel 11+), the recommended way to do this for package events is typically within the `boot` method of your application's `AppServiceProvider.php`.
 
-```php
-// app/Providers/EventServiceProvider.php
-protected $listen = [
-    \AaronLumsden\LaravelAgentADK\Events\AgentExecutionStarting::class => [
-        // Your event listeners here
-    ],
-    \AaronLumsden\LaravelAgentADK\Events\AgentExecutionFinished::class => [
+To create a listener
 
-    ],
-    \AaronLumsden\LaravelAgentADK\Events\AgentResponseGenerated::class => [
-
-    ],
-    \AaronLumsden\LaravelAgentADK\Events\LlmCallInitiating::class => [
-
-    ],
-    \AaronLumsden\LaravelAgentADK\Events\LlmResponseReceived::class => [
-
-    ],
-    \AaronLumsden\LaravelAgentADK\Events\StateUpdated::class => [
-
-    ],
-    \AaronLumsden\LaravelAgentADK\Events\ToolCallInitiating::class => [
-
-    ],
-    \AaronLumsden\LaravelAgentADK\Events\ToolCallCompleted::class => [
-
-    ],
-];
+```bash
+php artisan make:listener HandleAgentExecutionStarting --event=\\AaronLumsden\\LaravelAgentADK\\Events\\AgentExecutionStarting
 ```
+
+it should be automatically discovered but if not you can register it manually in your `AppServiceProvider.php`:
+
+    ```php
+    namespace App\Providers;
+
+    use Illuminate\Support\Facades\Event;
+    use Illuminate\Support\ServiceProvider;
+
+    use AaronLumsden\LaravelAgentADK\Events\AgentExecutionStarting;
+    use App\Listeners\HandleAgentExecutionStarting;
+
+    class AppServiceProvider extends ServiceProvider
+    {
+
+        public function boot(): void
+        {
+            Event::listen(
+                AgentExecutionStarting::class,
+                [
+                    HandleAgentExecutionStarting::class,
+                ]
+            );
+        }
+    }
+    ```
+
+Available events you can listen to are:
+
+- AgentExecutionStarting;
+- AgentExecutionFinished;
+- AgentResponseGenerated;
+- LlmCallInitiating;
+- LlmResponseReceived;
+- StateUpdated;
+- ToolCallInitiating;
+- ToolCallCompleted;
 
 ## What's Coming Next? 🚀
 
