@@ -332,29 +332,29 @@ php artisan make:listener HandleAgentExecutionStarting --event=\\AaronLumsden\\L
 
 it should be automatically discovered but if not you can register it manually in your `AppServiceProvider.php`:
 
-    ```php
-    namespace App\Providers;
+```php
+namespace App\Providers;
 
-    use Illuminate\Support\Facades\Event;
-    use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\ServiceProvider;
 
-    use AaronLumsden\LaravelAgentADK\Events\AgentExecutionStarting;
-    use App\Listeners\HandleAgentExecutionStarting;
+use AaronLumsden\LaravelAgentADK\Events\AgentExecutionStarting;
+use App\Listeners\HandleAgentExecutionStarting;
 
-    class AppServiceProvider extends ServiceProvider
+class AppServiceProvider extends ServiceProvider
+{
+
+    public function boot(): void
     {
-
-        public function boot(): void
-        {
-            Event::listen(
-                AgentExecutionStarting::class,
-                [
-                    HandleAgentExecutionStarting::class,
-                ]
-            );
-        }
+        Event::listen(
+            AgentExecutionStarting::class,
+            [
+                HandleAgentExecutionStarting::class,
+            ]
+        );
     }
-    ```
+}
+```
 
 Available events you can listen to are:
 
