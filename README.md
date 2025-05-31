@@ -63,7 +63,7 @@ php artisan migrate
 
 ### 4. Add Your API Keys 🔑
 
-Pop your LLM API key in your `.env` file:
+Pop your LLM API key(s) in your `.env` file:
 
 ```dotenv
 OPENAI_URL=
@@ -97,8 +97,7 @@ class WeatherReporterAgent extends BaseLlmAgent
 
     protected string $instructions = 'You are the coolest weather assistant ever! When someone asks about weather, use the get_current_weather tool. Never make up weather data - that would be super uncool. Keep it fun and concise! ☀️🌧️';
 
-    // Want a specific model? Uncomment this:
-    // protected string $model = 'gemini-1.5-pro-latest';
+    protected string $model = 'gemini-1.5-pro-latest';
 
     protected function registerTools(): array
     {
