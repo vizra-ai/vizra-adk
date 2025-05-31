@@ -37,6 +37,7 @@ Whether you're building a chatbot, data analyzer, or the next AI assistant, this
   - `php artisan agent:install` - Get everything set up
   - `php artisan agent:make:agent <AgentName>` - Scaffold new agents
   - `php artisan agent:make:tool <ToolName>` - Create new tools
+  - `php artisan agent:chat <AgentName>` - Chat with your agent in the terminal
 - **⚙️ Configurable:** Tweak everything in `config/agent-adk.php`
 
 ## Getting Started 🚀
