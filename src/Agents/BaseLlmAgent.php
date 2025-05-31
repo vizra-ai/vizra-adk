@@ -131,7 +131,6 @@ abstract class BaseLlmAgent extends BaseAgent
 
             // Add parameters based on the definition
             if (isset($definition['parameters']['properties']) && !empty($definition['parameters']['properties'])) {
-                ray('Processing parameters...');
                 foreach ($definition['parameters']['properties'] as $paramName => $paramDef) {
                     $description = $paramDef['description'] ?? '';
                     $parameterOrder[] = $paramName;
@@ -211,7 +210,6 @@ abstract class BaseLlmAgent extends BaseAgent
 
                     return $result;
                 } catch (\Throwable $e) {
-                    ray('Tool execution error:', $e->getMessage());
                     throw new ToolExecutionException("Error executing tool '{$tool->definition()['name']}': " . $e->getMessage(), 0, $e);
                 }
             });
@@ -223,7 +221,6 @@ abstract class BaseLlmAgent extends BaseAgent
 
     public function run(mixed $input, AgentContext $context): mixed
     {
-        ray('running agent: ' . $this->getName());
         $context->setUserInput($input);
         $context->addMessage(['role' => 'user', 'content' => $input, 'timestamp' => now()]);
 
@@ -241,7 +238,6 @@ abstract class BaseLlmAgent extends BaseAgent
 
             // Add system prompt if available
             if (!empty($this->getInstructions())) {
-                ray('system prompt', $this->getInstructions());
                 $prismRequest = $prismRequest->withSystemPrompt($this->getInstructions());
             }
 
