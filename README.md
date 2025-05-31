@@ -330,11 +330,26 @@ protected $listen = [
     \AaronLumsden\LaravelAgentADK\Events\AgentExecutionStarting::class => [
         // Your event listeners here
     ],
+    \AaronLumsden\LaravelAgentADK\Events\AgentExecutionFinished::class => [
+
+    ],
+    \AaronLumsden\LaravelAgentADK\Events\AgentResponseGenerated::class => [
+
+    ],
     \AaronLumsden\LaravelAgentADK\Events\LlmCallInitiating::class => [
-        // More listeners
+
+    ],
+    \AaronLumsden\LaravelAgentADK\Events\LlmResponseReceived::class => [
+
+    ],
+    \AaronLumsden\LaravelAgentADK\Events\StateUpdated::class => [
+
+    ],
+    \AaronLumsden\LaravelAgentADK\Events\ToolCallInitiating::class => [
+
     ],
     \AaronLumsden\LaravelAgentADK\Events\ToolCallCompleted::class => [
-        // Even more listeners!
+
     ],
 ];
 ```
