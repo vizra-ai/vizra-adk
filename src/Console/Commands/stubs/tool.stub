@@ -1,0 +1,56 @@
+<?php
+
+namespace {{ namespace }};
+
+use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
+use AaronLumsden\LaravelAgentADK\System\AgentContext;
+
+class {{ class }} implements ToolInterface
+{
+    /**
+     * Get the tool's definition for the LLM.
+     * This structure should be JSON schema compatible.
+     */
+    public function definition(): array
+    {
+        return [
+            'name' => '{{ toolName }}',
+            'description' => '{{ toolDescription }}.',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    // Define your parameters here
+                    // 'example_param' => [
+                    //     'type' => 'string',
+                    //     'description' => 'An example parameter.'
+                    // ],
+                ],
+                // 'required' => ['example_param'],
+            ],
+        ];
+    }
+
+    /**
+     * Execute the tool's logic.
+     *
+     * @param array $arguments Arguments provided by the LLM, matching the parameters defined above.
+     * @param AgentContext $context The current agent context, providing access to session state etc.
+     * @return string JSON string representation of the tool's result.
+     */
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        // Access arguments: $location = $arguments['location'] ?? null;
+        // Access context: $sessionId = $context->getSessionId();
+        // Access state: $previousValue = $context->getState('some_key');
+
+        // Implement tool logic here...
+        $result = [
+            'status' => 'success',
+            'message' => 'Tool {{ toolName }} executed with arguments: ' . json_encode($arguments),
+            // Add relevant data to the result
+        ];
+
+        // The result MUST be a JSON encoded string.
+        return json_encode($result);
+    }
+}

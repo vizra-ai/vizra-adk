@@ -1,0 +1,59 @@
+<?php
+
+namespace {{ namespace }};
+
+use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
+use AaronLumsden\LaravelAgentADK\System\AgentContext;
+// use App\Tools\YourTool; // Example: Import your tool
+
+class {{ class }} extends BaseLlmAgent
+{
+    protected string $name = '{{ agentName }}';
+    protected string $description = 'Describe what this agent does.';
+
+    /**
+     * System prompt / instructions for the LLM.
+     * This guides the agent's behavior and responses.
+     */
+    protected string $instructions = 'You are a helpful assistant. Your name is {{ agentName }}.';
+
+    /**
+     * The LLM model to use for this agent.
+     * Leave empty to use the default from config/agent-adk.php.
+     * Example: 'gemini-pro', 'gpt-4-turbo'
+     */
+    protected string $model = '';
+
+    /**
+     * Register the tools this agent can use.
+     *
+     * @return array<class-string<ToolInterface>>
+     */
+    protected function registerTools(): array
+    {
+        return [
+            // Example: YourTool::class,
+        ];
+    }
+
+    /**
+     * Example of an overridable hook method.
+     * Modify the input messages array before it's sent to the LLM.
+     *
+     * @param array $inputMessages The array of messages prepared for the LLM.
+     * @param AgentContext $context The current agent context.
+     * @return array The modified messages array.
+     */
+    public function beforeLlmCall(array $inputMessages, AgentContext $context): array
+    {
+        // $context->setState('custom_data_for_llm', 'some_value');
+        // $inputMessages[] = ['role' => 'system', 'content' => 'Additional system note for this call.'];
+        return parent::beforeLlmCall($inputMessages, $context);
+    }
+
+    // Optional hook methods to override:
+    // public function afterLlmResponse(mixed $response, AgentContext $context): mixed { /* ... */ return parent::afterLlmResponse($response, $context); }
+    // public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array { /* ... */ return parent::beforeToolCall($toolName, $arguments, $context); }
+    // public function afterToolResult(string $toolName, string $result, AgentContext $context): string { /* ... */ return parent::afterToolResult($toolName, $result, $context); }
+}
