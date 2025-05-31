@@ -59,4 +59,9 @@ return [
                                         // This might be useful if Prism-PHP evolves to support multiple providers directly
                                         // For now, Prism client is usually instantiated for a specific provider
     ],
+    'routes' => [
+        'enabled' => true, // Master switch for package routes
+        'prefix' => 'api/agent-adk', // Default prefix for all package API routes
+        'middleware' => ['api'], // Default middleware group for package routes
+    ],
 ];

@@ -17,7 +17,8 @@ class AgentServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../../config/agent-adk.php', 'agent-adk'
+            __DIR__.'/../../config/agent-adk.php',
+            'agent-adk'
         );
 
         $this->app->singleton(AgentRegistry::class, function (Application $app) {
@@ -62,6 +63,20 @@ class AgentServiceProvider extends ServiceProvider
                 MakeAgentCommand::class,
                 MakeToolCommand::class,
             ]);
+        }
+
+        $this->loadRoutes();
+    }
+
+    protected function loadRoutes(): void
+    {
+        if (config('agent-adk.routes.enabled', true)) { // Make route loading configurable
+            Route::group([
+                'prefix' => config('agent-adk.routes.prefix', 'api/agent-adk'), // Configurable prefix
+                'middleware' => config('agent-adk.routes.middleware', ['api']), // Configurable middleware
+            ], function () {
+                $this->loadRoutesFrom(__DIR__.'/../../routes/api.php');
+            });
         }
     }
 }
