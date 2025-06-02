@@ -358,6 +358,11 @@ $agent->setTemperature(0.8)
     'max_tokens' => 1000,
     'top_p' => null,
 ],
+
+// Method 4: Environment variables
+AGENT_ADK_DEFAULT_TEMPERATURE=0.7
+AGENT_ADK_DEFAULT_MAX_TOKENS=1000
+AGENT_ADK_DEFAULT_TOP_P=
 ```
 
 ### Event System
@@ -556,13 +561,25 @@ Key configuration options in `config/agent-adk.php`:
 return [
     // Default LLM provider and model
     'default_provider' => env('AGENT_ADK_DEFAULT_PROVIDER', 'openai'),
-    'default_model' => env('AGENT_ADK_DEFAULT_MODEL', 'gpt-4o'),
+    'default_model' => env('AGENT_ADK_DEFAULT_MODEL', 'gemini-pro'),
 
     // Generation parameters
     'default_generation_params' => [
-        'temperature' => env('AGENT_ADK_DEFAULT_TEMPERATURE', 0.7),
-        'max_tokens' => env('AGENT_ADK_DEFAULT_MAX_TOKENS', 1000),
+        'temperature' => env('AGENT_ADK_DEFAULT_TEMPERATURE', null),
+        'max_tokens' => env('AGENT_ADK_DEFAULT_MAX_TOKENS', null),
         'top_p' => env('AGENT_ADK_DEFAULT_TOP_P', null),
+    ],
+
+    // Database table names
+    'tables' => [
+        'agent_sessions' => 'agent_sessions',
+        'agent_messages' => 'agent_messages',
+    ],
+
+    // Namespaces for generated classes
+    'namespaces' => [
+        'agents' => 'App\Agents',
+        'tools'  => 'App\Tools',
     ],
 
     // Built-in API routes
@@ -572,16 +589,10 @@ return [
         'middleware' => ['api'],
     ],
 
-    // Session and context storage
-    'session_driver' => env('AGENT_ADK_SESSION_DRIVER', 'database'),
-    'context_ttl' => env('AGENT_ADK_CONTEXT_TTL', 3600), // 1 hour
-
-    // Security settings
-    'input_max_length' => env('AGENT_ADK_INPUT_MAX_LENGTH', 4000),
-    'rate_limiting' => [
-        'enabled' => true,
-        'max_requests' => 60,
-        'per_minutes' => 1,
+    // Prism-PHP configuration
+    'prism' => [
+        'api_key' => env('PRISM_API_KEY'),
+        'client_options' => [],
     ],
 ];
 ```
@@ -597,7 +608,7 @@ public function beforeLlmCall(array $inputMessages, AgentContext $context): arra
     $userInput = $context->getUserInput();
 
     // Length validation
-    if (strlen($userInput) > config('agent-adk.input_max_length', 4000)) {
+    if (strlen($userInput) > 4000) {
         throw new \InvalidArgumentException('Input too long');
     }
 
@@ -697,8 +708,8 @@ public function execute(array $arguments, AgentContext $context): string
 3. **Database Optimization**
 
 ```php
-// Index your context tables
-Schema::table('agent_contexts', function (Blueprint $table) {
+// Index your agent tables
+Schema::table('agent_sessions', function (Blueprint $table) {
     $table->index(['session_id', 'created_at']);
     $table->index('agent_name');
 });
@@ -793,8 +804,7 @@ public function test_agent_api_endpoint()
 ```bash
 # Production .env additions
 AGENT_ADK_DEFAULT_TEMPERATURE=0.3  # Lower for consistency
-AGENT_ADK_CONTEXT_TTL=1800         # 30 minutes
-AGENT_ADK_INPUT_MAX_LENGTH=2000    # Reasonable limit
+AGENT_ADK_DEFAULT_MODEL=gpt-4o     # Reliable model
 LOG_LEVEL=warning                   # Reduce log noise
 
 # Optional: Use Redis for caching
@@ -811,10 +821,14 @@ php artisan make:command CleanupAgentContexts
 // In the command
 public function handle()
 {
-    $cutoff = now()->subSeconds(config('agent-adk.context_ttl', 3600));
+    $cutoff = now()->subHours(24); // Clean up contexts older than 24 hours
 
-    DB::table('agent_contexts')
+    DB::table(config('agent-adk.tables.agent_sessions'))
       ->where('updated_at', '<', $cutoff)
+      ->delete();
+
+    DB::table(config('agent-adk.tables.agent_messages'))
+      ->where('created_at', '<', $cutoff)
       ->delete();
 
     $this->info('Cleaned up old agent contexts');
@@ -823,7 +837,7 @@ public function handle()
 // In app/Console/Kernel.php
 protected function schedule(Schedule $schedule)
 {
-    $schedule->command('agent:cleanup-contexts')->hourly();
+    $schedule->command('agent:cleanup-contexts')->daily();
 }
 ```
 
@@ -870,14 +884,11 @@ try {
 
 ### Debug Mode
 
-Enable detailed logging:
+Enable detailed logging by setting your Laravel log level:
 
 ```php
-// In config/agent-adk.php
-'debug' => env('AGENT_ADK_DEBUG', false),
-
 // In .env
-AGENT_ADK_DEBUG=true
+LOG_LEVEL=debug
 ```
 
 ## Contributing 🤝
