@@ -7,3 +7,9 @@
 __pycache__/
 .DS_Store
 .env
+
+# Test related
+/build
+/.phpunit.cache
+/tests/Coverage
+.phpunit.result.cache

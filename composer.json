@@ -15,9 +15,19 @@
     "prism-php/prism": "^0.68.1",
     "league/csv": "^9.23"
   },
+  "require-dev": {
+    "orchestra/testbench": "^10.0",
+    "pestphp/pest": "^3.0",
+    "pestphp/pest-plugin-laravel": "^3.0"
+  },
   "autoload": {
     "psr-4": {
       "AaronLumsden\\LaravelAgentADK\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "AaronLumsden\\LaravelAgentADK\\Tests\\": "tests/"
     }
   },
   "extra": {
@@ -28,6 +38,15 @@
       "aliases": {
         "Agent": "AaronLumsden\\LaravelAgentADK\\Facades\\Agent"
       }
+    }
+  },
+  "scripts": {
+    "test": "pest",
+    "test-coverage": "pest --coverage"
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
     }
   }
 }
