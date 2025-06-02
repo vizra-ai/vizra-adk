@@ -41,10 +41,10 @@ it('completes agent workflow', function () {
     // Let's test by creating a new execution with the same agent and verify persistence works
     $sessionId = 'test-session-' . uniqid();
     $context = $stateManager->loadContext('integration-test-agent', $sessionId, 'Hello from integration test');
-    
+
     // Execute the agent directly to add messages
     $agent->run('Hello from integration test', $context);
-    
+
     // Save context manually when calling agent directly
     $stateManager->saveContext($context, 'integration-test-agent');
 
@@ -145,14 +145,14 @@ class IntegrationTestAgent extends BaseLlmAgent
         // For testing, simulate the LLM response behavior manually
         $context->setUserInput($input);
         $context->addMessage(['role' => 'user', 'content' => $input ?: '']);
-        
+
         $response = 'Integration response for: ' . $input . ' (Session: ' . $context->getSessionId() . ')';
-        
+
         $context->addMessage([
             'role' => 'assistant',
             'content' => $response
         ]);
-        
+
         return $response;
     }
 }
@@ -171,7 +171,7 @@ class StatefulTestAgent extends BaseLlmAgent
         // Simulate adding the user message like BaseLlmAgent would
         $context->setUserInput($input);
         $context->addMessage(['role' => 'user', 'content' => $input ?: '']);
-        
+
         $counter = $context->getState('counter', 0);
 
         if (str_contains(strtolower($input), 'set counter to')) {
@@ -186,13 +186,13 @@ class StatefulTestAgent extends BaseLlmAgent
         }
 
         $response = "Stateful response. Counter is now: $counter";
-        
+
         // Add assistant response to conversation history
         $context->addMessage([
             'role' => 'assistant',
             'content' => $response
         ]);
-        
+
         return $response;
     }
 }
