@@ -105,7 +105,7 @@ class WeatherReporterAgent extends BaseLlmAgent
     protected function registerTools(): array
     {
         return [
-            GetCurrentWeatherTool::class, // Your awesome tool goes here!
+            GetCurrentWeatherTool::class, // Your awesome tools go here!
         ];
     }
 
