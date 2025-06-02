@@ -1,0 +1,91 @@
+<?php
+
+namespace {{ namespace }};
+
+use AaronLumsden\LaravelAgentADK\Evaluations\BaseEvaluation; // Adjusted namespace
+use InvalidArgumentException;
+
+class {{ class }} extends BaseEvaluation
+{
+    /**
+     * The alias/name of the agent to be used for this evaluation (e.g., 'WeatherReporterAgent').
+     * This name will be used with Agent::run(agentName, ...).
+     * This agent should be registered in your AgentServiceProvider or via Agent::register().
+     */
+    public string $agentName = 'GenericLlmAgent'; // Default to a generic agent name, as defined in the agent class.
+
+    /**
+     * Human-readable name for the evaluation.
+     */
+    public string $name = '{{ evaluation_name }}';
+
+    /**
+     * Brief description of what this evaluation tests.
+     */
+    public string $description = 'Description for {{ evaluation_name }}.';
+
+    /**
+     * Path to the CSV file for this evaluation.
+     * This path should be relative to the Laravel project's base_path().
+     * Example: 'evaluations/data/{{ csv_file_name }}.csv'
+     */
+    public string $csvPath = 'app/Evaluations/data/{{ csv_file_name }}.csv';
+
+    /**
+     * Column in the CSV file that contains the prompt text.
+     */
+    public string $promptCsvColumn = 'prompt';
+
+    /**
+     * Prepares the prompt to be sent to the LLM based on a row of CSV data.
+     *
+     * @param array $csvRowData Data from a single row of the CSV.
+     * @return string The prompt for the LLM.
+     * @throws InvalidArgumentException if the required prompt column (defined by getPromptCsvColumn()) is missing from $csvRowData.
+     */
+    public function preparePrompt(array $csvRowData): string
+    {
+        if (!isset($csvRowData[$this->promptCsvColumn])) {
+            throw new InvalidArgumentException(
+                "CSV row for evaluation '{{ evaluation_name }}' must contain a '" . $this->promptCsvColumn . "' column/key."
+            );
+        }
+        // Example: You might want to prepend instructions or format the prompt.
+        // return "Analyze the following text: " . $csvRowData[$this->promptCsvColumn];
+        return $csvRowData[$this->promptCsvColumn];
+    }
+
+    /**
+     * Evaluates a single row of CSV data against the LLM's response.
+     *
+     * @param array $csvRowData The data from a single row of the CSV file.
+     * @param string $llmResponse The response from the LLM.
+     * @return array Structured results for the row.
+     */
+    public function evaluateRow(array $csvRowData, string $llmResponse): array
+    {
+        $this->resetAssertionResults(); // Important to clear previous results
+
+         /*
+        if (isset($csvRowData['expected_response'])) {
+            $this->assertResponseContains(
+                $llmResponse,
+                $csvRowData['expected_response'],
+                "Checking for exact match '{$csvRowData['expected_response']}'."
+            );
+        }
+        */
+
+        // Determine final status based on assertion outcomes
+        $assertionStatuses = array_column($this->assertionResults, 'status');
+        $finalStatus = empty($this->assertionResults) || !in_array('fail', $assertionStatuses, true) ? 'pass' : 'fail';
+
+        return [
+            'row_data' => $csvRowData,
+            'llm_response' => $llmResponse,
+            'assertions' => $this->assertionResults,
+            'final_status' => $finalStatus,
+        ];
+    }
+
+}

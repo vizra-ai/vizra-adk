@@ -32,13 +32,12 @@ class StateManager
         );
 
         $history = AgentMessage::where('agent_session_id', $agentSession->id)
-            ->orderBy('timestamp', 'asc')
+            ->orderBy('created_at', 'asc')
             ->get()
             ->map(fn ($msg) => [
                 'role' => $msg->role,
                 'content' => is_array($msg->content) ? $msg->content : (is_string($msg->content) ? json_decode($msg->content, true) : $msg->content),
-                'tool_name' => $msg->tool_name,
-                'timestamp' => $msg->timestamp,
+                'tool_name' => $msg->tool_name
             ]);
 
         return new AgentContext(
@@ -82,8 +81,7 @@ class StateManager
                     'agent_session_id' => $agentSession->id,
                     'role' => $message['role'],
                     'content' => $content,
-                    'tool_name' => $message['tool_name'] ?? null,
-                    'timestamp' => $message['timestamp'] ?? now(),
+                    'tool_name' => $message['tool_name'] ?? null
                 ];
             })->all();
 

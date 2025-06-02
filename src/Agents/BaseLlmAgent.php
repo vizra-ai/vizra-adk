@@ -240,8 +240,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     $context->addMessage([
                         'role' => 'tool',
                         'tool_name' => $tool->definition()['name'],
-                        'content' => $result ?: '',
-                        'timestamp' => now()
+                        'content' => $result ?: ''
                     ]);
 
                     return $result;
@@ -258,7 +257,7 @@ abstract class BaseLlmAgent extends BaseAgent
     public function run(mixed $input, AgentContext $context): mixed
     {
         $context->setUserInput($input);
-        $context->addMessage(['role' => 'user', 'content' => $input ?: '', 'timestamp' => now()]);
+        $context->addMessage(['role' => 'user', 'content' => $input ?: '']);
 
         // Since Prism handles tool execution internally with maxSteps,
         // we don't need the manual tool execution loop
@@ -320,8 +319,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
         $context->addMessage([
             'role' => 'assistant',
-            'content' => $assistantResponseContent ?: '',
-            'timestamp' => now()
+            'content' => $assistantResponseContent ?: ''
         ]);
 
         Event::dispatch(new AgentResponseGenerated($context, $this->getName(), $assistantResponseContent));

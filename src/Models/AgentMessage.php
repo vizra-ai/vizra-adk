@@ -14,26 +14,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $role (user, assistant, tool_call, tool_result)
  * @property string|array $content (text, or JSON for tool call/result)
  * @property string|null $tool_name
- * @property \Illuminate\Support\Carbon $timestamp
  * @property AgentSession $session
  */
 class AgentMessage extends Model
 {
     protected $table = 'agent_messages'; // Default, will be configurable
 
-    public $timestamps = false; // Using a manual 'timestamp' field
 
     protected $fillable = [
         'agent_session_id',
         'role',
         'content',
         'tool_name',
-        'timestamp',
     ];
 
     protected $casts = [
         'content' => 'json', // Cast to json, handles string or array/object
-        'timestamp' => 'datetime',
     ];
 
     /**

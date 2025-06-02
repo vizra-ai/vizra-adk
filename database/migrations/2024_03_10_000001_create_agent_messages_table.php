@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      *
@@ -22,10 +21,8 @@ return new class extends Migration
             $table->string('role'); // e.g., user, assistant, tool_call, tool_result
             $table->text('content'); // Using text for flexibility, could be JSON string for tool calls/results
             $table->string('tool_name')->nullable();
-            $table->timestamp('timestamp')->useCurrent(); // Manually managed timestamp
-
             $table->index('agent_session_id');
-            $table->index('timestamp');
+            $table->timestamps();
         });
     }
 

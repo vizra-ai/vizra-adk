@@ -38,6 +38,8 @@ Whether you're building a chatbot, data analyzer, or the next AI assistant, this
   - `php artisan agent:make:agent <AgentName>` - Scaffold new agents
   - `php artisan agent:make:tool <ToolName>` - Create new tools
   - `php artisan agent:chat <AgentName>` - Chat with your agent in the terminal
+  - `php artisan make:eval <EvaluationName>` - Create new evaluation classes
+  - `php artisan run:eval <EvaluationName>` - Run evaluations
 - **⚙️ Configurable:** Tweak everything in `config/agent-adk.php`
 
 ## Getting Started 🚀
@@ -443,6 +445,119 @@ Available events you can listen to are:
 - StateUpdated;
 - ToolCallInitiating;
 - ToolCallCompleted;
+
+### Generating an Evaluation Class
+
+To create a new evaluation class, use the `make:eval` Artisan command:
+
+```bash
+php artisan make:eval MyAwesomeEvaluation
+```
+
+This will generate `app/Evaluations/MyAwesomeEvaluation.php` (or `src/Evaluations/` for package dev), extending `AaronLumsden\LaravelAgentADK\Evaluations\BaseEvaluation`.
+
+### Structure of an Evaluation Class
+
+Key components:
+
+- **`$agentName` (public string property):** Specifies the **registered name/alias** of the LLM agent to be used (e.g., `public string $agentName = 'WeatherReporterAgent';`). This is the name you used when registering the agent (e.g., via `Agent::build(YourAgent::class)->register()` or `Agent::define('your_agent_name')`).
+- **`$name` (public string property):** Human-readable name for the evaluation.
+- **`$description` (public string property):** Brief description of the test.
+- **`$csvPath` (public string property):** Relative path to the CSV data file (e.g., `app/evaluations/data/my_test_data.csv`).
+- **`$promptCsvColumn` (public string property):** Defines which column in your CSV contains the main text/prompt for the LLM.
+  ```php
+  public function getPromptCsvColumn(): string
+  {
+      return 'user_query'; // Name of the column in your CSV
+  }
+  ```
+- **`preparePrompt(array $csvRowData): string`:** Constructs the full prompt string. The default stub uses `$this->promptCsvColumn` to fetch the base prompt from the CSV. You can customize this to add prefixes, instructions, or combine multiple CSV columns.
+- **`evaluateRow(array $csvRowData, string $llmResponse): array`:** Core logic using assertion methods to evaluate the LLM's response against the CSV data.
+
+**Assertion Methods:**
+(List and brief explanation as before: `assertResponseContains`, `assertEquals`, etc.)
+
+### Example Concrete Evaluation: `SentimentAnalysisEvaluation.php`
+
+```php
+<?php
+
+namespace App\Evaluations; // Or YourVendor\YourPackage\Evaluations
+
+use AaronLumsden\LaravelAgentADK\Evaluations\BaseEvaluation;
+use InvalidArgumentException;
+
+class SentimentAnalysisEvaluation extends BaseEvaluation
+{
+    // Use the agent's registered name/alias.
+    // This agent ('MySentimentAnalysisAgent') must be registered in a Service Provider.
+    public string $agentName = 'MySentimentAnalysisAgent';
+
+    public string $name = 'Sentiment Analysis Evaluation';
+
+    public string $description = 'Evaluates the LLM\'s ability to correctly classify text sentiment.';
+
+    public string $csvPath = 'evaluations/data/sentiment_analysis_data.csv';
+
+    // Specify which CSV column contains the prompt text
+    public string $promptCsvColumn = 'text_input'; // Name of the column in your CSV
+
+    public function preparePrompt(array $csvRowData): string
+    {
+        if (!isset($csvRowData[$this->promptCsvColumn])) {
+            throw new InvalidArgumentException(
+                "CSV row must contain a '" . $this->promptCsvColumn . "' column for sentiment analysis."
+            );
+        }
+        // Example: Constructing a more complete prompt
+        return "Classify the sentiment of the following text as positive, negative, or neutral: \"" . $csvRowData[$this->promptCsvColumn] . "\"";
+    }
+
+    public function evaluateRow(array $csvRowData, string $llmResponse): array
+    {
+        $this->resetAssertionResults();
+
+        $expectedSentimentColumn = 'expected_sentiment'; // Assuming this column exists
+        if (!isset($csvRowData[$expectedSentimentColumn])) {
+            throw new InvalidArgumentException("CSV row must contain an '" . $expectedSentimentColumn . "' column.");
+        }
+
+        $expectedSentiment = strtolower(trim($csvRowData[$expectedSentimentColumn]));
+        $actualSentiment = strtolower(trim($llmResponse)); // Assuming LLM returns only the sentiment category
+
+        $this->assertEquals($expectedSentiment, $actualSentiment,
+            "Checking if LLM sentiment ('{$actualSentiment}') matches expected ('{$expectedSentiment}')."
+        );
+        $this->assertTrue(in_array($actualSentiment, ['positive', 'negative', 'neutral']),
+            "Sentiment '{$actualSentiment}' should be one of 'positive', 'negative', or 'neutral'."
+        );
+
+        $assertionStatuses = array_column($this->assertionResults, 'status');
+        $finalStatus = empty($this->assertionResults) || !in_array('fail', $assertionStatuses, true) ? 'pass' : 'fail';
+
+        return [
+            'row_data' => $csvRowData,
+            'llm_response' => $llmResponse,
+            'assertions' => $this->assertionResults,
+            'final_status' => $finalStatus,
+        ];
+    }
+}
+```
+
+### Example CSV Data (`evaluations/data/sentiment_analysis_data.csv`)
+
+(Content as before, ensuring `text_input` and `expected_sentiment` columns are used)
+
+### Running Evaluations
+
+To run an evaluation, use the `run:eval` Artisan command with the evaluation's class name:
+
+```bash
+php artisan run:eval SentimentAnalysisEvaluation
+```
+
+The command will instantiate `SentimentAnalysisEvaluation`, use its `$agentName` property to call the specified agent via `Agent::run()` for each CSV row, and then execute your `evaluateRow` logic.
 
 ## What's Coming Next? 🚀
 

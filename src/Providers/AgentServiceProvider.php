@@ -11,6 +11,8 @@ use AaronLumsden\LaravelAgentADK\Console\Commands\InstallCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\MakeAgentCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\MakeToolCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\AgentChatCommand;
+use AaronLumsden\LaravelAgentADK\Console\Commands\MakeEvalCommand;
+use AaronLumsden\LaravelAgentADK\Console\Commands\RunEvalCommand;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Foundation\Application; // Added for type hint
 
@@ -64,7 +66,9 @@ class AgentServiceProvider extends ServiceProvider
                 InstallCommand::class,
                 MakeAgentCommand::class,
                 MakeToolCommand::class,
-                AgentChatCommand::class
+                AgentChatCommand::class,
+                MakeEvalCommand::class,
+                RunEvalCommand::class
             ]);
         }
 
