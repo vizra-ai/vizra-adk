@@ -257,36 +257,36 @@ abstract class BaseEvaluation
      * Uses an LLM agent as a judge to evaluate the response based on custom criteria.
      */
     protected function assertLlmJudge(
-        string $actualResponse, 
-        string $criteria, 
+        string $actualResponse,
+        string $criteria,
         string $judgeAgentName = 'llm_judge',
         string $expectedOutcome = 'pass',
         string $message = 'LLM judge evaluation failed.'
     ): array {
         $judgePrompt = $this->buildJudgePrompt($actualResponse, $criteria);
-        
+
         try {
             $judgeResponse = \AaronLumsden\LaravelAgentADK\Facades\Agent::run(
-                $judgeAgentName, 
-                $judgePrompt, 
+                $judgeAgentName,
+                $judgePrompt,
                 \Illuminate\Support\Str::uuid()->toString()
             );
-            
+
             $judgment = $this->parseJudgment($judgeResponse);
             $status = $judgment['outcome'] === $expectedOutcome;
-            
+
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__, 
-                $status, 
+                static::class . '::' . __FUNCTION__,
+                $status,
                 $message . " Judge reasoning: " . $judgment['reasoning'],
                 $expectedOutcome,
                 $judgment['outcome']
             );
-            
+
         } catch (\Exception $e) {
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__, 
-                false, 
+                static::class . '::' . __FUNCTION__,
+                false,
                 "LLM judge failed: " . $e->getMessage(),
                 $expectedOutcome,
                 'error'
@@ -305,29 +305,29 @@ abstract class BaseEvaluation
         string $message = 'Response quality below threshold.'
     ): array {
         $judgePrompt = $this->buildQualityJudgePrompt($actualResponse, $qualityCriteria);
-        
+
         try {
             $judgeResponse = \AaronLumsden\LaravelAgentADK\Facades\Agent::run(
-                $judgeAgentName, 
-                $judgePrompt, 
+                $judgeAgentName,
+                $judgePrompt,
                 \Illuminate\Support\Str::uuid()->toString()
             );
-            
+
             $score = $this->parseQualityScore($judgeResponse);
             $status = $score >= $minScore;
-            
+
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__, 
-                $status, 
+                static::class . '::' . __FUNCTION__,
+                $status,
                 $message . " Score: {$score}/{$minScore}",
                 ">= {$minScore}",
                 $score
             );
-            
+
         } catch (\Exception $e) {
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__, 
-                false, 
+                static::class . '::' . __FUNCTION__,
+                false,
                 "LLM quality judge failed: " . $e->getMessage(),
                 ">= {$minScore}",
                 'error'
@@ -347,29 +347,29 @@ abstract class BaseEvaluation
         string $message = 'Response comparison failed.'
     ): array {
         $judgePrompt = $this->buildComparisonJudgePrompt($actualResponse, $referenceResponse, $comparisonCriteria);
-        
+
         try {
             $judgeResponse = \AaronLumsden\LaravelAgentADK\Facades\Agent::run(
-                $judgeAgentName, 
-                $judgePrompt, 
+                $judgeAgentName,
+                $judgePrompt,
                 \Illuminate\Support\Str::uuid()->toString()
             );
-            
+
             $comparison = $this->parseComparison($judgeResponse);
             $status = $comparison['winner'] === $expectedWinner;
-            
+
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__, 
-                $status, 
+                static::class . '::' . __FUNCTION__,
+                $status,
                 $message . " Judge reasoning: " . $comparison['reasoning'],
                 $expectedWinner,
                 $comparison['winner']
             );
-            
+
         } catch (\Exception $e) {
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__, 
-                false, 
+                static::class . '::' . __FUNCTION__,
+                false,
                 "LLM comparison judge failed: " . $e->getMessage(),
                 $expectedWinner,
                 'error'
@@ -468,13 +468,13 @@ Be objective and thorough in your comparison.";
                 ];
             }
         }
-        
+
         // Fallback parsing
         $response = strtolower($judgeResponse);
         if (strpos($response, 'pass') !== false && strpos($response, 'fail') === false) {
             return ['outcome' => 'pass', 'reasoning' => 'Extracted from text'];
         }
-        
+
         return ['outcome' => 'fail', 'reasoning' => 'Could not parse judgment'];
     }
 
@@ -490,12 +490,12 @@ Be objective and thorough in your comparison.";
                 return (int) $json['score'];
             }
         }
-        
+
         // Fallback: look for score patterns
         if (preg_match('/(?:score|rating).*?(\d+)(?:\/10|out of 10)?/i', $judgeResponse, $matches)) {
             return (int) $matches[1];
         }
-        
+
         return 0; // Default low score if can't parse
     }
 
@@ -516,7 +516,7 @@ Be objective and thorough in your comparison.";
                 ];
             }
         }
-        
+
         // Fallback parsing
         $response = strtolower($judgeResponse);
         if (strpos($response, 'response a') !== false || strpos($response, 'actual') !== false) {
@@ -524,7 +524,7 @@ Be objective and thorough in your comparison.";
         } elseif (strpos($response, 'response b') !== false || strpos($response, 'reference') !== false) {
             return ['winner' => 'reference', 'reasoning' => 'Extracted from text'];
         }
-        
+
         return ['winner' => 'reference', 'reasoning' => 'Could not parse comparison'];
     }
 }

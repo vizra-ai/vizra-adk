@@ -24,6 +24,7 @@
   - [Generating an Evaluation Class](#generating-an-evaluation-class)
   - [Structure of an Evaluation Class](#structure-of-an-evaluation-class)
   - [Example Concrete Evaluation](#example-concrete-evaluation-sentimentanalysisevaluationphp)
+  - [LLM-as-a-Judge Example 🤖⚖️](#llm-as-a-judge-example-)
   - [Available Assertion Methods](#available-assertion-methods)
   - [Running Evaluations](#running-evaluations)
 - [What's Coming Next? 🚀](#whats-coming-next-)
@@ -482,6 +483,12 @@ Available events you can listen to are:
 
 ## Evaluations
 
+Evaluations are a crucial component in developing and maintaining reliable AI agents. They provide a structured framework for systematically testing and validating your agent's responses, ensuring consistent quality and appropriate behavior across various scenarios. By implementing evaluations, you can catch potential issues early, measure improvements over time, and maintain confidence in your agent's performance before deploying to production.
+
+The evaluation system in Laravel Agent ADK combines traditional assertion-based testing with advanced AI-powered quality assessment through its unique "LLM-as-a-Judge" feature. This dual approach allows you to not only verify basic requirements (like response format and content presence) but also assess more nuanced aspects like tone, helpfulness, accuracy, and overall quality of your agent's responses. Whether you're building customer service agents, content generators, or specialized AI tools, robust evaluation helps ensure your agents consistently meet your quality standards.
+
+### Generating an Evaluation Class
+
 To create a new evaluation class, use the `make:eval` Artisan command:
 
 ```bash
@@ -635,7 +642,7 @@ class ContentQualityEvaluation extends BaseEvaluation
             $this->assertLlmJudgeComparison(
                 $llmResponse,
                 $csvRowData['reference_response'],
-                'Compare accuracy, helpfulness, clarity, and overall quality',
+                'Compare accuracy, helpfulness, and clarity',
                 'actual',
                 'llm_judge',
                 'Generated response should be better than reference'
