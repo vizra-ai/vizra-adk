@@ -2,6 +2,35 @@
 
 **Laravel Agent ADK** is a super cool PHP package that makes building AI agents ridiculously easy! 🚀 Think of it as your AI agent's best friend - it handles all the boring stuff so you can focus on building awesome intelligent systems.
 
+## Table of Contents 📋
+
+- [What's This All About? 🤔](#whats-this-all-about-)
+- [Why Choose Laravel Agent ADK? 🌟](#why-choose-laravel-agent-adk-)
+- [Cool Features (What You Get Right Now) ✨](#cool-features-what-you-get-right-now-)
+- [Getting Started 🚀](#getting-started-)
+  - [1. Install This Bad Boy 📦](#1-install-this-bad-boy-)
+  - [2. Set Everything Up 🔧](#2-set-everything-up-)
+  - [3. Run Those Migrations 📊](#3-run-those-migrations-)
+  - [4. Add Your API Keys 🔑](#4-add-your-api-keys-)
+- [Let's Build Something Cool! 🛠️](#lets-build-something-cool-️)
+  - [1. Create Your First Agent 🤖](#1-create-your-first-agent-)
+  - [2. Build a Super Tool 🔨](#2-build-a-super-tool-)
+  - [3. Configure Generation Parameters 🎛️](#3-configure-generation-parameters-️)
+  - [4. Register Your Agent 📝](#4-register-your-agent-)
+  - [5. Chat With Your Agent! 💬](#5-chat-with-your-agent-)
+  - [6. Get More Control (If You Want) 🎛️](#6-get-more-control-if-you-want-️)
+  - [7. Listen to Events 👂](#7-listen-to-events-)
+- [Evaluations](#evaluations)
+  - [Generating an Evaluation Class](#generating-an-evaluation-class)
+  - [Structure of an Evaluation Class](#structure-of-an-evaluation-class)
+  - [Example Concrete Evaluation](#example-concrete-evaluation-sentimentanalysisevaluationphp)
+  - [Available Assertion Methods](#available-assertion-methods)
+  - [Running Evaluations](#running-evaluations)
+- [What's Coming Next? 🚀](#whats-coming-next-)
+- [Troubleshooting 🔧](#troubleshooting-)
+- [Want to Contribute? 🤝](#want-to-contribute-)
+- [License 📄](#license-)
+
 ## What's This All About? 🤔
 
 AI agents are like digital assistants that can think, decide, and take action. Pretty neat, right? 🧠 With Laravel Agent ADK, you get to build these smart little helpers without pulling your hair out over complicated setup.
@@ -446,7 +475,7 @@ Available events you can listen to are:
 - ToolCallInitiating;
 - ToolCallCompleted;
 
-### Generating an Evaluation Class
+## Evaluations
 
 To create a new evaluation class, use the `make:eval` Artisan command:
 
