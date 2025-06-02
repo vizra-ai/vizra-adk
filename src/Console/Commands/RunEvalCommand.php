@@ -163,10 +163,40 @@ class RunEvalCommand extends Command
             return;
         }
         try {
-            $outputDir = dirname($filePath);
-            if (!File::isDirectory($outputDir)) {
-                File::makeDirectory($outputDir, 0755, true, true);
+            // Always use storage path to ensure we have write permissions
+            // Extract just the filename and any subdirectories from the original path
+            $pathInfo = pathinfo($filePath);
+            $filename = $pathInfo['basename'];
+
+            // If the path includes subdirectories after the last slash, preserve them
+            if (str_contains($filePath, '/')) {
+                $relativePath = basename(dirname($filePath)) . '/' . $filename;
+            } else {
+                $relativePath = $filename;
             }
+
+            $filePath = storage_path('app/evaluations/' . $relativePath);
+            $outputDir = dirname($filePath);
+
+
+            // Ensure the directory exists, create it recursively if it doesn't
+            if (!File::isDirectory($outputDir)) {
+                $this->info("Directory does not exist, creating: {$outputDir}");
+
+                if (!File::makeDirectory($outputDir, 0755, true, true)) {
+                    // Fallback to native PHP mkdir
+                    if (!mkdir($outputDir, 0755, true)) {
+                        throw new Exception("Failed to create directory: {$outputDir}. Please check permissions.");
+                    }
+                }
+
+            }
+
+            // Ensure we can write to the directory
+            if (!is_writable($outputDir)) {
+                throw new Exception("Directory is not writable: {$outputDir}. Current permissions: " . substr(sprintf('%o', fileperms($outputDir)), -4));
+            }
+
             $csv = Writer::createFromPath($filePath, 'w+');
             $headers = ['Evaluation Name', 'Row Index', 'Final Status', 'LLM Response', 'Error'];
 

@@ -545,19 +545,87 @@ class SentimentAnalysisEvaluation extends BaseEvaluation
 }
 ```
 
-### Example CSV Data (`evaluations/data/sentiment_analysis_data.csv`)
+### Available Assertion Methods
 
-(Content as before, ensuring `text_input` and `expected_sentiment` columns are used)
+The `BaseEvaluation` class provides several assertion methods to help you evaluate LLM responses. Each method records the assertion result internally and returns an array with the test outcome:
+
+#### `assertResponseContains(string $actualResponse, string $expectedSubstring, string $message = 'Response should contain substring.'): array`
+
+Checks if the LLM response contains a specific substring. Useful for verifying that certain keywords or phrases appear in the response.
+
+```php
+$this->assertResponseContains($llmResponse, 'positive',
+    "Response should contain the word 'positive'");
+```
+
+#### `assertResponseDoesNotContain(string $actualResponse, string $unexpectedSubstring, string $message = 'Response should not contain substring.'): array`
+
+Verifies that the LLM response does NOT contain a specific substring. Great for ensuring unwanted content doesn't appear.
+
+```php
+$this->assertResponseDoesNotContain($llmResponse, 'error',
+    "Response should not contain error messages");
+```
+
+#### `assertToolCalled(string $expectedToolName, array $calledTools, string $message = 'Expected tool was not called.'): array`
+
+Validates that a specific tool was called during the agent's execution. Useful for testing agent behavior and tool usage.
+
+```php
+$this->assertToolCalled('get_current_weather', $calledTools,
+    "Weather tool should have been called");
+```
+
+#### `assertEquals($expected, $actual, string $message = 'Values should be equal.'): array`
+
+Performs a loose equality check between expected and actual values. Perfect for comparing extracted values or classifications.
+
+```php
+$this->assertEquals('positive', $extractedSentiment,
+    "Extracted sentiment should match expected value");
+```
+
+#### `assertTrue(bool $condition, string $message = 'Condition should be true.'): array`
+
+Asserts that a given condition evaluates to true. Useful for custom validation logic.
+
+```php
+$this->assertTrue(strlen($llmResponse) > 10,
+    "Response should be at least 10 characters long");
+```
+
+#### `assertFalse(bool $condition, string $message = 'Condition should be false.'): array`
+
+Asserts that a given condition evaluates to false. The opposite of `assertTrue`.
+
+```php
+$this->assertFalse(empty($llmResponse),
+    "Response should not be empty");
+```
+
+**💡 Pro Tip:** Each assertion method returns an array containing:
+
+- `assertion_method`: The method that was called
+- `status`: Either 'pass' or 'fail'
+- `message`: Your custom message
+- `expected`: The expected value (when applicable)
+- `actual`: The actual value (when applicable)
 
 ### Running Evaluations
 
-To run an evaluation, use the `run:eval` Artisan command with the evaluation's class name:
+To run an evaluation, use the `agent:run:eval` Artisan command with the evaluation's class name:
 
 ```bash
-php artisan run:eval SentimentAnalysisEvaluation
+php artisan agent:run:eval SentimentAnalysisEvaluation
 ```
 
-The command will instantiate `SentimentAnalysisEvaluation`, use its `$agentName` property to call the specified agent via `Agent::run()` for each CSV row, and then execute your `evaluateRow` logic.
+You can also save the evaluation results to a CSV file by adding the `--output` parameter:
+
+```bash
+php artisan agent:run:eval SentimentAnalysisEvaluation --output=results.csv
+```
+
+The results will be automatically saved to Laravel's storage directory (`storage/app/evaluations/`) to ensure proper write permissions. The CSV file will contain detailed information about each evaluation including the LLM responses, assertion results, and final status for each test case.
 
 ## What's Coming Next? 🚀
 
