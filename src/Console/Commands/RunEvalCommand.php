@@ -74,8 +74,6 @@ class RunEvalCommand extends Command
         $csvPath = $evaluation->csvPath;
         $fullCsvPath = base_path($csvPath);
 
-        ray('csv path', $fullCsvPath);
-
         if (!File::exists($fullCsvPath)) {
             $this->error("CSV file not found at: {$fullCsvPath} (defined in {$evaluationClass}::getCsvPath())");
             return Command::FAILURE;
@@ -200,6 +198,7 @@ class RunEvalCommand extends Command
             $csv = Writer::createFromPath($filePath, 'w+');
             $headers = ['Evaluation Name', 'Row Index', 'Final Status', 'LLM Response', 'Error'];
 
+            /** @var array<string> $sampleRowDataKeys */
             $sampleRowDataKeys = [];
             if (!empty($results) && isset($results[0]['row_data']) && is_array($results[0]['row_data'])) {
                 $sampleRowDataKeys = array_keys($results[0]['row_data']);
