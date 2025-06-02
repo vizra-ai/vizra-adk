@@ -13,3 +13,4 @@ __pycache__/
 /.phpunit.cache
 /tests/Coverage
 .phpunit.result.cache
+copilot-instructions.md

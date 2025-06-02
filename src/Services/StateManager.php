@@ -36,7 +36,7 @@ class StateManager
             ->get()
             ->map(fn ($msg) => [
                 'role' => $msg->role,
-                'content' => is_array($msg->content) ? $msg->content : (is_string($msg->content) ? json_decode($msg->content, true) : $msg->content),
+                'content' => $msg->content, // Laravel's JSON cast already handles the conversion
                 'tool_name' => $msg->tool_name
             ]);
 
@@ -70,23 +70,18 @@ class StateManager
             $messagesToInsert = $context->getConversationHistory()->map(function ($message) use ($agentSession) {
                 $content = $message['content'] ?? '';
 
-                // Ensure content is never null - convert arrays/objects to JSON, ensure strings are not null
-                if (is_array($content) || is_object($content)) {
-                    $content = json_encode($content);
-                } elseif ($content === null) {
-                    $content = '';
-                }
-
+                // Don't pre-process content - let the model's JSON cast handle it
                 return [
                     'agent_session_id' => $agentSession->id,
                     'role' => $message['role'],
-                    'content' => $content,
+                    'content' => $content, // Let the model cast handle JSON encoding
                     'tool_name' => $message['tool_name'] ?? null
                 ];
             })->all();
 
-            if (!empty($messagesToInsert)) {
-                AgentMessage::insert($messagesToInsert);
+            // Use model creation instead of insert to ensure casting is applied
+            foreach ($messagesToInsert as $messageData) {
+                AgentMessage::create($messageData);
             }
         });
     }

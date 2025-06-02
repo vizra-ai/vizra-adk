@@ -18,7 +18,12 @@ class GenericLlmAgent extends BaseLlmAgent
 
     public function setDescription(string $description): static
     {
+        $this->description = $description;
         return $this;
     }
 
+    protected function registerTools(): array
+    {
+        return [];
+    }
 }

@@ -37,7 +37,7 @@ class AgentMessage extends Model
      */
     public function session(): BelongsTo
     {
-        return $this->belongsTo(AgentSession::class);
+        return $this->belongsTo(AgentSession::class, 'agent_session_id');
     }
 
     /**

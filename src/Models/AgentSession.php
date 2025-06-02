@@ -51,7 +51,7 @@ class AgentSession extends Model
      */
     public function messages(): HasMany
     {
-        return $this->hasMany(AgentMessage::class);
+        return $this->hasMany(AgentMessage::class, 'agent_session_id');
     }
 
     /**
