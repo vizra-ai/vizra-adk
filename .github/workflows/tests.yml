@@ -128,4 +128,4 @@ jobs:
       - name: Check for potential issues with PHPStan
         run: |
           composer global require phpstan/phpstan
-          ~/.composer/vendor/bin/phpstan analyse src/ --level=1 --no-progress || echo "PHPStan analysis completed with warnings"
+          ~/.composer/vendor/bin/phpstan analyse --configuration=phpstan.neon || echo "PHPStan analysis completed with warnings"

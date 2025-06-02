@@ -67,21 +67,26 @@ class StateManager
             // but this is robust for MVP.
             AgentMessage::where('agent_session_id', $agentSession->id)->delete();
 
-            $messagesToInsert = $context->getConversationHistory()->map(function ($message) use ($agentSession) {
+            $messagesToInsert = $context->getConversationHistory()->map(function (array $message) use ($agentSession): array {
                 $content = $message['content'] ?? '';
 
-                // Don't pre-process content - let the model's JSON cast handle it
+                // Ensure content is never null - convert arrays/objects to JSON, ensure strings are not null
+                if (is_array($content) || is_object($content)) {
+                    $content = json_encode($content);
+                } elseif ($content === null) {
+                    $content = '';
+                }
+
                 return [
                     'agent_session_id' => $agentSession->id,
                     'role' => $message['role'],
-                    'content' => $content, // Let the model cast handle JSON encoding
+                    'content' => $content,
                     'tool_name' => $message['tool_name'] ?? null
                 ];
             })->all();
 
-            // Use model creation instead of insert to ensure casting is applied
-            foreach ($messagesToInsert as $messageData) {
-                AgentMessage::create($messageData);
+            if (!empty($messagesToInsert)) {
+                AgentMessage::insert($messagesToInsert);
             }
         });
     }

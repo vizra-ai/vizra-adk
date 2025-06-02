@@ -1,0 +1,17 @@
+parameters:
+    level: 1
+    paths:
+        - src/
+    ignoreErrors:
+        - '#Call to an undefined static method [a-zA-Z\\]+::create\(\)#'
+        - '#Call to an undefined static method [a-zA-Z\\]+::where\(\)#'
+        - '#Call to an undefined static method [a-zA-Z\\]+::firstOrCreate\(\)#'
+        - '#Call to an undefined static method [a-zA-Z\\]+::updateOrCreate\(\)#'
+        - '#Call to an undefined static method [a-zA-Z\\]+::insert\(\)#'
+        - '#Call to an undefined static method [a-zA-Z\\]+::delete\(\)#'
+        - '#Variable \$[a-zA-Z]+ in empty\(\) always exists and is not falsy#'
+    excludePaths:
+        - */vendor/*
+        - */tests/*
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
