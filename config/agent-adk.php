@@ -2,11 +2,28 @@
 
 return [
     /**
+     * Default LLM provider to use with Prism-PHP.
+     * This can be overridden by specific agent configurations.
+     * Options: 'openai', 'anthropic', 'gemini'
+     */
+    'default_provider' => env('AGENT_ADK_DEFAULT_PROVIDER', 'openai'),
+
+    /**
      * Default LLM model to use with Prism-PHP.
      * This can be overridden by specific agent configurations.
      * Example: 'gemini-pro', 'gpt-4-turbo', 'claude-3-opus-20240229'
      */
     'default_model' => env('AGENT_ADK_DEFAULT_MODEL', 'gemini-pro'),
+
+    /**
+     * Default generation parameters for LLM requests.
+     * These can be overridden by specific agent configurations.
+     */
+    'default_generation_params' => [
+        'temperature' => env('AGENT_ADK_DEFAULT_TEMPERATURE', null), // null means use provider default
+        'max_tokens' => env('AGENT_ADK_DEFAULT_MAX_TOKENS', null),   // null means use provider default
+        'top_p' => env('AGENT_ADK_DEFAULT_TOP_P', null),             // null means use provider default
+    ],
 
     /**
      * Database table names used by the package.

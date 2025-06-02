@@ -27,6 +27,9 @@ abstract class BaseLlmAgent extends BaseAgent
     protected string $instructions = '';
     protected string $model = '';
     protected ?Provider $provider = null;
+    protected ?float $temperature = null;
+    protected ?int $maxTokens = null;
+    protected ?float $topP = null;
 
     /** @var array<ToolInterface> */
     protected array $loadedTools = [];
@@ -89,6 +92,39 @@ abstract class BaseLlmAgent extends BaseAgent
     public function setProvider(Provider $provider): static
     {
         $this->provider = $provider;
+        return $this;
+    }
+
+    public function getTemperature(): ?float
+    {
+        return $this->temperature ?? config('agent-adk.default_generation_params.temperature');
+    }
+
+    public function setTemperature(?float $temperature): static
+    {
+        $this->temperature = $temperature;
+        return $this;
+    }
+
+    public function getMaxTokens(): ?int
+    {
+        return $this->maxTokens ?? config('agent-adk.default_generation_params.max_tokens');
+    }
+
+    public function setMaxTokens(?int $maxTokens): static
+    {
+        $this->maxTokens = $maxTokens;
+        return $this;
+    }
+
+    public function getTopP(): ?float
+    {
+        return $this->topP ?? config('agent-adk.default_generation_params.top_p');
+    }
+
+    public function setTopP(?float $topP): static
+    {
+        $this->topP = $topP;
         return $this;
     }
 
@@ -248,6 +284,19 @@ abstract class BaseLlmAgent extends BaseAgent
             if (!empty($this->loadedTools)) {
                 $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
                     ->withMaxSteps(5); // Prism will handle tool execution internally
+            }
+
+            // Add generation parameters if set
+            if ($this->getTemperature() !== null) {
+                $prismRequest = $prismRequest->usingTemperature($this->getTemperature());
+            }
+
+            if ($this->getMaxTokens() !== null) {
+                $prismRequest = $prismRequest->withMaxTokens($this->getMaxTokens());
+            }
+
+            if ($this->getTopP() !== null) {
+                $prismRequest = $prismRequest->usingTopP($this->getTopP());
             }
 
             // Execute the request - Prism handles all tool calls internally

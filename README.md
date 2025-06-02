@@ -196,7 +196,84 @@ class GetCurrentWeatherTool implements ToolInterface
 }
 ```
 
-### 3. Register Your Agent 📝
+### 3. Configure Generation Parameters 🎛️
+
+You can fine-tune how your agents generate responses using three powerful parameters:
+
+#### Temperature (0.0 - 1.0+) 🌡️
+
+Controls randomness and creativity in responses:
+
+- **0.0-0.3**: Very focused, deterministic responses
+- **0.4-0.7**: Balanced creativity and coherence
+- **0.8-1.0+**: High creativity, more random responses
+
+#### Max Tokens 📏
+
+Controls the maximum length of generated responses:
+
+- **100-500**: Short responses
+- **500-1500**: Medium responses
+- **1500+**: Long responses
+
+#### Top-P (0.0 - 1.0) 🎯
+
+Nucleus sampling parameter for probability control:
+
+- **0.1**: Very focused (top 10% probability tokens)
+- **0.5**: Moderate filtering (top 50% probability tokens)
+- **0.9**: Minimal filtering (top 90% probability tokens)
+
+**⚠️ Important**: Use either `temperature` OR `topP`, not both!
+
+#### Configuration Methods
+
+**Method 1: Set as Class Properties**
+
+```php
+class WeatherReporterAgent extends BaseLlmAgent
+{
+    protected string $model = 'gemini-1.5-pro-latest';
+
+    // Generation parameters
+    protected ?float $temperature = 0.7;  // Balanced creativity
+    protected ?int $maxTokens = 1000;     // Medium responses
+    protected ?float $topP = null;        // Use temperature instead
+}
+```
+
+**Method 2: Use Fluent Methods**
+
+```php
+$agent = new WeatherReporterAgent();
+$agent->setTemperature(0.9)    // High creativity
+      ->setMaxTokens(2000)     // Longer responses
+      ->setTopP(null);         // Don't use topP with temperature
+```
+
+**Method 3: Set Global Defaults**
+
+In `config/agent-adk.php`:
+
+```php
+'default_generation_params' => [
+    'temperature' => 0.7,
+    'max_tokens' => 1000,
+    'top_p' => null,
+],
+```
+
+**Method 4: Environment Variables**
+
+```dotenv
+AGENT_ADK_DEFAULT_PROVIDER=openai
+AGENT_ADK_DEFAULT_MODEL=gpt-4o
+AGENT_ADK_DEFAULT_TEMPERATURE=0.7
+AGENT_ADK_DEFAULT_MAX_TOKENS=1000
+AGENT_ADK_DEFAULT_TOP_P=
+```
+
+### 4. Register Your Agent 📝
 
 In your `AppServiceProvider.php`:
 
@@ -220,7 +297,7 @@ public function boot(): void
 }
 ```
 
-### 4. Chat With Your Agent! 💬
+### 5. Chat With Your Agent! 💬
 
 #### Try It Out in Your Terminal! 🖥️✨
 
@@ -309,7 +386,7 @@ class ChatController extends Controller
 
 The `Agent::run()` method is like magic - it handles everything! 🪄
 
-### 5. Get More Control (If You Want) 🎛️
+### 6. Get More Control (If You Want) 🎛️
 
 ```php
 use AaronLumsden\LaravelAgentADK\Facades\Agent;
@@ -320,7 +397,7 @@ $weatherAgent = Agent::named('weather_reporter');
 // Do your thing with it!
 ```
 
-### 6. Listen to Events 👂
+### 7. Listen to Events 👂
 
 To hook into the events dispatched by the `Laravel Agent ADK` package, you'll need to register your event listeners. In modern Laravel applications (Laravel 11+), the recommended way to do this for package events is typically within the `boot` method of your application's `AppServiceProvider.php`.
 
