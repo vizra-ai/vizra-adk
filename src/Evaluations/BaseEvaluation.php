@@ -434,6 +434,82 @@ abstract class BaseEvaluation
         );
     }
 
+    protected function assertIsBritishSpelling(string $actualResponse, string $message = 'Response should use British spelling conventions.'): array
+    {
+        $americanPatterns = [
+            // -ize/-ise endings
+            '/\b\w+ize\b/i' => 'American -ize endings (should be -ise)',
+            '/\b\w+ization\b/i' => 'American -ization endings (should be -isation)',
+
+            // -or/-our endings
+            '/\b(color|honor|favor|humor|labor|neighbor|rumor|tumor|vigor)\b/i' => 'American -or endings (should be -our)',
+
+            // -er/-re endings
+            '/\b(center|theater|meter|liter|fiber)\b/i' => 'American -er endings (should be -re)',
+
+            // -ense/-ence endings
+            '/\b(defense|offense|license)\b/i' => 'American -ense endings (should be -ence)',
+
+            // Other common differences
+            '/\b(gray|aluminum|tire|curb|pajamas|donut)\b/i' => 'American spelling variants',
+            '/\b(mom|gotten|fall)\b/i' => 'American terminology',
+        ];
+
+        $americanisms = [];
+        foreach ($americanPatterns as $pattern => $description) {
+            if (preg_match_all($pattern, $actualResponse, $matches)) {
+                $americanisms[] = $description . ': ' . implode(', ', array_unique($matches[0]));
+            }
+        }
+
+        $status = empty($americanisms);
+        return $this->recordAssertion(
+            static::class . '::' . __FUNCTION__,
+            $status,
+            $message,
+            'British spelling only',
+            $americanisms ? 'Found Americanisms: ' . implode('; ', $americanisms) : 'British spelling'
+        );
+    }
+
+    protected function assertIsAmericanSpelling(string $actualResponse, string $message = 'Response should use American spelling conventions.'): array
+    {
+        $britishPatterns = [
+            // -ise/-ize endings
+            '/\b\w+ise\b/i' => 'British -ise endings (should be -ize)',
+            '/\b\w+isation\b/i' => 'British -isation endings (should be -ization)',
+
+            // -our/-or endings
+            '/\b(colour|honour|favour|humour|labour|neighbour|rumour|tumour|vigour)\b/i' => 'British -our endings (should be -or)',
+
+            // -re/-er endings
+            '/\b(centre|theatre|metre|litre|fibre)\b/i' => 'British -re endings (should be -er)',
+
+            // -ence/-ense endings
+            '/\b(defence|offence|licence)\b/i' => 'British -ence endings (should be -ense)',
+
+            // Other common differences
+            '/\b(grey|aluminium|tyre|kerb|pyjamas|doughnut)\b/i' => 'British spelling variants',
+            '/\b(mum|autumn|whilst|amongst)\b/i' => 'British terminology',
+        ];
+
+        $briticisms = [];
+        foreach ($britishPatterns as $pattern => $description) {
+            if (preg_match_all($pattern, $actualResponse, $matches)) {
+                $briticisms[] = $description . ': ' . implode(', ', array_unique($matches[0]));
+            }
+        }
+
+        $status = empty($briticisms);
+        return $this->recordAssertion(
+            static::class . '::' . __FUNCTION__,
+            $status,
+            $message,
+            'American spelling only',
+            $briticisms ? 'Found Briticisms: ' . implode('; ', $briticisms) : 'American spelling'
+        );
+    }
+
     // --- Helper Methods for Calculations ---
 
     private function calculateFleschKincaidGradeLevel(string $text): float

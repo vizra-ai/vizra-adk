@@ -639,6 +639,8 @@ The `BaseEvaluation` class provides a comprehensive set of assertion methods to 
 - `assertReadabilityLevel()` - Calculates Flesch-Kincaid grade level to ensure appropriate reading difficulty
 - `assertNoRepetition()` - Checks for excessive word repetition in the response
 - `assertResponseTime()` - Validates that response generation time is within acceptable limits
+- `assertIsBritishSpelling()` - Checks if the response uses British spelling conventions (colour, centre, realise, etc.)
+- `assertIsAmericanSpelling()` - Checks if the response uses American spelling conventions (color, center, realize, etc.)
 
 **AI-Powered Judge Assertions:**
 
@@ -660,6 +662,10 @@ $this->assertReadabilityLevel($response, 8, 'Response should be readable by 8th 
 
 // Performance validation
 $this->assertResponseTime($processingTime, 5.0, 'Response should be generated quickly');
+
+// Spelling conventions for localized content
+$this->assertIsBritishSpelling($response, 'UK content should use British spelling');
+$this->assertIsAmericanSpelling($response, 'US content should use American spelling');
 
 // Advanced quality scoring
 $this->assertLlmJudgeQuality(
