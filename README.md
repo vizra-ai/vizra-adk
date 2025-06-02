@@ -76,8 +76,6 @@ AI agents are autonomous digital assistants that can think, decide, and take act
 
 - **PHP**: 8.1 or higher
 - **Laravel**: 10.0 or higher
-- **Extensions**: `json`, `curl`, `openssl`
-- **Memory**: 128MB minimum (512MB recommended)
 - **LLM Provider**: At least one API key for:
   - OpenAI (GPT models)
   - Anthropic (Claude models)
@@ -364,6 +362,59 @@ AGENT_ADK_DEFAULT_TEMPERATURE=0.7
 AGENT_ADK_DEFAULT_MAX_TOKENS=1000
 AGENT_ADK_DEFAULT_TOP_P=
 ```
+
+### Agent Lifecycle Hooks
+
+Customize your agent's behavior at key points in the execution cycle with these built-in hooks:
+
+```php
+class YourAgent extends BaseLlmAgent
+{
+    /**
+     * Called before sending messages to the LLM.
+     * Use this to modify messages, add context, or validate input.
+     */
+    public function beforeLlmCall(array $inputMessages, AgentContext $context): array
+    {
+        // Example: Add a system note or modify user input
+        $context->setState('last_interaction_time', now());
+        // $inputMessages[] = ['role' => 'system', 'content' => 'User is on a mobile device.'];
+        return $inputMessages;
+    }
+
+    /**
+     * Called after receiving a response from the LLM.
+     * Use this to process, validate, or transform the LLM response.
+     */
+    public function afterLlmResponse(Response $response, AgentContext $context): mixed
+    {
+        // Example: Log responses, validate output structure, apply post-processing
+        return $response;
+    }
+
+    /**
+     * Called before executing any tool.
+     * Use this to modify arguments, add authentication, or validate permissions.
+     */
+    public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array
+    {
+        // Example: Validate tool permissions, inject API keys into arguments, log tool call attempts
+        return $arguments;
+    }
+
+    /**
+     * Called after tool execution completes.
+     * Use this to process results, handle errors, or format output before it's sent back to the LLM.
+     */
+    public function afterToolResult(string $toolName, string $result, AgentContext $context): string
+    {
+        // Example: Format tool results into a specific string, handle tool errors gracefully, log tool usage
+        return $result;
+    }
+}
+```
+
+These hooks provide powerful customization points for logging, validation, authentication, and result processing without modifying the core agent logic.
 
 ### Event System
 
@@ -685,7 +736,7 @@ public function run(mixed $input, AgentContext $context): mixed
 {
     $cacheKey = 'agent_response:' . md5($this->name . $input);
 
-    return Cache::remember($cacheKey, 300, function() use ($input, $context) {
+    return Cache::remember($cacheKey, 300, function() use $input, $context) {
         return parent::run($input, $context);
     });
 }
