@@ -385,4 +385,15 @@ abstract class BaseLlmAgent extends BaseAgent
     {
         return $result;
     }
+
+    /**
+     * Get all loaded tools for this agent.
+     * Useful for testing and introspection.
+     *
+     * @return array<string, ToolInterface>
+     */
+    public function getLoadedTools(): array
+    {
+        return $this->loadedTools;
+    }
 }

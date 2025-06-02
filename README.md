@@ -1,298 +1,358 @@
-# Laravel Agent ADK 🤖✨ (Agent Development Kit)
+# Laravel Agent ADK 🤖 (Agent Development Kit)
 
-**Laravel Agent ADK** is a super cool PHP package that makes building AI agents ridiculously easy! 🚀 Think of it as your AI agent's best friend - it handles all the boring stuff so you can focus on building awesome intelligent systems.
+**Laravel Agent ADK** is a powerful PHP package that simplifies building AI agents with Laravel. Think of it as your AI agent's foundation - it handles the complex infrastructure so you can focus on building intelligent systems that actually work.
 
 ## Table of Contents 📋
 
-- [What's This All About? 🤔](#whats-this-all-about-)
-- [Why Choose Laravel Agent ADK? 🌟](#why-choose-laravel-agent-adk-)
-- [Cool Features (What You Get Right Now) ✨](#cool-features-what-you-get-right-now-)
-- [Getting Started 🚀](#getting-started-)
-  - [1. Install This Bad Boy 📦](#1-install-this-bad-boy-)
-  - [2. Set Everything Up 🔧](#2-set-everything-up-)
-  - [3. Run Those Migrations 📊](#3-run-those-migrations-)
-  - [4. Add Your API Keys 🔑](#4-add-your-api-keys-)
-- [Let's Build Something Cool! 🛠️](#lets-build-something-cool-️)
-  - [1. Create Your First Agent 🤖](#1-create-your-first-agent-)
-  - [2. Build a Super Tool 🔨](#2-build-a-super-tool-)
-  - [3. Configure Generation Parameters 🎛️](#3-configure-generation-parameters-️)
-  - [4. Register Your Agent 📝](#4-register-your-agent-)
-  - [5. Chat With Your Agent! 💬](#5-chat-with-your-agent-)
-  - [6. Get More Control (If You Want) 🎛️](#6-get-more-control-if-you-want-️)
-  - [7. Listen to Events 👂](#7-listen-to-events-)
+- [Quick Start](#quick-start-)
+- [What's This All About?](#whats-this-all-about-)
+- [Why Choose Laravel Agent ADK?](#why-choose-laravel-agent-adk-)
+- [Requirements](#requirements-)
+- [Installation & Setup](#installation--setup-)
+- [Core Features](#core-features-)
+- [Building Your First Agent](#building-your-first-agent-)
+- [Advanced Features](#advanced-features-)
+  - [Tool System](#tool-system)
+  - [Generation Parameters](#generation-parameters)
+  - [Event System](#event-system)
+  - [Error Handling](#error-handling)
 - [Evaluations](#evaluations)
-  - [Generating an Evaluation Class](#generating-an-evaluation-class)
-  - [Structure of an Evaluation Class](#structure-of-an-evaluation-class)
-  - [Example Concrete Evaluation](#example-concrete-evaluation-sentimentanalysisevaluationphp)
-  - [LLM-as-a-Judge Example 🤖⚖️](#llm-as-a-judge-example-)
-  - [Available Assertion Methods](#available-assertion-methods)
-  - [Running Evaluations](#running-evaluations)
-- [What's Coming Next? 🚀](#whats-coming-next-)
-- [Troubleshooting 🔧](#troubleshooting-)
-- [Want to Contribute? 🤝](#want-to-contribute-)
-- [License 📄](#license-)
+- [Configuration](#configuration)
+- [Security Best Practices](#security-best-practices)
+- [Performance Considerations](#performance-considerations)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Troubleshooting](#troubleshooting-)
+- [Contributing](#contributing-)
+
+## Quick Start ⚡
+
+Get up and running in 5 minutes:
+
+```bash
+# Install the package
+composer require aaronlumsden/laravel-agent-adk
+
+# Set up everything
+php artisan agent:install
+
+# Run migrations
+php artisan migrate
+
+# Add your API key to .env
+echo "OPENAI_API_KEY=your_key_here" >> .env
+
+# Create your first agent
+php artisan agent:make:agent ChatBot
+
+# Test it immediately
+php artisan agent:chat chat_bot
+```
 
 ## What's This All About? 🤔
 
-AI agents are like digital assistants that can think, decide, and take action. Pretty neat, right? 🧠 With Laravel Agent ADK, you get to build these smart little helpers without pulling your hair out over complicated setup.
+AI agents are autonomous digital assistants that can think, decide, and take action. With Laravel Agent ADK, you get to build these intelligent helpers using familiar Laravel patterns and without the typical AI integration headaches.
 
-Here's what makes this package awesome:
+**Key Capabilities:**
 
-- **🎯 Easy Agent Creation:** Build agents with simple PHP classes or use our fluent builder - no PhD required!
-- **🛠️ Tool Integration:** Let your agents use custom tools (APIs, databases, whatever!) - they'll figure out when to use them
-- **💾 Smart State Management:** We handle all the session stuff and conversation history automatically
-- **🌐 LLM Integration:** Talk to any AI model (OpenAI, Gemini, Claude) through the sweet [Prism-PHP](https://prismphp.com/) library
-- **💎 Laravel Native:** Built for Laravel developers, by Laravel developers
-- **🔧 Super Extensible:** Events, hooks, and overrides everywhere - customize to your heart's content!
-
-Whether you're building a chatbot, data analyzer, or the next AI assistant, this package has your back! 💪
+- **Smart Conversation Management**: Automatic context and history tracking
+- **Tool Integration**: Let agents use APIs, databases, and external services
+- **Multi-LLM Support**: OpenAI, Anthropic, Google Gemini through [Prism-PHP](https://prismphp.com/)
+- **Quality Assurance**: Built-in evaluation system with LLM-as-a-Judge
+- **Laravel Native**: Events, service providers, Artisan commands - it all just works
 
 ## Why Choose Laravel Agent ADK? 🌟
 
-- **📐 Structured Approach:** No more messy API calls - build proper, stateful agents
-- **🎭 LLM Abstraction:** One interface for all the major AI providers
-- **⚡ Tool Power:** Your agents can actually DO things, not just chat
-- **🏃‍♂️ Rapid Development:** Artisan commands to scaffold everything super fast
-- **🏠 Feels Like Home:** Pure Laravel goodness
+| Feature                 | Laravel Agent ADK | DIY Approach       |
+| ----------------------- | ----------------- | ------------------ |
+| **Setup Time**          | 5 minutes         | Hours/Days         |
+| **State Management**    | Automatic         | Manual complexity  |
+| **Multi-LLM Support**   | Built-in          | Custom integration |
+| **Tool System**         | Declarative       | Imperative coding  |
+| **Quality Testing**     | LLM evaluations   | Manual testing     |
+| **Laravel Integration** | Native            | Custom glue code   |
 
-## Cool Features (What You Get Right Now) ✨
+## Requirements 📋
 
-- **📚 Class-Based Agents:** Extend `BaseLlmAgent` and you're golden
-- **🎨 Fluent Builder:** `Agent::define('my_agent')->instructions(...)` - so smooth!
-- **🔨 Tool System:** Implement `ToolInterface` and watch the magic happen
-- **🌟 Prism-PHP Power:** All your favorite LLMs in one place
-- **📝 Auto-History:** Conversations remembered automatically
-- **🎉 Laravel Events:** Hook into everything with events
-- **🤖⚖️ LLM-as-a-Judge:** Use AI to evaluate AI responses with nuanced criteria
-- **📊 Smart Evaluations:** Traditional assertions + AI-powered quality assessment
-- **⚡ Artisan Commands:**
-  - `php artisan agent:install` - Get everything set up
-  - `php artisan agent:make:agent <AgentName>` - Scaffold new agents
-  - `php artisan agent:make:tool <ToolName>` - Create new tools
-  - `php artisan agent:chat <AgentName>` - Chat with your agent in the terminal
-  - `php artisan agent:make:eval <EvaluationName>` - Create new evaluation classes
-  - `php artisan run:eval <EvaluationName>` - Run evaluations
-- **⚙️ Configurable:** Tweak everything in `config/agent-adk.php`
+- **PHP**: 8.1 or higher
+- **Laravel**: 10.0 or higher
+- **Extensions**: `json`, `curl`, `openssl`
+- **Memory**: 128MB minimum (512MB recommended)
+- **LLM Provider**: At least one API key for:
+  - OpenAI (GPT models)
+  - Anthropic (Claude models)
+  - Google (Gemini models)
 
-## Getting Started 🚀
+## Installation & Setup 🚀
 
-### 1. Install This Bad Boy 📦
+### 1. Install the Package
 
 ```bash
 composer require aaronlumsden/laravel-agent-adk
 ```
 
-### 2. Set Everything Up 🔧
+### 2. Initialize the Package
 
 ```bash
 php artisan agent:install
 ```
 
-This creates your config file and database tables - pretty neat!
+This command:
 
-### 3. Run Those Migrations 📊
+- Publishes the configuration file to `config/agent-adk.php`
+- Creates database migrations for sessions and context storage
+- Sets up the directory structure
+
+### 3. Run Migrations
 
 ```bash
 php artisan migrate
 ```
 
-### 4. Add Your API Keys 🔑
+### 4. Configure Your Environment
 
-Pop your LLM API key(s) in your `.env` file:
+Add your LLM API keys to `.env`:
 
 ```dotenv
-OPENAI_URL=
-GEMINI_API_KEY=
-ANTHROPIC_API_KEY=
+# OpenAI Configuration
+OPENAI_API_KEY=sk-your-openai-key-here
+OPENAI_URL=https://api.openai.com/v1
+
+# Anthropic Configuration
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
+
+# Google Gemini Configuration
+GEMINI_API_KEY=your-gemini-key-here
+
+# Package Defaults
+AGENT_ADK_DEFAULT_PROVIDER=openai
+AGENT_ADK_DEFAULT_MODEL=gpt-4o
+AGENT_ADK_DEFAULT_TEMPERATURE=0.7
 ```
 
-## Let's Build Something Cool! 🛠️
+## Core Features ✨
 
-### 1. Create Your First Agent 🤖
+- **🏗️ Class-Based Agents**: Extend `BaseLlmAgent` with full IDE support
+- **🎨 Fluent Builder**: Quick agent creation with `Agent::define()`
+- **🔧 Tool System**: Declarative tool definitions with automatic parameter validation
+- **📚 Conversation Memory**: Automatic context and history management
+- **🌐 Multi-Provider**: OpenAI, Anthropic, Gemini support via Prism-PHP
+- **🎯 Smart Routing**: Automatic tool selection and execution
+- **📊 Quality Assurance**: Built-in evaluation framework
+- **⚡ Performance**: Optimized for production workloads
+- **🔒 Security**: Input validation and sanitization built-in
+
+## Building Your First Agent 🛠️
+
+### 1. Create the Agent Class
 
 ```bash
-php artisan agent:make:agent WeatherReporterAgent
+php artisan agent:make:agent CustomerSupportAgent
 ```
 
-This creates `app/Agents/WeatherReporterAgent.php`:
+This generates `app/Agents/CustomerSupportAgent.php`:
 
 ```php
-// app/Agents/WeatherReporterAgent.php
 namespace App\Agents;
 
 use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
 use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use App\Tools\GetCurrentWeatherTool;
 
-class WeatherReporterAgent extends BaseLlmAgent
+class CustomerSupportAgent extends BaseLlmAgent
 {
-    protected string $name = 'weather_reporter';
-    protected string $description = 'Your friendly neighborhood weather bot! 🌤️';
+    protected string $name = 'customer_support';
+    protected string $description = 'Helpful customer service assistant';
 
-    protected string $instructions = 'You are the coolest weather assistant ever! When someone asks about weather, use the get_current_weather tool. Never make up weather data - that would be super uncool. Keep it fun and concise! ☀️🌧️';
+    protected string $instructions = 'You are a friendly customer service agent. Be helpful, professional, and concise. Always ask clarifying questions when needed.';
 
-    protected string $model = 'gemini-1.5-pro-latest';
-    protected ?float $temperature = 0.7;
-    protected ?int $maxTokens = 1000;
-    protected ?float $topP = null;
+    protected string $model = 'gpt-4o';
+    protected ?float $temperature = 0.3; // Lower temperature for consistency
+    protected ?int $maxTokens = 500;
 
     protected function registerTools(): array
     {
         return [
-            GetCurrentWeatherTool::class, // Your awesome tools go here!
+            \App\Tools\OrderLookupTool::class,
+            \App\Tools\RefundProcessorTool::class,
         ];
     }
 
-    // Hook into the magic ✨
+    // Optional: Customize behavior with hooks
     public function beforeLlmCall(array $inputMessages, AgentContext $context): array
     {
-        // Add some spice to the context
-        $context->setState('current_time_zone', config('app.timezone'));
-        return parent::beforeLlmCall($inputMessages, $context);
+        // Add customer context if available
+        if ($customerId = $context->getState('customer_id')) {
+            $context->setState('customer_tier', $this->getCustomerTier($customerId));
+        }
+
+        return $inputMessages;
     }
 
-    public function afterLlmResponse(mixed $response, AgentContext $context): mixed
+    private function getCustomerTier(string $customerId): string
     {
-        // Do something with the result if you want ✨
-       return parent::afterLlmResponse($response, $context);
+        // Your business logic here
+        return 'premium';
     }
-
-    public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array
-    {
-        return parent::beforeToolCall($toolName, $arguments, $context);
-    }
-
-    public function afterToolResult(string $toolName, string $result, AgentContext $context): string
-    {
-        return parent::afterToolResult($toolName, $result, $context);
-    }
-
-
-
 }
 ```
 
-### 2. Build a Super Tool 🔨
+### 2. Register Your Agent
 
-```bash
-php artisan agent:make:tool GetCurrentWeatherTool
-```
-
-Creates `app/Tools/GetCurrentWeatherTool.php`:
+In `app/Providers/AppServiceProvider.php`:
 
 ```php
-// app/Tools/GetCurrentWeatherTool.php
+use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use App\Agents\CustomerSupportAgent;
+
+public function boot(): void
+{
+    Agent::build(CustomerSupportAgent::class)->register();
+
+    // Or create simple agents on-the-fly
+    Agent::define('greeter')
+         ->description('Friendly greeting agent')
+         ->instructions('Greet users warmly and ask how you can help. Keep it under 30 words.')
+         ->model('gpt-4o-mini')
+         ->temperature(0.8)
+         ->register();
+}
+```
+
+### 3. Use Your Agent
+
+```php
+use AaronLumsden\LaravelAgentADK\Facades\Agent;
+
+// In a controller
+public function chat(Request $request)
+{
+    $input = $request->validated()['message'];
+    $sessionId = $request->session()->getId();
+
+    try {
+        $response = Agent::run('customer_support', $input, $sessionId);
+        return response()->json(['reply' => $response]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Service temporarily unavailable'], 503);
+    }
+}
+
+// Or test directly in terminal
+// php artisan agent:chat customer_support
+```
+
+## Advanced Features 🚀
+
+### Tool System
+
+Tools extend your agent's capabilities beyond text generation. Here's a real-world example:
+
+```bash
+php artisan agent:make:tool WeatherApiTool
+```
+
+```php
 namespace App\Tools;
 
 use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
 use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
-class GetCurrentWeatherTool implements ToolInterface
+class WeatherApiTool implements ToolInterface
 {
     public function definition(): array
     {
         return [
-            'name' => 'get_current_weather',
-            'description' => 'Gets the current weather - pretty cool, right? 🌡️',
+            'name' => 'get_weather',
+            'description' => 'Get current weather conditions for any city worldwide',
             'parameters' => [
                 'type' => 'object',
                 'properties' => [
-                    'location' => [
+                    'city' => [
                         'type' => 'string',
-                        'description' => 'City name like "London" or "San Francisco, CA"',
+                        'description' => 'City name (e.g., "London" or "New York, NY")',
                     ],
-                    'unit' => [
+                    'country' => [
                         'type' => 'string',
-                        'enum' => ['celsius', 'fahrenheit'],
-                        'description' => 'Temperature unit (because we all have preferences)',
+                        'description' => 'Country code (optional, e.g., "GB", "US")',
+                    ],
+                    'units' => [
+                        'type' => 'string',
+                        'enum' => ['metric', 'imperial'],
+                        'description' => 'Temperature units',
+                        'default' => 'metric'
                     ]
                 ],
-                'required' => ['location'],
+                'required' => ['city'],
             ],
         ];
     }
 
     public function execute(array $arguments, AgentContext $context): string
     {
-        $location = $arguments['location'] ?? 'somewhere mysterious';
-        $unit = $arguments['unit'] ?? 'celsius';
+        $city = $arguments['city'];
+        $country = $arguments['country'] ?? '';
+        $units = $arguments['units'] ?? 'metric';
 
-        // In real life, you'd hit a weather API here! 🌐
-        // But for now, let's fake it till we make it
-        $simulatedWeather = [
-            'location' => $location,
-            'temperature' => $unit === 'celsius' ? '22°C' : '72°F',
-            'condition' => 'Absolutely gorgeous! ☀️',
-            'humidity' => '55%',
-        ];
+        // Build location string
+        $location = $country ? "{$city},{$country}" : $city;
 
-        // Return JSON because that's how we roll
-        return json_encode($simulatedWeather);
+        try {
+            $response = Http::timeout(10)->get('https://api.openweathermap.org/data/2.5/weather', [
+                'q' => $location,
+                'appid' => config('services.openweather.key'),
+                'units' => $units
+            ]);
+
+            if (!$response->successful()) {
+                return "Sorry, I couldn't fetch weather data for {$city}. Please check the city name.";
+            }
+
+            $data = $response->json();
+
+            return json_encode([
+                'location' => $data['name'] . ', ' . $data['sys']['country'],
+                'temperature' => $data['main']['temp'] . '°' . ($units === 'metric' ? 'C' : 'F'),
+                'description' => ucfirst($data['weather'][0]['description']),
+                'humidity' => $data['main']['humidity'] . '%',
+                'wind_speed' => $data['wind']['speed'] . ($units === 'metric' ? ' m/s' : ' mph')
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Weather API error', ['error' => $e->getMessage(), 'city' => $city]);
+            return "I'm having trouble accessing weather data right now. Please try again later.";
+        }
     }
 }
 ```
 
-### 3. Configure Generation Parameters 🎛️
+### Generation Parameters
 
-You can fine-tune how your agents generate responses using three powerful parameters:
+Fine-tune your agent's response style with these parameters:
 
-#### Temperature (0.0 - 1.0+) 🌡️
+| Parameter       | Range    | Best For           | Example Use Case                                          |
+| --------------- | -------- | ------------------ | --------------------------------------------------------- |
+| **Temperature** | 0.0-1.0+ | Creativity control | 0.1 (factual Q&A), 0.7 (balanced), 0.9 (creative writing) |
+| **Max Tokens**  | 1-4000+  | Response length    | 100 (concise), 1000 (detailed), 2000+ (comprehensive)     |
+| **Top-P**       | 0.0-1.0  | Token diversity    | 0.1 (focused), 0.5 (balanced), 0.9 (diverse)              |
 
-Controls randomness and creativity in responses:
+**⚠️ Important**: Use either `temperature` OR `topP`, not both simultaneously.
 
-- **0.0-0.3**: Very focused, deterministic responses
-- **0.4-0.7**: Balanced creativity and coherence
-- **0.8-1.0+**: High creativity, more random responses
-
-#### Max Tokens 📏
-
-Controls the maximum length of generated responses:
-
-- **100-500**: Short responses
-- **500-1500**: Medium responses
-- **1500+**: Long responses
-
-#### Top-P (0.0 - 1.0) 🎯
-
-Nucleus sampling parameter for probability control:
-
-- **0.1**: Very focused (top 10% probability tokens)
-- **0.5**: Moderate filtering (top 50% probability tokens)
-- **0.9**: Minimal filtering (top 90% probability tokens)
-
-**⚠️ Important**: Use either `temperature` OR `topP`, not both!
-
-#### Configuration Methods
-
-**Method 1: Set as Class Properties**
+**Configuration Examples:**
 
 ```php
-class WeatherReporterAgent extends BaseLlmAgent
-{
-    protected string $model = 'gemini-1.5-pro-latest';
+// Method 1: Agent class properties
+protected ?float $temperature = 0.3;  // Consistent responses
+protected ?int $maxTokens = 500;      // Concise answers
+protected ?float $topP = null;        // Use temperature instead
 
-    // Generation parameters
-    protected ?float $temperature = 0.7;  // Balanced creativity
-    protected ?int $maxTokens = 1000;     // Medium responses
-    protected ?float $topP = null;        // Use temperature instead
-}
-```
+// Method 2: Fluent configuration
+$agent->setTemperature(0.8)
+      ->setMaxTokens(1500)
+      ->setTopP(null);
 
-**Method 2: Use Fluent Methods**
-
-```php
-$agent = new WeatherReporterAgent();
-$agent->setTemperature(0.9)    // High creativity
-      ->setMaxTokens(2000)     // Longer responses
-      ->setTopP(null);         // Don't use topP with temperature
-```
-
-**Method 3: Set Global Defaults**
-
-In `config/agent-adk.php`:
-
-```php
+// Method 3: Global defaults in config/agent-adk.php
 'default_generation_params' => [
     'temperature' => 0.7,
     'max_tokens' => 1000,
@@ -300,314 +360,131 @@ In `config/agent-adk.php`:
 ],
 ```
 
-**Method 4: Environment Variables**
+### Event System
 
-```dotenv
-AGENT_ADK_DEFAULT_PROVIDER=openai
-AGENT_ADK_DEFAULT_MODEL=gpt-4o
-AGENT_ADK_DEFAULT_TEMPERATURE=0.7
-AGENT_ADK_DEFAULT_MAX_TOKENS=1000
-AGENT_ADK_DEFAULT_TOP_P=
-```
-
-### 4. Register Your Agent 📝
-
-In your `AppServiceProvider.php`:
-
-```php
-// app/Providers/AppServiceProvider.php
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
-use App\Agents\WeatherReporterAgent;
-
-public function boot(): void
-{
-    // Register your awesome class-based agent
-    Agent::build(WeatherReporterAgent::class)
-         // ->withInstructionOverride('Also mention if it\'s good weather for a BBQ! 🍖')
-         ->register();
-
-    // Or create a quick agent on the fly!
-    Agent::define('greeting_agent')
-         ->description('The friendliest greeter in town! 👋')
-         ->instructions('Say hi like you mean it! Ask how you can help and keep it under 30 words. Spread those good vibes! ✨')
-         ->register();
-}
-```
-
-### 5. Chat With Your Agent! 💬
-
-#### Try It Out in Your Terminal! 🖥️✨
-
-Want to test your agent super quick? Fire up your terminal and chat with your agent directly - just like Laravel Tinker but with your agent! 🔥
+Hook into agent execution with Laravel events:
 
 ```bash
-php artisan agent:chat weather_reporter
+php artisan make:listener LogAgentInteractions --event="AaronLumsden\LaravelAgentADK\Events\AgentResponseGenerated"
 ```
-
-This opens up an interactive chat session right in your terminal! Type your messages, hit enter, and watch your agent respond. Perfect for testing and debugging your agents without building any frontend. To exit, just type `exit` or press `Ctrl+C`.
-
-Pretty handy for those "does this actually work?" moments! 😄
-
-#### Use Our Built-In API! 🌐✨
-
-Too lazy to write your own controller? (We get it!) Laravel Agent ADK comes with a super convenient built-in API endpoint that's ready to rock! 🎸
-
-**Default endpoint:** `POST /api/agent-adk/interact`
-
-Want to customize it? Just tweak the config in `config/agent-adk.php`:
 
 ```php
-'routes' => [
-    'enabled' => true, // Master switch for package routes
-    'prefix' => 'api/agent-adk', // Default prefix for all package API routes
-    'middleware' => ['api'], // Default middleware group for package routes
-],
-```
+namespace App\Listeners;
 
-**POST Request Example:**
+use AaronLumsden\LaravelAgentADK\Events\AgentResponseGenerated;
+use Illuminate\Support\Facades\Log;
 
-```json
+class LogAgentInteractions
 {
-  "agent_name": "weather_reporter_agent",
-  "input": "What's the weather like in Leeds?",
-  "session_id": "91" // Optional session ID for tracking conversations
-}
-```
-
-**Response Example:**
-
-```json
-{
-  "agent_name": "weather_reporter_agent",
-  "session_id": "91",
-  "response": "The weather in Leeds is absolutely gorgeous! ☀️ It's currently 22°C with 55% humidity. Perfect weather for a nice walk or maybe even a BBQ! 🍖"
-}
-```
-
-Pretty sweet, right? Just POST to the endpoint and your agents start doing their thing! 🚀
-
-#### Or Build Your Own Controller 🎛️
-
-In your controller:
-
-```php
-// Example Controller
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
-use Illuminate\Http\Request;
-
-class ChatController extends Controller
-{
-    public function chatWithWeatherAgent(Request $request)
+    public function handle(AgentResponseGenerated $event): void
     {
-        $userInput = $request->input('message');
-        $sessionId = $request->session()->getId();
+        Log::info('Agent response generated', [
+            'agent' => $event->agentName,
+            'session_id' => $event->context->getSessionId(),
+            'response_length' => strlen($event->response),
+            'user_input' => $event->context->getUserInput(),
+        ]);
 
-        try {
-            $response = Agent::run('weather_reporter', $userInput, $sessionId);
-            return response()->json(['reply' => $response]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Oops! Something went wrong: ' . $e->getMessage()], 500);
-        }
-    }
-
-    public function chatWithGreetingAgent(Request $request)
-    {
-        $userInput = $request->input('message');
-        $sessionId = $request->session()->getId();
-
-        $response = Agent::run('greeting_agent', $userInput, $sessionId);
-        return response()->json(['reply' => $response]);
+        // Track metrics, send to analytics, etc.
     }
 }
 ```
 
-The `Agent::run()` method is like magic - it handles everything! 🪄
+**Available Events:**
 
-### 6. Get More Control (If You Want) 🎛️
+- `AgentExecutionStarting` - Before agent processing begins
+- `AgentExecutionFinished` - After agent completes
+- `LlmCallInitiating` - Before LLM API call
+- `LlmResponseReceived` - After LLM responds
+- `ToolCallInitiating` - Before tool execution
+- `ToolCallCompleted` - After tool execution
+- `AgentResponseGenerated` - Final response ready
+- `StateUpdated` - When context state changes
+
+### Error Handling
+
+Robust error handling for production environments:
 
 ```php
 use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use AaronLumsden\LaravelAgentADK\Exceptions\ToolExecutionException;
 
-// Grab your agent directly
-$weatherAgent = Agent::named('weather_reporter');
-
-// Do your thing with it!
-```
-
-### 7. Listen to Events 👂
-
-To hook into the events dispatched by the `Laravel Agent ADK` package, you'll need to register your event listeners. In modern Laravel applications (Laravel 11+), the recommended way to do this for package events is typically within the `boot` method of your application's `AppServiceProvider.php`.
-
-To create a listener
-
-```bash
-php artisan make:listener HandleAgentExecutionStarting --event=\\AaronLumsden\\LaravelAgentADK\\Events\\AgentExecutionStarting
-```
-
-it should be automatically discovered but if not you can register it manually in your `AppServiceProvider.php`:
-
-```php
-namespace App\Providers;
-
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\ServiceProvider;
-
-use AaronLumsden\LaravelAgentADK\Events\AgentExecutionStarting;
-use App\Listeners\HandleAgentExecutionStarting;
-
-class AppServiceProvider extends ServiceProvider
+public function handleChat(Request $request)
 {
+    try {
+        $response = Agent::run('support_agent', $request->input('message'), $request->session()->getId());
 
-    public function boot(): void
-    {
-        Event::listen(
-            AgentExecutionStarting::class,
-            [
-                HandleAgentExecutionStarting::class,
-            ]
-        );
+        return response()->json([
+            'success' => true,
+            'response' => $response
+        ]);
+
+    } catch (ToolExecutionException $e) {
+        // Tool-specific errors
+        Log::warning('Tool execution failed', [
+            'tool' => $e->getToolName(),
+            'error' => $e->getMessage()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'error' => 'I encountered an issue with one of my tools. Please try again.',
+            'code' => 'TOOL_ERROR'
+        ], 500);
+
+    } catch (\RuntimeException $e) {
+        // LLM API errors
+        Log::error('LLM API error', ['error' => $e->getMessage()]);
+
+        return response()->json([
+            'success' => false,
+            'error' => 'I\'m temporarily unavailable. Please try again in a moment.',
+            'code' => 'LLM_ERROR'
+        ], 503);
+
+    } catch (\Exception $e) {
+        // Unexpected errors
+        Log::error('Unexpected agent error', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'error' => 'Something went wrong. Please try again.',
+            'code' => 'UNKNOWN_ERROR'
+        ], 500);
     }
 }
 ```
-
-Available events you can listen to are:
-
-- AgentExecutionStarting;
-- AgentExecutionFinished;
-- AgentResponseGenerated;
-- LlmCallInitiating;
-- LlmResponseReceived;
-- StateUpdated;
-- ToolCallInitiating;
-- ToolCallCompleted;
 
 ## Evaluations
 
-Evaluations are a crucial component in developing and maintaining reliable AI agents. They provide a structured framework for systematically testing and validating your agent's responses, ensuring consistent quality and appropriate behavior across various scenarios. By implementing evaluations, you can catch potential issues early, measure improvements over time, and maintain confidence in your agent's performance before deploying to production.
+The evaluation system helps ensure your agents perform consistently and meet quality standards. It combines traditional assertions with AI-powered quality assessment.
 
-The evaluation system in Laravel Agent ADK combines traditional assertion-based testing with advanced AI-powered quality assessment through its unique "LLM-as-a-Judge" feature. This dual approach allows you to not only verify basic requirements (like response format and content presence) but also assess more nuanced aspects like tone, helpfulness, accuracy, and overall quality of your agent's responses. Whether you're building customer service agents, content generators, or specialized AI tools, robust evaluation helps ensure your agents consistently meet your quality standards.
-
-### Generating an Evaluation Class
-
-To create a new evaluation class, use the `make:eval` Artisan command:
+### Creating an Evaluation
 
 ```bash
-php artisan make:eval MyAwesomeEvaluation
+php artisan agent:make:eval CustomerServiceEvaluation
 ```
 
-This will generate `app/Evaluations/MyAwesomeEvaluation.php` (or `src/Evaluations/` for package dev), extending `AaronLumsden\LaravelAgentADK\Evaluations\BaseEvaluation`.
-
-### Structure of an Evaluation Class
-
-Key components:
-
-- **`$agentName` (public string property):** Specifies the **registered name/alias** of the LLM agent to be used (e.g., `public string $agentName = 'WeatherReporterAgent';`). This is the name you used when registering the agent (e.g., via `Agent::build(YourAgent::class)->register()` or `Agent::define('your_agent_name')`).
-- **`$name` (public string property):** Human-readable name for the evaluation.
-- **`$description` (public string property):** Brief description of the test.
-- **`$csvPath` (public string property):** Relative path to the CSV data file (e.g., `app/evaluations/data/my_test_data.csv`).
-- **`$promptCsvColumn` (public string property):** Defines which column in your CSV contains the main text/prompt for the LLM.
-  ```php
-  public function getPromptCsvColumn(): string
-  {
-      return 'user_query'; // Name of the column in your CSV
-  }
-  ```
-- **`preparePrompt(array $csvRowData): string`:** Constructs the full prompt string. The default stub uses `$this->promptCsvColumn` to fetch the base prompt from the CSV. You can customize this to add prefixes, instructions, or combine multiple CSV columns.
-- **`evaluateRow(array $csvRowData, string $llmResponse): array`:** Core logic using assertion methods to evaluate the LLM's response against the CSV data.
-
-### Example Concrete Evaluation: `SentimentAnalysisEvaluation.php`
+### Example: Customer Service Quality Evaluation
 
 ```php
-<?php
-
-namespace App\Evaluations; // Or YourVendor\YourPackage\Evaluations
-
-use AaronLumsden\LaravelAgentADK\Evaluations\BaseEvaluation;
-use InvalidArgumentException;
-
-class SentimentAnalysisEvaluation extends BaseEvaluation
-{
-    // Use the agent's registered name/alias.
-    // This agent ('MySentimentAnalysisAgent') must be registered in a Service Provider.
-    public string $agentName = 'MySentimentAnalysisAgent';
-
-    public string $name = 'Sentiment Analysis Evaluation';
-
-    public string $description = 'Evaluates the LLM\'s ability to correctly classify text sentiment.';
-
-    public string $csvPath = 'evaluations/data/sentiment_analysis_data.csv';
-
-    // Specify which CSV column contains the prompt text
-    public string $promptCsvColumn = 'text_input'; // Name of the column in your CSV
-
-    public function preparePrompt(array $csvRowData): string
-    {
-        if (!isset($csvRowData[$this->promptCsvColumn])) {
-            throw new InvalidArgumentException(
-                "CSV row must contain a '" . $this->promptCsvColumn . "' column for sentiment analysis."
-            );
-        }
-        // Example: Constructing a more complete prompt
-        return "Classify the sentiment of the following text as positive, negative, or neutral: \"" . $csvRowData[$this->promptCsvColumn] . "\"";
-    }
-
-    public function evaluateRow(array $csvRowData, string $llmResponse): array
-    {
-        $this->resetAssertionResults();
-
-        $expectedSentimentColumn = 'expected_sentiment'; // Assuming this column exists
-        if (!isset($csvRowData[$expectedSentimentColumn])) {
-            throw new InvalidArgumentException("CSV row must contain an '" . $expectedSentimentColumn . "' column.");
-        }
-
-        $expectedSentiment = strtolower(trim($csvRowData[$expectedSentimentColumn]));
-        $actualSentiment = strtolower(trim($llmResponse)); // Assuming LLM returns only the sentiment category
-
-        $this->assertEquals($expectedSentiment, $actualSentiment,
-            "Checking if LLM sentiment ('{$actualSentiment}') matches expected ('{$expectedSentiment}')."
-        );
-        $this->assertTrue(in_array($actualSentiment, ['positive', 'negative', 'neutral']),
-            "Sentiment '{$actualSentiment}' should be one of 'positive', 'negative', or 'neutral'."
-        );
-
-        $assertionStatuses = array_column($this->assertionResults, 'status');
-        $finalStatus = empty($this->assertionResults) || !in_array('fail', $assertionStatuses, true) ? 'pass' : 'fail';
-
-        return [
-            'row_data' => $csvRowData,
-            'llm_response' => $llmResponse,
-            'assertions' => $this->assertionResults,
-            'final_status' => $finalStatus,
-        ];
-    }
-}
-```
-
-### LLM-as-a-Judge Example 🤖⚖️
-
-Here's a more advanced example showing how to use LLM-as-a-judge for complex quality assessments:
-
-```php
-<?php
-
 namespace App\Evaluations;
 
 use AaronLumsden\LaravelAgentADK\Evaluations\BaseEvaluation;
-use InvalidArgumentException;
 
-class ContentQualityEvaluation extends BaseEvaluation
+class CustomerServiceEvaluation extends BaseEvaluation
 {
-    public string $agentName = 'content_writer';
-    public string $name = 'Content Quality Assessment';
-    public string $description = 'Evaluates content quality using both traditional assertions and LLM judge';
-    public string $csvPath = 'app/Evaluations/data/content_quality.csv';
-    public string $promptCsvColumn = 'prompt';
+    public string $agentName = 'customer_support';
+    public string $name = 'Customer Service Quality Assessment';
+    public string $description = 'Evaluates customer service responses for helpfulness and professionalism';
+    public string $csvPath = 'storage/evaluations/customer_service_scenarios.csv';
+    public string $promptCsvColumn = 'customer_query';
 
     public function preparePrompt(array $csvRowData): string
     {
-        if (!isset($csvRowData[$this->promptCsvColumn])) {
-            throw new InvalidArgumentException("CSV must contain '{$this->promptCsvColumn}' column.");
-        }
         return $csvRowData[$this->promptCsvColumn];
     }
 
@@ -615,47 +492,37 @@ class ContentQualityEvaluation extends BaseEvaluation
     {
         $this->resetAssertionResults();
 
-        // Traditional assertions
-        $this->assertResponseIsNotEmpty($llmResponse, 'Response should not be empty');
-        $this->assertResponseLengthBetween($llmResponse, 50, 1000, 'Response should be appropriately sized');
+        // Basic response validation
+        $this->assertResponseIsNotEmpty($llmResponse, 'Agent must provide a response');
+        $this->assertResponseLengthBetween($llmResponse, 20, 500, 'Response should be appropriately sized');
 
-        // LLM Judge for quality assessment
+        // Professional tone check
+        $this->assertResponseDoesNotContain($llmResponse, 'sorry, I can\'t help',
+            'Agent should not give up easily');
+
+        // Helpfulness assessment using LLM judge
         $this->assertLlmJudge(
             $llmResponse,
-            'The response should be helpful, accurate, well-structured, and appropriate for the given prompt. It should demonstrate clear understanding and provide useful information.',
+            'The response should be helpful, professional, empathetic, and provide actionable guidance. It should address the customer\'s concern directly.',
             'llm_judge',
             'pass',
-            'Content should meet overall quality standards'
+            'Response should meet customer service standards'
         );
 
-        // Quality scoring (1-10 scale)
+        // Quality scoring
         $this->assertLlmJudgeQuality(
             $llmResponse,
-            'Evaluate: 1) Clarity and readability, 2) Factual accuracy, 3) Completeness, 4) Engagement and helpfulness',
+            'Rate based on: 1) Helpfulness and problem-solving, 2) Professional and empathetic tone, 3) Clarity and completeness, 4) Appropriate next steps provided',
             7,
             'llm_judge',
-            'Content quality should score 7+ out of 10'
+            'Customer service quality should be high'
         );
 
-        // Comparison with reference if available
-        if (isset($csvRowData['reference_response'])) {
-            $this->assertLlmJudgeComparison(
-                $llmResponse,
-                $csvRowData['reference_response'],
-                'Compare accuracy, helpfulness, and clarity',
-                'actual',
-                'llm_judge',
-                'Generated response should be better than reference'
-            );
-        }
-
-        // Check specific requirements from CSV
-        if (isset($csvRowData['must_contain'])) {
-            $this->assertResponseContains(
-                $llmResponse,
-                $csvRowData['must_contain'],
-                "Response must contain: '{$csvRowData['must_contain']}'"
-            );
+        // Check for required elements if specified in CSV
+        if (isset($csvRowData['must_include'])) {
+            $requiredElements = explode(',', $csvRowData['must_include']);
+            $this->assertContainsAllOf($llmResponse, $requiredElements,
+                'Response must include all required elements');
         }
 
         $assertionStatuses = array_column($this->assertionResults, 'status');
@@ -671,341 +538,372 @@ class ContentQualityEvaluation extends BaseEvaluation
 }
 ```
 
-**CSV Data Example** (`app/Evaluations/data/content_quality.csv`):
-
-```csv
-prompt,must_contain,expected_sentiment,reference_response
-"What's the weather like in London?","London","positive","The weather in London today is partly cloudy..."
-"Tell me a joke about programming","programming","positive","Why do programmers prefer dark mode? Because light attracts bugs!"
-"Explain quantum computing in simple terms","quantum","neutral","Quantum computing uses principles of quantum mechanics..."
-```
-
-### Available Assertion Methods
-
-The `BaseEvaluation` class provides several assertion methods to help you evaluate LLM responses. Each method records the assertion result internally and returns an array with the test outcome:
-
-#### Basic Response Assertions
-
-#### `assertResponseContains(string $actualResponse, string $expectedSubstring, string $message = 'Response should contain substring.'): array`
-
-Checks if the LLM response contains a specific substring. Useful for verifying that certain keywords or phrases appear in the response.
-
-```php
-$this->assertResponseContains($llmResponse, 'positive',
-    "Response should contain the word 'positive'");
-```
-
-#### `assertResponseDoesNotContain(string $actualResponse, string $unexpectedSubstring, string $message = 'Response should not contain substring.'): array`
-
-Verifies that the LLM response does NOT contain a specific substring. Great for ensuring unwanted content doesn't appear.
-
-```php
-$this->assertResponseDoesNotContain($llmResponse, 'error',
-    "Response should not contain error messages");
-```
-
-#### `assertResponseStartsWith(string $actualResponse, string $expectedPrefix, string $message = 'Response should start with expected prefix.'): array`
-
-Validates that the response begins with a specific prefix.
-
-```php
-$this->assertResponseStartsWith($llmResponse, 'Classification:',
-    "Response should start with 'Classification:'");
-```
-
-#### `assertResponseEndsWith(string $actualResponse, string $expectedSuffix, string $message = 'Response should end with expected suffix.'): array`
-
-Validates that the response ends with a specific suffix.
-
-```php
-$this->assertResponseEndsWith($llmResponse, '.',
-    "Response should end with a period");
-```
-
-#### `assertResponseIsNotEmpty(string $actualResponse, string $message = 'Response should not be empty.'): array`
-
-Ensures the response is not empty or just whitespace.
-
-```php
-$this->assertResponseIsNotEmpty($llmResponse,
-    "LLM should provide a non-empty response");
-```
-
-#### Pattern and Format Assertions
-
-#### `assertResponseMatchesRegex(string $actualResponse, string $pattern, string $message = 'Response should match regex pattern.'): array`
-
-Validates that the response matches a specific regular expression pattern.
-
-```php
-$this->assertResponseMatchesRegex($llmResponse, '/^(positive|negative|neutral)$/i',
-    "Response should be exactly one of: positive, negative, neutral");
-```
-
-#### `assertResponseIsValidJson(string $actualResponse, string $message = 'Response should be valid JSON.'): array`
-
-Checks if the response is valid JSON format.
-
-```php
-$this->assertResponseIsValidJson($llmResponse,
-    "Response should be properly formatted JSON");
-```
-
-#### `assertJsonHasKey(string $actualResponse, string $key, string $message = 'JSON response should contain key.'): array`
-
-Validates that a JSON response contains a specific key.
-
-```php
-$this->assertJsonHasKey($llmResponse, 'sentiment',
-    "JSON response should have a 'sentiment' field");
-```
-
-#### Length and Size Assertions
-
-#### `assertResponseLengthBetween(string $actualResponse, int $minLength, int $maxLength, string $message = 'Response length should be within range.'): array`
-
-Validates that the response length (in characters) falls within a specified range.
-
-```php
-$this->assertResponseLengthBetween($llmResponse, 10, 100,
-    "Response should be between 10-100 characters");
-```
-
-#### `assertWordCountBetween(string $actualResponse, int $minWords, int $maxWords, string $message = 'Word count should be within range.'): array`
-
-Validates that the response word count falls within a specified range.
-
-```php
-$this->assertWordCountBetween($llmResponse, 5, 20,
-    "Response should contain 5-20 words");
-```
-
-#### Content Matching Assertions
-
-#### `assertContainsAnyOf(string $actualResponse, array $expectedSubstrings, string $message = 'Response should contain at least one of the expected substrings.'): array`
-
-Checks if the response contains at least one of the provided substrings.
-
-```php
-$this->assertContainsAnyOf($llmResponse, ['happy', 'joy', 'excited', 'pleased'],
-    "Response should contain at least one positive emotion word");
-```
-
-#### `assertContainsAllOf(string $actualResponse, array $expectedSubstrings, string $message = 'Response should contain all expected substrings.'): array`
-
-Validates that the response contains ALL of the provided substrings.
-
-```php
-$this->assertContainsAllOf($llmResponse, ['classification', 'confidence'],
-    "Response should contain both classification and confidence information");
-```
-
-#### Sentiment Analysis Assertion
-
-#### `assertResponseHasPositiveSentiment(string $actualResponse, string $message = 'Response should have positive sentiment.'): array`
-
-Performs basic keyword-based sentiment analysis to determine if the response has positive sentiment.
-
-```php
-$this->assertResponseHasPositiveSentiment($llmResponse,
-    "Agent response should maintain a positive tone");
-```
-
-#### Tool and Behavior Assertions
-
-#### `assertToolCalled(string $expectedToolName, array $calledTools, string $message = 'Expected tool was not called.'): array`
-
-Validates that a specific tool was called during the agent's execution. Useful for testing agent behavior and tool usage.
-
-```php
-$this->assertToolCalled('get_current_weather', $calledTools,
-    "Weather tool should have been called");
-```
-
-#### Value Comparison Assertions
-
-#### `assertEquals($expected, $actual, string $message = 'Values should be equal.'): array`
-
-Performs a loose equality check between expected and actual values. Perfect for comparing extracted values or classifications.
-
-```php
-$this->assertEquals('positive', $extractedSentiment,
-    "Extracted sentiment should match expected value");
-```
-
-#### `assertGreaterThan($expected, $actual, string $message = 'Actual value should be greater than expected.'): array`
-
-Validates that the actual value is greater than the expected value.
-
-```php
-$this->assertGreaterThan(0.7, $confidenceScore,
-    "Confidence score should be greater than 0.7");
-```
-
-#### `assertLessThan($expected, $actual, string $message = 'Actual value should be less than expected.'): array`
-
-Validates that the actual value is less than the expected value.
-
-```php
-$this->assertLessThan(1000, $responseTime,
-    "Response time should be under 1000ms");
-```
-
-#### Boolean Assertions
-
-#### `assertTrue(bool $condition, string $message = 'Condition should be true.'): array`
-
-Asserts that a given condition evaluates to true. Useful for custom validation logic.
-
-```php
-$this->assertTrue(strlen($llmResponse) > 10,
-    "Response should be at least 10 characters long");
-```
-
-#### `assertFalse(bool $condition, string $message = 'Condition should be false.'): array`
-
-Asserts that a given condition evaluates to false. The opposite of `assertTrue`.
-
-```php
-$this->assertFalse(empty($llmResponse),
-    "Response should not be empty");
-```
-
-**💡 Pro Tip:** Each assertion method returns an array containing:
-
-- `assertion_method`: The method that was called
-- `status`: Either 'pass' or 'fail'
-- `message`: Your custom message
-- `expected`: The expected value (when applicable)
-- `actual`: The actual value (when applicable)
-
-All assertion results are automatically collected and can be accessed via the `$this->assertionResults` property in your evaluation's `evaluateRow` method.
-
-### LLM-as-a-Judge Assertions 🤖⚖️
-
-These powerful assertion methods use another LLM agent as a judge to evaluate responses based on complex criteria that traditional string matching can't handle. Perfect for assessing quality, tone, accuracy, and other nuanced aspects of AI responses.
-
-#### `assertLlmJudge(string $actualResponse, string $criteria, string $judgeAgentName = 'llm_judge', string $expectedOutcome = 'pass', string $message = 'LLM judge evaluation failed.'): array`
-
-Uses another LLM agent as a judge to evaluate responses based on custom criteria. Perfect for complex evaluations that require nuanced understanding.
-
-```php
-$this->assertLlmJudge(
-    $llmResponse,
-    'The response should be helpful, accurate, and written in a friendly tone',
-    'llm_judge',
-    'pass',
-    'Response should meet quality standards'
-);
-```
-
-#### `assertLlmJudgeQuality(string $actualResponse, string $qualityCriteria, int $minScore = 7, string $judgeAgentName = 'llm_judge', string $message = 'Response quality below threshold.'): array`
-
-Uses LLM judge to score response quality on a scale of 1-10. Great for measuring overall response quality with specific criteria.
-
-```php
-$this->assertLlmJudgeQuality(
-    $llmResponse,
-    'Evaluate clarity, accuracy, completeness, and helpfulness',
-    8,
-    'llm_judge',
-    'Response quality should be high'
-);
-```
-
-#### `assertLlmJudgeComparison(string $actualResponse, string $referenceResponse, string $comparisonCriteria, string $expectedWinner = 'actual', string $judgeAgentName = 'llm_judge', string $message = 'Response comparison failed.'): array`
-
-Compares two responses and determines which is better based on specified criteria. Perfect for A/B testing or comparing against reference responses.
-
-```php
-$this->assertLlmJudgeComparison(
-    $llmResponse,
-    $referenceResponse,
-    'Compare accuracy, helpfulness, and clarity',
-    'actual',
-    'llm_judge',
-    'Generated response should be better than reference'
-);
-```
-
-**🔧 Setting Up LLM Judge**
-
-To use these assertions, you need to:
-
-1. **Create a Judge Agent** (if you haven't already):
-
-   ```bash
-   php artisan agent:make:agent LlmJudgeAgent
-   ```
-
-2. **Configure the Judge Agent** in `app/Agents/LlmJudgeAgent.php`:
-
-   ```php
-   class LlmJudgeAgent extends BaseLlmAgent
-   {
-       protected string $name = 'llm_judge';
-       protected string $description = 'An expert evaluator for judging LLM responses';
-       protected string $instructions = 'You are an expert evaluator with years of experience in assessing AI-generated content. Be objective, thorough, and consistent.';
-       protected string $model = 'gpt-4o'; // Use a capable model for judging
-       protected ?float $temperature = 0.1; // Low temperature for consistency
-   }
-   ```
-
-3. **Register the Judge Agent** in your `AppServiceProvider.php`:
-   ```php
-   Agent::build(LlmJudgeAgent::class)->register();
-   ```
-
-**💡 Judge Benefits:**
-
-- **Complex Evaluation**: Assess tone, helpfulness, accuracy beyond simple string matching
-- **Contextual Understanding**: Judge considers context and nuance
-- **Consistent Scoring**: Low temperature ensures reliable evaluations
-- **Flexible Criteria**: Define custom evaluation criteria for any use case
-- **Comparative Analysis**: Compare responses side-by-side
-
-## Running Evaluations
-
-To run an evaluation, use the `agent:run:eval` Artisan command with the evaluation's class name:
+### Running Evaluations
 
 ```bash
-php artisan agent:run:eval SentimentAnalysisEvaluation
+# Run evaluation with console output
+php artisan agent:run:eval CustomerServiceEvaluation
+
+# Save results to CSV file
+php artisan agent:run:eval CustomerServiceEvaluation --output=service_quality_results.csv
 ```
 
-You can also save the evaluation results to a CSV file by adding the `--output` parameter:
+## Configuration
+
+Key configuration options in `config/agent-adk.php`:
+
+```php
+return [
+    // Default LLM provider and model
+    'default_provider' => env('AGENT_ADK_DEFAULT_PROVIDER', 'openai'),
+    'default_model' => env('AGENT_ADK_DEFAULT_MODEL', 'gpt-4o'),
+
+    // Generation parameters
+    'default_generation_params' => [
+        'temperature' => env('AGENT_ADK_DEFAULT_TEMPERATURE', 0.7),
+        'max_tokens' => env('AGENT_ADK_DEFAULT_MAX_TOKENS', 1000),
+        'top_p' => env('AGENT_ADK_DEFAULT_TOP_P', null),
+    ],
+
+    // Built-in API routes
+    'routes' => [
+        'enabled' => true,
+        'prefix' => 'api/agent-adk',
+        'middleware' => ['api'],
+    ],
+
+    // Session and context storage
+    'session_driver' => env('AGENT_ADK_SESSION_DRIVER', 'database'),
+    'context_ttl' => env('AGENT_ADK_CONTEXT_TTL', 3600), // 1 hour
+
+    // Security settings
+    'input_max_length' => env('AGENT_ADK_INPUT_MAX_LENGTH', 4000),
+    'rate_limiting' => [
+        'enabled' => true,
+        'max_requests' => 60,
+        'per_minutes' => 1,
+    ],
+];
+```
+
+## Security Best Practices
+
+### Input Validation and Sanitization
+
+```php
+// In your agent class
+public function beforeLlmCall(array $inputMessages, AgentContext $context): array
+{
+    $userInput = $context->getUserInput();
+
+    // Length validation
+    if (strlen($userInput) > config('agent-adk.input_max_length', 4000)) {
+        throw new \InvalidArgumentException('Input too long');
+    }
+
+    // Content filtering
+    if ($this->containsProhibitedContent($userInput)) {
+        throw new \InvalidArgumentException('Input contains prohibited content');
+    }
+
+    // Sanitize HTML if needed
+    $sanitizedInput = strip_tags($userInput);
+    $context->setUserInput($sanitizedInput);
+
+    return $inputMessages;
+}
+
+private function containsProhibitedContent(string $input): bool
+{
+    $prohibitedPatterns = [
+        '/\b(exec|eval|system|shell_exec)\s*\(/i',
+        '/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/mi',
+        // Add your patterns
+    ];
+
+    foreach ($prohibitedPatterns as $pattern) {
+        if (preg_match($pattern, $input)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+```
+
+### API Key Management
+
+```php
+// Use Laravel's encrypted configuration for sensitive data
+// .env
+OPENAI_API_KEY=sk-your-key-here
+
+// In production, consider using:
+// - Laravel Vault
+// - AWS Secrets Manager
+// - Azure Key Vault
+// - HashiCorp Vault
+```
+
+### Rate Limiting
+
+```php
+// Apply rate limiting to your agent endpoints
+Route::middleware(['throttle:agent-chat'])->group(function () {
+    Route::post('/chat', [ChatController::class, 'handle']);
+});
+
+// In RouteServiceProvider.php
+protected function configureRateLimiting()
+{
+    RateLimiter::for('agent-chat', function (Request $request) {
+        return Limit::perMinute(30)->by($request->ip());
+    });
+}
+```
+
+## Performance Considerations
+
+### Optimization Strategies
+
+1. **Response Caching**
+
+```php
+// Cache frequent responses
+public function run(mixed $input, AgentContext $context): mixed
+{
+    $cacheKey = 'agent_response:' . md5($this->name . $input);
+
+    return Cache::remember($cacheKey, 300, function() use ($input, $context) {
+        return parent::run($input, $context);
+    });
+}
+```
+
+2. **Tool Result Caching**
+
+```php
+// In your tool's execute method
+public function execute(array $arguments, AgentContext $context): string
+{
+    $cacheKey = 'tool_result:' . md5(json_encode($arguments));
+
+    return Cache::remember($cacheKey, 600, function() use ($arguments) {
+        return $this->performApiCall($arguments);
+    });
+}
+```
+
+3. **Database Optimization**
+
+```php
+// Index your context tables
+Schema::table('agent_contexts', function (Blueprint $table) {
+    $table->index(['session_id', 'created_at']);
+    $table->index('agent_name');
+});
+```
+
+### Memory Management
+
+- Set appropriate `max_tokens` values (typically 500-2000)
+- Clean up old conversation contexts regularly
+- Use pagination for large tool result sets
+- Monitor memory usage with tools like Telescope
+
+## Testing
+
+### Unit Testing Your Agents
+
+```php
+namespace Tests\Unit\Agents;
+
+use Tests\TestCase;
+use App\Agents\CustomerSupportAgent;
+use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAgentADK\Facades\Agent;
+
+class CustomerSupportAgentTest extends TestCase
+{
+    public function test_agent_registration()
+    {
+        $agent = Agent::named('customer_support');
+        $this->assertInstanceOf(CustomerSupportAgent::class, $agent);
+    }
+
+    public function test_agent_responds_to_greeting()
+    {
+        $response = Agent::run('customer_support', 'Hello', 'test-session');
+
+        $this->assertIsString($response);
+        $this->assertNotEmpty($response);
+        $this->assertStringContainsString('hello', strtolower($response));
+    }
+
+    public function test_agent_handles_context()
+    {
+        $sessionId = 'test-session-' . uniqid();
+
+        // First interaction
+        Agent::run('customer_support', 'My name is John', $sessionId);
+
+        // Second interaction should remember context
+        $response = Agent::run('customer_support', 'What is my name?', $sessionId);
+
+        $this->assertStringContainsString('John', $response);
+    }
+}
+```
+
+### Integration Testing
+
+```php
+public function test_agent_api_endpoint()
+{
+    $response = $this->postJson('/api/agent-adk/interact', [
+        'agent_name' => 'customer_support',
+        'input' => 'I need help with my order',
+        'session_id' => 'test-session'
+    ]);
+
+    $response->assertStatus(200)
+             ->assertJsonStructure([
+                 'agent_name',
+                 'session_id',
+                 'response'
+             ]);
+}
+```
+
+## Deployment
+
+### Production Checklist
+
+- [ ] Set proper environment variables
+- [ ] Configure rate limiting
+- [ ] Set up monitoring and logging
+- [ ] Test error handling scenarios
+- [ ] Verify API key security
+- [ ] Configure caching strategy
+- [ ] Set up context cleanup jobs
+- [ ] Test agent evaluations
+
+### Environment Configuration
 
 ```bash
-php artisan agent:run:eval SentimentAnalysisEvaluation --output=results.csv
+# Production .env additions
+AGENT_ADK_DEFAULT_TEMPERATURE=0.3  # Lower for consistency
+AGENT_ADK_CONTEXT_TTL=1800         # 30 minutes
+AGENT_ADK_INPUT_MAX_LENGTH=2000    # Reasonable limit
+LOG_LEVEL=warning                   # Reduce log noise
+
+# Optional: Use Redis for caching
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
 ```
 
-The results will be automatically saved to Laravel's storage directory (`storage/app/evaluations/`) to ensure proper write permissions. The CSV file will contain detailed information about each evaluation including the LLM responses, assertion results, and final status for each test case.
+### Context Cleanup Job
 
-## What's Coming Next? 🚀
+```php
+// Create a scheduled job to clean up old contexts
+php artisan make:command CleanupAgentContexts
 
-- More advanced examples and tutorials
-- Dynamic tool loading
-- Multi-provider LLM strategies
-- UI integration guides
-- And much more cool stuff!
+// In the command
+public function handle()
+{
+    $cutoff = now()->subSeconds(config('agent-adk.context_ttl', 3600));
+
+    DB::table('agent_contexts')
+      ->where('updated_at', '<', $cutoff)
+      ->delete();
+
+    $this->info('Cleaned up old agent contexts');
+}
+
+// In app/Console/Kernel.php
+protected function schedule(Schedule $schedule)
+{
+    $schedule->command('agent:cleanup-contexts')->hourly();
+}
+```
 
 ## Troubleshooting 🔧
 
-**Agent Not Found?** 🤷‍♀️  
-Make sure you registered it with `Agent::build(...)->register()` in your service provider!
+### Common Issues
 
-**Tool Issues?** 🛠️  
-Double-check your namespaces and make sure it's registered in your agent's `registerTools()` method.
+**"Agent not found" Error**
 
-**API Key Problems?** 🔑  
-Check your `.env` file - those keys need to be perfect!
+```php
+// Ensure agent is registered in AppServiceProvider
+Agent::build(YourAgent::class)->register();
+```
 
-**Prism-PHP Acting Up?** 🌟  
-Check out the [Prism-PHP docs](https://prismphp.com/) for the latest troubleshooting tips.
+**"Tool execution failed" Error**
 
-## Want to Contribute? 🤝
+```php
+// Check tool namespace and registration
+protected function registerTools(): array
+{
+    return [
+        \App\Tools\YourTool::class, // Correct namespace
+    ];
+}
+```
 
-We'd love your help! Pull requests, issues, and wild ideas are all welcome. Let's make this thing even more awesome together!
+**Memory Issues**
+
+```php
+// Reduce max_tokens or implement response caching
+protected ?int $maxTokens = 500; // Instead of 2000
+```
+
+**API Rate Limits**
+
+```php
+// Implement exponential backoff in your tools
+try {
+    $response = Http::retry(3, 1000)->get($url);
+} catch (Exception $e) {
+    // Handle rate limiting
+}
+```
+
+### Debug Mode
+
+Enable detailed logging:
+
+```php
+// In config/agent-adk.php
+'debug' => env('AGENT_ADK_DEBUG', false),
+
+// In .env
+AGENT_ADK_DEBUG=true
+```
+
+## Contributing 🤝
+
+We welcome contributions! Here's how you can help:
+
+1. **Report Issues**: Use GitHub issues for bugs and feature requests
+2. **Submit PRs**: Follow PSR-12 coding standards
+3. **Add Tests**: Include tests for new features
+4. **Update Docs**: Keep documentation current
+5. **Share Examples**: Contribute real-world use cases
+
+### Development Setup
+
+```bash
+git clone https://github.com/aaronlumsden/laravel-agent-adk.git
+cd laravel-agent-adk
+composer install
+cp .env.example .env
+php artisan key:generate
+```
 
 ## License 📄
 
-MIT license - because sharing is caring! Check out the [full license](https://opensource.org/licenses/MIT) if you're into that sort of thing.
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+**Ready to build something amazing?** Start with the [Quick Start](#quick-start-) guide and join our community of Laravel AI developers! 🚀

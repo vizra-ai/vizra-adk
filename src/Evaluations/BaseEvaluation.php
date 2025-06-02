@@ -527,4 +527,13 @@ Be objective and thorough in your comparison.";
 
         return ['winner' => 'reference', 'reasoning' => 'Could not parse comparison'];
     }
+
+    /**
+     * Helper method to get the configured prompt CSV column name.
+     * Useful for evaluation classes that need to reference this column.
+     */
+    public function getPromptCsvColumn(): string
+    {
+        return $this->promptCsvColumn;
+    }
 }
