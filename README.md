@@ -599,6 +599,7 @@ class CustomerServiceEvaluation extends BaseEvaluation
 The `BaseEvaluation` class provides a comprehensive set of assertion methods to validate agent responses:
 
 **Basic Content Assertions:**
+
 - `assertResponseContains()` - Checks if the response contains a specific substring
 - `assertResponseDoesNotContain()` - Checks if the response does not contain a specific substring
 - `assertResponseStartsWith()` - Checks if the response starts with a specific prefix
@@ -607,17 +608,22 @@ The `BaseEvaluation` class provides a comprehensive set of assertion methods to 
 - `assertResponseIsNotEmpty()` - Checks if the response is not empty after trimming whitespace
 
 **Length and Format Assertions:**
+
 - `assertResponseLengthBetween()` - Checks if the response character length is within a specified range
 - `assertWordCountBetween()` - Checks if the response word count is within a specified range
 - `assertResponseIsValidJson()` - Checks if the response is a valid JSON string
 - `assertJsonHasKey()` - Checks if the decoded JSON response contains a specific key
+- `assertResponseIsValidXml()` - Checks if the response is a valid XML string
+- `assertXmlHasValidTag()` - Checks if the XML response contains a specific tag
 
 **Content Analysis Assertions:**
+
 - `assertContainsAnyOf()` - Checks if the response contains at least one of the provided substrings
 - `assertContainsAllOf()` - Checks if the response contains all of the provided substrings
 - `assertResponseHasPositiveSentiment()` - Performs a basic keyword-based check for positive sentiment
 
 **Tool and Logic Assertions:**
+
 - `assertToolCalled()` - Checks if a specific tool was called by the agent
 - `assertEquals()` - Checks if two values are equal using loose comparison
 - `assertTrue()` - Checks if a given condition is true
@@ -626,6 +632,7 @@ The `BaseEvaluation` class provides a comprehensive set of assertion methods to 
 - `assertLessThan()` - Checks if the actual value is less than the expected value
 
 **AI-Powered Judge Assertions:**
+
 - `assertLlmJudge()` - Uses another LLM agent to judge the response based on given criteria for a pass/fail outcome
 - `assertLlmJudgeQuality()` - Uses an LLM agent to rate the response quality on a numeric scale against given criteria
 - `assertLlmJudgeComparison()` - Uses an LLM agent to compare the actual response against a reference response based on criteria

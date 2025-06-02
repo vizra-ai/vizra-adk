@@ -163,6 +163,33 @@ abstract class BaseEvaluation
         return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $key, $actualResponse);
     }
 
+    protected function assertResponseIsValidXml(string $actualResponse, string $message = 'Response should be valid XML.'): array
+    {
+        libxml_use_internal_errors(true);
+        $doc = simplexml_load_string($actualResponse);
+        $status = $doc !== false;
+        libxml_clear_errors();
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, 'valid XML', $actualResponse);
+    }
+
+    protected function assertXmlHasValidTag(string $actualResponse, string $tagName, string $message = 'XML response should contain valid tag.'): array
+    {
+        libxml_use_internal_errors(true);
+        $doc = simplexml_load_string($actualResponse);
+
+        if ($doc === false) {
+            libxml_clear_errors();
+            $status = false;
+        } else {
+            // Check if the tag exists using XPath
+            $elements = $doc->xpath("//{$tagName}");
+            $status = !empty($elements);
+        }
+
+        libxml_clear_errors();
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $tagName, $actualResponse);
+    }
+
     protected function assertResponseLengthBetween(string $actualResponse, int $minLength, int $maxLength, string $message = 'Response length should be within range.'): array
     {
         $length = strlen($actualResponse);
