@@ -62,12 +62,14 @@ Whether you're building a chatbot, data analyzer, or the next AI assistant, this
 - **🌟 Prism-PHP Power:** All your favorite LLMs in one place
 - **📝 Auto-History:** Conversations remembered automatically
 - **🎉 Laravel Events:** Hook into everything with events
+- **🤖⚖️ LLM-as-a-Judge:** Use AI to evaluate AI responses with nuanced criteria
+- **📊 Smart Evaluations:** Traditional assertions + AI-powered quality assessment
 - **⚡ Artisan Commands:**
   - `php artisan agent:install` - Get everything set up
   - `php artisan agent:make:agent <AgentName>` - Scaffold new agents
   - `php artisan agent:make:tool <ToolName>` - Create new tools
   - `php artisan agent:chat <AgentName>` - Chat with your agent in the terminal
-  - `php artisan make:eval <EvaluationName>` - Create new evaluation classes
+  - `php artisan agent:make:eval <EvaluationName>` - Create new evaluation classes
   - `php artisan run:eval <EvaluationName>` - Run evaluations
 - **⚙️ Configurable:** Tweak everything in `config/agent-adk.php`
 
@@ -574,6 +576,103 @@ class SentimentAnalysisEvaluation extends BaseEvaluation
 }
 ```
 
+### LLM-as-a-Judge Example 🤖⚖️
+
+Here's a more advanced example showing how to use LLM-as-a-judge for complex quality assessments:
+
+```php
+<?php
+
+namespace App\Evaluations;
+
+use AaronLumsden\LaravelAgentADK\Evaluations\BaseEvaluation;
+use InvalidArgumentException;
+
+class ContentQualityEvaluation extends BaseEvaluation
+{
+    public string $agentName = 'content_writer';
+    public string $name = 'Content Quality Assessment';
+    public string $description = 'Evaluates content quality using both traditional assertions and LLM judge';
+    public string $csvPath = 'app/Evaluations/data/content_quality.csv';
+    public string $promptCsvColumn = 'prompt';
+
+    public function preparePrompt(array $csvRowData): string
+    {
+        if (!isset($csvRowData[$this->promptCsvColumn])) {
+            throw new InvalidArgumentException("CSV must contain '{$this->promptCsvColumn}' column.");
+        }
+        return $csvRowData[$this->promptCsvColumn];
+    }
+
+    public function evaluateRow(array $csvRowData, string $llmResponse): array
+    {
+        $this->resetAssertionResults();
+
+        // Traditional assertions
+        $this->assertResponseIsNotEmpty($llmResponse, 'Response should not be empty');
+        $this->assertResponseLengthBetween($llmResponse, 50, 1000, 'Response should be appropriately sized');
+
+        // LLM Judge for quality assessment
+        $this->assertLlmJudge(
+            $llmResponse,
+            'The response should be helpful, accurate, well-structured, and appropriate for the given prompt. It should demonstrate clear understanding and provide useful information.',
+            'llm_judge',
+            'pass',
+            'Content should meet overall quality standards'
+        );
+
+        // Quality scoring (1-10 scale)
+        $this->assertLlmJudgeQuality(
+            $llmResponse,
+            'Evaluate: 1) Clarity and readability, 2) Factual accuracy, 3) Completeness, 4) Engagement and helpfulness',
+            7,
+            'llm_judge',
+            'Content quality should score 7+ out of 10'
+        );
+
+        // Comparison with reference if available
+        if (isset($csvRowData['reference_response'])) {
+            $this->assertLlmJudgeComparison(
+                $llmResponse,
+                $csvRowData['reference_response'],
+                'Compare accuracy, helpfulness, clarity, and overall quality',
+                'actual',
+                'llm_judge',
+                'Generated response should be better than reference'
+            );
+        }
+
+        // Check specific requirements from CSV
+        if (isset($csvRowData['must_contain'])) {
+            $this->assertResponseContains(
+                $llmResponse,
+                $csvRowData['must_contain'],
+                "Response must contain: '{$csvRowData['must_contain']}'"
+            );
+        }
+
+        $assertionStatuses = array_column($this->assertionResults, 'status');
+        $finalStatus = !in_array('fail', $assertionStatuses, true) ? 'pass' : 'fail';
+
+        return [
+            'row_data' => $csvRowData,
+            'llm_response' => $llmResponse,
+            'assertions' => $this->assertionResults,
+            'final_status' => $finalStatus,
+        ];
+    }
+}
+```
+
+**CSV Data Example** (`app/Evaluations/data/content_quality.csv`):
+
+```csv
+prompt,must_contain,expected_sentiment,reference_response
+"What's the weather like in London?","London","positive","The weather in London today is partly cloudy..."
+"Tell me a joke about programming","programming","positive","Why do programmers prefer dark mode? Because light attracts bugs!"
+"Explain quantum computing in simple terms","quantum","neutral","Quantum computing uses principles of quantum mechanics..."
+```
+
 ### Available Assertion Methods
 
 The `BaseEvaluation` class provides several assertion methods to help you evaluate LLM responses. Each method records the assertion result internally and returns an array with the test outcome:
@@ -774,6 +873,89 @@ $this->assertFalse(empty($llmResponse),
 - `actual`: The actual value (when applicable)
 
 All assertion results are automatically collected and can be accessed via the `$this->assertionResults` property in your evaluation's `evaluateRow` method.
+
+### LLM-as-a-Judge Assertions 🤖⚖️
+
+These powerful assertion methods use another LLM agent as a judge to evaluate responses based on complex criteria that traditional string matching can't handle. Perfect for assessing quality, tone, accuracy, and other nuanced aspects of AI responses.
+
+#### `assertLlmJudge(string $actualResponse, string $criteria, string $judgeAgentName = 'llm_judge', string $expectedOutcome = 'pass', string $message = 'LLM judge evaluation failed.'): array`
+
+Uses another LLM agent as a judge to evaluate responses based on custom criteria. Perfect for complex evaluations that require nuanced understanding.
+
+```php
+$this->assertLlmJudge(
+    $llmResponse,
+    'The response should be helpful, accurate, and written in a friendly tone',
+    'llm_judge',
+    'pass',
+    'Response should meet quality standards'
+);
+```
+
+#### `assertLlmJudgeQuality(string $actualResponse, string $qualityCriteria, int $minScore = 7, string $judgeAgentName = 'llm_judge', string $message = 'Response quality below threshold.'): array`
+
+Uses LLM judge to score response quality on a scale of 1-10. Great for measuring overall response quality with specific criteria.
+
+```php
+$this->assertLlmJudgeQuality(
+    $llmResponse,
+    'Evaluate clarity, accuracy, completeness, and helpfulness',
+    8,
+    'llm_judge',
+    'Response quality should be high'
+);
+```
+
+#### `assertLlmJudgeComparison(string $actualResponse, string $referenceResponse, string $comparisonCriteria, string $expectedWinner = 'actual', string $judgeAgentName = 'llm_judge', string $message = 'Response comparison failed.'): array`
+
+Compares two responses and determines which is better based on specified criteria. Perfect for A/B testing or comparing against reference responses.
+
+```php
+$this->assertLlmJudgeComparison(
+    $llmResponse,
+    $referenceResponse,
+    'Compare accuracy, helpfulness, and clarity',
+    'actual',
+    'llm_judge',
+    'Generated response should be better than reference'
+);
+```
+
+**🔧 Setting Up LLM Judge**
+
+To use these assertions, you need to:
+
+1. **Create a Judge Agent** (if you haven't already):
+
+   ```bash
+   php artisan agent:make:agent LlmJudgeAgent
+   ```
+
+2. **Configure the Judge Agent** in `app/Agents/LlmJudgeAgent.php`:
+
+   ```php
+   class LlmJudgeAgent extends BaseLlmAgent
+   {
+       protected string $name = 'llm_judge';
+       protected string $description = 'An expert evaluator for judging LLM responses';
+       protected string $instructions = 'You are an expert evaluator with years of experience in assessing AI-generated content. Be objective, thorough, and consistent.';
+       protected string $model = 'gpt-4o'; // Use a capable model for judging
+       protected ?float $temperature = 0.1; // Low temperature for consistency
+   }
+   ```
+
+3. **Register the Judge Agent** in your `AppServiceProvider.php`:
+   ```php
+   Agent::build(LlmJudgeAgent::class)->register();
+   ```
+
+**💡 Judge Benefits:**
+
+- **Complex Evaluation**: Assess tone, helpfulness, accuracy beyond simple string matching
+- **Contextual Understanding**: Judge considers context and nuance
+- **Consistent Scoring**: Low temperature ensures reliable evaluations
+- **Flexible Criteria**: Define custom evaluation criteria for any use case
+- **Comparative Analysis**: Compare responses side-by-side
 
 ## Running Evaluations
 

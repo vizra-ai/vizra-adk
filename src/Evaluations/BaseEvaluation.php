@@ -252,4 +252,279 @@ abstract class BaseEvaluation
         $status = !empty(trim($actualResponse));
         return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, 'non-empty response', $actualResponse ?: 'empty');
     }
+
+    /**
+     * Uses an LLM agent as a judge to evaluate the response based on custom criteria.
+     */
+    protected function assertLlmJudge(
+        string $actualResponse, 
+        string $criteria, 
+        string $judgeAgentName = 'llm_judge',
+        string $expectedOutcome = 'pass',
+        string $message = 'LLM judge evaluation failed.'
+    ): array {
+        $judgePrompt = $this->buildJudgePrompt($actualResponse, $criteria);
+        
+        try {
+            $judgeResponse = \AaronLumsden\LaravelAgentADK\Facades\Agent::run(
+                $judgeAgentName, 
+                $judgePrompt, 
+                \Illuminate\Support\Str::uuid()->toString()
+            );
+            
+            $judgment = $this->parseJudgment($judgeResponse);
+            $status = $judgment['outcome'] === $expectedOutcome;
+            
+            return $this->recordAssertion(
+                static::class . '::' . __FUNCTION__, 
+                $status, 
+                $message . " Judge reasoning: " . $judgment['reasoning'],
+                $expectedOutcome,
+                $judgment['outcome']
+            );
+            
+        } catch (\Exception $e) {
+            return $this->recordAssertion(
+                static::class . '::' . __FUNCTION__, 
+                false, 
+                "LLM judge failed: " . $e->getMessage(),
+                $expectedOutcome,
+                'error'
+            );
+        }
+    }
+
+    /**
+     * Uses LLM judge to evaluate quality on a scale (e.g., 1-10).
+     */
+    protected function assertLlmJudgeQuality(
+        string $actualResponse,
+        string $qualityCriteria,
+        int $minScore = 7,
+        string $judgeAgentName = 'llm_judge',
+        string $message = 'Response quality below threshold.'
+    ): array {
+        $judgePrompt = $this->buildQualityJudgePrompt($actualResponse, $qualityCriteria);
+        
+        try {
+            $judgeResponse = \AaronLumsden\LaravelAgentADK\Facades\Agent::run(
+                $judgeAgentName, 
+                $judgePrompt, 
+                \Illuminate\Support\Str::uuid()->toString()
+            );
+            
+            $score = $this->parseQualityScore($judgeResponse);
+            $status = $score >= $minScore;
+            
+            return $this->recordAssertion(
+                static::class . '::' . __FUNCTION__, 
+                $status, 
+                $message . " Score: {$score}/{$minScore}",
+                ">= {$minScore}",
+                $score
+            );
+            
+        } catch (\Exception $e) {
+            return $this->recordAssertion(
+                static::class . '::' . __FUNCTION__, 
+                false, 
+                "LLM quality judge failed: " . $e->getMessage(),
+                ">= {$minScore}",
+                'error'
+            );
+        }
+    }
+
+    /**
+     * Uses LLM judge to compare two responses and determine which is better.
+     */
+    protected function assertLlmJudgeComparison(
+        string $actualResponse,
+        string $referenceResponse,
+        string $comparisonCriteria,
+        string $expectedWinner = 'actual',
+        string $judgeAgentName = 'llm_judge',
+        string $message = 'Response comparison failed.'
+    ): array {
+        $judgePrompt = $this->buildComparisonJudgePrompt($actualResponse, $referenceResponse, $comparisonCriteria);
+        
+        try {
+            $judgeResponse = \AaronLumsden\LaravelAgentADK\Facades\Agent::run(
+                $judgeAgentName, 
+                $judgePrompt, 
+                \Illuminate\Support\Str::uuid()->toString()
+            );
+            
+            $comparison = $this->parseComparison($judgeResponse);
+            $status = $comparison['winner'] === $expectedWinner;
+            
+            return $this->recordAssertion(
+                static::class . '::' . __FUNCTION__, 
+                $status, 
+                $message . " Judge reasoning: " . $comparison['reasoning'],
+                $expectedWinner,
+                $comparison['winner']
+            );
+            
+        } catch (\Exception $e) {
+            return $this->recordAssertion(
+                static::class . '::' . __FUNCTION__, 
+                false, 
+                "LLM comparison judge failed: " . $e->getMessage(),
+                $expectedWinner,
+                'error'
+            );
+        }
+    }
+
+    /**
+     * Builds the prompt for LLM judge evaluation.
+     */
+    private function buildJudgePrompt(string $response, string $criteria): string
+    {
+        return "You are an expert evaluator. Your task is to judge the following response based on the given criteria.
+
+RESPONSE TO EVALUATE:
+{$response}
+
+EVALUATION CRITERIA:
+{$criteria}
+
+Please provide your judgment in the following JSON format:
+{
+    \"outcome\": \"pass\" or \"fail\",
+    \"reasoning\": \"Brief explanation of your decision\",
+    \"confidence\": \"High, Medium, or Low\"
+}
+
+Be objective and thorough in your evaluation.";
+    }
+
+    /**
+     * Builds the prompt for quality scoring.
+     */
+    private function buildQualityJudgePrompt(string $response, string $criteria): string
+    {
+        return "You are an expert evaluator. Rate the quality of the following response on a scale of 1-10 based on the given criteria.
+
+RESPONSE TO EVALUATE:
+{$response}
+
+QUALITY CRITERIA:
+{$criteria}
+
+Please provide your assessment in the following JSON format:
+{
+    \"score\": 8,
+    \"reasoning\": \"Explanation of the score\",
+    \"strengths\": [\"List of strengths\"],
+    \"weaknesses\": [\"List of weaknesses\"]
+}
+
+Be objective and consistent in your scoring.";
+    }
+
+    /**
+     * Builds the prompt for comparing two responses.
+     */
+    private function buildComparisonJudgePrompt(string $actualResponse, string $referenceResponse, string $criteria): string
+    {
+        return "You are an expert evaluator. Compare the following two responses based on the given criteria and determine which is better.
+
+RESPONSE A (ACTUAL):
+{$actualResponse}
+
+RESPONSE B (REFERENCE):
+{$referenceResponse}
+
+COMPARISON CRITERIA:
+{$criteria}
+
+Please provide your comparison in the following JSON format:
+{
+    \"winner\": \"actual\" or \"reference\",
+    \"reasoning\": \"Detailed explanation of your decision\",
+    \"strengths_actual\": [\"Strengths of Response A\"],
+    \"strengths_reference\": [\"Strengths of Response B\"],
+    \"overall_assessment\": \"Brief summary\"
+}
+
+Be objective and thorough in your comparison.";
+    }
+
+    /**
+     * Parses the LLM judge response for pass/fail judgment.
+     */
+    private function parseJudgment(string $judgeResponse): array
+    {
+        // Try to extract JSON from the response
+        if (preg_match('/\{[^}]*"outcome"[^}]*\}/s', $judgeResponse, $matches)) {
+            $json = json_decode($matches[0], true);
+            if ($json && isset($json['outcome'])) {
+                return [
+                    'outcome' => strtolower($json['outcome']),
+                    'reasoning' => $json['reasoning'] ?? 'No reasoning provided',
+                    'confidence' => $json['confidence'] ?? 'Unknown'
+                ];
+            }
+        }
+        
+        // Fallback parsing
+        $response = strtolower($judgeResponse);
+        if (strpos($response, 'pass') !== false && strpos($response, 'fail') === false) {
+            return ['outcome' => 'pass', 'reasoning' => 'Extracted from text'];
+        }
+        
+        return ['outcome' => 'fail', 'reasoning' => 'Could not parse judgment'];
+    }
+
+    /**
+     * Parses the quality score from LLM judge response.
+     */
+    private function parseQualityScore(string $judgeResponse): int
+    {
+        // Try to extract JSON score
+        if (preg_match('/\{[^}]*"score"[^}]*\}/s', $judgeResponse, $matches)) {
+            $json = json_decode($matches[0], true);
+            if ($json && isset($json['score']) && is_numeric($json['score'])) {
+                return (int) $json['score'];
+            }
+        }
+        
+        // Fallback: look for score patterns
+        if (preg_match('/(?:score|rating).*?(\d+)(?:\/10|out of 10)?/i', $judgeResponse, $matches)) {
+            return (int) $matches[1];
+        }
+        
+        return 0; // Default low score if can't parse
+    }
+
+    /**
+     * Parses the comparison result from LLM judge response.
+     */
+    private function parseComparison(string $judgeResponse): array
+    {
+        // Try to extract JSON from the response
+        if (preg_match('/\{[^}]*"winner"[^}]*\}/s', $judgeResponse, $matches)) {
+            $json = json_decode($matches[0], true);
+            if ($json && isset($json['winner'])) {
+                return [
+                    'winner' => strtolower($json['winner']),
+                    'reasoning' => $json['reasoning'] ?? 'No reasoning provided',
+                    'strengths_actual' => $json['strengths_actual'] ?? [],
+                    'strengths_reference' => $json['strengths_reference'] ?? []
+                ];
+            }
+        }
+        
+        // Fallback parsing
+        $response = strtolower($judgeResponse);
+        if (strpos($response, 'response a') !== false || strpos($response, 'actual') !== false) {
+            return ['winner' => 'actual', 'reasoning' => 'Extracted from text'];
+        } elseif (strpos($response, 'response b') !== false || strpos($response, 'reference') !== false) {
+            return ['winner' => 'reference', 'reasoning' => 'Extracted from text'];
+        }
+        
+        return ['winner' => 'reference', 'reasoning' => 'Could not parse comparison'];
+    }
 }
