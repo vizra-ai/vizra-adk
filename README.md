@@ -130,6 +130,9 @@ class WeatherReporterAgent extends BaseLlmAgent
     protected string $instructions = 'You are the coolest weather assistant ever! When someone asks about weather, use the get_current_weather tool. Never make up weather data - that would be super uncool. Keep it fun and concise! ☀️🌧️';
 
     protected string $model = 'gemini-1.5-pro-latest';
+    protected ?float $temperature = 0.7;
+    protected ?int $maxTokens = 1000;
+    protected ?float $topP = null;
 
     protected function registerTools(): array
     {
