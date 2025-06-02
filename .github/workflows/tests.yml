@@ -41,19 +41,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd packages/AaronLumsden/LaravelAgentADK
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
           composer update --prefer-dist --no-interaction --no-progress
 
       - name: List Installed Dependencies
-        run: |
-          cd packages/AaronLumsden/LaravelAgentADK
-          composer show -D
+        run: composer show -D
 
       - name: Execute tests
-        run: |
-          cd packages/AaronLumsden/LaravelAgentADK
-          ./vendor/bin/pest
+        run: ./vendor/bin/pest
 
   coverage:
     runs-on: ubuntu-latest
@@ -72,20 +67,16 @@ jobs:
           coverage: xdebug
 
       - name: Install dependencies
-        run: |
-          cd packages/AaronLumsden/LaravelAgentADK
-          composer install --prefer-dist --no-interaction --no-progress
+        run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests with coverage
-        run: |
-          cd packages/AaronLumsden/LaravelAgentADK
-          ./vendor/bin/pest --coverage --min=80
+        run: ./vendor/bin/pest --coverage --min=80
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         if: success()
         with:
-          file: ./packages/AaronLumsden/LaravelAgentADK/build/logs/clover.xml
+          file: ./build/logs/clover.xml
           flags: tests
           name: codecov-umbrella
           fail_ci_if_error: true
@@ -107,14 +98,10 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: |
-          cd packages/AaronLumsden/LaravelAgentADK
-          composer install --prefer-dist --no-interaction --no-progress
+        run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Security Audit
-        run: |
-          cd packages/AaronLumsden/LaravelAgentADK
-          composer audit
+        run: composer audit
 
   code-quality:
     runs-on: ubuntu-latest
@@ -133,18 +120,14 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: |
-          cd packages/AaronLumsden/LaravelAgentADK
-          composer install --prefer-dist --no-interaction --no-progress
+        run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Check PSR-12 Coding Standards
         run: |
-          cd packages/AaronLumsden/LaravelAgentADK
           composer global require squizlabs/php_codesniffer
           ~/.composer/vendor/bin/phpcs --standard=PSR12 src/
 
       - name: Check for potential issues with PHPStan
         run: |
-          cd packages/AaronLumsden/LaravelAgentADK
           composer global require phpstan/phpstan
           ~/.composer/vendor/bin/phpstan analyse src/ --level=5 --no-progress
