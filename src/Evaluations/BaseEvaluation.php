@@ -142,4 +142,114 @@ abstract class BaseEvaluation
         $status = ($condition === false);
         return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, false, $condition);
     }
+
+    protected function assertResponseMatchesRegex(string $actualResponse, string $pattern, string $message = 'Response should match regex pattern.'): array
+    {
+        $status = preg_match($pattern, $actualResponse) === 1;
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $pattern, $actualResponse);
+    }
+
+    protected function assertResponseIsValidJson(string $actualResponse, string $message = 'Response should be valid JSON.'): array
+    {
+        json_decode($actualResponse);
+        $status = json_last_error() === JSON_ERROR_NONE;
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, 'valid JSON', $actualResponse);
+    }
+
+    protected function assertJsonHasKey(string $actualResponse, string $key, string $message = 'JSON response should contain key.'): array
+    {
+        $decoded = json_decode($actualResponse, true);
+        $status = $decoded !== null && array_key_exists($key, $decoded);
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $key, $actualResponse);
+    }
+
+    protected function assertResponseLengthBetween(string $actualResponse, int $minLength, int $maxLength, string $message = 'Response length should be within range.'): array
+    {
+        $length = strlen($actualResponse);
+        $status = $length >= $minLength && $length <= $maxLength;
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, "between {$minLength}-{$maxLength} chars", "{$length} chars");
+    }
+
+    protected function assertWordCountBetween(string $actualResponse, int $minWords, int $maxWords, string $message = 'Word count should be within range.'): array
+    {
+        $wordCount = str_word_count($actualResponse);
+        $status = $wordCount >= $minWords && $wordCount <= $maxWords;
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, "between {$minWords}-{$maxWords} words", "{$wordCount} words");
+    }
+
+    protected function assertGreaterThan($expected, $actual, string $message = 'Actual value should be greater than expected.'): array
+    {
+        $status = $actual > $expected;
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, "> {$expected}", $actual);
+    }
+
+    protected function assertLessThan($expected, $actual, string $message = 'Actual value should be less than expected.'): array
+    {
+        $status = $actual < $expected;
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, "< {$expected}", $actual);
+    }
+
+    protected function assertContainsAnyOf(string $actualResponse, array $expectedSubstrings, string $message = 'Response should contain at least one of the expected substrings.'): array
+    {
+        $status = false;
+        $foundSubstring = null;
+        foreach ($expectedSubstrings as $substring) {
+            if (strpos($actualResponse, $substring) !== false) {
+                $status = true;
+                $foundSubstring = $substring;
+                break;
+            }
+        }
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $expectedSubstrings, $foundSubstring ?? 'none found');
+    }
+
+    protected function assertContainsAllOf(string $actualResponse, array $expectedSubstrings, string $message = 'Response should contain all expected substrings.'): array
+    {
+        $missingSubstrings = [];
+        foreach ($expectedSubstrings as $substring) {
+            if (strpos($actualResponse, $substring) === false) {
+                $missingSubstrings[] = $substring;
+            }
+        }
+        $status = empty($missingSubstrings);
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $expectedSubstrings, $missingSubstrings ?: 'all found');
+    }
+
+    protected function assertResponseStartsWith(string $actualResponse, string $expectedPrefix, string $message = 'Response should start with expected prefix.'): array
+    {
+        $status = strpos($actualResponse, $expectedPrefix) === 0;
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $expectedPrefix, substr($actualResponse, 0, strlen($expectedPrefix)));
+    }
+
+    protected function assertResponseEndsWith(string $actualResponse, string $expectedSuffix, string $message = 'Response should end with expected suffix.'): array
+    {
+        $status = substr($actualResponse, -strlen($expectedSuffix)) === $expectedSuffix;
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $expectedSuffix, substr($actualResponse, -strlen($expectedSuffix)));
+    }
+
+    protected function assertResponseHasPositiveSentiment(string $actualResponse, string $message = 'Response should have positive sentiment.'): array
+    {
+        $positiveWords = ['good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'positive', 'happy', 'satisfied', 'pleased'];
+        $negativeWords = ['bad', 'terrible', 'awful', 'horrible', 'negative', 'sad', 'disappointed', 'unsatisfied', 'poor', 'worst'];
+
+        $response = strtolower($actualResponse);
+        $positiveCount = 0;
+        $negativeCount = 0;
+
+        foreach ($positiveWords as $word) {
+            $positiveCount += substr_count($response, $word);
+        }
+        foreach ($negativeWords as $word) {
+            $negativeCount += substr_count($response, $word);
+        }
+
+        $status = $positiveCount > $negativeCount;
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, 'positive sentiment', "positive: {$positiveCount}, negative: {$negativeCount}");
+    }
+
+    protected function assertResponseIsNotEmpty(string $actualResponse, string $message = 'Response should not be empty.'): array
+    {
+        $status = !empty(trim($actualResponse));
+        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, 'non-empty response', $actualResponse ?: 'empty');
+    }
 }

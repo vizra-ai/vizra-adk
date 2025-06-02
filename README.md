@@ -506,9 +506,6 @@ Key components:
 - **`preparePrompt(array $csvRowData): string`:** Constructs the full prompt string. The default stub uses `$this->promptCsvColumn` to fetch the base prompt from the CSV. You can customize this to add prefixes, instructions, or combine multiple CSV columns.
 - **`evaluateRow(array $csvRowData, string $llmResponse): array`:** Core logic using assertion methods to evaluate the LLM's response against the CSV data.
 
-**Assertion Methods:**
-(List and brief explanation as before: `assertResponseContains`, `assertEquals`, etc.)
-
 ### Example Concrete Evaluation: `SentimentAnalysisEvaluation.php`
 
 ```php
@@ -581,6 +578,8 @@ class SentimentAnalysisEvaluation extends BaseEvaluation
 
 The `BaseEvaluation` class provides several assertion methods to help you evaluate LLM responses. Each method records the assertion result internally and returns an array with the test outcome:
 
+#### Basic Response Assertions
+
 #### `assertResponseContains(string $actualResponse, string $expectedSubstring, string $message = 'Response should contain substring.'): array`
 
 Checks if the LLM response contains a specific substring. Useful for verifying that certain keywords or phrases appear in the response.
@@ -599,6 +598,115 @@ $this->assertResponseDoesNotContain($llmResponse, 'error',
     "Response should not contain error messages");
 ```
 
+#### `assertResponseStartsWith(string $actualResponse, string $expectedPrefix, string $message = 'Response should start with expected prefix.'): array`
+
+Validates that the response begins with a specific prefix.
+
+```php
+$this->assertResponseStartsWith($llmResponse, 'Classification:',
+    "Response should start with 'Classification:'");
+```
+
+#### `assertResponseEndsWith(string $actualResponse, string $expectedSuffix, string $message = 'Response should end with expected suffix.'): array`
+
+Validates that the response ends with a specific suffix.
+
+```php
+$this->assertResponseEndsWith($llmResponse, '.',
+    "Response should end with a period");
+```
+
+#### `assertResponseIsNotEmpty(string $actualResponse, string $message = 'Response should not be empty.'): array`
+
+Ensures the response is not empty or just whitespace.
+
+```php
+$this->assertResponseIsNotEmpty($llmResponse,
+    "LLM should provide a non-empty response");
+```
+
+#### Pattern and Format Assertions
+
+#### `assertResponseMatchesRegex(string $actualResponse, string $pattern, string $message = 'Response should match regex pattern.'): array`
+
+Validates that the response matches a specific regular expression pattern.
+
+```php
+$this->assertResponseMatchesRegex($llmResponse, '/^(positive|negative|neutral)$/i',
+    "Response should be exactly one of: positive, negative, neutral");
+```
+
+#### `assertResponseIsValidJson(string $actualResponse, string $message = 'Response should be valid JSON.'): array`
+
+Checks if the response is valid JSON format.
+
+```php
+$this->assertResponseIsValidJson($llmResponse,
+    "Response should be properly formatted JSON");
+```
+
+#### `assertJsonHasKey(string $actualResponse, string $key, string $message = 'JSON response should contain key.'): array`
+
+Validates that a JSON response contains a specific key.
+
+```php
+$this->assertJsonHasKey($llmResponse, 'sentiment',
+    "JSON response should have a 'sentiment' field");
+```
+
+#### Length and Size Assertions
+
+#### `assertResponseLengthBetween(string $actualResponse, int $minLength, int $maxLength, string $message = 'Response length should be within range.'): array`
+
+Validates that the response length (in characters) falls within a specified range.
+
+```php
+$this->assertResponseLengthBetween($llmResponse, 10, 100,
+    "Response should be between 10-100 characters");
+```
+
+#### `assertWordCountBetween(string $actualResponse, int $minWords, int $maxWords, string $message = 'Word count should be within range.'): array`
+
+Validates that the response word count falls within a specified range.
+
+```php
+$this->assertWordCountBetween($llmResponse, 5, 20,
+    "Response should contain 5-20 words");
+```
+
+#### Content Matching Assertions
+
+#### `assertContainsAnyOf(string $actualResponse, array $expectedSubstrings, string $message = 'Response should contain at least one of the expected substrings.'): array`
+
+Checks if the response contains at least one of the provided substrings.
+
+```php
+$this->assertContainsAnyOf($llmResponse, ['happy', 'joy', 'excited', 'pleased'],
+    "Response should contain at least one positive emotion word");
+```
+
+#### `assertContainsAllOf(string $actualResponse, array $expectedSubstrings, string $message = 'Response should contain all expected substrings.'): array`
+
+Validates that the response contains ALL of the provided substrings.
+
+```php
+$this->assertContainsAllOf($llmResponse, ['classification', 'confidence'],
+    "Response should contain both classification and confidence information");
+```
+
+#### Sentiment Analysis Assertion
+
+#### `assertResponseHasPositiveSentiment(string $actualResponse, string $message = 'Response should have positive sentiment.'): array`
+
+Performs basic keyword-based sentiment analysis to determine if the response has positive sentiment.
+
+```php
+$this->assertResponseHasPositiveSentiment($llmResponse,
+    "Agent response should maintain a positive tone");
+```
+
+#### Tool and Behavior Assertions
+
 #### `assertToolCalled(string $expectedToolName, array $calledTools, string $message = 'Expected tool was not called.'): array`
 
 Validates that a specific tool was called during the agent's execution. Useful for testing agent behavior and tool usage.
@@ -608,6 +716,8 @@ $this->assertToolCalled('get_current_weather', $calledTools,
     "Weather tool should have been called");
 ```
 
+#### Value Comparison Assertions
+
 #### `assertEquals($expected, $actual, string $message = 'Values should be equal.'): array`
 
 Performs a loose equality check between expected and actual values. Perfect for comparing extracted values or classifications.
@@ -616,6 +726,26 @@ Performs a loose equality check between expected and actual values. Perfect for 
 $this->assertEquals('positive', $extractedSentiment,
     "Extracted sentiment should match expected value");
 ```
+
+#### `assertGreaterThan($expected, $actual, string $message = 'Actual value should be greater than expected.'): array`
+
+Validates that the actual value is greater than the expected value.
+
+```php
+$this->assertGreaterThan(0.7, $confidenceScore,
+    "Confidence score should be greater than 0.7");
+```
+
+#### `assertLessThan($expected, $actual, string $message = 'Actual value should be less than expected.'): array`
+
+Validates that the actual value is less than the expected value.
+
+```php
+$this->assertLessThan(1000, $responseTime,
+    "Response time should be under 1000ms");
+```
+
+#### Boolean Assertions
 
 #### `assertTrue(bool $condition, string $message = 'Condition should be true.'): array`
 
@@ -643,7 +773,9 @@ $this->assertFalse(empty($llmResponse),
 - `expected`: The expected value (when applicable)
 - `actual`: The actual value (when applicable)
 
-### Running Evaluations
+All assertion results are automatically collected and can be accessed via the `$this->assertionResults` property in your evaluation's `evaluateRow` method.
+
+## Running Evaluations
 
 To run an evaluation, use the `agent:run:eval` Artisan command with the evaluation's class name:
 
