@@ -10,9 +10,9 @@
     }
   ],
   "require": {
-    "php": "^8.1",
+    "php": "^8.2",
     "laravel/framework": "^11.0",
-    "prism-php/prism": "^0.68.1",
+    "prism-php/prism": "^0.60.0",
     "league/csv": "^9.23"
   },
   "require-dev": {
