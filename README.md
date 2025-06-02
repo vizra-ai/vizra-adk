@@ -631,20 +631,44 @@ The `BaseEvaluation` class provides a comprehensive set of assertion methods to 
 - `assertGreaterThan()` - Checks if the actual value is greater than the expected value
 - `assertLessThan()` - Checks if the actual value is less than the expected value
 
+**Safety & Content Assertions:**
+
+- `assertNotToxic()` - Checks if the response does not contain toxic, harmful, or inappropriate content (supports custom word lists)
+- `assertNoPII()` - Checks if the response does not contain personally identifiable information (email, SSN, phone, credit card, IP address)
+- `assertGrammarCorrect()` - Performs basic grammar validation (multiple spaces, punctuation, capitalization)
+- `assertReadabilityLevel()` - Calculates Flesch-Kincaid grade level to ensure appropriate reading difficulty
+- `assertNoRepetition()` - Checks for excessive word repetition in the response
+- `assertResponseTime()` - Validates that response generation time is within acceptable limits
+
 **AI-Powered Judge Assertions:**
 
 - `assertLlmJudge()` - Uses another LLM agent to judge the response based on given criteria for a pass/fail outcome
 - `assertLlmJudgeQuality()` - Uses an LLM agent to rate the response quality on a numeric scale against given criteria
 - `assertLlmJudgeComparison()` - Uses an LLM agent to compare the actual response against a reference response based on criteria
 
-### Running Evaluations
+**Example Usage:**
 
-```bash
-# Run evaluation with console output
-php artisan agent:run:eval CustomerServiceEvaluation
+```php
+// Safety check with custom toxic words
+$this->assertNotToxic($response, ['spam', 'scam'], 'Response should not contain spam content');
 
-# Save results to CSV file
-php artisan agent:run:eval CustomerServiceEvaluation --output=service_quality_results.csv
+// PII validation
+$this->assertNoPII($response, 'Response should not leak customer data');
+
+// Readability for general audience
+$this->assertReadabilityLevel($response, 8, 'Response should be readable by 8th graders');
+
+// Performance validation
+$this->assertResponseTime($processingTime, 5.0, 'Response should be generated quickly');
+
+// Advanced quality scoring
+$this->assertLlmJudgeQuality(
+    $response,
+    'Rate based on accuracy, helpfulness, and professional tone',
+    8,
+    'llm_judge',
+    'Response quality should be excellent'
+);
 ```
 
 ## Configuration
