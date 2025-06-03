@@ -15,6 +15,7 @@ This is not a test
 - [Building Your First Agent](#building-your-first-agent-)
 - [Advanced Features](#advanced-features-)
   - [Tool System](#tool-system)
+  - [Sub-Agent Delegation](#sub-agent-delegation)
   - [Generation Parameters](#generation-parameters)
   - [Event System](#event-system)
   - [Error Handling](#error-handling)
@@ -59,20 +60,22 @@ AI agents are autonomous digital assistants that can think, decide, and take act
 
 - **Smart Conversation Management**: Automatic context and history tracking
 - **Tool Integration**: Let agents use APIs, databases, and external services
+- **Sub-Agent Delegation**: Build hierarchical agent systems with task specialization
 - **Multi-LLM Support**: OpenAI, Anthropic, Google Gemini through [Prism-PHP](https://prismphp.com/)
 - **Quality Assurance**: Built-in evaluation system with LLM-as-a-Judge
 - **Laravel Native**: Events, service providers, Artisan commands - it all just works
 
 ## Why Choose Laravel Agent ADK? 🌟
 
-| Feature                 | Laravel Agent ADK | DIY Approach       |
-| ----------------------- | ----------------- | ------------------ |
-| **Setup Time**          | 5 minutes         | Hours/Days         |
-| **State Management**    | Automatic         | Manual complexity  |
-| **Multi-LLM Support**   | Built-in          | Custom integration |
-| **Tool System**         | Declarative       | Imperative coding  |
-| **Quality Testing**     | LLM evaluations   | Manual testing     |
-| **Laravel Integration** | Native            | Custom glue code   |
+| Feature                  | Laravel Agent ADK | DIY Approach         |
+| ------------------------ | ----------------- | -------------------- |
+| **Setup Time**           | 5 minutes         | Hours/Days           |
+| **State Management**     | Automatic         | Manual complexity    |
+| **Multi-LLM Support**    | Built-in          | Custom integration   |
+| **Tool System**          | Declarative       | Imperative coding    |
+| **Sub-Agent Delegation** | Built-in          | Complex architecture |
+| **Quality Testing**      | LLM evaluations   | Manual testing       |
+| **Laravel Integration**  | Native            | Custom glue code     |
 
 ## Requirements 📋
 
@@ -135,6 +138,7 @@ AGENT_ADK_DEFAULT_TEMPERATURE=0.7
 - **🏗️ Class-Based Agents**: Extend `BaseLlmAgent` with full IDE support
 - **🎨 Fluent Builder**: Quick agent creation with `Agent::define()`
 - **🔧 Tool System**: Declarative tool definitions with automatic parameter validation
+- **🤖 Sub-Agent Delegation**: Hierarchical agent systems with task specialization
 - **📚 Conversation Memory**: Automatic context and history management
 - **🌐 Multi-Provider**: OpenAI, Anthropic, Gemini support via Prism-PHP
 - **🎯 Smart Routing**: Automatic tool selection and execution
@@ -327,6 +331,177 @@ class WeatherApiTool implements ToolInterface
 }
 ```
 
+### Sub-Agent Delegation
+
+Build sophisticated hierarchical agent systems where parent agents can delegate specialized tasks to child agents (sub-agents). This enables complex workflows with task specialization and modular agent architectures.
+
+#### Creating Sub-Agents
+
+Sub-agents are regular agents that can be used independently or as children of parent agents:
+
+```bash
+# Create the specialized sub-agents
+php artisan agent:make:agent TechnicalSupportAgent
+php artisan agent:make:agent BillingSupportAgent
+php artisan agent:make:agent OrderSpecialistAgent
+
+# Create the parent agent
+php artisan agent:make:agent CustomerServiceAgent
+```
+
+#### Registering Sub-Agents
+
+In your parent agent, register sub-agents by implementing the `registerSubAgents()` method:
+
+```php
+namespace App\Agents;
+
+use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
+use App\Agents\TechnicalSupportAgent;
+use App\Agents\BillingSupportAgent;
+use App\Agents\OrderSpecialistAgent;
+
+class CustomerServiceAgent extends BaseLlmAgent
+{
+    protected string $name = 'customer_service';
+    protected string $instructions = 'You are a customer service manager. You can handle general inquiries or delegate to specialists when needed.';
+
+    /**
+     * Register sub-agents that this agent can delegate to
+     */
+    protected function registerSubAgents(): array
+    {
+        return [
+            'technical_support' => TechnicalSupportAgent::class,
+            'billing_support' => BillingSupportAgent::class,
+            'order_specialist' => OrderSpecialistAgent::class,
+        ];
+    }
+
+    protected function registerTools(): array
+    {
+        return [
+            // Your regular tools here
+        ];
+    }
+}
+```
+
+#### How Delegation Works
+
+1. **Automatic Tool Creation**: When sub-agents are registered, the parent agent automatically gains access to a `delegate_to_sub_agent` tool
+2. **LLM Awareness**: The parent agent's instructions are enhanced to inform the LLM about available sub-agents
+3. **Intelligent Delegation**: The LLM can choose to delegate tasks by calling the delegation tool
+4. **Context Isolation**: Each sub-agent runs in its own isolated context with optional context summary from the parent
+
+#### Example Usage
+
+```php
+use AaronLumsden\LaravelAgentADK\Facades\Agent;
+
+// The parent agent can handle requests directly
+$response = Agent::run('customer_service', "Hello, I need help", 'session-123');
+
+// Or it can intelligently delegate to sub-agents
+$response = Agent::run('customer_service',
+    "My billing is wrong and I was overcharged last month",
+    'session-123'
+);
+// The LLM will likely delegate this to the billing_support sub-agent
+
+$response = Agent::run('customer_service',
+    "My internet connection keeps dropping",
+    'session-123'
+);
+// The LLM will likely delegate this to the technical_support sub-agent
+```
+
+#### Nested Sub-Agents
+
+Sub-agents can have their own sub-agents, creating multi-level hierarchies:
+
+```php
+class TechnicalSupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'technical_support';
+
+    protected function registerSubAgents(): array
+    {
+        return [
+            'network_specialist' => NetworkSpecialistAgent::class,
+            'software_specialist' => SoftwareSpecialistAgent::class,
+        ];
+    }
+}
+```
+
+#### Benefits
+
+- **Task Specialization**: Each agent can focus on specific domains with optimized instructions and tools
+- **Modular Architecture**: Agents can be developed, tested, and maintained independently
+- **Scalable Complexity**: Handle complex workflows by breaking them into specialized components
+- **Context Isolation**: Sub-agents operate independently, preventing context pollution
+- **Reusability**: Sub-agents can be shared across multiple parent agents
+
+#### Monitoring Delegation Events
+
+The system dispatches a `TaskDelegated` event whenever a task is delegated to a sub-agent, providing comprehensive monitoring capabilities:
+
+```bash
+php artisan make:listener TrackTaskDelegation --event="AaronLumsden\LaravelAgentADK\Events\TaskDelegated"
+```
+
+```php
+namespace App\Listeners;
+
+use AaronLumsden\LaravelAgentADK\Events\TaskDelegated;
+use Illuminate\Support\Facades\Log;
+
+class TrackTaskDelegation
+{
+    public function handle(TaskDelegated $event): void
+    {
+        // Log delegation details
+        Log::info('Task delegated', [
+            'parent_agent' => $event->parentAgentName,
+            'sub_agent' => $event->subAgentName,
+            'task_input' => $event->taskInput,
+            'delegation_depth' => $event->delegationDepth,
+            'has_context_summary' => !empty($event->contextSummary),
+        ]);
+
+        // Monitor for potential issues
+        if ($event->delegationDepth > 3) {
+            Log::warning('Deep delegation detected', [
+                'depth' => $event->delegationDepth,
+                'chain' => "{$event->parentAgentName} -> {$event->subAgentName}"
+            ]);
+        }
+
+        // Track metrics for analytics
+        $this->trackDelegationMetrics($event);
+    }
+
+    private function trackDelegationMetrics(TaskDelegated $event): void
+    {
+        // Send to your analytics service
+        // Track delegation patterns, success rates, etc.
+    }
+}
+```
+
+**Event Properties:**
+
+- `$parentContext` - The parent agent's context
+- `$subAgentContext` - The newly created sub-agent context
+- `$parentAgentName` - Name of the delegating agent
+- `$subAgentName` - Name of the receiving sub-agent
+- `$taskInput` - The task being delegated
+- `$contextSummary` - Context summary provided to sub-agent
+- `$delegationDepth` - Current nesting level (for recursion monitoring)
+
+For detailed implementation examples and best practices, see the [Sub-Agent Documentation](docs/SUB_AGENTS.md).
+
 ### Generation Parameters
 
 Fine-tune your agent's response style with these parameters:
@@ -413,6 +588,26 @@ class YourAgent extends BaseLlmAgent
         // Example: Format tool results into a specific string, handle tool errors gracefully, log tool usage
         return $result;
     }
+
+    /**
+     * Called before delegating a task to a sub-agent.
+     * Use this to modify delegation parameters, add authorization checks, or log delegation attempts.
+     */
+    public function beforeSubAgentDelegation(string $subAgentName, string $taskInput, string $contextSummary, AgentContext $parentContext): array
+    {
+        // Example: Validate delegation permissions, modify task input, enhance context summary
+        return [$subAgentName, $taskInput, $contextSummary];
+    }
+
+    /**
+     * Called after a sub-agent completes a delegated task.
+     * Use this to process results, validate responses, or perform cleanup.
+     */
+    public function afterSubAgentDelegation(string $subAgentName, string $taskInput, string $subAgentResult, AgentContext $parentContext, AgentContext $subAgentContext): string
+    {
+        // Example: Process sub-agent results, add metadata, validate responses
+        return $subAgentResult;
+    }
 }
 ```
 
@@ -448,6 +643,48 @@ class LogAgentInteractions
 }
 ```
 
+**Task Delegation Monitoring:**
+
+```php
+namespace App\Listeners;
+
+use AaronLumsden\LaravelAgentADK\Events\TaskDelegated;
+use Illuminate\Support\Facades\Log;
+
+class TrackTaskDelegation
+{
+    public function handle(TaskDelegated $event): void
+    {
+        Log::info('Task delegated to sub-agent', [
+            'parent_agent' => $event->parentAgentName,
+            'sub_agent' => $event->subAgentName,
+            'task_input' => $event->taskInput,
+            'context_summary' => $event->contextSummary,
+            'delegation_depth' => $event->delegationDepth,
+            'parent_session' => $event->parentContext->getSessionId(),
+            'sub_session' => $event->subAgentContext->getSessionId(),
+        ]);
+
+        // Monitor delegation patterns, detect potential issues
+        if ($event->delegationDepth > 3) {
+            Log::warning('Deep delegation detected', [
+                'depth' => $event->delegationDepth,
+                'chain' => "{$event->parentAgentName} -> {$event->subAgentName}"
+            ]);
+        }
+
+        // Track delegation metrics for analytics
+        $this->trackDelegationMetrics($event);
+    }
+
+    private function trackDelegationMetrics(TaskDelegated $event): void
+    {
+        // Send metrics to your analytics service
+        // Track delegation frequency, depth, success rates, etc.
+    }
+}
+```
+
 **Available Events:**
 
 - `AgentExecutionStarting` - Before agent processing begins
@@ -456,6 +693,7 @@ class LogAgentInteractions
 - `LlmResponseReceived` - After LLM responds
 - `ToolCallInitiating` - Before tool execution
 - `ToolCallCompleted` - After tool execution
+- `TaskDelegated` - When a task is delegated to a sub-agent
 - `AgentResponseGenerated` - Final response ready
 - `StateUpdated` - When context state changes
 
@@ -847,6 +1085,13 @@ Schema::table('agent_sessions', function (Blueprint $table) {
 - Clean up old conversation contexts regularly
 - Use pagination for large tool result sets
 - Monitor memory usage with tools like Telescope
+
+### Sub-Agent Performance
+
+- **Delegation Depth**: Consider limiting nested delegation to prevent excessive recursion
+- **Context Isolation**: Each sub-agent creates separate contexts, which consume additional memory
+- **Caching Strategy**: Cache frequently delegated sub-agent responses to reduce redundant processing
+- **Monitoring**: Track delegation patterns to identify performance bottlenecks in agent hierarchies
 
 ## Testing
 

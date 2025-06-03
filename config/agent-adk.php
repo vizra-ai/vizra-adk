@@ -26,6 +26,12 @@ return [
     ],
 
     /**
+     * Sub-agent delegation settings.
+     * Controls behavior of agent hierarchies and delegation.
+     */
+    'max_delegation_depth' => env('AGENT_ADK_MAX_DELEGATION_DEPTH', 5), // Maximum depth for nested sub-agent delegation
+
+    /**
      * Database table names used by the package.
      * You can change these if they conflict with existing tables.
      */

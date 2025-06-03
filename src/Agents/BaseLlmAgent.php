@@ -34,10 +34,14 @@ abstract class BaseLlmAgent extends BaseAgent
     /** @var array<ToolInterface> */
     protected array $loadedTools = [];
 
+    /** @var array<string, BaseLlmAgent> */
+    protected array $loadedSubAgents = [];
+
     public function __construct()
     {
-        // Initialize tools right away so definition is available
+        // Initialize tools and sub-agents right away so definitions are available
         $this->loadTools();
+        $this->loadSubAgents();
     }
 
     protected function getProvider(): Provider
@@ -74,7 +78,23 @@ abstract class BaseLlmAgent extends BaseAgent
 
     public function getInstructions(): string
     {
-        return $this->instructions;
+        $instructions = $this->instructions;
+
+        // Add delegation information if sub-agents are available
+        if (!empty($this->loadedSubAgents)) {
+            $subAgentNames = array_keys($this->loadedSubAgents);
+            $subAgentsList = implode(', ', $subAgentNames);
+
+            $delegationInfo = "\n\nDELEGATION CAPABILITIES:\n" .
+                "You have access to specialized sub-agents for handling specific tasks. " .
+                "Available sub-agents: {$subAgentsList}. " .
+                "Use the 'delegate_to_sub_agent' tool when a task would be better handled by one of your sub-agents. " .
+                "This allows you to leverage specialized expertise and break down complex problems into manageable parts.";
+
+            $instructions .= $delegationInfo;
+        }
+
+        return $instructions;
     }
 
     public function setInstructions(string $instructions): static
@@ -136,6 +156,17 @@ abstract class BaseLlmAgent extends BaseAgent
         return [];
     }
 
+    /**
+     * Register sub-agents for this agent.
+     * Return an associative array where keys are unique names and values are class names.
+     *
+     * @return array<string, class-string<BaseLlmAgent>>
+     */
+    protected function registerSubAgents(): array
+    {
+        return [];
+    }
+
     protected function loadTools(): void
     {
         if (!empty($this->loadedTools)) {
@@ -149,13 +180,54 @@ abstract class BaseLlmAgent extends BaseAgent
         }
     }
 
+    protected function loadSubAgents(): void
+    {
+        if (!empty($this->loadedSubAgents)) {
+            return;
+        }
+        foreach ($this->registerSubAgents() as $subAgentName => $subAgentClass) {
+            if (class_exists($subAgentClass) && is_subclass_of($subAgentClass, BaseLlmAgent::class)) {
+                $subAgentInstance = app($subAgentClass); // Resolve from container
+                $this->loadedSubAgents[$subAgentName] = $subAgentInstance;
+            }
+        }
+    }
+
+    /**
+     * Get a loaded sub-agent instance by its registered name.
+     *
+     * @param string $name The name of the sub-agent
+     * @return BaseLlmAgent|null The sub-agent instance or null if not found
+     */
+    public function getSubAgent(string $name): ?BaseLlmAgent
+    {
+        return $this->loadedSubAgents[$name] ?? null;
+    }
+
+    /**
+     * Get all loaded sub-agents.
+     *
+     * @return array Array of loaded sub-agent instances keyed by name
+     */
+    public function getLoadedSubAgents(): array
+    {
+        return $this->loadedSubAgents;
+    }
+
     /**
      * @return array<\Prism\Prism\Tool>
      */
     protected function getToolsForPrism(AgentContext $context): array
     {
         $tools = [];
-        foreach ($this->loadedTools as $tool) {
+
+        // Include delegation tool if sub-agents are available
+        $allTools = $this->loadedTools;
+        if (!empty($this->loadedSubAgents)) {
+            $allTools[] = new \AaronLumsden\LaravelAgentADK\Tools\DelegateToSubAgentTool($this);
+        }
+
+        foreach ($allTools as $tool) {
             $definition = $tool->definition();
 
             // Create Prism Tool using the correct facade API
@@ -280,7 +352,7 @@ abstract class BaseLlmAgent extends BaseAgent
             $prismRequest = $prismRequest->withMessages($messages);
 
             // Add tools if available
-            if (!empty($this->loadedTools)) {
+            if (!empty($allTools)) {
                 $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
                     ->withMaxSteps(5); // Prism will handle tool execution internally
             }
@@ -384,6 +456,37 @@ abstract class BaseLlmAgent extends BaseAgent
     public function afterToolResult(string $toolName, string $result, AgentContext $context): string
     {
         return $result;
+    }
+
+    /**
+     * Called before delegating a task to a sub-agent.
+     * Use this to modify delegation parameters, add authorization checks, or log delegation attempts.
+     *
+     * @param string $subAgentName The name of the sub-agent receiving the task
+     * @param string $taskInput The task input being delegated
+     * @param string $contextSummary The context summary for the sub-agent
+     * @param AgentContext $parentContext The parent agent's context
+     * @return array Returns modified delegation parameters [subAgentName, taskInput, contextSummary]
+     */
+    public function beforeSubAgentDelegation(string $subAgentName, string $taskInput, string $contextSummary, AgentContext $parentContext): array
+    {
+        return [$subAgentName, $taskInput, $contextSummary];
+    }
+
+    /**
+     * Called after a sub-agent completes a delegated task.
+     * Use this to process results, validate responses, or perform cleanup.
+     *
+     * @param string $subAgentName The name of the sub-agent that handled the task
+     * @param string $taskInput The original task input
+     * @param string $subAgentResult The result from the sub-agent
+     * @param AgentContext $parentContext The parent agent's context
+     * @param AgentContext $subAgentContext The sub-agent's context
+     * @return string Returns the processed result
+     */
+    public function afterSubAgentDelegation(string $subAgentName, string $taskInput, string $subAgentResult, AgentContext $parentContext, AgentContext $subAgentContext): string
+    {
+        return $subAgentResult;
     }
 
     /**

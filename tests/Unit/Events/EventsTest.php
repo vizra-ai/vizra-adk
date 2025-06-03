@@ -3,6 +3,7 @@
 use AaronLumsden\LaravelAgentADK\Events\AgentResponseGenerated;
 use AaronLumsden\LaravelAgentADK\Events\AgentExecutionStarting;
 use AaronLumsden\LaravelAgentADK\Events\AgentExecutionFinished;
+use AaronLumsden\LaravelAgentADK\Events\TaskDelegated;
 use AaronLumsden\LaravelAgentADK\System\AgentContext;
 use Illuminate\Support\Facades\Event;
 
@@ -40,20 +41,51 @@ it('creates agent execution finished event correctly', function () {
     expect($event->agentName)->toBe($agentName);
 });
 
+it('creates task delegated event correctly', function () {
+    $parentContext = new AgentContext('parent-session', 'parent input');
+    $subAgentContext = new AgentContext('sub-session', 'sub input');
+    $parentAgentName = 'parent-agent';
+    $subAgentName = 'sub-agent';
+    $taskInput = 'Process this data';
+    $contextSummary = 'User is asking about data processing';
+    $delegationDepth = 2;
+
+    $event = new TaskDelegated(
+        $parentContext,
+        $subAgentContext,
+        $parentAgentName,
+        $subAgentName,
+        $taskInput,
+        $contextSummary,
+        $delegationDepth
+    );
+
+    expect($event->parentContext)->toBe($parentContext);
+    expect($event->subAgentContext)->toBe($subAgentContext);
+    expect($event->parentAgentName)->toBe($parentAgentName);
+    expect($event->subAgentName)->toBe($subAgentName);
+    expect($event->taskInput)->toBe($taskInput);
+    expect($event->contextSummary)->toBe($contextSummary);
+    expect($event->delegationDepth)->toBe($delegationDepth);
+});
+
 it('can dispatch events', function () {
     Event::fake();
 
     $context = new AgentContext('test-session', 'test input');
+    $subAgentContext = new AgentContext('sub-session', 'sub input');
 
     // Dispatch events
     AgentResponseGenerated::dispatch($context, 'test-agent', 'response');
     AgentExecutionStarting::dispatch($context, 'test-agent', 'test input');
     AgentExecutionFinished::dispatch($context, 'test-agent');
+    TaskDelegated::dispatch($context, $subAgentContext, 'parent-agent', 'sub-agent', 'task input', 'context summary', 1);
 
     // Assert events were dispatched
     Event::assertDispatched(AgentResponseGenerated::class);
     Event::assertDispatched(AgentExecutionStarting::class);
     Event::assertDispatched(AgentExecutionFinished::class);
+    Event::assertDispatched(TaskDelegated::class);
 });
 
 it('contains correct data when dispatched', function () {
