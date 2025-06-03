@@ -2,8 +2,6 @@
 
 **Laravel Agent ADK** is a powerful PHP package that simplifies building AI agents with Laravel. Think of it as your AI agent's foundation - it handles the complex infrastructure so you can focus on building intelligent systems that actually work.
 
-This is not a test
-
 ## Table of Contents 📋
 
 - [Quick Start](#quick-start-)
