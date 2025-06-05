@@ -430,6 +430,627 @@ $deletedCount = $memoryManager->cleanupOldSessions('customer_support', 30); // 3
 $history = $memoryManager->getConversationHistory('customer_support', 100);
 ```
 
+### Manual Memory Management
+
+All memory management methods support an optional `$userId` parameter for user-specific memories:
+
+```php
+use AaronLumsden\LaravelAgentADK\Services\MemoryManager;
+
+$memoryManager = app(MemoryManager::class);
+
+// Basic usage - applies to all users of the agent
+$memoryManager->addLearning('customer_support', 'Always greet customers warmly');
+$memoryManager->updateMemoryData('sales_agent', ['product_knowledge' => 'updated']);
+$memoryManager->addFact('support_agent', 'system_version', 'v2.1.4');
+$memoryManager->updateSummary('billing_agent', 'Specialized in payment processing');
+
+// User-specific usage - applies only to specific user
+$userId = 123;
+$memoryManager->addLearning('customer_support', 'User prefers email over phone', $userId);
+$memoryManager->updateMemoryData('sales_agent', ['budget' => 5000], $userId);
+$memoryManager->addFact('support_agent', 'preferred_language', 'Spanish', $userId);
+$memoryManager->updateSummary('billing_agent', 'VIP customer with premium support', $userId);
+
+// Retrieve memory context (with optional user ID)
+$globalContext = $memoryManager->getMemoryContext('customer_support');
+$userContext = $memoryManager->getMemoryContext('customer_support', $userId);
+```
+
+### Manual Memory Management Examples
+
+#### User Onboarding Example
+
+```php
+// When a user signs up or provides preferences
+use AaronLumsden\LaravelAgentADK\Services\MemoryManager;
+
+class UserController extends Controller
+{
+    public function updatePreferences(Request $request)
+    {
+        $memoryManager = app(MemoryManager::class);
+        $agentName = 'customer_support';
+
+        // Store user preferences in agent memory
+        $memoryManager->updateMemoryData($agentName, [
+            'user_' . $request->user()->id . '_communication_style' => $request->input('communication_style'),
+            'user_' . $request->user()->id . '_preferred_language' => $request->input('language', 'English'),
+            'user_' . $request->user()->id . '_account_type' => $request->user()->account_type,
+            'user_' . $request->user()->id . '_timezone' => $request->input('timezone'),
+        ]);
+
+        // Add a learning about user behavior patterns
+        $memoryManager->addLearning($agentName,
+            "User {$request->user()->email} prefers {$request->input('communication_style')} communication style"
+        );
+
+        return response()->json(['status' => 'preferences_saved']);
+    }
+}
+```
+
+#### Post-Interaction Learning
+
+```php
+// After successful customer interaction
+public function recordSuccessfulInteraction($agentName, $sessionId, $resolutionType)
+{
+    $memoryManager = app(MemoryManager::class);
+
+    // Record what worked well
+    $memoryManager->addLearning($agentName,
+        "Successfully resolved {$resolutionType} issue using step-by-step guidance"
+    );
+
+    // Update statistics
+    $currentStats = $memoryManager->getMemoryContextArray($agentName)['facts'];
+    $successCount = ($currentStats['successful_resolutions'] ?? 0) + 1;
+
+    $memoryManager->updateMemoryData($agentName, [
+        'successful_resolutions' => $successCount,
+        'last_successful_resolution' => now()->toISOString(),
+        'most_effective_approach' => $resolutionType,
+    ]);
+}
+```
+
+#### Domain Knowledge Updates
+
+```php
+// When system updates or new policies are implemented
+public function updateSystemKnowledge()
+{
+    $memoryManager = app(MemoryManager::class);
+
+    // Update all customer support agents with new system info
+    $agentNames = ['customer_support', 'billing_support', 'technical_support'];
+
+    foreach ($agentNames as $agentName) {
+        $memoryManager->updateMemoryData($agentName, [
+            'system_version' => 'v3.2.1',
+            'new_features' => ['automated_refunds', 'instant_chat_transfer', 'priority_queuing'],
+            'policy_update_date' => now()->toDateString(),
+            'knowledge_base_url' => 'https://internal.company.com/kb/v3.2.1',
+        ]);
+
+        $memoryManager->addLearning($agentName,
+            'System updated to v3.2.1 with new automated refund capabilities - customers can now get instant refunds for purchases under $50'
+        );
+    }
+}
+```
+
+#### Quick Memory Usage Example
+
+Here's how to quickly use memory in your application without complex hooks:
+
+```php
+// In a controller or service
+class ChatController extends Controller
+{
+    public function handleChat(Request $request)
+    {
+        $memoryManager = app(MemoryManager::class);
+        $agentName = 'customer_support';
+        $userId = $request->user()->id;
+
+        // Before running the agent, update any relevant memory
+        if ($request->has('feedback')) {
+            $memoryManager->addLearning($agentName,
+                "User feedback: {$request->input('feedback')}",
+                $userId
+            );
+        }
+
+        // Run the agent (memory is automatically included)
+        $response = Agent::run($agentName, $request->input('message'), $request->session()->getId());
+
+        // After the interaction, learn from it
+        if ($response && str_contains(strtolower($response), 'resolved')) {
+            $memoryManager->addLearning($agentName,
+                'Successfully resolved user issue',
+                $userId
+            );
+        }
+
+        return response()->json(['reply' => $response]);
+    }
+}
+```
+
+### Automatic Agent Memory Usage
+
+#### Simple Memory Integration
+
+Here's the simplest way to add memory to your agent:
+
+```php
+class SimpleAgent extends BaseLlmAgent
+{
+    protected string $name = 'simple_agent';
+    protected string $instructions = 'You are a helpful assistant.';
+
+    // Automatically load memory before each LLM call
+    protected function beforeLlmCall(array $inputMessages, AgentContext $context): array
+    {
+        $memoryManager = app(MemoryManager::class);
+
+        // Get memory context (with optional user ID)
+        $userId = $context->getState('user_id'); // optional
+        $memoryContext = $memoryManager->getMemoryContext($this->getName(), $userId);
+
+        // Store in context - getInstructionsWithMemory() will automatically use this
+        $context->setState('memory_context', $memoryContext);
+
+        return $inputMessages;
+    }
+
+    // Learn from successful interactions
+    protected function afterLlmResponse(Response $response, AgentContext $context): mixed
+    {
+        $responseText = $response->text ?? '';
+
+        // Simple learning: if user says thanks, remember the approach worked
+        if (str_contains(strtolower($responseText), 'thank')) {
+            $memoryManager = app(MemoryManager::class);
+            $userId = $context->getState('user_id'); // optional
+
+            $memoryManager->addLearning($this->getName(),
+                'User appreciated this type of response',
+                $userId
+            );
+        }
+
+        return $response;
+    }
+}
+```
+
+The key points:
+
+1. **beforeLlmCall**: Load memory and store in `$context->setState('memory_context', $memoryContext)`
+2. **getInstructionsWithMemory()**: Automatically injects memory into agent instructions
+3. **afterLlmResponse**: Learn from interactions and update memory
+4. **Optional $userId**: Add as the last parameter to make memories user-specific
+
+#### Using Memory in beforeLlmCall Hook
+
+The `beforeLlmCall` hook is a powerful lifecycle method in `BaseLlmAgent` that allows you to automatically inject memory context before each LLM interaction. Here are comprehensive examples:
+
+##### Example 1: Customer Support Agent with Memory-Enhanced Context
+
+```php
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'customer_support';
+    protected string $instructions = 'You are a helpful customer service agent...';
+
+    /**
+     * Automatically enhance conversations with relevant memory before LLM calls
+     */
+    public function beforeLlmCall(array $inputMessages, AgentContext $context): array
+    {
+        $memoryManager = app(MemoryManager::class);
+
+        // Get current user info from context or session
+        $userId = $context->getState('user_id');
+        $currentIssue = $this->extractIssueType($context->getLastUserMessage());
+
+        // Retrieve relevant memory context
+        $memoryContext = $memoryManager->getMemoryContext($this->getName());
+
+        // Store memory context in agent context state for use in instructions
+        $context->setState('memory_context', $memoryContext);
+
+        // Extract user-specific facts
+        $userFacts = [];
+        if ($memoryContext && isset($memoryContext['facts'])) {
+            foreach ($memoryContext['facts'] as $key => $value) {
+                if (str_contains($key, "user_{$userId}_")) {
+                    $userFacts[$key] = $value;
+                }
+            }
+        }
+
+        // Store personalization data in context for instructions
+        if (!empty($userFacts)) {
+            $personalizationData = [
+                'communication_style' => $userFacts["user_{$userId}_communication_style"] ?? null,
+                'account_type' => $userFacts["user_{$userId}_account_type"] ?? null,
+                'preferred_language' => $userFacts["user_{$userId}_preferred_language"] ?? null,
+            ];
+
+            $context->setState('user_personalization', array_filter($personalizationData));
+        }
+
+        // Add relevant learnings for this issue type
+        if ($memoryContext && isset($memoryContext['key_learnings'])) {
+            $relevantLearnings = collect($memoryContext['key_learnings'])
+                ->filter(fn($learning) => str_contains(strtolower($learning), strtolower($currentIssue)))
+                ->take(3)
+                ->values()
+                ->toArray();
+
+            $context->setState('relevant_learnings', $relevantLearnings);
+        }
+
+        // Add recent successful approaches
+        if ($memoryContext && isset($memoryContext['facts'])) {
+            $recentSuccesses = [];
+            foreach ($memoryContext['facts'] as $key => $value) {
+                if (str_contains($key, 'last_success_' . $currentIssue)) {
+                    $recentSuccesses[] = $value;
+                }
+            }
+
+            $context->setState('recent_successes', array_slice($recentSuccesses, 0, 2));
+        }
+
+        return $inputMessages;
+    }
+
+    /**
+     * Automatically extract learnings after successful interactions
+     */
+    public function afterLlmResponse(Response $response, AgentContext $context): mixed
+    {
+        $responseText = $response->text ?? '';
+
+        // Auto-extract learnings based on response patterns
+        if ($this->isSuccessfulResolution($responseText)) {
+            $memoryManager = app(MemoryManager::class);
+            $issueType = $this->extractIssueType($context->getLastUserMessage());
+
+            // Add learning about successful resolution approach
+            $memoryManager->addLearning($this->getName(),
+                "Successfully resolved {$issueType} by " . $this->extractApproach($responseText)
+            );
+
+            // Update success metrics
+            $memoryManager->updateMemoryData($this->getName(), [
+                'last_success_' . $issueType => now()->toISOString(),
+                'total_' . $issueType . '_resolutions' => ($this->getSuccessCount($issueType) + 1),
+                'most_effective_' . $issueType . '_approach' => $this->extractApproach($responseText),
+            ]);
+        }
+
+        // Extract user satisfaction indicators
+        $lastUserMessage = $context->getLastUserMessage();
+        if ($this->detectUserSatisfaction($lastUserMessage)) {
+            $memoryManager = app(MemoryManager::class);
+            $memoryManager->addLearning($this->getName(),
+                "User expressed satisfaction with response approach: " . $this->extractResponseType($responseText)
+            );
+        }
+
+        return $response;
+    }
+
+
+    private function extractIssueType(string $input): string
+    {
+        $patterns = [
+            'billing' => ['bill', 'charge', 'payment', 'invoice', 'refund', 'subscription'],
+            'technical' => ['error', 'bug', 'broken', 'not working', 'issue', 'crash'],
+            'account' => ['login', 'password', 'access', 'profile', 'settings', 'account'],
+            'shipping' => ['delivery', 'shipping', 'tracking', 'order', 'package'],
+        ];
+
+        $input = strtolower($input);
+        foreach ($patterns as $type => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (str_contains($input, $keyword)) {
+                    return $type;
+                }
+            }
+        }
+
+        return 'general';
+    }
+
+    private function isSuccessfulResolution(string $response): bool
+    {
+        $successIndicators = [
+            'resolved', 'fixed', 'completed', 'processed', 'approved',
+            'should work now', 'try again', 'all set', 'problem solved'
+        ];
+
+        $response = strtolower($response);
+        foreach ($successIndicators as $indicator) {
+            if (str_contains($response, $indicator)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function extractApproach(string $response): string
+    {
+        if (str_contains($response, 'step')) return 'providing step-by-step instructions';
+        if (str_contains($response, 'escalat')) return 'escalating to specialist';
+        if (str_contains($response, 'refund') || str_contains($response, 'credit')) return 'offering refund/credit';
+        if (str_contains($response, 'reset') || str_contains($response, 'restart')) return 'system reset approach';
+        if (str_contains($response, 'guide') || str_contains($response, 'tutorial')) return 'providing detailed guidance';
+
+        return 'standard support protocol';
+    }
+
+    private function detectUserSatisfaction(string $input): bool
+    {
+        $satisfactionIndicators = ['thank you', 'thanks', 'perfect', 'great', 'excellent', 'helpful', 'solved'];
+        $input = strtolower($input);
+
+        foreach ($satisfactionIndicators as $indicator) {
+            if (str_contains($input, $indicator)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function extractResponseType(string $response): string
+    {
+        if (str_contains($response, 'detailed') || str_contains($response, 'thorough')) return 'detailed explanation';
+        if (str_contains($response, 'quick') || str_contains($response, 'simple')) return 'concise solution';
+        if (str_contains($response, 'alternative') || str_contains($response, 'option')) return 'multiple options';
+
+        return 'standard response';
+    }
+
+    private function getSuccessCount(string $issueType): int
+    {
+        $memoryManager = app(MemoryManager::class);
+        $memoryContext = $memoryManager->getMemoryContext($this->getName());
+        return $memoryContext['facts']['total_' . $issueType . '_resolutions'] ?? 0;
+    }
+}
+```
+
+##### Example 2: Personal Assistant Agent with Advanced Memory Integration
+
+```php
+class PersonalAssistantAgent extends BaseLlmAgent
+{
+    protected string $name = 'personal_assistant';
+    protected string $instructions = 'You are a personal assistant who adapts to user preferences...';
+
+    /**
+     * Inject personalized context and relationship memory using proper hooks
+     */
+    public function beforeLlmCall(array $inputMessages, AgentContext $context): array
+    {
+        $memoryManager = app(MemoryManager::class);
+        $userId = $context->getState('user_id');
+
+        // Get memory context using the actual service method
+        $memoryContext = $memoryManager->getMemoryContext($this->getName());
+
+        // Store memory data in context state for use in getInstructionsWithMemory()
+        $context->setState('memory_context', $memoryContext);
+
+        if ($memoryContext && isset($memoryContext['facts'])) {
+            // 1. Communication Style Adaptation
+            $communicationStyle = $memoryContext['facts']['communication_style'] ?? null;
+            if ($communicationStyle) {
+                $context->setState('communication_style', $communicationStyle);
+            }
+
+            // 2. Current Projects and Interests
+            $currentProjects = [];
+            foreach ($memoryContext['facts'] as $key => $value) {
+                if (str_starts_with($key, 'current_project_')) {
+                    $currentProjects[] = $value;
+                }
+            }
+            $context->setState('current_projects', $currentProjects);
+
+            // 3. Important Relationships and Context
+            $relationships = [];
+            foreach ($memoryContext['facts'] as $key => $value) {
+                if (str_starts_with($key, 'relationship_')) {
+                    $relationshipName = str_replace('relationship_', '', $key);
+                    $relationships[$relationshipName] = $value;
+                }
+            }
+            $context->setState('relationships', $relationships);
+
+            // 4. Preferences and Constraints
+            $preferences = [];
+            foreach ($memoryContext['facts'] as $key => $value) {
+                if (str_starts_with($key, 'preference_')) {
+                    $prefName = str_replace('preference_', '', $key);
+                    $preferences[$prefName] = $value;
+                }
+            }
+            $context->setState('preferences', $preferences);
+        }
+
+        // 5. Recent Context and Follow-ups from learnings
+        if ($memoryContext && isset($memoryContext['key_learnings'])) {
+            $recentInteractions = collect($memoryContext['key_learnings'])
+                ->filter(fn($learning) => str_contains($learning, 'follow up') || str_contains($learning, 'reminder'))
+                ->take(3)
+                ->values()
+                ->toArray();
+
+            $context->setState('recent_interactions', $recentInteractions);
+        }
+
+        return $inputMessages;
+    }
+
+    /**
+     * Extract personal insights and update relationship context
+     */
+    public function afterLlmResponse(Response $response, AgentContext $context): mixed
+    {
+        $memoryManager = app(MemoryManager::class);
+        $userId = $context->getState('user_id');
+        $lastUserMessage = $context->getLastUserMessage();
+        $responseText = $response->text ?? '';
+
+
+        // Extract new project mentions
+        if (preg_match('/working on (.+?)(?:\.|$)/i', $lastUserMessage, $matches)) {
+            $project = trim($matches[1]);
+            $memoryManager->updateMemoryData($this->getName(), [
+                'current_project_' . md5($project) => $project,
+                'project_start_' . md5($project) => now()->toDateString()
+            ]);
+        }
+
+        // Extract relationship updates
+        if (preg_match('/my (.+?) (?:is|was) (.+?)(?:\.|$)/i', $lastUserMessage, $matches)) {
+            $person = trim($matches[1]);
+            $context_info = trim($matches[2]);
+            $memoryManager->updateMemoryData($this->getName(), [
+                'relationship_' . strtolower($person) => $context_info
+            ]);
+        }
+
+        // Extract preferences from user feedback
+        if (str_contains($lastUserMessage, 'I prefer') || str_contains($lastUserMessage, 'I like')) {
+            preg_match('/I (?:prefer|like) (.+?)(?:\.|$)/i', $lastUserMessage, $matches);
+            if (!empty($matches[1])) {
+                $preference = trim($matches[1]);
+                $memoryManager->updateMemoryData($this->getName(), [
+                    'preference_' . md5($preference) => $preference,
+                    'preference_learned_at' => now()->toISOString()
+                ]);
+            }
+        }
+
+        // Add follow-up reminders if assistant suggested them
+        if (str_contains($responseText, 'remind') || str_contains($responseText, 'follow up')) {
+            $memoryManager->addLearning($this->getName(),
+                "Reminder set: " . $this->extractReminderContext($responseText, $lastUserMessage)
+            );
+        }
+
+        return $response;
+    }
+
+    private function extractReminderContext(string $response, string $userInput): string
+    {
+        // Extract what the reminder is about
+        if (preg_match('/remind.+?(?:about|to) (.+?)(?:\.|$)/i', $response, $matches)) {
+            return trim($matches[1]);
+        }
+
+        // Fallback to user input context
+        return "Follow up on: " . Str::limit($userInput, 50);
+    }
+}
+```
+
+#### Memory-Aware Tool Usage
+
+```php
+class SmartWeatherTool implements ToolInterface
+{
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        $memoryManager = app(MemoryManager::class);
+        $agentName = $context->getState('agent_name');
+
+        // Check if we know user's preferred units from memory
+        $userId = $context->getState('user_id');
+        $memoryContext = $memoryManager->getMemoryContext($agentName);
+
+        $preferredUnits = 'metric'; // default
+        $timezone = 'UTC'; // default
+
+        if ($memoryContext && isset($memoryContext['facts'])) {
+            $preferredUnits = $memoryContext['facts']["user_{$userId}_preferred_units"] ?? 'metric';
+            $timezone = $memoryContext['facts']["user_{$userId}_timezone"] ?? 'UTC';
+        }
+
+        // Use memory to enhance the weather request
+        $location = $arguments['location'];
+        $units = $arguments['units'] ?? $preferredUnits;
+
+        $weatherData = $this->fetchWeather($location, $units, $timezone);
+
+        // Learn from user interactions with weather data
+        if (isset($arguments['units']) && $arguments['units'] !== $preferredUnits) {
+            $memoryManager->updateMemoryData($agentName, [
+                "user_{$userId}_preferred_units" => $arguments['units']
+            ]);
+        }
+
+        return $weatherData;
+    }
+
+    private function fetchWeather(string $location, string $units, string $timezone): string
+    {
+        // Implementation would call actual weather API
+        return "Weather data for {$location} in {$units} units (timezone: {$timezone})";
+    }
+}
+```
+
+#### Automatic Memory Updates via Middleware
+
+```php
+class AgentMemoryMiddleware
+{
+    public function handle($request, Closure $next)
+    {
+        $response = $next($request);
+
+        // Auto-update memory based on API interactions
+        if ($request->is('api/agent/*') && $response->isSuccessful()) {
+            $this->updateMemoryFromInteraction($request, $response);
+        }
+
+        return $response;
+    }
+
+    private function updateMemoryFromInteraction($request, $response)
+    {
+        $memoryManager = app(MemoryManager::class);
+        $agentName = $request->route('agent');
+
+        // Track API usage patterns
+        $memoryManager->updateMemoryData($agentName, [
+            'last_api_call' => now()->toISOString(),
+            'total_api_calls' => $this->incrementApiCount($agentName),
+            'most_recent_endpoint' => $request->path(),
+        ]);
+
+        // Learn from user feedback if provided
+        if ($request->has('feedback') && $request->feedback === 'helpful') {
+            $memoryManager->addLearning($agentName,
+                "User found response helpful for query: " . Str::limit($request->input('query'), 100)
+            );
+        }
+    }
+}
+```
+
 ### Best Practices
 
 1. **Learning Extraction**: Encourage agents to extract learnings from successful interactions
@@ -438,15 +1059,60 @@ $history = $memoryManager->getConversationHistory('customer_support', 100);
 4. **Privacy Considerations**: Avoid storing sensitive user data in long-term memory
 5. **Memory Cleanup**: Implement regular cleanup of outdated facts and learnings
 
-### Database Schema
+### Memory Integration Best Practices
 
-The memory system uses these tables:
+Based on the actual implementation, here are key best practices for memory integration:
 
-- `agent_memories`: Stores long-term agent knowledge
-- `agent_sessions`: Individual conversation threads
-- `agent_messages`: Messages within sessions
+#### 1. Use Context State for Memory Data
 
-Sessions link to memory via `agent_memory_id`, enabling seamless integration between short-term conversations and long-term knowledge.
+```php
+// In beforeLlmCall - store memory data in context state
+$context->setState('memory_context', $memoryManager->getMemoryContext($this->getName()));
+$context->setState('user_preferences', $userPreferences);
+
+// The base agent will automatically use this in getInstructionsWithMemory()
+```
+
+#### 2. Hook Signatures Matter
+
+```php
+// Correct hook signatures (match the actual implementation)
+public function beforeLlmCall(array $inputMessages, AgentContext $context): array
+public function afterLlmResponse(Response $response, AgentContext $context): mixed
+```
+
+#### 3. Memory Service Method Usage
+
+```php
+// Use actual MemoryManager methods
+$memoryManager->getMemoryContext($agentName);           // Returns memory object
+$memoryManager->addLearning($agentName, $learning);     // Add new learning
+$memoryManager->updateMemoryData($agentName, $facts);   // Update facts
+$memoryManager->addFact($agentName, $key, $value);      // Add single fact
+```
+
+#### 4. Context Data Access
+
+```php
+// Access user messages correctly
+$lastUserMessage = $context->getLastUserMessage();
+$allMessages = $context->getMessages();
+
+// Response object handling
+$responseText = $response->text ?? '';
+if ($response instanceof Response) {
+    // Handle properly typed response
+}
+```
+
+#### 5. Memory Context Flow
+
+1. **beforeLlmCall**: Load memory → Store in context state
+2. **getInstructionsWithMemory**: Automatically formats context state into system prompt
+3. **LLM Call**: Enhanced instructions with memory context
+4. **afterLlmResponse**: Extract insights → Update memory
+
+This approach ensures memory context is seamlessly integrated without manual message manipulation.
 
 ## Advanced Features 🚀
 
@@ -669,8 +1335,10 @@ class TrackTaskDelegation
             'parent_agent' => $event->parentAgentName,
             'sub_agent' => $event->subAgentName,
             'task_input' => $event->taskInput,
+            'context_summary' => $event->contextSummary,
             'delegation_depth' => $event->delegationDepth,
-            'has_context_summary' => !empty($event->contextSummary),
+            'parent_session' => $event->parentContext->getSessionId(),
+            'sub_session' => $event->subAgentContext->getSessionId(),
         ]);
 
         // Monitor for potential issues
