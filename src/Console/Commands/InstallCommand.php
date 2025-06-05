@@ -30,5 +30,22 @@ class InstallCommand extends Command
         $this->info('Laravel Agent ADK installed successfully.');
         $this->comment('Please run "php artisan migrate" to create the necessary database tables.');
         $this->comment('Configure your LLM provider API keys in .env and in config/agent-adk.php if needed.');
+
+        $this->showDashboardInfo();
+    }
+
+    protected function showDashboardInfo(): void
+    {
+        $prefix = config('agent-adk.routes.web.prefix', 'ai-adk');
+        $url = url($prefix);
+
+        $this->line('');
+        $this->info('🤖 Web Dashboard Available:');
+        $this->line("   <fg=green>{$url}</fg=green>");
+        $this->line('');
+        $this->comment('💡 Quick commands:');
+        $this->line('   <fg=cyan>php artisan agent:dashboard</fg=cyan>          # Show dashboard URL');
+        $this->line('   <fg=cyan>php artisan agent:dashboard --open</fg=cyan>   # Open dashboard in browser');
+        $this->line('   <fg=cyan>php artisan agent:make:agent MyAgent</fg=cyan> # Create a new agent');
     }
 }

@@ -97,5 +97,10 @@ return [
         'enabled' => true, // Master switch for package routes
         'prefix' => 'api/agent-adk', // Default prefix for all package API routes
         'middleware' => ['api'], // Default middleware group for package routes
+        'web' => [
+            'enabled' => env('AGENT_ADK_WEB_ENABLED', true), // Enable web interface
+            'prefix' => 'ai-adk', // Prefix for web routes
+            'middleware' => ['web'], // Middleware for web routes
+        ],
     ],
 ];
