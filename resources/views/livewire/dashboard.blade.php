@@ -124,21 +124,21 @@
                     </code>
                 </div>
 
-                <!-- Start Chat -->
-                <div class="border rounded-lg p-4 hover:border-purple-300 transition-colors">
+                <!-- Chat Interface -->
+                <a href="{{ route('agent-adk.chat') }}" class="border rounded-lg p-4 hover:border-purple-300 transition-colors block">
                     <div class="flex items-center mb-3">
                         <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
                             <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                         </div>
-                        <h4 class="font-medium text-gray-900">Test Agent</h4>
+                        <h4 class="font-medium text-gray-900">Chat Interface</h4>
                     </div>
-                    <p class="text-sm text-gray-600 mb-3">Interactive chat with your agents via command line.</p>
-                    <code class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800 block">
-                        php artisan agent:chat agent_name
-                    </code>
-                </div>
+                    <p class="text-sm text-gray-600 mb-3">Interactive web-based chat with your agents in real-time.</p>
+                    <div class="text-xs bg-purple-50 px-2 py-1 rounded text-purple-800 inline-block">
+                        Open Chat Interface →
+                    </div>
+                </a>
 
                 <!-- Run Evaluation -->
                 <div class="border rounded-lg p-4 hover:border-orange-300 transition-colors">

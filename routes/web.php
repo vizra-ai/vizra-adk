@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use AaronLumsden\LaravelAgentADK\Livewire\Dashboard;
+use AaronLumsden\LaravelAgentADK\Livewire\ChatInterface;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,4 +14,5 @@ use AaronLumsden\LaravelAgentADK\Livewire\Dashboard;
 |
 */
 
-Route::get('/', Dashboard::class)->name('agent-adk.dashboard');
+Route::get('/', Dashboard::class)->name('dashboard');
+Route::get('/chat', ChatInterface::class)->name('chat');

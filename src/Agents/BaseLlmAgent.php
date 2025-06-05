@@ -111,9 +111,14 @@ abstract class BaseLlmAgent extends BaseAgent
         // Add memory context if available
         $memoryContext = $context->getState('memory_context');
         if (!empty($memoryContext)) {
+            // Handle memory_context that might be an array
+            $memoryContextString = is_array($memoryContext) || is_object($memoryContext)
+                ? json_encode($memoryContext, JSON_PRETTY_PRINT)
+                : (string)$memoryContext;
+
             $memoryInfo = "\n\nMEMORY CONTEXT:\n" .
                 "Based on your previous interactions, here's what you should remember:\n\n" .
-                $memoryContext . "\n\n" .
+                $memoryContextString . "\n\n" .
                 "Use this information to provide more personalized and contextual responses. " .
                 "Build upon previous conversations and maintain continuity in your interactions.";
 
@@ -204,7 +209,7 @@ abstract class BaseLlmAgent extends BaseAgent
         return [];
     }
 
-    protected function loadTools(): void
+    public function loadTools(): void
     {
         if (!empty($this->loadedTools)) {
             return;
@@ -304,10 +309,8 @@ abstract class BaseLlmAgent extends BaseAgent
             // Set the tool execution callback - handle tools with or without parameters
             $prismTool = $prismTool->using(function (...$args) use ($tool, $context, $parameterOrder) {
                 try {
-
                     // Check if we have named parameters vs indexed parameters
                     $hasNamedKeys = !empty($args) && !array_is_list($args);
-
 
                     // Handle different argument formats from Prism
                     $arguments = [];
@@ -327,7 +330,6 @@ abstract class BaseLlmAgent extends BaseAgent
                         }
                     }
 
-
                     // Only validate required parameters if the tool has parameters
                     if (!empty($parameterOrder)) {
                         $definition = $tool->definition();
@@ -339,21 +341,36 @@ abstract class BaseLlmAgent extends BaseAgent
                         }
                     }
 
+                    // Dispatch event and call the beforeToolCall hook to enable tracing
                     Event::dispatch(new ToolCallInitiating($context, $this->getName(), $tool->definition()['name'], $arguments));
 
-                    $result = $tool->execute($arguments, $context);
+                    // Call the beforeToolCall hook - this triggers the tracer to start a span
+                    $processedArgs = $this->beforeToolCall($tool->definition()['name'], $arguments, $context);
 
-                    Event::dispatch(new ToolCallCompleted($context, $this->getName(), $tool->definition()['name'], $result));
+                    // Execute the tool with processed arguments
+                    $result = $tool->execute($processedArgs, $context);
+
+                    // Call the afterToolResult hook - this triggers the tracer to end the span
+                    $processedResult = $this->afterToolResult($tool->definition()['name'], $result, $context);
+
+                    // Dispatch completed event
+                    Event::dispatch(new ToolCallCompleted($context, $this->getName(), $tool->definition()['name'], $processedResult));
 
                     // Add tool execution to conversation history
                     $context->addMessage([
                         'role' => 'tool',
                         'tool_name' => $tool->definition()['name'],
-                        'content' => $result ?: ''
+                        'content' => $processedResult ?: ''
                     ]);
 
-                    return $result;
+                    return $processedResult;
                 } catch (\Throwable $e) {
+                    // Get the span ID for this tool call to mark it as failed
+                    $spanId = $context->getState("tool_call_span_id_{$tool->definition()['name']}");
+                    if ($spanId) {
+                        app(Tracer::class)->failSpan($spanId, $e);
+                    }
+
                     throw new ToolExecutionException("Error executing tool '{$tool->definition()['name']}': " . $e->getMessage(), 0, $e);
                 }
             });
@@ -550,9 +567,9 @@ abstract class BaseLlmAgent extends BaseAgent
                 output: [
                     'text' => $response->text,
                     'usage' => $response->usage ? [
-                        'input_tokens' => $response->usage->inputTokens,
-                        'output_tokens' => $response->usage->outputTokens,
-                        'total_tokens' => $response->usage->inputTokens + $response->usage->outputTokens
+                        'input_tokens' => $response->usage->input ?? $response->usage->inputTokens ?? 0,
+                        'output_tokens' => $response->usage->output ?? $response->usage->outputTokens ?? 0,
+                        'total_tokens' => ($response->usage->input ?? $response->usage->inputTokens ?? 0) + ($response->usage->output ?? $response->usage->outputTokens ?? 0)
                     ] : null,
                     'finish_reason' => $response->finishReason ?? null
                 ],
@@ -582,6 +599,14 @@ abstract class BaseLlmAgent extends BaseAgent
         // Store span ID in context for afterToolResult
         $context->setState("tool_call_span_id_{$toolName}", $spanId);
 
+        // Log debugging information
+        logger()->info('beforeToolCall hook executed', [
+            'tool_name' => $toolName,
+            'span_id' => $spanId,
+            'arguments' => $arguments,
+            'agent' => $this->getName()
+        ]);
+
         return $arguments;
     }
 
@@ -593,6 +618,14 @@ abstract class BaseLlmAgent extends BaseAgent
         // Get the span ID from context
         $spanId = $context->getState("tool_call_span_id_{$toolName}");
 
+        // Log debugging information
+        logger()->info('afterToolResult hook executed', [
+            'tool_name' => $toolName,
+            'span_id' => $spanId,
+            'result_length' => strlen($result),
+            'agent' => $this->getName()
+        ]);
+
         if ($spanId) {
             // End the tool call span
             $tracer->endSpan(
@@ -600,6 +633,11 @@ abstract class BaseLlmAgent extends BaseAgent
                 output: ['result' => $result],
                 status: 'success'
             );
+        } else {
+            logger()->warning('Tool call span ID not found in context', [
+                'tool_name' => $toolName,
+                'agent' => $this->getName()
+            ]);
         }
 
         return $result;

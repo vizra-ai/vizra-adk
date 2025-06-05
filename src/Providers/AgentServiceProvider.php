@@ -13,6 +13,7 @@ use AaronLumsden\LaravelAgentADK\Services\MemoryManager;
 use AaronLumsden\LaravelAgentADK\Services\AgentManager;
 use AaronLumsden\LaravelAgentADK\Services\Tracer;
 use AaronLumsden\LaravelAgentADK\Livewire\Dashboard;
+use AaronLumsden\LaravelAgentADK\Livewire\ChatInterface;
 use AaronLumsden\LaravelAgentADK\Console\Commands\InstallCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\MakeAgentCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\MakeToolCommand;
@@ -99,6 +100,7 @@ class AgentServiceProvider extends ServiceProvider
     {
         if (class_exists(Livewire::class)) {
             Livewire::component('agent-adk-dashboard', Dashboard::class);
+            Livewire::component('agent-adk-chat-interface', ChatInterface::class);
         }
     }
 
