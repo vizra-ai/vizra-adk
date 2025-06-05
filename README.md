@@ -12,6 +12,7 @@
 - [Core Features](#core-features-)
 - [Building Your First Agent](#building-your-first-agent-)
 - [Memory System](#memory-system-)
+- [Tracing & Debugging](#tracing--debugging-)
 - [Advanced Features](#advanced-features-)
   - [Tool System](#tool-system)
   - [Sub-Agent Delegation](#sub-agent-delegation)
@@ -62,6 +63,7 @@ AI agents are autonomous digital assistants that can think, decide, and take act
 - **Tool Integration**: Let agents use APIs, databases, and external services
 - **Sub-Agent Delegation**: Build hierarchical agent systems with task specialization
 - **Multi-LLM Support**: OpenAI, Anthropic, Google Gemini through [Prism-PHP](https://prismphp.com/)
+- **Execution Tracing**: Comprehensive debugging and performance analysis
 - **Quality Assurance**: Built-in evaluation system with LLM-as-a-Judge
 - **Laravel Native**: Events, service providers, Artisan commands - it all just works
 
@@ -74,6 +76,7 @@ AI agents are autonomous digital assistants that can think, decide, and take act
 | **Multi-LLM Support**    | Built-in          | Custom integration   |
 | **Tool System**          | Declarative       | Imperative coding    |
 | **Sub-Agent Delegation** | Built-in          | Complex architecture |
+| **Execution Tracing**    | Visual debugging  | Custom logging       |
 | **Quality Testing**      | LLM evaluations   | Manual testing       |
 | **Laravel Integration**  | Native            | Custom glue code     |
 
@@ -141,6 +144,7 @@ AGENT_ADK_DEFAULT_TEMPERATURE=0.7
 - **🤖 Sub-Agent Delegation**: Hierarchical agent systems with task specialization
 - **📚 Conversation Memory**: Automatic context and history management
 - **🌐 Multi-Provider**: OpenAI, Anthropic, Gemini support via Prism-PHP
+- **🔍 Execution Tracing**: Visual debugging with hierarchical span tracking
 - **⚡ Streaming Responses**: Real-time streaming for enhanced user experience
 - **🎯 Smart Routing**: Automatic tool selection and execution
 - **📊 Quality Assurance**: Built-in evaluation framework
@@ -1115,6 +1119,126 @@ if ($response instanceof Response) {
 4. **afterLlmResponse**: Extract insights → Update memory
 
 This approach ensures memory context is seamlessly integrated without manual message manipulation.
+
+## Tracing & Debugging 🔍
+
+Laravel Agent ADK includes a comprehensive tracing system that automatically tracks agent execution, LLM calls, tool executions, and sub-agent delegations. This provides valuable insights for debugging, performance analysis, and understanding agent behavior.
+
+### Key Features
+
+- **Hierarchical Span Tracking**: Traces organized as trees showing parent-child relationships
+- **Multiple Trace Types**: Agent execution, LLM calls, tool calls, and sub-agent delegations
+- **Session Management**: Groups related traces by session ID for conversation tracking
+- **Performance Metrics**: Duration, start/end times, and execution status
+- **Error Tracking**: Captures exceptions and error states with detailed messages
+- **CLI Visualization**: Tree view, table, and JSON output formats
+
+### Configuration
+
+Tracing is configured in `config/agent-adk.php`:
+
+```php
+'tracing' => [
+    'enabled' => env('AGENT_TRACING_ENABLED', true),
+    'table' => 'agent_trace_spans',
+    'cleanup_days' => 30,
+],
+```
+
+### Viewing Traces
+
+Use the `agent:trace` command to visualize agent execution:
+
+```bash
+# View traces for a specific session
+php artisan agent:trace session-123
+
+# View in different formats
+php artisan agent:trace session-123 --format=tree
+php artisan agent:trace session-123 --format=table
+php artisan agent:trace session-123 --format=json
+
+# Show only errors
+php artisan agent:trace session-123 --errors-only
+
+# View with input/output details
+php artisan agent:trace session-123 --show-input --show-output
+```
+
+### Example Trace Output
+
+```
+📊 Trace: 01JBXXX... (customer_support) [completed] 1.2s
+├── 🤖 agent: customer_support [completed] 1.2s
+│   ├── 🧠 llm_call: gpt-4o [completed] 800ms
+│   ├── 🔧 tool_call: search_knowledge_base [completed] 300ms
+│   └── 🧠 llm_call: gpt-4o [completed] 100ms
+```
+
+### Span Types
+
+- **`agent_run`**: Top-level spans for entire agent executions
+- **`llm_call`**: Individual calls to language models
+- **`tool_call`**: Individual tool executions
+- **`sub_agent_delegation`**: When one agent delegates to another
+
+### Cleaning Up Old Traces
+
+Automatically clean up old trace data to prevent database bloat:
+
+```bash
+# Clean up traces older than 30 days (default)
+php artisan agent:trace:cleanup
+
+# Specify custom retention period
+php artisan agent:trace:cleanup --days=7
+
+# Dry run to see what would be deleted
+php artisan agent:trace:cleanup --dry-run
+
+# Skip confirmation prompt
+php artisan agent:trace:cleanup --force
+```
+
+### Programmatic Access
+
+Access tracing data programmatically:
+
+```php
+use AaronLumsden\LaravelAgentADK\Services\Tracer;
+
+$tracer = app(Tracer::class);
+
+// Get spans for a session
+$spans = $tracer->getSpansForSession('session-123');
+
+// Get spans for a specific trace
+$spans = $tracer->getSpansForTrace('01JBXXX...');
+
+// Clean up old traces
+$deleted = $tracer->cleanupOldTraces(30);
+```
+
+### Using TraceSpan Model
+
+```php
+use AaronLumsden\LaravelAgentADK\Models\TraceSpan;
+
+// Query spans directly
+$spans = TraceSpan::forSession('session-123')->get();
+
+// Get error spans
+$errors = TraceSpan::withStatus('error')->get();
+
+// Get root spans (no parent)
+$roots = TraceSpan::rootSpans()->get();
+```
+
+### Automatic Integration
+
+Tracing is automatically integrated into `BaseLlmAgent` - no code changes required. All agent executions, LLM calls, tool calls, and sub-agent delegations are traced transparently.
+
+For complete documentation, see the [TRACING.md](./TRACING.md) file.
 
 ## Advanced Features 🚀
 

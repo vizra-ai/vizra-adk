@@ -42,6 +42,16 @@ return [
     ],
 
     /**
+     * Tracing configuration.
+     * Controls the execution tracing system for debugging and performance analysis.
+     */
+    'tracing' => [
+        'enabled' => env('AGENT_ADK_TRACING_ENABLED', true),
+        'table' => 'agent_trace_spans',
+        'cleanup_days' => env('AGENT_ADK_TRACING_CLEANUP_DAYS', 30), // Days to keep trace data
+    ],
+
+    /**
      * Namespaces for user-defined classes.
      * These are used by the artisan 'make' commands.
      */

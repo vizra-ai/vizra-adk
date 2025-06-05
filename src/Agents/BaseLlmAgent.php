@@ -10,6 +10,7 @@ use AaronLumsden\LaravelAgentADK\Events\ToolCallCompleted;
 use AaronLumsden\LaravelAgentADK\Events\ToolCallInitiating;
 use AaronLumsden\LaravelAgentADK\Events\AgentResponseGenerated;
 use AaronLumsden\LaravelAgentADK\Exceptions\ToolExecutionException;
+use AaronLumsden\LaravelAgentADK\Services\Tracer;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Arr;
 use Prism\Prism\Prism;
@@ -364,87 +365,107 @@ abstract class BaseLlmAgent extends BaseAgent
 
     public function run(mixed $input, AgentContext $context): mixed
     {
-        $context->setUserInput($input);
-        $context->addMessage(['role' => 'user', 'content' => $input ?: '']);
+        /** @var Tracer $tracer */
+        $tracer = app(Tracer::class);
 
-        // Since Prism handles tool execution internally with maxSteps,
-        // we don't need the manual tool execution loop
-        $messages = $this->prepareMessagesForPrism($context);
-        $messages = $this->beforeLlmCall($messages, $context);
-
-        Event::dispatch(new LlmCallInitiating($context, $this->getName(), $messages));
+        // Start the trace for this agent run
+        $traceId = $tracer->startTrace($context, $this->getName());
 
         try {
-            // Build Prism request using the correct fluent API
-            $prismRequest = Prism::text()
-                ->using($this->getProvider(), $this->getModel());
+            $context->setUserInput($input);
+            $context->addMessage(['role' => 'user', 'content' => $input ?: '']);
 
-            // Add system prompt if available (now includes memory context)
-            if (!empty($this->getInstructions())) {
-                $prismRequest = $prismRequest->withSystemPrompt($this->getInstructionsWithMemory($context));
+            // Since Prism handles tool execution internally with maxSteps,
+            // we don't need the manual tool execution loop
+            $messages = $this->prepareMessagesForPrism($context);
+            $messages = $this->beforeLlmCall($messages, $context);
+
+            Event::dispatch(new LlmCallInitiating($context, $this->getName(), $messages));
+
+            try {
+                // Build Prism request using the correct fluent API
+                $prismRequest = Prism::text()
+                    ->using($this->getProvider(), $this->getModel());
+
+                // Add system prompt if available (now includes memory context)
+                if (!empty($this->getInstructions())) {
+                    $prismRequest = $prismRequest->withSystemPrompt($this->getInstructionsWithMemory($context));
+                }
+
+                // Add messages for conversation history
+                $prismRequest = $prismRequest->withMessages($messages);
+
+                // Add tools if available
+                $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \AaronLumsden\LaravelAgentADK\Tools\DelegateToSubAgentTool($this)] : []);
+                if (!empty($allTools)) {
+                    $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
+                        ->withMaxSteps(5); // Prism will handle tool execution internally
+                }
+
+                // Add generation parameters if set
+                if ($this->getTemperature() !== null) {
+                    $prismRequest = $prismRequest->usingTemperature($this->getTemperature());
+                }
+
+                if ($this->getMaxTokens() !== null) {
+                    $prismRequest = $prismRequest->withMaxTokens($this->getMaxTokens());
+                }
+
+                if ($this->getTopP() !== null) {
+                    $prismRequest = $prismRequest->usingTopP($this->getTopP());
+                }
+
+                // Execute the request - Prism handles all tool calls internally
+                if ($this->getStreaming()) {
+                    /** @var \Prism\Prism\Text\Stream $llmResponse */
+                    $llmResponse = $prismRequest->asStream();
+                } else {
+                    /** @var Response $llmResponse */
+                    $llmResponse = $prismRequest->asText();
+                }
+
+            } catch (\Throwable $e) {
+                throw new \RuntimeException("LLM API call failed: " . $e->getMessage(), 0, $e);
             }
 
-            // Add messages for conversation history
-            $prismRequest = $prismRequest->withMessages($messages);
+            Event::dispatch(new LlmResponseReceived($context, $this->getName(), $llmResponse));
 
-            // Add tools if available
-            if (!empty($allTools)) {
-                $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
-                    ->withMaxSteps(5); // Prism will handle tool execution internally
-            }
-
-            // Add generation parameters if set
-            if ($this->getTemperature() !== null) {
-                $prismRequest = $prismRequest->usingTemperature($this->getTemperature());
-            }
-
-            if ($this->getMaxTokens() !== null) {
-                $prismRequest = $prismRequest->withMaxTokens($this->getMaxTokens());
-            }
-
-            if ($this->getTopP() !== null) {
-                $prismRequest = $prismRequest->usingTopP($this->getTopP());
-            }
-
-            // Execute the request - Prism handles all tool calls internally
+            // Handle streaming differently
             if ($this->getStreaming()) {
-                /** @var \Prism\Prism\Text\Stream $llmResponse */
-                $llmResponse = $prismRequest->asStream();
-            } else {
-                /** @var Response $llmResponse */
-                $llmResponse = $prismRequest->asText();
+                // For streaming, return the stream directly
+                // The consumer is responsible for handling the stream
+                return $llmResponse;
             }
+
+            $processedResponse = $this->afterLlmResponse($llmResponse, $context);
+
+            if (!($processedResponse instanceof Response)) {
+                throw new \RuntimeException("afterLlmResponse hook modified the response to an incompatible type.");
+            }
+
+            // Get the final response text - Prism has already executed any tools
+            $assistantResponseContent = $processedResponse->text ?: '';
+
+            $context->addMessage([
+                'role' => 'assistant',
+                'content' => $assistantResponseContent ?: ''
+            ]);
+
+            Event::dispatch(new AgentResponseGenerated($context, $this->getName(), $assistantResponseContent));
+
+            // End the trace with success
+            $tracer->endTrace(
+                output: ['response' => $assistantResponseContent],
+                status: 'success'
+            );
+
+            return $assistantResponseContent;
 
         } catch (\Throwable $e) {
-            throw new \RuntimeException("LLM API call failed: " . $e->getMessage(), 0, $e);
+            // End the trace with error
+            $tracer->failTrace($e);
+            throw $e;
         }
-
-        Event::dispatch(new LlmResponseReceived($context, $this->getName(), $llmResponse));
-
-        // Handle streaming differently
-        if ($this->getStreaming()) {
-            // For streaming, return the stream directly
-            // The consumer is responsible for handling the stream
-            return $llmResponse;
-        }
-
-        $processedResponse = $this->afterLlmResponse($llmResponse, $context);
-
-        if (!($processedResponse instanceof Response)) {
-            throw new \RuntimeException("afterLlmResponse hook modified the response to an incompatible type.");
-        }
-
-        // Get the final response text - Prism has already executed any tools
-        $assistantResponseContent = $processedResponse->text ?: '';
-
-
-        $context->addMessage([
-            'role' => 'assistant',
-            'content' => $assistantResponseContent ?: ''
-        ]);
-
-        Event::dispatch(new AgentResponseGenerated($context, $this->getName(), $assistantResponseContent));
-        return $assistantResponseContent;
     }
 
     protected function prepareMessagesForPrism(AgentContext $context): array
@@ -489,21 +510,98 @@ abstract class BaseLlmAgent extends BaseAgent
 
     public function beforeLlmCall(array $inputMessages, AgentContext $context): array
     {
+        /** @var Tracer $tracer */
+        $tracer = app(Tracer::class);
+
+        // Start span for LLM call
+        $spanId = $tracer->startSpan(
+            type: 'llm_call',
+            name: $this->getModel(),
+            input: [
+                'messages' => $inputMessages,
+                'system_prompt' => $this->getInstructionsWithMemory($context)
+            ],
+            metadata: [
+                'provider' => $this->getProvider()->value,
+                'temperature' => $this->getTemperature(),
+                'max_tokens' => $this->getMaxTokens(),
+                'top_p' => $this->getTopP()
+            ]
+        );
+
+        // Store span ID in context for afterLlmResponse
+        $context->setState('llm_call_span_id', $spanId);
+
         return $inputMessages;
     }
 
     public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
     {
+        /** @var Tracer $tracer */
+        $tracer = app(Tracer::class);
+
+        // Get the span ID from context
+        $spanId = $context->getState('llm_call_span_id');
+
+        if ($spanId && $response instanceof Response) {
+            // End the LLM call span
+            $tracer->endSpan(
+                spanId: $spanId,
+                output: [
+                    'text' => $response->text,
+                    'usage' => $response->usage ? [
+                        'input_tokens' => $response->usage->inputTokens,
+                        'output_tokens' => $response->usage->outputTokens,
+                        'total_tokens' => $response->usage->inputTokens + $response->usage->outputTokens
+                    ] : null,
+                    'finish_reason' => $response->finishReason ?? null
+                ],
+                status: 'success'
+            );
+        }
+
         return $response;
     }
 
     public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array
     {
+        /** @var Tracer $tracer */
+        $tracer = app(Tracer::class);
+
+        // Start span for tool call
+        $spanId = $tracer->startSpan(
+            type: 'tool_call',
+            name: $toolName,
+            input: $arguments,
+            metadata: [
+                'agent_name' => $this->getName(),
+                'tool_class' => get_class($this->loadedTools[$toolName] ?? null)
+            ]
+        );
+
+        // Store span ID in context for afterToolResult
+        $context->setState("tool_call_span_id_{$toolName}", $spanId);
+
         return $arguments;
     }
 
     public function afterToolResult(string $toolName, string $result, AgentContext $context): string
     {
+        /** @var Tracer $tracer */
+        $tracer = app(Tracer::class);
+
+        // Get the span ID from context
+        $spanId = $context->getState("tool_call_span_id_{$toolName}");
+
+        if ($spanId) {
+            // End the tool call span
+            $tracer->endSpan(
+                spanId: $spanId,
+                output: ['result' => $result],
+                status: 'success'
+            );
+        }
+
         return $result;
     }
 
@@ -519,6 +617,27 @@ abstract class BaseLlmAgent extends BaseAgent
      */
     public function beforeSubAgentDelegation(string $subAgentName, string $taskInput, string $contextSummary, AgentContext $parentContext): array
     {
+        /** @var Tracer $tracer */
+        $tracer = app(Tracer::class);
+
+        // Start span for sub-agent delegation
+        $spanId = $tracer->startSpan(
+            type: 'sub_agent_delegation',
+            name: $subAgentName,
+            input: [
+                'task_input' => $taskInput,
+                'context_summary' => $contextSummary
+            ],
+            metadata: [
+                'parent_agent' => $this->getName(),
+                'sub_agent_name' => $subAgentName,
+                'delegation_depth' => $parentContext->getState('delegation_depth', 0) + 1
+            ]
+        );
+
+        // Store span ID in context for afterSubAgentDelegation
+        $parentContext->setState("sub_agent_delegation_span_id_{$subAgentName}", $spanId);
+
         return [$subAgentName, $taskInput, $contextSummary];
     }
 
@@ -535,6 +654,24 @@ abstract class BaseLlmAgent extends BaseAgent
      */
     public function afterSubAgentDelegation(string $subAgentName, string $taskInput, string $subAgentResult, AgentContext $parentContext, AgentContext $subAgentContext): string
     {
+        /** @var Tracer $tracer */
+        $tracer = app(Tracer::class);
+
+        // Get the span ID from context
+        $spanId = $parentContext->getState("sub_agent_delegation_span_id_{$subAgentName}");
+
+        if ($spanId) {
+            // End the sub-agent delegation span
+            $tracer->endSpan(
+                spanId: $spanId,
+                output: [
+                    'result' => $subAgentResult,
+                    'sub_agent_session_id' => $subAgentContext->getSessionId()
+                ],
+                status: 'success'
+            );
+        }
+
         return $subAgentResult;
     }
 

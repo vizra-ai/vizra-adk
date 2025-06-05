@@ -3,19 +3,22 @@
 namespace AaronLumsden\LaravelAgentADK\Providers;
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Foundation\Application;
 use AaronLumsden\LaravelAgentADK\Services\AgentBuilder;
 use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
 use AaronLumsden\LaravelAgentADK\Services\StateManager;
 use AaronLumsden\LaravelAgentADK\Services\MemoryManager;
-use AaronLumsden\LaravelAgentADK\Services\AgentManager; // Added
+use AaronLumsden\LaravelAgentADK\Services\AgentManager;
+use AaronLumsden\LaravelAgentADK\Services\Tracer;
 use AaronLumsden\LaravelAgentADK\Console\Commands\InstallCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\MakeAgentCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\MakeToolCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\AgentChatCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\MakeEvalCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\RunEvalCommand;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Contracts\Foundation\Application; // Added for type hint
+use AaronLumsden\LaravelAgentADK\Console\Commands\AgentTraceCleanupCommand;
+use AaronLumsden\LaravelAgentADK\Console\Commands\AgentTraceCommand;
 
 class AgentServiceProvider extends ServiceProvider
 {
@@ -40,6 +43,10 @@ class AgentServiceProvider extends ServiceProvider
 
         $this->app->singleton(StateManager::class, function (Application $app) {
             return new StateManager($app->make(MemoryManager::class));
+        });
+
+        $this->app->singleton(Tracer::class, function (Application $app) {
+            return new Tracer();
         });
 
         // Bind the AgentManager for the Facade and general use
@@ -73,7 +80,9 @@ class AgentServiceProvider extends ServiceProvider
                 MakeToolCommand::class,
                 AgentChatCommand::class,
                 MakeEvalCommand::class,
-                RunEvalCommand::class
+                RunEvalCommand::class,
+                AgentTraceCommand::class,
+                AgentTraceCleanupCommand::class
             ]);
         }
 
