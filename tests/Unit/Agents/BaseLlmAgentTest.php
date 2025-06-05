@@ -38,6 +38,38 @@ it('can load tools', function () {
     expect($tools)->toBeArray();
 });
 
+// Streaming functionality tests
+it('has streaming disabled by default', function () {
+    expect($this->agent->getStreaming())->toBeFalse();
+});
+
+it('can enable streaming', function () {
+    $this->agent->setStreaming(true);
+    expect($this->agent->getStreaming())->toBeTrue();
+});
+
+it('can disable streaming', function () {
+    $this->agent->setStreaming(true);
+    $this->agent->setStreaming(false);
+    expect($this->agent->getStreaming())->toBeFalse();
+});
+
+it('setStreaming returns agent instance for fluent interface', function () {
+    $result = $this->agent->setStreaming(true);
+    expect($result)->toBe($this->agent);
+});
+
+it('can chain streaming configuration with other methods', function () {
+    $agent = $this->agent
+        ->setStreaming(true)
+        ->setTemperature(0.5)
+        ->setMaxTokens(200);
+
+    expect($agent->getStreaming())->toBeTrue();
+    expect($agent->getTemperature())->toBe(0.5);
+    expect($agent->getMaxTokens())->toBe(200);
+});
+
 it('executes with context', function () {
     $context = new AgentContext('test-session');
 

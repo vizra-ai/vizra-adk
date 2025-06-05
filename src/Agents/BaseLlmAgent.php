@@ -17,6 +17,8 @@ use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Tool; // Use the Tool facade instead of Tool class
 use Prism\Prism\ValueObjects\Usage;
 use Prism\Prism\Text\Response;
+use Generator;
+use Prism\Prism\Schema\StringSchema;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Messages\SystemMessage;
@@ -30,6 +32,7 @@ abstract class BaseLlmAgent extends BaseAgent
     protected ?float $temperature = null;
     protected ?int $maxTokens = null;
     protected ?float $topP = null;
+    protected bool $streaming = false;
 
     /** @var array<ToolInterface> */
     protected array $loadedTools = [];
@@ -170,6 +173,17 @@ abstract class BaseLlmAgent extends BaseAgent
         return $this;
     }
 
+    public function getStreaming(): bool
+    {
+        return $this->streaming;
+    }
+
+    public function setStreaming(bool $streaming): static
+    {
+        $this->streaming = $streaming;
+        return $this;
+    }
+
     /**
      * @return array<class-string<ToolInterface>>
      */
@@ -277,7 +291,7 @@ abstract class BaseLlmAgent extends BaseAgent
                             $prismTool = $prismTool->withBooleanParameter($paramName, $description);
                             break;
                         case 'array':
-                            $prismTool = $prismTool->withArrayParameter($paramName, $description);
+                            $prismTool = $prismTool->withArrayParameter($paramName, $description, new StringSchema('item', 'Array item'));
                             break;
                         default:
                             $prismTool = $prismTool->withStringParameter($paramName, $description);
@@ -393,14 +407,27 @@ abstract class BaseLlmAgent extends BaseAgent
             }
 
             // Execute the request - Prism handles all tool calls internally
-            /** @var Response $llmResponse */
-            $llmResponse = $prismRequest->asText();
+            if ($this->getStreaming()) {
+                /** @var \Prism\Prism\Text\Stream $llmResponse */
+                $llmResponse = $prismRequest->asStream();
+            } else {
+                /** @var Response $llmResponse */
+                $llmResponse = $prismRequest->asText();
+            }
 
         } catch (\Throwable $e) {
             throw new \RuntimeException("LLM API call failed: " . $e->getMessage(), 0, $e);
         }
 
         Event::dispatch(new LlmResponseReceived($context, $this->getName(), $llmResponse));
+
+        // Handle streaming differently
+        if ($this->getStreaming()) {
+            // For streaming, return the stream directly
+            // The consumer is responsible for handling the stream
+            return $llmResponse;
+        }
+
         $processedResponse = $this->afterLlmResponse($llmResponse, $context);
 
         if (!($processedResponse instanceof Response)) {
@@ -465,7 +492,7 @@ abstract class BaseLlmAgent extends BaseAgent
         return $inputMessages;
     }
 
-    public function afterLlmResponse(Response $response, AgentContext $context): mixed // Back to original type hint
+    public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
     {
         return $response;
     }

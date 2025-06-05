@@ -16,6 +16,7 @@
   - [Tool System](#tool-system)
   - [Sub-Agent Delegation](#sub-agent-delegation)
   - [Generation Parameters](#generation-parameters)
+  - [Streaming Responses](#streaming-responses)
   - [Event System](#event-system)
   - [Error Handling](#error-handling)
 - [Evaluations](#evaluations)
@@ -140,6 +141,7 @@ AGENT_ADK_DEFAULT_TEMPERATURE=0.7
 - **🤖 Sub-Agent Delegation**: Hierarchical agent systems with task specialization
 - **📚 Conversation Memory**: Automatic context and history management
 - **🌐 Multi-Provider**: OpenAI, Anthropic, Gemini support via Prism-PHP
+- **⚡ Streaming Responses**: Real-time streaming for enhanced user experience
 - **🎯 Smart Routing**: Automatic tool selection and execution
 - **📊 Quality Assurance**: Built-in evaluation framework
 - **⚡ Performance**: Optimized for production workloads
@@ -1410,6 +1412,131 @@ AGENT_ADK_DEFAULT_TEMPERATURE=0.7
 AGENT_ADK_DEFAULT_MAX_TOKENS=1000
 AGENT_ADK_DEFAULT_TOP_P=
 ```
+
+### Streaming Responses
+
+Enable real-time streaming responses from your agents for enhanced user experience. When streaming is enabled, agents return a `Stream` object that can be consumed incrementally.
+
+**Enabling Streaming:**
+
+```php
+// Method 1: In agent class constructor or property
+class ChatAgent extends BaseLlmAgent
+{
+    protected bool $streaming = true;  // Enable streaming by default
+
+    // Or set it dynamically in constructor
+    public function __construct()
+    {
+        parent::__construct();
+        $this->setStreaming(true);
+    }
+}
+
+// Method 2: Fluent configuration
+$agent = Agent::named('chat_agent')
+    ->setStreaming(true);
+
+// Method 3: Before running the agent
+Agent::named('chat_agent')
+    ->setStreaming(true)
+    ->run('Tell me a story', 'session-123');
+```
+
+**Consuming Streaming Responses:**
+
+```php
+use AaronLumsden\LaravelAgentADK\Facades\Agent;
+
+// Enable streaming and get the stream object
+$stream = Agent::named('chat_agent')
+    ->setStreaming(true)
+    ->run('Tell me about Laravel', 'user-session-123');
+
+// Option 1: Iterate over chunks
+foreach ($stream as $chunk) {
+    echo $chunk;  // Output each piece as it arrives
+    flush();      // Send to browser immediately
+}
+
+// Option 2: Convert to string (waits for completion)
+$fullResponse = (string) $stream;
+
+// Option 3: Process chunks with callback
+$stream->each(function ($chunk) {
+    // Process each chunk individually
+    broadcast(new StreamChunk($chunk));  // Real-time updates via WebSockets
+});
+```
+
+**Real-time Web Interface Example:**
+
+```php
+// Controller method for streaming chat
+public function streamChat(Request $request)
+{
+    $stream = Agent::named('chat_assistant')
+        ->setStreaming(true)
+        ->run($request->input('message'), $request->input('session_id'));
+
+    return response()->stream(function () use ($stream) {
+        foreach ($stream as $chunk) {
+            echo "data: " . json_encode(['chunk' => $chunk]) . "\n\n";
+            flush();
+        }
+        echo "data: " . json_encode(['done' => true]) . "\n\n";
+    }, 200, [
+        'Content-Type' => 'text/event-stream',
+        'Cache-Control' => 'no-cache',
+        'Connection' => 'keep-alive',
+    ]);
+}
+```
+
+**JavaScript Frontend Integration:**
+
+```javascript
+// Stream consumption with Server-Sent Events
+const eventSource = new EventSource("/api/agent/stream-chat");
+const chatContainer = document.getElementById("chat-container");
+
+eventSource.onmessage = function (event) {
+  const data = JSON.parse(event.data);
+
+  if (data.done) {
+    eventSource.close();
+    return;
+  }
+
+  // Append streaming chunk to chat interface
+  chatContainer.innerHTML += data.chunk;
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+};
+```
+
+**Important Notes:**
+
+- **Tool Calls**: When streaming is enabled, tool calls and sub-agent delegations are bypassed for performance
+- **Response Processing**: The `afterLlmResponse()` hook is called but response processing is minimal for streaming
+- **Context Management**: Context is not automatically updated when streaming; handle manually if needed
+- **Error Handling**: Stream errors should be handled at the consumer level
+
+**When to Use Streaming:**
+
+✅ **Good for:**
+
+- Real-time chat interfaces
+- Long-form content generation
+- Interactive storytelling
+- Live coding assistance
+- Step-by-step tutorials
+
+❌ **Avoid for:**
+
+- Tool-heavy workflows
+- Multi-step reasoning tasks
+- Sub-agent delegation
+- Complex context management
 
 ### Agent Lifecycle Hooks
 
