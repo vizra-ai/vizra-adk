@@ -38,6 +38,7 @@ return [
     'tables' => [
         'agent_sessions' => 'agent_sessions',
         'agent_messages' => 'agent_messages',
+        'agent_memories' => 'agent_memories',
     ],
 
     /**

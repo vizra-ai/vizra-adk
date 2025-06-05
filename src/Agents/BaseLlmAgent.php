@@ -97,6 +97,28 @@ abstract class BaseLlmAgent extends BaseAgent
         return $instructions;
     }
 
+    /**
+     * Get instructions with memory context included.
+     */
+    public function getInstructionsWithMemory(AgentContext $context): string
+    {
+        $instructions = $this->getInstructions();
+
+        // Add memory context if available
+        $memoryContext = $context->getState('memory_context');
+        if (!empty($memoryContext)) {
+            $memoryInfo = "\n\nMEMORY CONTEXT:\n" .
+                "Based on your previous interactions, here's what you should remember:\n\n" .
+                $memoryContext . "\n\n" .
+                "Use this information to provide more personalized and contextual responses. " .
+                "Build upon previous conversations and maintain continuity in your interactions.";
+
+            $instructions .= $memoryInfo;
+        }
+
+        return $instructions;
+    }
+
     public function setInstructions(string $instructions): static
     {
         $this->instructions = $instructions;
@@ -343,9 +365,9 @@ abstract class BaseLlmAgent extends BaseAgent
             $prismRequest = Prism::text()
                 ->using($this->getProvider(), $this->getModel());
 
-            // Add system prompt if available
+            // Add system prompt if available (now includes memory context)
             if (!empty($this->getInstructions())) {
-                $prismRequest = $prismRequest->withSystemPrompt($this->getInstructions());
+                $prismRequest = $prismRequest->withSystemPrompt($this->getInstructionsWithMemory($context));
             }
 
             // Add messages for conversation history

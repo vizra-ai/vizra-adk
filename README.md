@@ -11,6 +11,7 @@
 - [Installation & Setup](#installation--setup-)
 - [Core Features](#core-features-)
 - [Building Your First Agent](#building-your-first-agent-)
+- [Memory System](#memory-system-)
 - [Advanced Features](#advanced-features-)
   - [Tool System](#tool-system)
   - [Sub-Agent Delegation](#sub-agent-delegation)
@@ -242,6 +243,210 @@ public function chat(Request $request)
 // Or test directly in terminal
 // php artisan agent:chat customer_support
 ```
+
+## Memory System 🧠
+
+Laravel Agent ADK includes a comprehensive memory system that enables agents to maintain long-term knowledge across multiple conversations. The memory system consists of two complementary components:
+
+- **Sessions**: Short-term conversation threads for individual interactions
+- **Memory**: Long-term knowledge that spans an agent's entire lifespan
+
+### Understanding Memory vs Sessions
+
+**Sessions** represent individual conversation threads:
+
+- Store messages and context for a single interaction
+- Automatically cleaned up after a period of inactivity
+- Focus on immediate conversation flow
+
+**Memory** represents persistent agent knowledge:
+
+- Stores learned insights, facts, and summaries across all conversations
+- Persists indefinitely to build agent expertise over time
+- Tracks total session count and key patterns
+
+### Memory Components
+
+#### 1. Memory Summary
+
+A high-level description of the agent's knowledge and capabilities:
+
+```php
+// Automatically managed or manually updated
+$memoryManager->updateSummary('customer_support',
+    'Specialized in billing and technical support with expertise in payment processing and account management.'
+);
+```
+
+#### 2. Key Learnings
+
+Important insights learned from conversations:
+
+```php
+// Add learnings from agent interactions
+$memoryManager->addLearning('customer_support',
+    'Users prefer quick, direct answers for billing questions'
+);
+
+$memoryManager->addLearning('customer_support',
+    'Complex technical issues require step-by-step guidance'
+);
+```
+
+#### 3. Facts Database
+
+Structured knowledge about users, preferences, and domain-specific information:
+
+```php
+// Store facts about users or domain knowledge
+$memoryManager->updateMemoryData('customer_support', [
+    'primary_customer_segment' => 'small_business',
+    'common_issues' => ['billing', 'account_access', 'feature_requests'],
+    'preferred_communication_style' => 'professional_friendly'
+]);
+```
+
+### Using the Memory Tool
+
+Agents can manage their own memory through the built-in `MemoryTool`:
+
+```php
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    protected function registerTools(): array
+    {
+        return [
+            \AaronLumsden\LaravelAgentADK\Tools\MemoryTool::class,
+            // ... other tools
+        ];
+    }
+}
+```
+
+The Memory Tool provides these actions:
+
+#### Get Memory Context
+
+```php
+// Agent can retrieve its current memory state
+[
+    'action' => 'get_context'
+]
+```
+
+#### Add Learning
+
+```php
+// Agent can add new insights
+[
+    'action' => 'add_learning',
+    'content' => 'Customers respond better to empathetic language when frustrated'
+]
+```
+
+#### Add Facts
+
+```php
+// Agent can store factual information
+[
+    'action' => 'add_fact',
+    'key' => 'billing_system_version',
+    'value' => 'v2.1.4'
+]
+```
+
+#### Get Conversation History
+
+```php
+// Agent can review past conversations
+[
+    'action' => 'get_history',
+    'limit' => 20  // optional, defaults to 50
+]
+```
+
+### Memory Integration with State
+
+Memory automatically integrates with the agent's context:
+
+```php
+// Memory context is automatically included when loading agent state
+$response = Agent::run('customer_support', 'How can I help?', 'session-123');
+
+// The agent receives memory context like:
+// "Based on your memory: You specialize in billing support and have learned
+//  that users prefer quick responses. You know the billing system is v2.1.4..."
+```
+
+### Memory Events
+
+Listen for memory updates in your application:
+
+```php
+// Listen for memory changes
+Event::listen(MemoryUpdated::class, function ($event) {
+    $memory = $event->memory;
+    $session = $event->session; // nullable
+    $updateType = $event->updateType; // 'learning', 'fact', 'summary'
+
+    // Log important memory updates, trigger notifications, etc.
+    Log::info("Agent {$memory->agent_name} learned: {$updateType}");
+});
+```
+
+### Memory Management
+
+#### Programmatic Management
+
+```php
+use AaronLumsden\LaravelAgentADK\Services\MemoryManager;
+
+$memoryManager = app(MemoryManager::class);
+
+// Get agent's memory context
+$context = $memoryManager->getMemoryContextArray('customer_support');
+
+// Add learning
+$memoryManager->addLearning('customer_support', 'New insight');
+
+// Update facts
+$memoryManager->updateMemoryData('customer_support', ['key' => 'value']);
+
+// Update summary
+$memoryManager->updateSummary('customer_support', 'Updated description');
+```
+
+#### Session Cleanup
+
+```php
+// Clean up old sessions while preserving memory
+$deletedCount = $memoryManager->cleanupOldSessions('customer_support', 30); // 30 days
+```
+
+#### Conversation History
+
+```php
+// Get conversation history across sessions
+$history = $memoryManager->getConversationHistory('customer_support', 100);
+```
+
+### Best Practices
+
+1. **Learning Extraction**: Encourage agents to extract learnings from successful interactions
+2. **Fact Organization**: Structure facts logically with consistent key naming
+3. **Memory Summaries**: Update summaries periodically to reflect agent evolution
+4. **Privacy Considerations**: Avoid storing sensitive user data in long-term memory
+5. **Memory Cleanup**: Implement regular cleanup of outdated facts and learnings
+
+### Database Schema
+
+The memory system uses these tables:
+
+- `agent_memories`: Stores long-term agent knowledge
+- `agent_sessions`: Individual conversation threads
+- `agent_messages`: Messages within sessions
+
+Sessions link to memory via `agent_memory_id`, enabling seamless integration between short-term conversations and long-term knowledge.
 
 ## Advanced Features 🚀
 

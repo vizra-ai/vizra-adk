@@ -39,10 +39,7 @@ class TestCase extends Orchestra
     {
         parent::setUp();
 
-        // Run any migrations if your package has them
-        // $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-
-        // Or run them manually
-        // $this->artisan('migrate', ['--database' => 'testbench']);
+        // Run migrations for testing
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
     }
 }

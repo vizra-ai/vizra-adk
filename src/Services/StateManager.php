@@ -15,20 +15,29 @@ use Illuminate\Support\Collection;
  */
 class StateManager
 {
+    protected MemoryManager $memoryManager;
+
+    public function __construct(MemoryManager $memoryManager = null)
+    {
+        $this->memoryManager = $memoryManager ?? app(MemoryManager::class);
+    }
+
     /**
      * Load or create an AgentContext for a given session ID and agent name.
+     * Now also includes memory context from previous sessions.
      *
      * @param string $agentName The name of the agent.
      * @param string|null $sessionId Optional session ID. If null, a new session is created.
      * @param mixed|null $userInput Optional initial user input for a new context.
+     * @param int|null $userId Optional user ID for user-specific memory.
      * @return AgentContext
      */
-    public function loadContext(string $agentName, ?string $sessionId = null, mixed $userInput = null): AgentContext
+    public function loadContext(string $agentName, ?string $sessionId = null, mixed $userInput = null, ?int $userId = null): AgentContext
     {
         $sessionId = $sessionId ?: (string) Str::uuid();
         $agentSession = AgentSession::firstOrCreate(
             ['session_id' => $sessionId, 'agent_name' => $agentName],
-            ['state_data' => []]
+            ['state_data' => [], 'user_id' => $userId]
         );
 
         $history = AgentMessage::where('agent_session_id', $agentSession->id)
@@ -40,12 +49,20 @@ class StateManager
                 'tool_name' => $msg->tool_name
             ]);
 
-        return new AgentContext(
+        $context = new AgentContext(
             $sessionId,
             $userInput,
             $agentSession->state_data ?: [],
             $history
         );
+
+        // Add memory context to the context state
+        $memoryContext = $this->memoryManager->getMemoryContextArray($agentName, $userId);
+        if (!empty($memoryContext['summary']) || !empty($memoryContext['key_learnings']) || !empty($memoryContext['facts'])) {
+            $context->setState('memory_context', $memoryContext);
+        }
+
+        return $context;
     }
 
     /**
@@ -53,10 +70,13 @@ class StateManager
      *
      * @param AgentContext $context
      * @param string $agentName The name of the agent (for creating session if it doesn't exist)
+     * @param bool $updateMemory Whether to update long-term memory after saving
      */
-    public function saveContext(AgentContext $context, string $agentName): void
+    public function saveContext(AgentContext $context, string $agentName, bool $updateMemory = true): void
     {
-        DB::transaction(function () use ($context, $agentName) {
+        $agentSession = null;
+
+        DB::transaction(function () use ($context, $agentName, &$agentSession) {
             $agentSession = AgentSession::updateOrCreate(
                 ['session_id' => $context->getSessionId(), 'agent_name' => $agentName],
                 ['state_data' => $context->getAllState()]
@@ -84,5 +104,54 @@ class StateManager
                 AgentMessage::create($messageData);
             }
         });
+
+        // Update memory after the transaction completes
+        if ($updateMemory && $agentSession) {
+            // Check for memory updates in context state
+            $memoryUpdates = $context->getState('memory_updates');
+            if ($memoryUpdates) {
+                // Apply memory updates
+                if (isset($memoryUpdates['learnings'])) {
+                    foreach ($memoryUpdates['learnings'] as $learning) {
+                        $this->memoryManager->addLearning($agentName, $learning, $agentSession->user_id);
+                    }
+                }
+
+                if (isset($memoryUpdates['facts'])) {
+                    $this->memoryManager->updateMemoryData($agentName, $memoryUpdates['facts'], $agentSession->user_id);
+                }
+
+                if (isset($memoryUpdates['summary'])) {
+                    $this->memoryManager->updateSummary($agentName, $memoryUpdates['summary'], $agentSession->user_id);
+                }
+            } else {
+                // Default memory update from session
+                $this->memoryManager->updateMemoryFromSession($agentSession);
+            }
+        }
+    }
+
+    /**
+     * Get memory context for an agent.
+     */
+    public function getMemoryContext(string $agentName, ?int $userId = null): string
+    {
+        return $this->memoryManager->getMemoryContext($agentName, $userId);
+    }
+
+    /**
+     * Add a learning to memory.
+     */
+    public function addLearning(string $agentName, string $learning, ?int $userId = null): void
+    {
+        $this->memoryManager->addLearning($agentName, $learning, $userId);
+    }
+
+    /**
+     * Update memory data.
+     */
+    public function updateMemoryData(string $agentName, array $data, ?int $userId = null): void
+    {
+        $this->memoryManager->updateMemoryData($agentName, $data, $userId);
     }
 }

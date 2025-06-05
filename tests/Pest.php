@@ -13,6 +13,7 @@
 
 uses(AaronLumsden\LaravelAgentADK\Tests\TestCase::class)->in('Feature');
 uses(AaronLumsden\LaravelAgentADK\Tests\TestCase::class)->in('Unit');
+uses(AaronLumsden\LaravelAgentADK\Tests\TestCase::class)->in('Integration');
 
 /*
 |--------------------------------------------------------------------------

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use AaronLumsden\LaravelAgentADK\Services\AgentBuilder;
 use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
 use AaronLumsden\LaravelAgentADK\Services\StateManager;
+use AaronLumsden\LaravelAgentADK\Services\MemoryManager;
 use AaronLumsden\LaravelAgentADK\Services\AgentManager; // Added
 use AaronLumsden\LaravelAgentADK\Console\Commands\InstallCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\MakeAgentCommand;
@@ -33,8 +34,12 @@ class AgentServiceProvider extends ServiceProvider
             return new AgentBuilder($app, $app->make(AgentRegistry::class));
         });
 
+        $this->app->singleton(MemoryManager::class, function (Application $app) {
+            return new MemoryManager();
+        });
+
         $this->app->singleton(StateManager::class, function (Application $app) {
-            return new StateManager(); // StateManager doesn't have app dependency currently
+            return new StateManager($app->make(MemoryManager::class));
         });
 
         // Bind the AgentManager for the Facade and general use

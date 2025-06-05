@@ -19,6 +19,7 @@ return new class extends Migration
             $table->id();
             $table->string('session_id')->unique();
             $table->foreignId('user_id')->nullable()->index()->comment('Optional link to users table');
+            $table->foreignId('agent_memory_id')->nullable()->index()->comment('Link to agent memory');
             $table->string('agent_name')->index();
             $table->json('state_data')->nullable();
             $table->timestamps();

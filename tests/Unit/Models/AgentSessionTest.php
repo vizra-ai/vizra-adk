@@ -124,3 +124,121 @@ it('manages timestamps', function () {
 
     expect($session->updated_at->isAfter($originalUpdatedAt))->toBeTrue();
 });
+
+it('can have memory relationship', function () {
+    $memory = \AaronLumsden\LaravelAgentADK\Models\AgentMemory::create([
+        'agent_name' => 'test-agent'
+    ]);
+
+    $session = AgentSession::create([
+        'agent_name' => 'test-agent',
+        'agent_memory_id' => $memory->id
+    ]);
+
+    expect($session->memory)->toBeInstanceOf(\AaronLumsden\LaravelAgentADK\Models\AgentMemory::class);
+    expect($session->memory->id)->toBe($memory->id);
+    expect($session->memory->agent_name)->toBe('test-agent');
+});
+
+it('can have null memory relationship', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'test-agent'
+    ]);
+
+    expect($session->agent_memory_id)->toBeNull();
+    expect($session->memory)->toBeNull();
+});
+
+it('can get or create memory', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'memory-test-agent'
+    ]);
+
+    // Initially no memory
+    expect($session->agent_memory_id)->toBeNull();
+
+    // Should create new memory
+    $memory = $session->getOrCreateMemory();
+
+    expect($memory)->toBeInstanceOf(\AaronLumsden\LaravelAgentADK\Models\AgentMemory::class);
+    expect($memory->agent_name)->toBe('memory-test-agent');
+
+    // Session should now be linked to memory
+    $session->refresh();
+    expect($session->agent_memory_id)->toBe($memory->id);
+
+    // Calling again should return same memory
+    $sameMemory = $session->getOrCreateMemory();
+    expect($sameMemory->id)->toBe($memory->id);
+});
+
+it('can update memory through session', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'update-test-agent'
+    ]);
+
+    $memory = $session->getOrCreateMemory();
+
+    $session->updateMemory([
+        'learnings' => ['User prefers concise answers'],
+        'facts' => ['user_type' => 'power_user'],
+        'summary' => 'Handles power user queries'
+    ]);
+
+    $memory->refresh();
+
+    expect($memory->key_learnings)->toContain('User prefers concise answers');
+    expect($memory->memory_data['user_type'])->toBe('power_user');
+    expect($memory->memory_summary)->toBe('Handles power user queries');
+});
+
+it('can update memory with only learnings', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'learnings-test-agent'
+    ]);
+
+    $memory = $session->getOrCreateMemory();
+
+    $session->updateMemory([
+        'learnings' => ['First learning', 'Second learning']
+    ]);
+
+    $memory->refresh();
+
+    expect($memory->key_learnings)->toHaveCount(2);
+    expect($memory->key_learnings)->toContain('First learning');
+    expect($memory->key_learnings)->toContain('Second learning');
+});
+
+it('can update memory with only facts', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'facts-test-agent'
+    ]);
+
+    $memory = $session->getOrCreateMemory();
+
+    $session->updateMemory([
+        'facts' => ['preference' => 'email', 'timezone' => 'UTC']
+    ]);
+
+    $memory->refresh();
+
+    expect($memory->memory_data['preference'])->toBe('email');
+    expect($memory->memory_data['timezone'])->toBe('UTC');
+});
+
+it('can update memory with only summary', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'summary-test-agent'
+    ]);
+
+    $memory = $session->getOrCreateMemory();
+
+    $session->updateMemory([
+        'summary' => 'Specialized in technical support'
+    ]);
+
+    $memory->refresh();
+
+    expect($memory->memory_summary)->toBe('Specialized in technical support');
+});
