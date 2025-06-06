@@ -259,7 +259,7 @@
                 </a>
 
                 <!-- Run Evaluation -->
-                <div class="quickstart-card bg-gradient-to-br from-white to-orange-50/50 border border-orange-100/50 rounded-xl p-6 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                <a href="{{ route('agent-adk.eval-runner') }}" class="quickstart-card bg-gradient-to-br from-white to-orange-50/50 border border-orange-100/50 rounded-xl p-6 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 block group">
                     <div class="flex items-center mb-4">
                         <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/25 mr-4">
                             <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -268,11 +268,14 @@
                         </div>
                         <h4 class="text-lg font-semibold text-gray-900">Run Evaluation</h4>
                     </div>
-                    <p class="text-gray-600 mb-4 leading-relaxed">Test agent quality and performance with comprehensive evaluation frameworks.</p>
-                    <div class="bg-gradient-to-r from-gray-50 to-orange-50/50 border border-gray-200/50 rounded-lg p-3 font-mono text-sm text-gray-800 shadow-inner">
-                        php artisan agent:eval eval_name
+                    <p class="text-gray-600 mb-4 leading-relaxed">Test agent quality and performance with comprehensive evaluation frameworks through a user-friendly interface.</p>
+                    <div class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 border border-orange-200/50 shadow-sm group-hover:shadow-md transition-shadow">
+                        Open Eval Runner
+                        <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
     </div>
