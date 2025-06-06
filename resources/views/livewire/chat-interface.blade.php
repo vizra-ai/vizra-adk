@@ -139,6 +139,22 @@
             transform: scale(1.1);
         }
     }
+
+    /* Compact Trace Cards */
+    .compact-trace-card {
+        backdrop-filter: blur(8px);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .compact-trace-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Trace connection lines */
+    .compact-trace-card .group:hover .absolute {
+        opacity: 0.8;
+    }
 </style>
 
 <script>
@@ -298,132 +314,117 @@ function testModalButton() {
                         <!-- Agent Info Tab -->
                         @if($activeTab === 'agent-info' && $selectedAgent && $agentInfo)
                             <div class="flex-1 overflow-y-auto custom-scrollbar">
-                                <div class="space-y-6 p-6">
-                                <!-- Agent Header Card -->
-                                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                                    <div class="flex items-start space-x-4">
-                                        <div class="flex-shrink-0">
-                                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                                                <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <h3 class="text-xl font-bold text-gray-900 mb-1">{{ $agentInfo['name'] ?? 'Unknown Agent' }}</h3>
-                                            <p class="text-sm text-blue-600 font-medium">AI Agent</p>
-                                            @if(isset($agentInfo['tools']) && count($agentInfo['tools']) > 0)
-                                                <div class="mt-2 flex items-center space-x-4">
-                                                    <div class="flex items-center text-sm text-gray-600">
-                                                        <svg class="w-4 h-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                <div class="space-y-3 p-4">
+                                    <!-- Compact Agent Header -->
+                                    <div class="bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
+                                        <div class="px-4 py-3">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                         </svg>
-                                                        <span class="font-medium">{{ count($agentInfo['tools']) }}</span> tools available
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="text-lg font-semibold text-gray-900">{{ $agentInfo['name'] ?? 'Unknown Agent' }}</h3>
+                                                        <p class="text-sm text-blue-600 font-mono">AI Agent</p>
                                                     </div>
                                                 </div>
-                                            @endif
-                                        </div>
-                                        @if(isset($agentInfo['error']))
-                                            <div class="flex-shrink-0">
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                                    </svg>
-                                                    Error
-                                                </span>
-                                            </div>
-                                        @else
-                                            <div class="flex-shrink-0">
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                                    </svg>
-                                                    Active
-                                                </span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                @if(isset($agentInfo['error']))
-                                    <!-- Error Alert -->
-                                    <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg">
-                                        <div class="flex">
-                                            <div class="flex-shrink-0">
-                                                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                                                </svg>
-                                            </div>
-                                            <div class="ml-3">
-                                                <h3 class="text-sm font-medium text-red-800">Agent Error</h3>
-                                                <div class="mt-1 text-sm text-red-700">
-                                                    {{ $agentInfo['error'] }}
+                                                <div class="flex items-center space-x-4 text-sm">
+                                                    @if(isset($agentInfo['tools']) && count($agentInfo['tools']) > 0)
+                                                        <div class="flex items-center text-gray-600">
+                                                            <svg class="w-4 h-4 mr-1 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                                                            </svg>
+                                                            <span class="font-medium">{{ count($agentInfo['tools']) }}</span> tools
+                                                        </div>
+                                                    @endif
+                                                    <div class="flex items-center text-gray-600">
+                                                        @if(isset($agentInfo['error']))
+                                                            <svg class="w-4 h-4 mr-1 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                                            </svg>
+                                                            <span class="font-medium">Error</span>
+                                                        @else
+                                                            <svg class="w-4 h-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                            </svg>
+                                                            <span class="font-medium">Active</span>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                @endif
 
-                                <!-- Instructions Card -->
-                                <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
-                                    <div class="px-6 py-4 border-b border-gray-200">
-                                        <div class="flex items-center">
-                                            <div class="flex-shrink-0">
-                                                <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    @if(isset($agentInfo['error']))
+                                        <!-- Error Alert -->
+                                        <div class="bg-red-50/80 backdrop-blur-sm border border-red-200 p-3 rounded-lg">
+                                            <div class="flex items-start space-x-2">
+                                                <svg class="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <div>
+                                                    <h3 class="text-sm font-medium text-red-800">Agent Error</h3>
+                                                    <div class="mt-1 text-sm text-red-700">{{ $agentInfo['error'] }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <!-- Compact Instructions -->
+                                    <div class="bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
+                                        <div class="px-3 py-2 border-b border-gray-200">
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                 </svg>
+                                                <h4 class="text-sm font-medium text-gray-900">Instructions</h4>
                                             </div>
-                                            <h4 class="ml-3 text-lg font-medium text-gray-900">Instructions</h4>
+                                        </div>
+                                        <div class="px-3 py-2">
+                                            <div class="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed max-h-24 overflow-y-auto custom-scrollbar">{{ Str::limit($agentInfo['instructions'] ?? 'No instructions available', 200) }}</div>
                                         </div>
                                     </div>
-                                    <div class="px-6 py-4">
-                                        <div class="prose prose-sm max-w-none">
-                                            <div class="text-gray-700 whitespace-pre-wrap leading-relaxed max-h-32 overflow-y-auto custom-scrollbar">{{ $agentInfo['instructions'] ?? 'No instructions available' }}</div>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                @if(isset($agentInfo['tools']) && count($agentInfo['tools']) > 0)
-                                    <!-- Available Tools Card -->
-                                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
-                                        <div class="px-6 py-4 border-b border-gray-200">
-                                            <div class="flex items-center justify-between">
-                                                <div class="flex items-center">
-                                                    <div class="flex-shrink-0">
-                                                        <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    @if(isset($agentInfo['tools']) && count($agentInfo['tools']) > 0)
+                                        <!-- Compact Available Tools -->
+                                        <div class="bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
+                                            <div class="px-3 py-2 border-b border-gray-200">
+                                                <div class="flex items-center justify-between">
+                                                    <div class="flex items-center">
+                                                        <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                         </svg>
+                                                        <h4 class="text-sm font-medium text-gray-900">Available Tools</h4>
                                                     </div>
-                                                    <h4 class="ml-3 text-lg font-medium text-gray-900">Available Tools</h4>
+                                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                                                        {{ count($agentInfo['tools']) }}
+                                                    </span>
                                                 </div>
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                    {{ count($agentInfo['tools']) }} tools
-                                                </span>
                                             </div>
-                                        </div>
-                                        <div class="px-6 py-4">
-                                            <div class="space-y-3 max-h-48 overflow-y-auto custom-scrollbar">
-                                                @foreach($agentInfo['tools'] as $tool)
-                                                    <div class="group bg-gray-50 hover:bg-gray-100 transition-colors duration-200 p-4 rounded-lg border border-gray-200">
-                                                        <div class="flex items-start space-x-3">
-                                                            <div class="flex-shrink-0 mt-0.5">
-                                                                <div class="w-8 h-8 bg-blue-100 group-hover:bg-blue-200 transition-colors duration-200 rounded-lg flex items-center justify-center">
-                                                                    <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <div class="px-3 py-2">
+                                                <div class="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
+                                                    @foreach($agentInfo['tools'] as $tool)
+                                                        <div class="group bg-gray-50/80 hover:bg-gray-100/80 transition-colors duration-200 px-3 py-2 rounded border border-gray-200/50">
+                                                            <div class="flex items-start space-x-2">
+                                                                <div class="w-4 h-4 bg-blue-100 rounded flex items-center justify-center mt-0.5 flex-shrink-0">
+                                                                    <svg class="w-2 h-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                                                     </svg>
                                                                 </div>
-                                                            </div>
-                                                            <div class="flex-1 min-w-0">
-                                                                <h5 class="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors duration-200">{{ $tool['name'] }}</h5>
-                                                                <p class="text-sm text-gray-600 mt-1 leading-relaxed">{{ $tool['description'] }}</p>
+                                                                <div class="flex-1 min-w-0">
+                                                                    <h5 class="text-xs font-semibold text-gray-900 group-hover:text-blue-700 transition-colors duration-200">{{ $tool['name'] }}</h5>
+                                                                    <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">{{ Str::limit($tool['description'], 80) }}</p>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                @endforeach
+                                                    @endforeach
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>                                    @endif
+                                    @endif
                                 </div>
                             </div>
                             @elseif($activeTab === 'agent-info')
@@ -442,33 +443,33 @@ function testModalButton() {
                         @if($activeTab === 'session-memory')
                             @if($selectedAgent)
                                 <div class="flex-1 overflow-y-auto custom-scrollbar">
-                                    <div class="space-y-6 p-6">
-                                    <!-- Session Header Card -->
-                                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
-                                        <div class="flex items-start space-x-4">
-                                            <div class="flex-shrink-0">
-                                                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                                                    <svg class="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div class="space-y-3 p-4">
+                                    <!-- Compact Session Header -->
+                                    <div class="bg-white/70 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-100 shadow-sm">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                                    <svg class="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                     </svg>
                                                 </div>
+                                                <div>
+                                                    <h3 class="text-lg font-semibold text-gray-900">Session Management</h3>
+                                                    <p class="text-sm text-purple-600 font-mono">{{ $sessionId }}</p>
+                                                </div>
                                             </div>
-                                            <div class="flex-1 min-w-0">
-                                                <h3 class="text-xl font-bold text-gray-900 mb-1">Session Management</h3>
-                                                <p class="text-sm text-purple-600 font-medium">Current Session: {{ $sessionId }}</p>
-                                                <div class="mt-2 flex items-center space-x-4">
-                                                    <div class="flex items-center text-sm text-gray-600">
-                                                        <svg class="w-4 h-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                                        </svg>
-                                                        <span class="font-medium">{{ count($chatHistory) }}</span> messages
-                                                    </div>
-                                                    <div class="flex items-center text-sm text-gray-600">
-                                                        <svg class="w-4 h-4 mr-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                        </svg>
-                                                        <span class="font-medium">Active</span>
-                                                    </div>
+                                            <div class="flex items-center space-x-4 text-sm">
+                                                <div class="flex items-center text-gray-600">
+                                                    <svg class="w-4 h-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    <span class="font-medium">{{ count($chatHistory) }}</span> msgs
+                                                </div>
+                                                <div class="flex items-center text-gray-600">
+                                                    <svg class="w-4 h-4 mr-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <span class="font-medium">Active</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -493,91 +494,60 @@ function testModalButton() {
                                         </div>
                                     @endif
 
-                                    <!-- Context Data Card -->
-                                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
-                                        <div class="px-6 py-4 border-b border-gray-200">
+                                    <!-- Compact Context Information -->
+                                    <div class="bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
+                                        <div class="px-4 py-3 border-b border-gray-200">
                                             <div class="flex items-center">
-                                                <div class="flex-shrink-0">
-                                                    <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                                    </svg>
-                                                </div>
-                                                <h4 class="ml-3 text-lg font-medium text-gray-900">Context Information</h4>
+                                                <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                </svg>
+                                                <h4 class="text-sm font-medium text-gray-900">Context Information</h4>
                                             </div>
                                         </div>
-                                        <div class="px-6 py-4">
+                                        <div class="px-4 py-3">
                                             @if(isset($contextData['error']))
                                                 <div class="text-red-600 text-sm">{{ $contextData['error'] }}</div>
                                             @else
-                                                <div class="space-y-4">
-                                                    <div class="bg-gray-50 rounded-lg p-4">
-                                                        <div class="flex items-center justify-between">
-                                                            <div class="flex items-center">
-                                                                <div class="flex-shrink-0">
-                                                                    <svg class="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                                                                    </svg>
-                                                                </div>
-                                                                <div class="ml-4">
-                                                                    <div class="text-sm font-medium text-gray-500">Messages</div>
-                                                                    <div class="text-lg text-gray-900">{{ $contextData['messages_count'] ?? 0 }} messages in conversation</div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="text-2xl font-bold text-blue-600">{{ $contextData['messages_count'] ?? 0 }}</div>
+                                                <div class="grid grid-cols-3 gap-4 text-sm">
+                                                    <div class="flex items-center space-x-2">
+                                                        <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                                        </svg>
+                                                        <div>
+                                                            <div class="text-xs text-gray-500">Messages</div>
+                                                            <div class="font-semibold text-blue-600">{{ $contextData['messages_count'] ?? 0 }}</div>
                                                         </div>
                                                     </div>
 
-                                                    <div class="bg-gray-50 rounded-lg p-4">
-                                                        <div class="flex items-center justify-between">
-                                                            <div class="flex items-center">
-                                                                <div class="flex-shrink-0">
-                                                                    <svg class="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z" />
-                                                                    </svg>
-                                                                </div>
-                                                                <div class="ml-4">
-                                                                    <div class="text-sm font-medium text-gray-500">State Keys</div>
-                                                                    <div class="text-lg text-gray-900">active state variables</div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="text-2xl font-bold text-green-600">{{ count($contextData['state_keys'] ?? []) }}</div>
+                                                    <div class="flex items-center space-x-2">
+                                                        <svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z" />
+                                                        </svg>
+                                                        <div>
+                                                            <div class="text-xs text-gray-500">State Keys</div>
+                                                            <div class="font-semibold text-green-600">{{ count($contextData['state_keys'] ?? []) }}</div>
                                                         </div>
                                                     </div>
 
-                                                    <div class="bg-gray-50 rounded-lg p-4">
-                                                        <div class="flex items-center justify-between">
-                                                            <div class="flex items-center">
-                                                                <div class="flex-shrink-0">
-                                                                    <svg class="w-8 h-8 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                                    </svg>
-                                                                </div>
-                                                                <div class="ml-4">
-                                                                    <div class="text-sm font-medium text-gray-500">Session ID</div>
-                                                                    <div class="text-lg text-gray-900">conversation session</div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="text-right">
-                                                                <div class="text-xs font-mono text-purple-600 bg-purple-50 px-2 py-1 rounded">
-                                                                    {{ $contextData['session_id'] ?? 'N/A' }}
-                                                                </div>
-                                                                <div class="text-xs text-green-600 mt-1 flex items-center">
-                                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                                                    </svg>
-                                                                    Active
-                                                                </div>
+                                                    <div class="flex items-center space-x-2">
+                                                        <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                        </svg>
+                                                        <div>
+                                                            <div class="text-xs text-gray-500">Session</div>
+                                                            <div class="text-xs font-mono text-purple-600 bg-purple-50 px-1 py-0.5 rounded">
+                                                                {{ Str::limit($contextData['session_id'] ?? 'N/A', 8) }}
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 @if(isset($contextData['state_keys']) && count($contextData['state_keys']) > 0)
-                                                    <div class="mt-6">
-                                                        <h5 class="text-sm font-medium text-gray-700 mb-3">Active State Keys</h5>
-                                                        <div class="flex flex-wrap gap-2">
+                                                    <div class="mt-3 pt-3 border-t border-gray-100">
+                                                        <div class="text-xs text-gray-500 mb-2">Active State Keys</div>
+                                                        <div class="flex flex-wrap gap-1">
                                                             @foreach($contextData['state_keys'] as $key)
-                                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                                                                     {{ $key }}
                                                                 </span>
                                                             @endforeach
@@ -589,38 +559,36 @@ function testModalButton() {
                                     </div>
 
                                     @if(isset($memoryData) && count($memoryData) > 0)
-                                        <!-- Memory Data Card -->
-                                        <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
-                                            <div class="px-6 py-4 border-b border-gray-200">
+                                        <!-- Compact Memory Store -->
+                                        <div class="bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
+                                            <div class="px-4 py-3 border-b border-gray-200">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex items-center">
-                                                        <div class="flex-shrink-0">
-                                                            <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                                                            </svg>
-                                                        </div>
-                                                        <h4 class="ml-3 text-lg font-medium text-gray-900">Memory Store</h4>
+                                                        <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                                        </svg>
+                                                        <h4 class="text-sm font-medium text-gray-900">Memory Store</h4>
                                                     </div>
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
                                                         {{ count($memoryData) }} entries
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div class="px-6 py-4">
-                                                <div class="space-y-3 max-h-48 overflow-y-auto custom-scrollbar">
+                                            <div class="px-4 py-3">
+                                                <div class="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
                                                     @foreach($memoryData as $key => $value)
-                                                        <div class="group bg-gray-50 hover:bg-gray-100 transition-colors duration-200 p-4 rounded-lg border border-gray-200">
+                                                        <div class="group bg-gray-50/50 hover:bg-gray-100/70 transition-colors duration-200 px-3 py-2 rounded border border-gray-100">
                                                             <div class="flex items-start justify-between">
                                                                 <div class="flex-1 min-w-0">
-                                                                    <h5 class="text-sm font-semibold text-gray-900 group-hover:text-purple-700 transition-colors duration-200 mb-1">{{ $key }}</h5>
-                                                                    <div class="text-sm text-gray-600 font-mono bg-white rounded px-2 py-1 border max-h-16 overflow-y-auto">
-                                                                        {{ is_array($value) ? json_encode($value, JSON_PRETTY_PRINT) : $value }}
+                                                                    <div class="flex items-center space-x-2 mb-1">
+                                                                        <h5 class="text-sm font-medium text-gray-900 group-hover:text-purple-700 transition-colors duration-200">{{ $key }}</h5>
+                                                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium {{ is_array($value) ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                                                                            {{ is_array($value) ? 'Array' : 'String' }}
+                                                                        </span>
                                                                     </div>
-                                                                </div>
-                                                                <div class="flex-shrink-0 ml-3">
-                                                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium {{ is_array($value) ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
-                                                                        {{ is_array($value) ? 'Array' : 'String' }}
-                                                                    </span>
+                                                                    <div class="text-xs text-gray-600 font-mono bg-white/50 rounded px-2 py-1 border max-h-12 overflow-y-auto">
+                                                                        {{ is_array($value) ? json_encode($value, JSON_PRETTY_PRINT) : Str::limit($value, 100) }}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -649,7 +617,7 @@ function testModalButton() {
                         <!-- Traces Tab -->
                         @if($activeTab === 'traces')
                             <div class="flex-1 overflow-y-auto custom-scrollbar">
-                                <div class="p-6">
+                                <div class="p-4">
                                 @if(isset($traceData['error']))
                                     <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                                         <div class="flex">
@@ -677,35 +645,43 @@ function testModalButton() {
                                         <p class="text-gray-500 max-w-sm mx-auto">Execution traces will appear here after running the agent. Traces show the step-by-step execution flow including tool calls and responses.</p>
                                     </div>
                                 @else
-                                    <!-- Execution Trace Header -->
-                                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100 mb-6">
-                                        <div class="flex items-start space-x-4">
-                                            <div class="flex-shrink-0">
-                                                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                                                    <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                                    </svg>
+                                    <!-- Compact Trace Header -->
+                                    <div class="bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm mb-4">
+                                        <div class="px-4 py-3">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="text-lg font-semibold text-gray-900">Execution Traces</h3>
+                                                        <p class="text-sm text-blue-600 font-mono">{{ $sessionId }}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="flex-1 min-w-0">
-                                                <h3 class="text-xl font-bold text-gray-900 mb-1">Execution Trace</h3>
-                                                <p class="text-sm text-blue-600 font-medium">Step-by-step execution flow</p>
-                                                <div class="mt-2 flex items-center space-x-4">
-                                                    <div class="flex items-center text-sm text-gray-600">
+                                                <div class="flex items-center space-x-4 text-sm">
+                                                    <div class="flex items-center text-gray-600">
                                                         <svg class="w-4 h-4 mr-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                                                         </svg>
-                                                        <span class="font-medium">{{ count($traceData) }}</span> execution spans
+                                                        <span class="font-medium">{{ count($traceData) }}</span> spans
+                                                    </div>
+                                                    <div class="flex items-center text-gray-600">
+                                                        <svg class="w-4 h-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        <span class="font-medium">Available</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Trace Timeline Tree -->
+                                    <!-- Compact Trace Timeline -->
                                     <div class="flex-1 overflow-hidden">
                                         <div class="h-full overflow-y-auto custom-scrollbar">
-                                            <div class="space-y-3">
+                                            <div class="space-y-1">
                                                 @foreach($traceData as $rootSpan)
                                                     @include('agent-adk::partials.trace-span', ['span' => $rootSpan, 'level' => 0])
                                                 @endforeach

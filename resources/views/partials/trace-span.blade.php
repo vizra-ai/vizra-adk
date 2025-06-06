@@ -46,82 +46,81 @@
                    !empty($span['error_data']) || !empty($span['metadata']));
 @endphp
 
-<!-- Trace Span Item -->
+<!-- Compact Trace Span Item -->
 <div class="relative" style="margin-left: {{ $indent }}px;">
     <!-- Connection Lines for Tree Structure -->
     @if($level > 0)
-        <div class="absolute left-0 top-0 bottom-0 w-6">
-            <div class="absolute left-3 top-0 bottom-0 w-px bg-gray-200"></div>
-            <div class="absolute left-3 top-6 w-3 h-px bg-gray-200"></div>
+        <div class="absolute left-0 top-0 bottom-0 w-4">
+            <div class="absolute left-2 top-0 bottom-0 w-px bg-gray-200"></div>
+            <div class="absolute left-2 top-3 w-2 h-px bg-gray-200"></div>
         </div>
     @endif
 
-    <!-- Span Content Card -->
-    <div class="bg-white border {{ $typeInfo['border'] }} rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 mb-3 {{ $level > 0 ? 'ml-6' : '' }}">
-        <div class="p-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3 flex-1 min-w-0">
-                    <!-- Type Icon -->
-                    <div class="flex-shrink-0 w-8 h-8 {{ $typeInfo['bg'] }} rounded-lg flex items-center justify-center {{ $typeInfo['color'] }}">
-                        {!! $typeInfo['icon'] !!}
-                    </div>
-
-                    <!-- Span Info -->
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center space-x-2 mb-1">
-                            <h4 class="text-sm font-semibold text-gray-900 truncate">{{ $span['name'] }}</h4>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColor }} border">
-                                {{ ucfirst($span['status']) }}
-                            </span>
-                        </div>
-
-                        <div class="flex items-center space-x-4 text-xs text-gray-500">
-                            @if(!empty($span['start_time']))
-                                <div class="flex items-center space-x-1">
-                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span>{{ $span['start_time'] }}</span>
-                                </div>
-                            @endif
-                            @if(!empty($span['duration_ms']))
-                                <div class="flex items-center space-x-1">
-                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                    <span>{{ $span['duration_ms'] }}ms</span>
-                                </div>
-                            @endif
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-800">
-                                {{ str_replace('_', ' ', ucwords($span['type'], '_')) }}
-                            </span>
-                        </div>
+    <!-- Compact Span Content -->
+    <div class="compact-trace-card bg-white/70 backdrop-blur-sm border border-gray-200/60 rounded-lg hover:bg-white hover:border-gray-300/80 hover:shadow-sm transition-all duration-200 mb-1.5 {{ $level > 0 ? 'ml-4' : '' }} group">
+        <div class="px-3 py-2">
+            <div class="flex items-center space-x-2.5">
+                <!-- Compact Type Icon -->
+                <div class="flex-shrink-0 w-6 h-6 {{ $typeInfo['bg'] }} rounded-md flex items-center justify-center {{ $typeInfo['color'] }} group-hover:scale-105 transition-transform duration-150">
+                    <div class="w-3.5 h-3.5">
+                        {!! str_replace('w-4 h-4', 'w-3.5 h-3.5', $typeInfo['icon']) !!}
                     </div>
                 </div>
 
-                <!-- Expand Button -->
+                <!-- Inline Span Info -->
+                <div class="flex-1 min-w-0 flex items-center space-x-2.5">
+                    <!-- Name and Status -->
+                    <div class="flex items-center space-x-2 min-w-0 flex-1">
+                        <span class="text-sm font-medium text-gray-900 truncate">{{ $span['name'] }}</span>
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium {{ $statusColor }} border-0 flex-shrink-0">
+                            {{ ucfirst($span['status']) }}
+                        </span>
+                    </div>
+
+                    <!-- Compact Metadata -->
+                    <div class="flex items-center space-x-2 text-xs text-gray-500 flex-shrink-0">
+                        @if(!empty($span['duration_ms']))
+                            <div class="flex items-center space-x-1 bg-gray-50 px-1.5 py-0.5 rounded">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                <span class="font-medium">{{ $span['duration_ms'] }}ms</span>
+                            </div>
+                        @endif
+
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 border-0">
+                            {{ str_replace('_', ' ', ucwords($span['type'], '_')) }}
+                        </span>
+
+                        @if(!empty($span['start_time']))
+                            <span class="text-gray-400 font-mono text-xs">{{ $span['start_time'] }}</span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Compact Expand Button -->
                 @if($hasDetails)
                     <button onclick="toggleSpanDetails('{{ $span['span_id'] }}')"
-                            class="flex-shrink-0 ml-2 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-150">
-                        <svg class="w-4 h-4 transform transition-transform duration-200" id="chevron-{{ $span['span_id'] }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            class="flex-shrink-0 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-150 opacity-0 group-hover:opacity-100">
+                        <svg class="w-3.5 h-3.5 transform transition-transform duration-200" id="chevron-{{ $span['span_id'] }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
                 @endif
             </div>
 
-            <!-- Expandable Details Section -->
+            <!-- Compact Expandable Details Section -->
             @if($hasDetails)
-                <div id="span-details-{{ $span['span_id'] }}" class="hidden mt-4 pt-4 border-t border-gray-100 space-y-3">
+                <div id="span-details-{{ $span['span_id'] }}" class="hidden mt-2 pt-2 border-t border-gray-100/80 space-y-2">
                     @if(!empty($span['input_data']))
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="bg-blue-50/80 border border-blue-200/60 rounded-md p-2">
+                            <div class="flex items-center space-x-1.5 mb-1.5">
+                                <svg class="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                                 </svg>
-                                <span class="text-sm font-semibold text-blue-800">Input Data</span>
+                                <span class="text-xs font-semibold text-blue-800">Input</span>
                             </div>
-                            <pre class="text-xs text-blue-700 bg-white rounded border border-blue-200 p-2 overflow-auto max-h-24 whitespace-pre-wrap">@php
+                            <pre class="text-xs text-blue-700 bg-white/80 rounded border border-blue-200/60 p-1.5 overflow-auto max-h-20 whitespace-pre-wrap">@php
                                 try {
                                     echo json_encode($span['input_data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
                                 } catch (\Exception $e) {
@@ -132,14 +131,14 @@
                     @endif
 
                     @if(!empty($span['output_data']))
-                        <div class="bg-green-50 border border-green-200 rounded-lg p-3">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="bg-green-50/80 border border-green-200/60 rounded-md p-2">
+                            <div class="flex items-center space-x-1.5 mb-1.5">
+                                <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                 </svg>
-                                <span class="text-sm font-semibold text-green-800">Output Data</span>
+                                <span class="text-xs font-semibold text-green-800">Output</span>
                             </div>
-                            <pre class="text-xs text-green-700 bg-white rounded border border-green-200 p-2 overflow-auto max-h-24 whitespace-pre-wrap">@php
+                            <pre class="text-xs text-green-700 bg-white/80 rounded border border-green-200/60 p-1.5 overflow-auto max-h-20 whitespace-pre-wrap">@php
                                 try {
                                     echo json_encode($span['output_data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
                                 } catch (\Exception $e) {
@@ -150,14 +149,14 @@
                     @endif
 
                     @if(!empty($span['error_data']))
-                        <div class="bg-red-50 border border-red-200 rounded-lg p-3">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <svg class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="bg-red-50/80 border border-red-200/60 rounded-md p-2">
+                            <div class="flex items-center space-x-1.5 mb-1.5">
+                                <svg class="w-3 h-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
                                 </svg>
-                                <span class="text-sm font-semibold text-red-800">Error Data</span>
+                                <span class="text-xs font-semibold text-red-800">Error</span>
                             </div>
-                            <pre class="text-xs text-red-700 bg-white rounded border border-red-200 p-2 overflow-auto max-h-24 whitespace-pre-wrap">@php
+                            <pre class="text-xs text-red-700 bg-white/80 rounded border border-red-200/60 p-1.5 overflow-auto max-h-20 whitespace-pre-wrap">@php
                                 try {
                                     echo json_encode($span['error_data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
                                 } catch (\Exception $e) {
@@ -168,14 +167,14 @@
                     @endif
 
                     @if(!empty($span['metadata']))
-                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="bg-gray-50/80 border border-gray-200/60 rounded-md p-2">
+                            <div class="flex items-center space-x-1.5 mb-1.5">
+                                <svg class="w-3 h-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <span class="text-sm font-semibold text-gray-800">Metadata</span>
+                                <span class="text-xs font-semibold text-gray-800">Metadata</span>
                             </div>
-                            <pre class="text-xs text-gray-700 bg-white rounded border border-gray-200 p-2 overflow-auto max-h-24 whitespace-pre-wrap">@php
+                            <pre class="text-xs text-gray-700 bg-white/80 rounded border border-gray-200/60 p-1.5 overflow-auto max-h-20 whitespace-pre-wrap">@php
                                 try {
                                     echo json_encode($span['metadata'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
                                 } catch (\Exception $e) {
