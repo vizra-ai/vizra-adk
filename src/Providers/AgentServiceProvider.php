@@ -12,9 +12,11 @@ use AaronLumsden\LaravelAgentADK\Services\StateManager;
 use AaronLumsden\LaravelAgentADK\Services\MemoryManager;
 use AaronLumsden\LaravelAgentADK\Services\AgentManager;
 use AaronLumsden\LaravelAgentADK\Services\Tracer;
+use AaronLumsden\LaravelAgentADK\Services\AnalyticsService;
 use AaronLumsden\LaravelAgentADK\Livewire\Dashboard;
 use AaronLumsden\LaravelAgentADK\Livewire\ChatInterface;
 use AaronLumsden\LaravelAgentADK\Livewire\EvalRunner;
+use AaronLumsden\LaravelAgentADK\Livewire\Analytics;
 use AaronLumsden\LaravelAgentADK\Console\Commands\InstallCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\MakeAgentCommand;
 use AaronLumsden\LaravelAgentADK\Console\Commands\MakeToolCommand;
@@ -52,6 +54,10 @@ class AgentServiceProvider extends ServiceProvider
 
         $this->app->singleton(Tracer::class, function (Application $app) {
             return new Tracer();
+        });
+
+        $this->app->singleton(AnalyticsService::class, function (Application $app) {
+            return new AnalyticsService();
         });
 
         // Bind the AgentManager for the Facade and general use
@@ -103,6 +109,7 @@ class AgentServiceProvider extends ServiceProvider
             Livewire::component('agent-adk-dashboard', Dashboard::class);
             Livewire::component('agent-adk-chat-interface', ChatInterface::class);
             Livewire::component('agent-adk-eval-runner', EvalRunner::class);
+            Livewire::component('agent-adk-analytics', Analytics::class);
         }
     }
 

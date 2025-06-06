@@ -32,11 +32,20 @@ class EvalRunner extends Component
     public int $totalRows = 0;
     public array $results = [];
     public bool $showResults = false;
+    
+    // Real-time processing state
+    public array $csvData = [];
+    public int $currentRowIndex = 0;
+    public int $passCount = 0;
+    public int $failCount = 0;
 
     // Results display
     public array $resultSummary = [];
     public array $detailedResults = [];
     public string $outputPath = '';
+    
+    // Expandable row details
+    public array $expandedRows = [];
 
     // CSV upload for custom evaluations
     public $csvFile;
@@ -45,6 +54,15 @@ class EvalRunner extends Component
     public function mount()
     {
         $this->discoverEvaluations();
+        
+        // Debug: Log the number of discovered evaluations
+        \Log::info('EvalRunner: Discovered ' . count($this->availableEvaluations) . ' evaluations');
+    }
+
+    public function refreshEvaluations()
+    {
+        $this->discoverEvaluations();
+        session()->flash('message', 'Refreshed evaluations. Found: ' . count($this->availableEvaluations));
     }
 
     /**
@@ -141,7 +159,7 @@ class EvalRunner extends Component
         }
 
         if (!$evaluation) {
-            $this->currentStatus = "Evaluation not found";
+            $this->currentStatus = "Evaluation not found - Key: " . $evaluationKey;
             return;
         }
 
@@ -150,9 +168,11 @@ class EvalRunner extends Component
         try {
             $this->evaluationInstance = app($evaluation['class']);
             $this->resetResults();
-            $this->currentStatus = "Evaluation selected: " . $evaluation['name'];
+            $this->currentStatus = "Evaluation selected: " . $evaluation['name'] . " (Class: " . $evaluation['class'] . ")";
         } catch (Exception $e) {
             $this->currentStatus = "Error loading evaluation: " . $e->getMessage();
+            $this->selectedEvaluation = null;
+            $this->evaluationInstance = null;
         }
     }
 
@@ -162,7 +182,9 @@ class EvalRunner extends Component
     public function runEvaluation()
     {
         if (!$this->hasValidEvaluation()) {
-            $this->currentStatus = "No evaluation selected";
+            $instanceStatus = $this->evaluationInstance ? 'OK' : 'NULL';
+            $selectedStatus = $this->selectedEvaluation ? $this->selectedEvaluation : 'NULL';
+            $this->currentStatus = "No evaluation selected. Instance: {$instanceStatus}, Selected: {$selectedStatus}";
             return;
         }
 
@@ -170,6 +192,9 @@ class EvalRunner extends Component
         $this->currentStatus = "Loading CSV data...";
         $this->progress = 0;
         $this->results = [];
+        $this->currentRowIndex = 0;
+        $this->passCount = 0;
+        $this->failCount = 0;
 
         try {
             // Get CSV data
@@ -179,86 +204,127 @@ class EvalRunner extends Component
                 throw new Exception("CSV file not found at: {$csvPath}");
             }
 
-            $csvData = $this->readCsv($csvPath);
+            $this->csvData = $this->readCsv($csvPath);
 
-            if (empty($csvData)) {
+            if (empty($this->csvData)) {
                 throw new Exception("No data found in CSV file");
             }
 
-            $this->totalRows = count($csvData);
-            $this->currentStatus = "Processing {$this->totalRows} rows...";
+            $this->totalRows = count($this->csvData);
+            $this->currentStatus = "Starting evaluation of {$this->totalRows} rows...";
 
-            $results = [];
-            $passCount = 0;
-            $failCount = 0;
-
-            foreach ($csvData as $index => $row) {
-                $this->currentStatus = "Processing row " . ($index + 1) . " of {$this->totalRows}";
-                $this->progress = (int)(($index / $this->totalRows) * 100);
-
-                // Emit progress update
-                $this->dispatch('evaluation-progress', [
-                    'progress' => $this->progress,
-                    'status' => $this->currentStatus
-                ]);
-
-                $sessionId = Str::uuid()->toString();
-
-                try {
-                    $prompt = $this->evaluationInstance->preparePrompt($row);
-                    $llmResponse = Agent::run($this->evaluationInstance->agentName, $prompt, $sessionId);
-
-                    $evaluationResult = $this->evaluationInstance->evaluateRow($row, $llmResponse);
-
-                    // Determine if this row passed
-                    $rowPassed = $evaluationResult['final_status'] ?? ($evaluationResult['passed'] ?? true);
-                    if ($rowPassed) {
-                        $passCount++;
-                    } else {
-                        $failCount++;
-                    }
-
-                    $results[] = [
-                        'row_index' => $index + 1,
-                        'row_data' => $row,
-                        'llm_response' => $llmResponse,
-                        'evaluation_result' => $evaluationResult,
-                        'passed' => $rowPassed,
-                    ];
-
-                } catch (Exception $e) {
-                    $failCount++;
-                    $results[] = [
-                        'row_index' => $index + 1,
-                        'row_data' => $row,
-                        'llm_response' => 'ERROR',
-                        'evaluation_result' => ['error' => $e->getMessage()],
-                        'passed' => false,
-                    ];
-                }
-            }
-
-            // Store results
-            $this->results = $results;
-            $this->resultSummary = [
-                'total_rows' => $this->totalRows,
-                'passed' => $passCount,
-                'failed' => $failCount,
-                'pass_rate' => $this->totalRows > 0 ? round(($passCount / $this->totalRows) * 100, 2) : 0,
-            ];
-
-            // Save results to file
-            $this->saveResults();
-
-            $this->showResults = true;
-            $this->currentStatus = "Evaluation completed! Pass rate: {$this->resultSummary['pass_rate']}%";
-            $this->progress = 100;
+            // Start processing the first row
+            $this->processNextRow();
 
         } catch (Exception $e) {
             $this->currentStatus = "Error: " . $e->getMessage();
-        } finally {
             $this->isRunning = false;
         }
+    }
+
+    public function processNextRow()
+    {
+        if ($this->currentRowIndex >= count($this->csvData)) {
+            // All rows processed, finalize
+            $this->finalizeEvaluation();
+            return;
+        }
+
+        // Ensure evaluation instance exists (recreate if needed due to Livewire serialization)
+        if (!$this->evaluationInstance && $this->selectedEvaluation) {
+            try {
+                $this->evaluationInstance = app($this->selectedEvaluation);
+            } catch (Exception $e) {
+                $this->currentStatus = "Error recreating evaluation instance: " . $e->getMessage();
+                $this->isRunning = false;
+                return;
+            }
+        }
+
+        if (!$this->evaluationInstance) {
+            $this->currentStatus = "Error: No evaluation instance available";
+            $this->isRunning = false;
+            return;
+        }
+
+        $row = $this->csvData[$this->currentRowIndex];
+        $rowNumber = $this->currentRowIndex + 1;
+        
+        $this->currentStatus = "Processing row {$rowNumber} of {$this->totalRows}...";
+        $this->progress = (int)(($this->currentRowIndex / $this->totalRows) * 100);
+
+        $sessionId = Str::uuid()->toString();
+
+        try {
+            $prompt = $this->evaluationInstance->preparePrompt($row);
+            $llmResponse = Agent::run($this->evaluationInstance->agentName, $prompt, $sessionId);
+            $evaluationResult = $this->evaluationInstance->evaluateRow($row, $llmResponse);
+
+            // Determine if this row passed
+            $rowPassed = ($evaluationResult['final_status'] ?? 'fail') === 'pass';
+            if ($rowPassed) {
+                $this->passCount++;
+            } else {
+                $this->failCount++;
+            }
+
+            // Add result to results array
+            $this->results[] = [
+                'row_index' => $rowNumber,
+                'row_data' => $row,
+                'llm_response' => $llmResponse,
+                'evaluation_result' => $evaluationResult,
+                'passed' => $rowPassed,
+            ];
+
+        } catch (Exception $e) {
+            $this->failCount++;
+            $this->results[] = [
+                'row_index' => $rowNumber,
+                'row_data' => $row,
+                'llm_response' => 'ERROR',
+                'evaluation_result' => ['error' => $e->getMessage()],
+                'passed' => false,
+            ];
+        }
+
+        // Move to next row
+        $this->currentRowIndex++;
+
+        // Emit progress update
+        $this->dispatch('evaluation-progress', [
+            'progress' => $this->progress,
+            'current_row' => $rowNumber,
+            'total_rows' => $this->totalRows,
+            'passed' => $this->passCount,
+            'failed' => $this->failCount
+        ]);
+
+        // Continue with next row after a small delay for UI updates
+        $this->dispatch('process-next-row');
+    }
+
+    public function finalizeEvaluation()
+    {
+        // Store final results
+        $this->resultSummary = [
+            'total_rows' => $this->totalRows,
+            'passed' => $this->passCount,
+            'failed' => $this->failCount,
+            'pass_rate' => $this->totalRows > 0 ? round(($this->passCount / $this->totalRows) * 100, 2) : 0,
+        ];
+
+        // Save results to file
+        $this->saveResults();
+
+        $this->showResults = true;
+        $this->currentStatus = "Evaluation completed! Pass rate: {$this->resultSummary['pass_rate']}%";
+        $this->progress = 100;
+        $this->isRunning = false;
+
+        $this->dispatch('evaluation-completed', [
+            'summary' => $this->resultSummary
+        ]);
     }
 
     /**
@@ -355,6 +421,18 @@ class EvalRunner extends Component
     }
 
     /**
+     * Toggle expanded view for a specific result row
+     */
+    public function toggleRowExpansion($rowIndex)
+    {
+        if (in_array($rowIndex, $this->expandedRows)) {
+            $this->expandedRows = array_diff($this->expandedRows, [$rowIndex]);
+        } else {
+            $this->expandedRows[] = $rowIndex;
+        }
+    }
+
+    /**
      * Reset all results and status
      */
     public function resetResults()
@@ -366,6 +444,7 @@ class EvalRunner extends Component
         $this->progress = 0;
         $this->totalRows = 0;
         $this->outputPath = '';
+        $this->expandedRows = [];
     }
 
     /**
@@ -400,11 +479,27 @@ class EvalRunner extends Component
      */
     private function hasValidEvaluation(): bool
     {
+        if ($this->selectedEvaluation === null) {
+            return false;
+        }
+
+        // Try to recreate the instance if it's null (Livewire serialization issue)
+        if ($this->evaluationInstance === null && $this->selectedEvaluation) {
+            try {
+                $this->evaluationInstance = app($this->selectedEvaluation);
+            } catch (Exception $e) {
+                return false;
+            }
+        }
+
         return $this->evaluationInstance !== null && $this->selectedEvaluation !== null;
     }
 
     public function render()
     {
-        return view('agent-adk::livewire.eval-runner');
+        return view('agent-adk::livewire.eval-runner')
+            ->layout('agent-adk::layouts.app', [
+                'title' => 'Evaluation Runner'
+            ]);
     }
 }

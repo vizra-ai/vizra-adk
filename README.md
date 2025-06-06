@@ -13,6 +13,7 @@
 - [Building Your First Agent](#building-your-first-agent-)
 - [Memory System](#memory-system-)
 - [Tracing & Debugging](#tracing--debugging-)
+- [Vector Memory & RAG](#vector-memory--rag-)
 - [Advanced Features](#advanced-features-)
   - [Tool System](#tool-system)
   - [Sub-Agent Delegation](#sub-agent-delegation)
@@ -143,6 +144,7 @@ AGENT_ADK_DEFAULT_TEMPERATURE=0.7
 - **🔧 Tool System**: Declarative tool definitions with automatic parameter validation
 - **🤖 Sub-Agent Delegation**: Hierarchical agent systems with task specialization
 - **📚 Conversation Memory**: Automatic context and history management
+- **🧠 Vector Memory & RAG**: Semantic search and retrieval-augmented generation
 - **🌐 Multi-Provider**: OpenAI, Anthropic, Gemini support via Prism-PHP
 - **🔍 Execution Tracing**: Visual debugging with hierarchical span tracking
 - **⚡ Streaming Responses**: Real-time streaming for enhanced user experience
@@ -1239,6 +1241,310 @@ $roots = TraceSpan::rootSpans()->get();
 Tracing is automatically integrated into `BaseLlmAgent` - no code changes required. All agent executions, LLM calls, tool calls, and sub-agent delegations are traced transparently.
 
 For complete documentation, see the [TRACING.md](./TRACING.md) file.
+
+## Vector Memory & RAG 🧠
+
+Laravel Agent ADK includes a powerful Vector Memory system that enables Retrieval-Augmented Generation (RAG) workflows. This allows agents to store, search, and retrieve information using semantic similarity, making them capable of answering questions based on large knowledge bases.
+
+### Key Features
+
+- **Multi-Provider Embeddings**: OpenAI, Cohere, Ollama, and Gemini support
+- **Flexible Storage**: Meilisearch, PostgreSQL + pgvector, or in-memory
+- **Automatic Chunking**: Smart document splitting with configurable strategies
+- **Semantic Search**: Find relevant content using meaning, not just keywords
+- **RAG Integration**: Seamless context generation for agent responses
+- **Laravel Native**: Built with Laravel patterns and conventions
+
+### Quick Setup with Meilisearch
+
+Meilisearch provides excellent vector search capabilities with built-in indexing and filtering. Here's how to set it up:
+
+#### 1. Install Meilisearch
+
+```bash
+# Using Docker (recommended)
+docker run -it --rm \
+    -p 7700:7700 \
+    -e MEILI_ENV='development' \
+    -v $(pwd)/meili_data:/meili_data \
+    getmeili/meilisearch:v1.6
+
+# Or install locally
+curl -L https://install.meilisearch.com | sh
+./meilisearch
+```
+
+#### 2. Configure Environment Variables
+
+Add to your `.env` file:
+
+```env
+# Vector Memory Configuration
+AGENT_VECTOR_MEMORY_ENABLED=true
+AGENT_VECTOR_DRIVER=meilisearch
+AGENT_EMBEDDING_PROVIDER=openai
+
+# Meilisearch Configuration
+AGENT_MEILISEARCH_HOST=http://localhost:7700
+AGENT_MEILISEARCH_API_KEY=your_master_key_here
+AGENT_MEILISEARCH_INDEX_PREFIX=agent_vectors_
+
+# OpenAI for Embeddings
+OPENAI_API_KEY=sk-your-openai-api-key-here
+AGENT_OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+
+# Document Chunking (optional)
+AGENT_CHUNKING_STRATEGY=sentence
+AGENT_CHUNK_SIZE=1000
+AGENT_CHUNK_OVERLAP=200
+```
+
+#### 3. Run Database Migrations
+
+```bash
+php artisan migrate
+```
+
+#### 4. Test the Setup
+
+```bash
+# Store some content
+php artisan vector:store document_assistant \
+    --content="Laravel Agent ADK is a powerful framework for building AI agents with RAG capabilities" \
+    --namespace=docs \
+    --source=manual
+
+# Search for content
+php artisan vector:search document_assistant "AI agent framework" \
+    --namespace=docs \
+    --rag
+
+# View statistics
+php artisan vector:stats document_assistant --namespace=docs
+```
+
+### Using Vector Memory in Agents
+
+#### Create a RAG-Enabled Agent
+
+```php
+namespace App\Agents;
+
+use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
+use App\Tools\VectorMemoryTool;
+
+class DocumentAssistantAgent extends BaseLlmAgent
+{
+    protected string $name = 'document_assistant';
+    protected string $description = 'AI assistant with RAG capabilities';
+    
+    protected string $instructions = 'You are a knowledgeable assistant with access to stored documents. 
+        When answering questions, first search your vector memory for relevant information, 
+        then provide comprehensive answers based on the retrieved context.';
+
+    protected function registerTools(): array
+    {
+        return [
+            VectorMemoryTool::class,
+        ];
+    }
+}
+```
+
+#### Register and Use the Agent
+
+```php
+// In AppServiceProvider
+Agent::build(DocumentAssistantAgent::class)->register();
+
+// Use the agent
+$response = Agent::run('document_assistant', 
+    'What is Laravel Agent ADK and what are its main features?', 
+    'user-session-123'
+);
+```
+
+### Vector Memory Operations
+
+#### Store Documents
+
+```php
+use App\VectorMemory\Services\VectorMemoryManager;
+
+$vectorMemory = app(VectorMemoryManager::class);
+
+// Store a document with automatic chunking
+$memories = $vectorMemory->addDocument(
+    agentName: 'support_agent',
+    content: $documentContent,
+    metadata: [
+        'title' => 'User Guide',
+        'category' => 'documentation',
+        'version' => '2.1'
+    ],
+    namespace: 'help_docs',
+    source: 'user_guide.pdf'
+);
+
+echo "Stored {$memories->count()} chunks in vector memory";
+```
+
+#### Search and Retrieve
+
+```php
+// Semantic search
+$results = $vectorMemory->search(
+    agentName: 'support_agent',
+    query: 'How do I configure authentication?',
+    namespace: 'help_docs',
+    limit: 5,
+    threshold: 0.7
+);
+
+// Generate RAG context
+$ragContext = $vectorMemory->generateRagContext(
+    agentName: 'support_agent',
+    query: 'authentication setup process',
+    namespace: 'help_docs'
+);
+
+echo $ragContext['context']; // Formatted context for LLM
+```
+
+#### Use in Agents with VectorMemoryTool
+
+The `VectorMemoryTool` provides agents with direct access to vector memory operations:
+
+```php
+// Agents can store content
+$storePrompt = "Store this information: Laravel uses Eloquent ORM for database operations";
+
+// Agents can search and answer
+$queryPrompt = "What ORM does Laravel use?";
+
+$response = Agent::run('document_assistant', $queryPrompt, 'session-123');
+// Agent will automatically search vector memory and provide context-aware answers
+```
+
+### Command Line Management
+
+#### Store Content
+
+```bash
+# From file
+php artisan vector:store my_agent --file=/path/to/document.pdf --namespace=docs
+
+# Direct content  
+php artisan vector:store my_agent --content="Your content here" --source=manual
+
+# With metadata
+php artisan vector:store my_agent \
+    --file=guide.md \
+    --metadata='{"category":"guide","priority":"high"}'
+```
+
+#### Search Content
+
+```bash
+# Basic search
+php artisan vector:search my_agent "search query" --namespace=docs
+
+# Generate RAG context
+php artisan vector:search my_agent "complex question" --rag --limit=10
+
+# JSON output
+php artisan vector:search my_agent "query" --json
+```
+
+#### Monitor Usage
+
+```bash
+# Agent statistics
+php artisan vector:stats my_agent --namespace=docs --detailed
+
+# Global statistics
+php artisan vector:stats --detailed
+```
+
+### Alternative Storage Options
+
+#### PostgreSQL + pgvector
+
+For high-performance production workloads:
+
+```env
+AGENT_VECTOR_DRIVER=pgvector
+DB_CONNECTION=pgsql
+# Ensure PostgreSQL has pgvector extension installed
+```
+
+#### In-Memory (Development)
+
+For development and testing:
+
+```env
+AGENT_VECTOR_DRIVER=in_memory
+AGENT_MEMORY_PERSISTENCE=true
+```
+
+### Configuration Options
+
+#### Embedding Providers
+
+```env
+# OpenAI (recommended for quality)
+AGENT_EMBEDDING_PROVIDER=openai
+OPENAI_API_KEY=sk-your-key
+AGENT_OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+
+# Cohere (cost-effective)
+AGENT_EMBEDDING_PROVIDER=cohere
+COHERE_API_KEY=your-cohere-key
+
+# Ollama (free, local)
+AGENT_EMBEDDING_PROVIDER=ollama
+OLLAMA_URL=http://localhost:11434
+```
+
+#### Search Settings
+
+```env
+AGENT_SIMILARITY_THRESHOLD=0.7    # Minimum similarity score (0.0-1.0)
+AGENT_MAX_SEARCH_RESULTS=5        # Maximum results per search
+AGENT_DISTANCE_METRIC=cosine      # cosine, euclidean, dot_product
+```
+
+#### RAG Context Generation
+
+```env
+AGENT_RAG_MAX_CONTEXT_LENGTH=4000  # Maximum context characters
+AGENT_RAG_INCLUDE_METADATA=true    # Include metadata in context
+```
+
+### Performance Tips
+
+1. **Choose the right embedding model**: `text-embedding-3-small` offers good performance/cost balance
+2. **Optimize chunk size**: 500-1000 characters work well for most content
+3. **Use appropriate similarity thresholds**: Start with 0.7, adjust based on results
+4. **Leverage metadata**: Use structured metadata for better filtering
+5. **Monitor costs**: Track embedding generation usage for commercial providers
+
+### Demo and Examples
+
+Run the included demo to see RAG in action:
+
+```bash
+php demo_rag_capabilities.php
+```
+
+This demonstrates:
+- Document storage with automatic chunking
+- Semantic search across stored content  
+- RAG-powered question answering
+- Cross-namespace searching
+- Real-world usage patterns
+
+For detailed setup instructions and advanced configuration, see `VECTOR_MEMORY_SETUP.md` in the project root.
 
 ## Advanced Features 🚀
 

@@ -136,6 +136,28 @@
     .error-glow {
         box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
     }
+
+    .result-item {
+        animation: slideInResult 0.5s ease-out;
+    }
+
+    @keyframes slideInResult {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
 </style>
 
 <script>
@@ -143,6 +165,80 @@ document.addEventListener('DOMContentLoaded', function() {
     // Listen for evaluation progress updates
     window.addEventListener('evaluation-progress', event => {
         console.log('Evaluation progress:', event.detail);
+        
+        // Update real-time stats if they exist
+        const passedEl = document.getElementById('passed-count');
+        const failedEl = document.getElementById('failed-count');
+        const summaryPassedEl = document.getElementById('summary-passed-count');
+        const summaryFailedEl = document.getElementById('summary-failed-count');
+        const summaryPassRateEl = document.getElementById('summary-pass-rate');
+        const passRateTextEl = document.getElementById('pass-rate-text');
+        const passRateBarEl = document.getElementById('pass-rate-bar');
+        
+        if (passedEl && event.detail.passed !== undefined) {
+            passedEl.textContent = event.detail.passed;
+        }
+        if (failedEl && event.detail.failed !== undefined) {
+            failedEl.textContent = event.detail.failed;
+        }
+        if (summaryPassedEl && event.detail.passed !== undefined) {
+            summaryPassedEl.textContent = event.detail.passed;
+        }
+        if (summaryFailedEl && event.detail.failed !== undefined) {
+            summaryFailedEl.textContent = event.detail.failed;
+        }
+        
+        // Update pass rate
+        if (event.detail.total_rows && event.detail.total_rows > 0) {
+            const passRate = Math.round((event.detail.passed / event.detail.total_rows) * 100 * 10) / 10;
+            
+            if (summaryPassRateEl) {
+                summaryPassRateEl.textContent = passRate + '%';
+                // Update color based on pass rate
+                summaryPassRateEl.className = summaryPassRateEl.className.replace(/text-(green|red|yellow)-600/, 
+                    passRate >= 80 ? 'text-green-600' : (passRate < 50 ? 'text-red-600' : 'text-yellow-600'));
+            }
+            if (passRateTextEl) {
+                passRateTextEl.textContent = passRate + '%';
+            }
+            if (passRateBarEl) {
+                passRateBarEl.style.width = passRate + '%';
+                // Update bar color
+                const colorClass = passRate >= 80 ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 
+                                 (passRate < 50 ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-yellow-500 to-orange-600');
+                passRateBarEl.className = passRateBarEl.className.replace(/bg-gradient-to-r from-\w+-\d+ to-\w+-\d+/, colorClass);
+            }
+        }
+        
+        // Auto-scroll to latest result after a short delay to let Livewire update
+        setTimeout(() => {
+            const resultsContainer = document.querySelector('.live-results-container');
+            if (resultsContainer) {
+                const lastResult = resultsContainer.lastElementChild;
+                if (lastResult) {
+                    lastResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        }, 200);
+    });
+
+    // Listen for process-next-row event to continue processing
+    window.addEventListener('process-next-row', event => {
+        setTimeout(() => {
+            @this.processNextRow();
+        }, 100); // Small delay for UI updates
+    });
+
+    // Listen for evaluation completion
+    window.addEventListener('evaluation-completed', event => {
+        console.log('Evaluation completed:', event.detail);
+        
+        setTimeout(() => {
+            const resultsSection = document.getElementById('results-section');
+            if (resultsSection) {
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }, 500);
     });
 
     // Auto-scroll to results when they appear
@@ -160,343 +256,383 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <!-- Enhanced Header -->
-        <div class="eval-card bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/40 overflow-hidden shadow-xl rounded-2xl mb-8 border border-slate-200/60">
-            <div class="bg-gradient-to-r from-purple-600/5 via-indigo-600/5 to-blue-600/5 px-8 py-8">
-                <div class="text-center">
-                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 mb-6 shadow-lg shadow-purple-500/25">
-                        <svg class="h-8 w-8 text-white hero-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Minimal Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Evaluation Runner</h1>
+            <p class="text-gray-600">Test your agents with comprehensive evaluations</p>
+        </div>
+
+        <!-- Debug Section -->
+        @if(session()->has('message'))
+            <div class="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                <p class="text-blue-800 text-sm">{{ session('message') }}</p>
+            </div>
+        @endif
+
+        <!-- Progressive Disclosure Layout -->
+        <div class="max-w-4xl mx-auto space-y-6">
+            
+            <!-- Step 1: Evaluation Selection (Always Visible) -->
+            <div class="text-center">
+                @if(count($availableEvaluations) > 0)
+                    <div class="relative inline-block">
+                        <select id="evaluation-select" 
+                                wire:change="selectEvaluation($event.target.value)"
+                                class="appearance-none bg-white border-2 border-gray-200 rounded-2xl px-6 py-4 pr-12 text-lg font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer min-w-96">
+                            <option value="">Choose an evaluation to run...</option>
+                            @foreach($availableEvaluations as $evaluation)
+                                <option value="{{ $evaluation['key'] }}" 
+                                        @if($selectedEvaluation === $evaluation['class']) selected @endif>
+                                    {{ $evaluation['name'] }} → {{ $evaluation['agent_name'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+                @else
+                    <div class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-12">
+                        <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">No Evaluations Found</h3>
+                        <p class="text-gray-600 mb-4">Create an evaluation to get started</p>
+                        <code class="bg-gray-100 px-3 py-2 rounded text-sm">php artisan agent:make:eval MyEvaluation</code>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Step 2: Evaluation Ready (When Selected) -->
+            @if($selectedEvaluation && !$isRunning && count($results) == 0)
+                @php
+                    $selectedEval = collect($availableEvaluations)->firstWhere('class', $selectedEvaluation);
+                    $csvPath = base_path($selectedEval['csv_path'] ?? '');
+                    $testCount = 0;
+                    if (File::exists($csvPath)) {
+                        $testCount = count(file($csvPath)) - 1;
+                    }
+                @endphp
+                
+                <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-3xl p-8 text-center shadow-xl">
+                    <div class="flex items-center justify-center w-16 h-16 bg-green-500 rounded-full mx-auto mb-6 shadow-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <h1 class="text-4xl font-bold gradient-text mb-3">Evaluation Runner</h1>
-                    <p class="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                        Run comprehensive evaluations to test agent quality, performance, and reliability using your configured evaluation frameworks.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stats Row -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <!-- Available Evaluations -->
-            <div class="stat-card bg-gradient-to-br from-white to-purple-50/30 overflow-hidden shadow-lg rounded-xl border border-purple-100/50">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg">
-                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                                </svg>
+                    
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ $selectedEval['name'] }}</h2>
+                    <p class="text-gray-600 mb-6">Ready to test <strong>{{ $selectedEval['agent_name'] }}</strong> with {{ $testCount }} test cases</p>
+                    
+                    <!-- Big Action Button -->
+                    <button wire:click="runEvaluation"
+                            class="inline-flex items-center px-12 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-xl font-bold rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-200 mb-6">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m6-4a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        🚀 Run Evaluation
+                    </button>
+                    
+                    <p class="text-sm text-gray-500">Estimated time: ~{{ ceil($testCount * 2 / 60) }} minutes</p>
+                    
+                    <!-- Expandable Details -->
+                    <div class="mt-8">
+                        <button onclick="this.nextElementSibling.classList.toggle('hidden')" 
+                                class="text-gray-600 hover:text-gray-800 text-sm font-medium flex items-center mx-auto">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            View evaluation details
+                        </button>
+                        
+                        <div class="hidden mt-4 bg-white rounded-2xl p-6 border border-gray-200">
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <!-- Test Criteria -->
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">Test Criteria</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex items-center text-gray-700">
+                                            <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                            Response completeness & length
+                                        </div>
+                                        <div class="flex items-center text-gray-700">
+                                            <div class="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                                            AI quality assessment
+                                        </div>
+                                        <div class="flex items-center text-gray-700">
+                                            <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                                            Content accuracy & relevance
+                                        </div>
+                                        <div class="flex items-center text-gray-700">
+                                            <div class="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                                            Sentiment & tone analysis
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sample Test -->
+                                @if($selectedEval['csv_path'])
+                                    @php
+                                        $sampleData = [];
+                                        if (File::exists($csvPath)) {
+                                            $handle = fopen($csvPath, 'r');
+                                            $header = fgetcsv($handle);
+                                            $firstRow = fgetcsv($handle);
+                                            if ($header && $firstRow && count($header) === count($firstRow)) {
+                                                $sampleData = array_combine($header, $firstRow);
+                                            }
+                                            fclose($handle);
+                                        }
+                                    @endphp
+                                    @if(!empty($sampleData) && isset($sampleData['prompt']))
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900 mb-3">Sample Test</h4>
+                                            <div class="bg-gray-50 rounded-lg p-3 text-sm">
+                                                <p class="text-gray-700">"{{ Str::limit($sampleData['prompt'], 120) }}"</p>
+                                                @if(isset($sampleData['must_contain']))
+                                                    <p class="text-xs text-gray-500 mt-2">Must contain: {{ $sampleData['must_contain'] }}</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endif
                             </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Available Evaluations</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ count($availableEvaluations) }}</p>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
 
-            <!-- Current Status -->
-            <div class="stat-card bg-gradient-to-br from-white to-green-50/30 overflow-hidden shadow-lg rounded-xl border border-green-100/50">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+            <!-- Step 3: Execution Progress -->
+            @if($isRunning)
+                @php
+                    $contextEval = collect($availableEvaluations)->firstWhere('class', $selectedEvaluation);
+                @endphp
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-3xl p-8 shadow-xl">
+                    <div class="text-center mb-6">
+                        <div class="flex items-center justify-center w-16 h-16 bg-blue-500 rounded-full mx-auto mb-4 shadow-lg">
+                            <svg class="w-8 h-8 text-white spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Running: {{ $contextEval['name'] ?? 'Evaluation' }}</h2>
+                        <p class="text-gray-600">Testing {{ $contextEval['agent_name'] ?? 'agent' }} • {{ $currentRowIndex }}/{{ $totalRows }} tests completed</p>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="mb-6">
+                        <div class="flex justify-between text-sm text-gray-600 mb-2">
+                            <span class="font-medium">{{ $progress }}% Complete</span>
+                            @php
+                                $remainingRows = $totalRows - $currentRowIndex;
+                                $estimatedMinutes = $remainingRows > 0 ? ceil($remainingRows * 2 / 60) : 0;
+                            @endphp
+                            <span>~{{ $estimatedMinutes }} min remaining</span>
+                        </div>
+                        <div class="w-full bg-white rounded-full h-4 shadow-inner">
+                            <div class="bg-gradient-to-r from-blue-500 to-purple-600 h-4 rounded-full transition-all duration-300 shadow-lg"
+                                 style="width: {{ $progress }}%"></div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2 text-center">{{ $currentStatus }}</p>
+                    </div>
+                    
+                    <!-- Live Stats -->
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                            <p class="text-2xl font-bold text-green-600">{{ $passCount }}</p>
+                            <p class="text-xs text-gray-600">Passed</p>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                            <p class="text-2xl font-bold text-red-600">{{ $failCount }}</p>
+                            <p class="text-xs text-gray-600">Failed</p>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                            @php
+                                $livePassRate = $totalRows > 0 ? round(($passCount / $totalRows) * 100, 1) : 0;
+                            @endphp
+                            <p class="text-2xl font-bold {{ $livePassRate >= 80 ? 'text-green-600' : ($livePassRate < 50 ? 'text-red-600' : 'text-yellow-600') }}">{{ $livePassRate }}%</p>
+                            <p class="text-xs text-gray-600">Pass Rate</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Step 4: Results (Live and Final) -->
+            @if(count($results) > 0 || ($showResults && !empty($resultSummary)))
+                @php
+                    $contextEval = collect($availableEvaluations)->firstWhere('class', $selectedEvaluation);
+                    $finalPassRate = isset($resultSummary['pass_rate']) ? $resultSummary['pass_rate'] : ($totalRows > 0 ? round(($passCount / $totalRows) * 100, 1) : 0);
+                @endphp
+                
+                <div class="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-3xl p-8 shadow-xl">
+                    <!-- Results Header -->
+                    <div class="text-center mb-8">
+                        <div class="flex items-center justify-center w-16 h-16 {{ $finalPassRate >= 80 ? 'bg-green-500' : ($finalPassRate < 50 ? 'bg-red-500' : 'bg-yellow-500') }} rounded-full mx-auto mb-4 shadow-lg">
+                            @if($isRunning)
+                                <svg class="w-8 h-8 text-white spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                            @else
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            @endif
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                            {{ $contextEval['name'] ?? 'Evaluation' }} 
+                            @if(!$isRunning)
+                                - {{ $finalPassRate >= 80 ? 'Excellent!' : ($finalPassRate < 50 ? 'Needs Work' : 'Good') }}
+                            @endif
+                        </h2>
+                        <p class="text-gray-600">
+                            @if($isRunning)
+                                Running live results • {{ $passCount }}/{{ $currentRowIndex }} passed so far
+                            @else
+                                Final results • {{ $contextEval['agent_name'] ?? 'Agent' }} achieved {{ $finalPassRate }}% pass rate
+                            @endif
+                        </p>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-4 gap-4 mb-8">
+                        <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
+                            <p class="text-3xl font-bold text-gray-900">{{ $totalRows ?: (isset($resultSummary['total_rows']) ? $resultSummary['total_rows'] : 0) }}</p>
+                            <p class="text-sm text-gray-500">Total</p>
+                        </div>
+                        <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
+                            <p class="text-3xl font-bold text-green-600">{{ $passCount ?: (isset($resultSummary['passed']) ? $resultSummary['passed'] : 0) }}</p>
+                            <p class="text-sm text-gray-500">Passed</p>
+                        </div>
+                        <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
+                            <p class="text-3xl font-bold text-red-600">{{ $failCount ?: (isset($resultSummary['failed']) ? $resultSummary['failed'] : 0) }}</p>
+                            <p class="text-sm text-gray-500">Failed</p>
+                        </div>
+                        <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
+                            <p class="text-3xl font-bold {{ $finalPassRate >= 80 ? 'text-green-600' : ($finalPassRate < 50 ? 'text-red-600' : 'text-yellow-600') }}">{{ $finalPassRate }}%</p>
+                            <p class="text-sm text-gray-500">Pass Rate</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Results List -->
+                    @if(count($results) > 0)
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                                 @if($isRunning)
-                                    <svg class="h-6 w-6 spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 text-blue-500 mr-2 spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                     </svg>
+                                    Live Test Results
                                 @else
-                                    <svg class="h-6 w-6 status-indicator" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
+                                    Test Results
                                 @endif
-                            </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Status</p>
-                            <p class="text-sm font-bold text-gray-900">
-                                @if($isRunning)
-                                    <span class="text-orange-600">Running</span>
-                                @elseif($showResults)
-                                    <span class="text-green-600">Completed</span>
-                                @else
-                                    <span class="text-gray-600">Ready</span>
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Progress -->
-            <div class="stat-card bg-gradient-to-br from-white to-blue-50/30 overflow-hidden shadow-lg rounded-xl border border-blue-100/50">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-lg">
-                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Progress</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $progress }}%</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            <!-- Left Column: Evaluation Selection -->
-            <div class="space-y-6">
-                <!-- Available Evaluations -->
-                <div class="eval-card bg-gradient-to-br from-white via-slate-50/30 to-gray-50/40 overflow-hidden shadow-xl rounded-2xl border border-slate-200/60">
-                    <div class="bg-gradient-to-r from-slate-600/5 via-gray-600/5 to-zinc-600/5 px-6 py-5">
-                        <div class="flex items-center">
-                            <div class="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-slate-500 to-gray-600 text-white shadow-lg mr-4">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-bold gradient-text">Available Evaluations</h3>
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        @if(count($availableEvaluations) > 0)
-                            <div class="space-y-4">
-                                @foreach($availableEvaluations as $evaluation)
-                                    <div class="evaluation-item bg-white rounded-xl border border-gray-200/60 p-4 cursor-pointer transition-all duration-200 hover:border-blue-300 {{ $selectedEvaluation === $evaluation['class'] ? 'border-blue-500 bg-blue-50/50' : '' }}"
-                                         wire:click="selectEvaluation({{ $evaluation['key'] }})">
-                                        <div class="flex items-start justify-between">
-                                            <div class="flex-1">
-                                                <h4 class="text-lg font-semibold text-gray-900 mb-1">{{ $evaluation['name'] }}</h4>
-                                                <p class="text-sm text-gray-600 mb-2">{{ $evaluation['description'] }}</p>
-                                                <div class="flex items-center space-x-4 text-xs text-gray-500">
-                                                    <span class="flex items-center">
-                                                        <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                                        </svg>
-                                                        Agent: {{ $evaluation['agent_name'] }}
+                            </h3>
+                            
+                            <div class="space-y-2 max-h-96 overflow-y-auto">
+                                @foreach($results as $result)
+                                    <div class="bg-white rounded-lg border-l-4 {{ $result['passed'] ? 'border-green-500' : 'border-red-500' }} p-4 shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md"
+                                         wire:click="toggleRowExpansion({{ $result['row_index'] }})">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-3">
+                                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold text-white {{ $result['passed'] ? 'bg-green-500' : 'bg-red-500' }}">
+                                                    {{ $result['row_index'] }}
+                                                </span>
+                                                <div>
+                                                    <span class="text-sm font-medium {{ $result['passed'] ? 'text-green-800' : 'text-red-800' }}">
+                                                        {{ $result['passed'] ? 'PASSED' : 'FAILED' }}
                                                     </span>
-                                                    @if($evaluation['csv_path'])
-                                                        <span class="flex items-center">
-                                                            <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                            </svg>
-                                                            {{ basename($evaluation['csv_path']) }}
+                                                    @if(isset($result['evaluation_result']['assertions']))
+                                                        @php
+                                                            $assertions = $result['evaluation_result']['assertions'];
+                                                            $passedAssertions = collect($assertions)->where('status', 'pass')->count();
+                                                            $totalAssertions = count($assertions);
+                                                        @endphp
+                                                        <span class="ml-2 text-xs px-2 py-1 rounded-full {{ $result['passed'] ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                                            {{ $passedAssertions }}/{{ $totalAssertions }} checks
                                                         </span>
                                                     @endif
                                                 </div>
                                             </div>
-                                            @if($selectedEvaluation === $evaluation['class'])
-                                                <div class="flex items-center justify-center h-6 w-6 rounded-full bg-blue-500 text-white">
-                                                    <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                </div>
-                                            @endif
+                                            <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 {{ in_array($result['row_index'], $expandedRows) ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
                                         </div>
+                                        
+                                        @if(isset($result['row_data']['prompt']))
+                                            <p class="text-sm text-gray-600 mt-2">{{ Str::limit($result['row_data']['prompt'], 100) }}</p>
+                                        @endif
+                                        
+                                        <!-- Expanded Details -->
+                                        @if(in_array($result['row_index'], $expandedRows))
+                                            <div class="mt-4 pt-4 border-t border-gray-100">
+                                                <div class="grid md:grid-cols-2 gap-4">
+                                                    <!-- Full Response -->
+                                                    <div>
+                                                        <h5 class="text-sm font-semibold text-gray-700 mb-2">Full Response:</h5>
+                                                        <div class="bg-gray-50 p-3 rounded text-sm text-gray-700 max-h-32 overflow-y-auto">
+                                                            {{ $result['llm_response'] }}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Assertion Results -->
+                                                    @if(isset($result['evaluation_result']['assertions']) && count($result['evaluation_result']['assertions']) > 0)
+                                                        <div>
+                                                            <h5 class="text-sm font-semibold text-gray-700 mb-2">Assertion Results:</h5>
+                                                            <div class="space-y-1 max-h-32 overflow-y-auto">
+                                                                @foreach($result['evaluation_result']['assertions'] as $assertion)
+                                                                    <div class="flex items-center text-xs {{ $assertion['status'] === 'pass' ? 'text-green-700' : 'text-red-700' }}">
+                                                                        @if($assertion['status'] === 'pass')
+                                                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                                            </svg>
+                                                                        @else
+                                                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                                            </svg>
+                                                                        @endif
+                                                                        {{ $assertion['name'] ?? 'Check' }}: {{ $assertion['message'] ?? strtoupper($assertion['status']) }}
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
-
-                            <!-- Run Evaluation Button -->
-                            @if($selectedEvaluation && !$isRunning)
-                                <div class="mt-6 pt-6 border-t border-gray-200">
-                                    <button wire:click="runEvaluation"
-                                            class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
-                                        <div class="flex items-center justify-center">
-                                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m6-4a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            </svg>
-                                            Run Evaluation
-                                        </div>
-                                    </button>
-                                </div>
-                            @endif
-                        @else
-                            <div class="text-center py-12">
-                                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500 mb-6 shadow-lg">
-                                    <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                    </svg>
-                                </div>
-                                <h3 class="text-xl font-bold text-gray-900 mb-2">No Evaluations Found</h3>
-                                <p class="text-gray-600 mb-4">Create an evaluation to get started with testing your agents.</p>
-                                <div class="bg-gradient-to-r from-gray-50 to-blue-50/50 border border-gray-200/50 rounded-lg p-3 font-mono text-sm text-gray-800 shadow-inner">
-                                    php artisan agent:make:eval MyEvaluation
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column: Status & Results -->
-            <div class="space-y-6">
-                <!-- Current Status -->
-                @if($isRunning || $currentStatus)
-                    <div class="eval-card bg-gradient-to-br from-white via-orange-50/30 to-yellow-50/40 overflow-hidden shadow-xl rounded-2xl border border-orange-200/60">
-                        <div class="bg-gradient-to-r from-orange-600/5 via-yellow-600/5 to-amber-600/5 px-6 py-5">
-                            <div class="flex items-center">
-                                <div class="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-600 text-white shadow-lg mr-4">
-                                    @if($isRunning)
-                                        <svg class="h-5 w-5 spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                        </svg>
-                                    @else
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    @endif
-                                </div>
-                                <h3 class="text-xl font-bold gradient-text">
-                                    @if($isRunning) Running Evaluation @else Status @endif
-                                </h3>
-                            </div>
                         </div>
-                        <div class="p-6">
-                            <p class="text-gray-700 mb-4">{{ $currentStatus }}</p>
-
-                            @if($isRunning && $totalRows > 0)
-                                <div class="mb-4">
-                                    <div class="flex justify-between text-sm text-gray-600 mb-2">
-                                        <span>Progress</span>
-                                        <span>{{ $progress }}% ({{ $totalRows > 0 ? intval(($progress / 100) * $totalRows) : 0 }}/{{ $totalRows }})</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-3 shadow-inner">
-                                        <div class="progress-bar bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-300 shadow-lg"
-                                             style="width: {{ $progress }}%"></div>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-
-                <!-- Results Summary -->
-                @if($showResults && !empty($resultSummary))
-                    <div id="results-section" class="results-card bg-gradient-to-br from-white via-green-50/30 to-emerald-50/40 overflow-hidden shadow-xl rounded-2xl border border-green-200/60 {{ $resultSummary['pass_rate'] >= 80 ? 'success-glow' : ($resultSummary['pass_rate'] < 50 ? 'error-glow' : '') }}">
-                        <div class="bg-gradient-to-r from-green-600/5 via-emerald-600/5 to-teal-600/5 px-6 py-5">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <div class="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg mr-4">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                                        </svg>
-                                    </div>
-                                    <h3 class="text-xl font-bold gradient-text">Evaluation Results</h3>
-                                </div>
-                                @if($outputPath)
-                                    <button wire:click="downloadResults"
-                                            class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
-                                        <div class="flex items-center">
-                                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                            Download CSV
-                                        </div>
-                                    </button>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="p-6">
-                            <!-- Summary Stats -->
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                <div class="text-center p-4 bg-white/50 rounded-xl border border-gray-200/50">
-                                    <p class="text-2xl font-bold text-gray-900">{{ $resultSummary['total_rows'] }}</p>
-                                    <p class="text-sm text-gray-600">Total Tests</p>
-                                </div>
-                                <div class="text-center p-4 bg-green-50/50 rounded-xl border border-green-200/50">
-                                    <p class="text-2xl font-bold text-green-600">{{ $resultSummary['passed'] }}</p>
-                                    <p class="text-sm text-gray-600">Passed</p>
-                                </div>
-                                <div class="text-center p-4 bg-red-50/50 rounded-xl border border-red-200/50">
-                                    <p class="text-2xl font-bold text-red-600">{{ $resultSummary['failed'] }}</p>
-                                    <p class="text-sm text-gray-600">Failed</p>
-                                </div>
-                                <div class="text-center p-4 bg-blue-50/50 rounded-xl border border-blue-200/50">
-                                    <p class="text-2xl font-bold {{ $resultSummary['pass_rate'] >= 80 ? 'text-green-600' : ($resultSummary['pass_rate'] < 50 ? 'text-red-600' : 'text-yellow-600') }}">{{ $resultSummary['pass_rate'] }}%</p>
-                                    <p class="text-sm text-gray-600">Pass Rate</p>
-                                </div>
-                            </div>
-
-                            <!-- Pass Rate Visualization -->
-                            <div class="mb-6">
-                                <div class="flex justify-between text-sm text-gray-600 mb-2">
-                                    <span>Overall Pass Rate</span>
-                                    <span>{{ $resultSummary['pass_rate'] }}%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-4 shadow-inner">
-                                    <div class="h-4 rounded-full transition-all duration-500 shadow-lg {{ $resultSummary['pass_rate'] >= 80 ? 'bg-gradient-to-r from-green-500 to-emerald-600' : ($resultSummary['pass_rate'] < 50 ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-yellow-500 to-orange-600') }}"
-                                         style="width: {{ $resultSummary['pass_rate'] }}%"></div>
-                                </div>
-                            </div>
-
-                            <!-- Recent Results Preview -->
-                            @if(!empty($results))
-                                <div class="space-y-3">
-                                    <h4 class="font-semibold text-gray-900 mb-3">Recent Results (Latest 5)</h4>
-                                    @foreach(array_slice($results, -5) as $result)
-                                        <div class="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-gray-200/50">
-                                            <div class="flex items-center">
-                                                <div class="flex items-center justify-center h-6 w-6 rounded-full mr-3 {{ $result['passed'] ? 'bg-green-500' : 'bg-red-500' }}">
-                                                    @if($result['passed'])
-                                                        <svg class="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                                        </svg>
-                                                    @else
-                                                        <svg class="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                                        </svg>
-                                                    @endif
-                                                </div>
-                                                <div>
-                                                    <p class="text-sm font-medium text-gray-900">Row {{ $result['row_index'] }}</p>
-                                                    <p class="text-xs text-gray-500">{{ Str::limit($result['llm_response'], 50) }}</p>
-                                                </div>
-                                            </div>
-                                            <span class="text-xs font-medium {{ $result['passed'] ? 'text-green-600' : 'text-red-600' }}">
-                                                {{ $result['passed'] ? 'PASS' : 'FAIL' }}
-                                            </span>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-
-                            <!-- Actions -->
-                            <div class="mt-6 pt-6 border-t border-gray-200 flex space-x-3">
-                                <button wire:click="resetResults"
-                                        class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
-                                    <div class="flex items-center justify-center">
-                                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                        </svg>
-                                        Reset
-                                    </div>
+                    @endif
+                    
+                    <!-- Actions -->
+                    @if(!$isRunning)
+                        <div class="mt-8 pt-6 border-t border-gray-200 flex justify-center space-x-4">
+                            <button wire:click="resetResults"
+                                    class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-all duration-200">
+                                Reset & Start Over
+                            </button>
+                            
+                            @if($selectedEvaluation)
+                                <button wire:click="runEvaluation"
+                                        class="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                                    🚀 Run Again
                                 </button>
-                                @if($selectedEvaluation)
-                                    <button wire:click="runEvaluation"
-                                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
-                                        <div class="flex items-center justify-center">
-                                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                            </svg>
-                                            Run Again
-                                        </div>
-                                    </button>
-                                @endif
-                            </div>
+                            @endif
+                            
+                            @if($outputPath)
+                                <button wire:click="downloadResults"
+                                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg">
+                                    📥 Download CSV
+                                </button>
+                            @endif
                         </div>
-                    </div>
-                @endif
-            </div>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 </div>
