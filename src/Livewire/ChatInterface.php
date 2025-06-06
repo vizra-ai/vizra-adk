@@ -4,6 +4,7 @@ namespace AaronLumsden\LaravelAgentADK\Livewire;
 
 use Livewire\Component;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Layout;
 use AaronLumsden\LaravelAgentADK\Facades\Agent;
 use AaronLumsden\LaravelAgentADK\System\AgentContext;
 use AaronLumsden\LaravelAgentADK\Services\StateManager;
@@ -11,7 +12,9 @@ use AaronLumsden\LaravelAgentADK\Models\AgentSession;
 use AaronLumsden\LaravelAgentADK\Models\TraceSpan;
 use AaronLumsden\LaravelAgentADK\Services\Tracer;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
+#[Layout('agent-adk::layouts.app')]
 class ChatInterface extends Component
 {
     public string $selectedAgent = '';
@@ -20,13 +23,17 @@ class ChatInterface extends Component
     public array $chatHistory = [];
     public string $sessionId = '';
     public bool $isLoading = false;
-    public bool $showDetails = false;
+    public bool $showDetails = true; // Always show details by default
     public string $activeTab = 'agent-info';
     public array $sessionData = [];
     public array $contextData = [];
     public array $memoryData = [];
     public array $agentInfo = [];
     public array $traceData = [];
+
+    // Modal properties
+    public bool $showLoadSessionModal = false;
+    public string $loadSessionId = '';
 
     public function mount()
     {
@@ -200,9 +207,31 @@ class ChatInterface extends Component
         $this->loadTraceData();
     }
 
-    public function toggleDetails()
+    public function openLoadSessionModal()
     {
-        $this->showDetails = !$this->showDetails;
+        \Log::info('openLoadSessionModal called at ' . now());
+        $this->showLoadSessionModal = true;
+        $this->loadSessionId = '';
+        \Log::info('showLoadSessionModal set to: ' . ($this->showLoadSessionModal ? 'true' : 'false'));
+    }
+
+    public function closeLoadSessionModal()
+    {
+        $this->showLoadSessionModal = false;
+        $this->loadSessionId = '';
+    }
+
+    public function loadSessionFromModal()
+    {
+        if (empty($this->loadSessionId)) {
+            $this->closeLoadSessionModal();
+            return;
+        }
+
+        $this->sessionId = $this->loadSessionId;
+        $this->loadContextData();
+        $this->loadTraceData();
+        $this->closeLoadSessionModal();
     }
 
     public function refreshData()
@@ -315,9 +344,19 @@ class ChatInterface extends Component
         $this->loadTraceData();
     }
 
+    public function getMessageCharacterCount()
+    {
+        return is_string($this->message) ? strlen($this->message) : 0;
+    }
+
+    public function updatedMessage($value)
+    {
+        // Ensure message is always a string
+        $this->message = is_string($value) ? $value : '';
+    }
+
     public function render()
     {
-        return view('agent-adk::livewire.chat-interface')
-            ->layout('agent-adk::layouts.app');
+        return view('agent-adk::livewire.chat-interface');
     }
 }

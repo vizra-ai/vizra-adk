@@ -10,22 +10,65 @@
 
     <!-- Livewire Styles -->
     @livewireStyles
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+
+        /* Custom scrollbar styles */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        /* Prose styles for better text readability */
+        .prose p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prose p:last-child {
+            margin-bottom: 0;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <nav class="bg-white shadow-sm border-b">
+    <nav class="bg-gradient-to-r from-white via-blue-50 to-white shadow-lg border-b border-blue-100 backdrop-blur-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
                     <div class="flex-shrink-0">
-                        <h1 class="text-xl font-bold text-gray-900">🤖 Laravel Agent ADK</h1>
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+                            🤖 Laravel Agent ADK
+                        </h1>
                     </div>
-                    <div class="hidden md:flex space-x-4">
+                    <div class="hidden md:flex space-x-2">
                         <a href="{{ route('agent-adk.dashboard') }}"
-                           class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('agent-adk.dashboard') ? 'text-blue-600 bg-blue-50' : '' }}">
+                           class="group relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 {{ request()->routeIs('agent-adk.dashboard') ? 'text-white bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg shadow-blue-500/25' : 'text-gray-600 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50' }}">
+                            <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                            </svg>
                             Dashboard
                         </a>
                         <a href="{{ route('agent-adk.chat') }}"
-                           class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('agent-adk.chat') ? 'text-blue-600 bg-blue-50' : '' }}">
+                           class="group relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 {{ request()->routeIs('agent-adk.chat') ? 'text-white bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg shadow-blue-500/25' : 'text-gray-600 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50' }}">
+                            <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
                             Chat Interface
                         </a>
                     </div>
@@ -43,11 +86,15 @@
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {{ $slot }}
+    <main class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {{ $slot }}
+        </div>
     </main>
 
     <!-- Livewire Scripts -->
     @livewireScripts
+
+    @stack('scripts')
 </body>
 </html>
