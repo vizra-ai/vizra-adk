@@ -1,5 +1,5 @@
 {
-  "name": "aaronlumsden/laravel-agent-adk",
+  "name": "aaronlumsden/laravel-ai-adk",
   "description": "A Laravel package for building AI-driven agents, inspired by Google ADK.",
   "type": "laravel-package",
   "license": "MIT",
@@ -23,21 +23,22 @@
   },
   "autoload": {
     "psr-4": {
-      "AaronLumsden\\LaravelAgentADK\\": "src/"
+      "AaronLumsden\\LaravelAiADK\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "AaronLumsden\\LaravelAgentADK\\Tests\\": "tests/"
+      "AaronLumsden\\LaravelAiADK\\Tests\\": "tests/"
     }
   },
   "extra": {
     "laravel": {
       "providers": [
-        "AaronLumsden\\LaravelAgentADK\\Providers\\AgentServiceProvider"
+        "AaronLumsden\\LaravelAiADK\\Providers\\AgentServiceProvider"
       ],
       "aliases": {
-        "Agent": "AaronLumsden\\LaravelAgentADK\\Facades\\Agent"
+        "Agent": "AaronLumsden\\LaravelAiADK\\Facades\\Agent",
+        "Workflow": "AaronLumsden\\LaravelAiADK\\Facades\\Workflow"
       }
     }
   },

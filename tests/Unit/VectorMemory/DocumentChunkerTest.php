@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\VectorMemory;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\VectorMemory;
 
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Services\DocumentChunker;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Services\DocumentChunker;
 use Illuminate\Support\Facades\Config;
 
 class DocumentChunkerTest extends TestCase

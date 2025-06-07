@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\Agents;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\Agents;
 
-use AaronLumsden\LaravelAgentADK\Agents\ParallelWorkflow;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\Agents\ParallelWorkflow;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
 use Mockery;
 
 class ParallelWorkflowTest extends TestCase
@@ -17,7 +17,7 @@ class ParallelWorkflowTest extends TestCase
     {
         parent::setUp();
         $this->workflow = new ParallelWorkflow();
-        $this->context = new AgentContext();
+        $this->context = new AgentContext('test-session');
     }
 
     protected function tearDown(): void

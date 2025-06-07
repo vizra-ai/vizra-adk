@@ -1,7 +1,7 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseAgent;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 
 /**
  * Test implementation of BaseAgent for testing purposes

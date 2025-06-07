@@ -23,7 +23,7 @@ composer require aaronlumsden/laravel-agent-adk
 
 ```bash
 # Publish config file and migrations
-php artisan vendor:publish --provider="AaronLumsden\LaravelAgentADK\AgentAdkServiceProvider"
+php artisan vendor:publish --provider="AaronLumsden\LaravelAiADK\AgentAdkServiceProvider"
 
 # Run the migrations (creates agent sessions, messages, and memory tables)
 php artisan migrate
@@ -64,7 +64,7 @@ This creates `app/Agents/WeatherAgent.php`:
 
 namespace App\Agents;
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
 
 class WeatherAgent extends BaseLlmAgent
 {
@@ -98,7 +98,7 @@ $response = WeatherAgent::ask('What\'s the weather like today?')->forUser(auth()
 echo $response;
 
 // Or using the facade (legacy approach)
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
 $response = Agent::run('weather_agent', 'What\'s the weather like today?');
 echo $response;
 ```
@@ -120,8 +120,8 @@ This creates `app/Tools/WeatherTool.php`:
 
 namespace App\Tools;
 
-use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 use Illuminate\Support\Facades\Http;
 
 class WeatherTool implements ToolInterface
@@ -307,7 +307,7 @@ The Laravel Agent ADK comes with a beautiful web interface for testing and monit
 In your `routes/web.php`:
 
 ```php
-use AaronLumsden\LaravelAgentADK\AgentAdkRouteServiceProvider;
+use AaronLumsden\LaravelAiADK\AgentAdkRouteServiceProvider;
 
 // The service provider automatically registers routes under /ai-adk
 // Visit: http://your-app.test/ai-adk

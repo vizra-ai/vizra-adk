@@ -1,10 +1,10 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
-use AaronLumsden\LaravelAgentADK\Agents\BaseAgent;
-use AaronLumsden\LaravelAgentADK\Exceptions\AgentNotFoundException;
-use AaronLumsden\LaravelAgentADK\Exceptions\AgentConfigurationException;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
+use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
+use AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException;
+use AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 
 beforeEach(function () {
     $this->registry = new AgentRegistry($this->app);
@@ -32,7 +32,7 @@ it('can register agent with ad hoc LLM configuration', function () {
 
     // Test that we can actually get the agent instance
     $agent = $this->registry->getAgent('ad-hoc-agent');
-    expect($agent)->toBeInstanceOf(\AaronLumsden\LaravelAgentADK\Agents\GenericLlmAgent::class);
+    expect($agent)->toBeInstanceOf(\AaronLumsden\LaravelAiADK\Agents\GenericLlmAgent::class);
     expect($agent->getName())->toBe('Test Ad Hoc Agent');
     expect($agent->getInstructions())->toBe('You are a test agent.');
 });

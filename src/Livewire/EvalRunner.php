@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Livewire;
+namespace AaronLumsden\LaravelAiADK\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use AaronLumsden\LaravelAgentADK\Evaluations\BaseEvaluation;
-use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\Evaluations\BaseEvaluation;
+use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -32,7 +32,7 @@ class EvalRunner extends Component
     public int $totalRows = 0;
     public array $results = [];
     public bool $showResults = false;
-    
+
     // Real-time processing state
     public array $csvData = [];
     public int $currentRowIndex = 0;
@@ -43,7 +43,7 @@ class EvalRunner extends Component
     public array $resultSummary = [];
     public array $detailedResults = [];
     public string $outputPath = '';
-    
+
     // Expandable row details
     public array $expandedRows = [];
 
@@ -54,7 +54,7 @@ class EvalRunner extends Component
     public function mount()
     {
         $this->discoverEvaluations();
-        
+
         // Debug: Log the number of discovered evaluations
         \Log::info('EvalRunner: Discovered ' . count($this->availableEvaluations) . ' evaluations');
     }
@@ -115,7 +115,7 @@ class EvalRunner extends Component
             foreach ($files as $file) {
                 if ($file->getExtension() === 'php') {
                     $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-                    $fullClassName = "AaronLumsden\\LaravelAgentADK\\Evaluations\\{$className}";
+                    $fullClassName = "AaronLumsden\\LaravelAiADK\\Evaluations\\{$className}";
 
                     if (class_exists($fullClassName) && is_subclass_of($fullClassName, BaseEvaluation::class)) {
                         try {
@@ -249,7 +249,7 @@ class EvalRunner extends Component
 
         $row = $this->csvData[$this->currentRowIndex];
         $rowNumber = $this->currentRowIndex + 1;
-        
+
         $this->currentStatus = "Processing row {$rowNumber} of {$this->totalRows}...";
         $this->progress = (int)(($this->currentRowIndex / $this->totalRows) * 100);
 

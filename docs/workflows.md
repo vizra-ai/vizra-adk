@@ -37,7 +37,7 @@ Workflow Agents are perfect for:
 Workflow Agents are included with Laravel Agent ADK v2.0+. No additional installation required.
 
 ```php
-use AaronLumsden\LaravelAgentADK\Facades\Workflow;
+use AaronLumsden\LaravelAiADK\Facades\Workflow;
 ```
 
 ## Workflow Types
@@ -61,7 +61,7 @@ Perfect for step-by-step processes where each step depends on the previous one.
 ### Basic Usage
 
 ```php
-use AaronLumsden\LaravelAgentADK\Facades\Workflow;
+use AaronLumsden\LaravelAiADK\Facades\Workflow;
 
 // Simple sequential execution
 $result = Workflow::sequential()

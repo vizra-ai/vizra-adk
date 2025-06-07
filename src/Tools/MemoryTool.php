@@ -1,10 +1,10 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tools;
+namespace AaronLumsden\LaravelAiADK\Tools;
 
-use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Services\MemoryManager;
+use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Services\MemoryManager;
 
 /**
  * Memory Management Tool

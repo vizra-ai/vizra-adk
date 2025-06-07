@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Scheduling;
+namespace AaronLumsden\LaravelAiADK\Scheduling;
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseAgent;
+use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Log;
 

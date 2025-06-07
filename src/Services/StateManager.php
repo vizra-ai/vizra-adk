@@ -1,10 +1,10 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Services;
+namespace AaronLumsden\LaravelAiADK\Services;
 
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Models\AgentSession;
-use AaronLumsden\LaravelAgentADK\Models\AgentMessage;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Models\AgentSession;
+use AaronLumsden\LaravelAiADK\Models\AgentMessage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;

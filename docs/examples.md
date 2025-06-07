@@ -15,7 +15,7 @@ See Laravel AI ADK in action with real-world examples. From simple chatbots to s
 
 namespace App\Agents;
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
 use App\Tools\OrderLookupTool;
 use App\Tools\ProductSearchTool;
 use App\Tools\ReturnProcessTool;

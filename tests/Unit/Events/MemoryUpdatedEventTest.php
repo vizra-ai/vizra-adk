@@ -1,8 +1,8 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Events\MemoryUpdated;
-use AaronLumsden\LaravelAgentADK\Models\AgentMemory;
-use AaronLumsden\LaravelAgentADK\Models\AgentSession;
+use AaronLumsden\LaravelAiADK\Events\MemoryUpdated;
+use AaronLumsden\LaravelAiADK\Models\AgentMemory;
+use AaronLumsden\LaravelAiADK\Models\AgentSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

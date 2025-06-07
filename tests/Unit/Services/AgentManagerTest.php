@@ -1,12 +1,12 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Services\AgentManager;
-use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
-use AaronLumsden\LaravelAgentADK\Services\AgentBuilder;
-use AaronLumsden\LaravelAgentADK\Services\StateManager;
-use AaronLumsden\LaravelAgentADK\Agents\BaseAgent;
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Services\AgentManager;
+use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
+use AaronLumsden\LaravelAiADK\Services\AgentBuilder;
+use AaronLumsden\LaravelAiADK\Services\StateManager;
+use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 
 beforeEach(function () {
     $this->mockRegistry = Mockery::mock(AgentRegistry::class);

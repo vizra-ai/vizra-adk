@@ -1,13 +1,13 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\Services;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\Services;
 
-use AaronLumsden\LaravelAgentADK\Services\WorkflowManager;
-use AaronLumsden\LaravelAgentADK\Agents\SequentialWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\ParallelWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\ConditionalWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\LoopWorkflow;
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Services\WorkflowManager;
+use AaronLumsden\LaravelAiADK\Agents\SequentialWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\ParallelWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\ConditionalWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\LoopWorkflow;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
 
 class WorkflowManagerTest extends TestCase
 {

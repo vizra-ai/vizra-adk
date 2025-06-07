@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Console\Commands;
+namespace AaronLumsden\LaravelAiADK\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
@@ -14,13 +14,13 @@ class InstallCommand extends Command
     {
         $this->info('Publishing Laravel Agent ADK configuration...');
         $this->call('vendor:publish', [
-            '--provider' => "AaronLumsden\LaravelAgentADK\Providers\AgentServiceProvider",
+            '--provider' => "AaronLumsden\LaravelAiADK\Providers\AgentServiceProvider",
             '--tag' => "agent-adk-config"
         ]);
 
         $this->info('Publishing Laravel Agent ADK migrations...');
         $this->call('vendor:publish', [
-            '--provider' => "AaronLumsden\LaravelAgentADK\Providers\AgentServiceProvider",
+            '--provider' => "AaronLumsden\LaravelAiADK\Providers\AgentServiceProvider",
             '--tag' => "agent-adk-migrations"
         ]);
 

@@ -53,7 +53,7 @@ OPENAI_API_KEY=your-openai-api-key
 
 namespace App\Agents;
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
 use App\Tools\VectorMemoryTool;
 
 class CustomerSupportAgent extends BaseLlmAgent
@@ -81,7 +81,7 @@ class CustomerSupportAgent extends BaseLlmAgent
 ### Step 3: Store Knowledge
 
 ```php
-use AaronLumsden\LaravelAgentADK\Facades\VectorMemory;
+use AaronLumsden\LaravelAiADK\Facades\VectorMemory;
 
 // Store company policies
 VectorMemory::store(
@@ -111,7 +111,7 @@ VectorMemory::store(
 ### Step 4: Test Your Agent
 
 ```php
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
 
 // The agent will automatically search memory for relevant information
 $response = Agent::run('customer_support', "Hi, I'm John Smith and I want to return an item I bought last week");
@@ -333,7 +333,7 @@ class KnowledgeBaseAgent extends BaseLlmAgent
 For better relevance, implement result re-ranking:
 
 ```php
-use AaronLumsden\LaravelAgentADK\Services\VectorMemoryManager;
+use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
 
 class AdvancedRagAgent extends BaseLlmAgent
 {
@@ -446,7 +446,7 @@ public function generateMultiSourceRag(string $query): array
 Monitor and optimize your vector memory:
 
 ```php
-use AaronLumsden\LaravelAgentADK\Facades\VectorMemory;
+use AaronLumsden\LaravelAiADK\Facades\VectorMemory;
 
 // Get comprehensive memory statistics
 $stats = VectorMemory::getStatistics('customer_support');

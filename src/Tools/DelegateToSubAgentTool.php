@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tools;
+namespace AaronLumsden\LaravelAiADK\Tools;
 
-use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAgentADK\Events\TaskDelegated;
+use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\Events\TaskDelegated;
 use Illuminate\Support\Facades\Event;
 
 /**

@@ -1,16 +1,16 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Providers;
+namespace AaronLumsden\LaravelAiADK\Providers;
 
-use AaronLumsden\LaravelAgentADK\Contracts\EmbeddingProviderInterface;
-use AaronLumsden\LaravelAgentADK\Providers\OpenAIEmbeddingProvider;
-use AaronLumsden\LaravelAgentADK\Providers\CohereEmbeddingProvider;
-use AaronLumsden\LaravelAgentADK\Providers\OllamaEmbeddingProvider;
-use AaronLumsden\LaravelAgentADK\Services\VectorMemoryManager;
-use AaronLumsden\LaravelAgentADK\Services\DocumentChunker;
-use AaronLumsden\LaravelAgentADK\Console\Commands\VectorMemoryStore;
-use AaronLumsden\LaravelAgentADK\Console\Commands\VectorMemorySearch;
-use AaronLumsden\LaravelAgentADK\Console\Commands\VectorMemoryStats;
+use AaronLumsden\LaravelAiADK\Contracts\EmbeddingProviderInterface;
+use AaronLumsden\LaravelAiADK\Providers\OpenAIEmbeddingProvider;
+use AaronLumsden\LaravelAiADK\Providers\CohereEmbeddingProvider;
+use AaronLumsden\LaravelAiADK\Providers\OllamaEmbeddingProvider;
+use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
+use AaronLumsden\LaravelAiADK\Services\DocumentChunker;
+use AaronLumsden\LaravelAiADK\Console\Commands\VectorMemoryStore;
+use AaronLumsden\LaravelAiADK\Console\Commands\VectorMemorySearch;
+use AaronLumsden\LaravelAiADK\Console\Commands\VectorMemoryStats;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;

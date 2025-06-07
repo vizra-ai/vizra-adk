@@ -74,8 +74,8 @@ ReportAgent::generate('weekly_sales')
 
 namespace App\Agents;
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 
 class OrderProcessingAgent extends BaseLlmAgent
 {
@@ -219,7 +219,7 @@ class OrderProcessingAgent extends BaseLlmAgent
 
 namespace App\Listeners;
 
-use AaronLumsden\LaravelAgentADK\Listeners\AgentEventListener;
+use AaronLumsden\LaravelAiADK\Listeners\AgentEventListener;
 use App\Events\OrderCreated;
 use App\Agents\OrderProcessingAgent;
 
@@ -291,7 +291,7 @@ protected $listen = [
 namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
-use AaronLumsden\LaravelAgentADK\Scheduling\AgentScheduler;
+use AaronLumsden\LaravelAiADK\Scheduling\AgentScheduler;
 use App\Agents\{BusinessIntelligenceAgent, CustomerHealthAgent, SecurityMonitoringAgent};
 
 class Kernel extends ConsoleKernel

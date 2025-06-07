@@ -1,6 +1,6 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
 
 it('can access the agent facade', function () {
     expect(Agent::class)->toBeTruthy();

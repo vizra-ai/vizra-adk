@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Services\Drivers;
+namespace AaronLumsden\LaravelAiADK\Services\Drivers;
 
-use AaronLumsden\LaravelAgentADK\Models\VectorMemory;
+use AaronLumsden\LaravelAiADK\Models\VectorMemory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;

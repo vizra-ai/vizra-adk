@@ -1,14 +1,14 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Console\Commands;
+namespace AaronLumsden\LaravelAiADK\Console\Commands;
 
 use Illuminate\Console\Command;
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
 use Illuminate\Support\Str; // For generating session ID
 use Symfony\Component\Console\Input\InputArgument;
-use AaronLumsden\LaravelAgentADK\Exceptions\AgentNotFoundException;
-use AaronLumsden\LaravelAgentADK\Exceptions\ToolExecutionException;
-use AaronLumsden\LaravelAgentADK\Exceptions\AgentConfigurationException;
+use AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException;
+use AaronLumsden\LaravelAiADK\Exceptions\ToolExecutionException;
+use AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException;
 
 class AgentChatCommand extends Command
 {

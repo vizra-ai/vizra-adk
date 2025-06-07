@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Services;
+namespace AaronLumsden\LaravelAiADK\Services;
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAgentADK\Exceptions\AgentConfigurationException;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Str;
 

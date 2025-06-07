@@ -1,8 +1,8 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Tools\DelegateToSubAgentTool;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Tools\DelegateToSubAgentTool;
 use Prism\Prism\Enums\Provider;
 
 beforeEach(function () {

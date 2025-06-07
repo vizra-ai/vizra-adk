@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Services;
+namespace AaronLumsden\LaravelAiADK\Services;
 
 class DocumentChunker
 {

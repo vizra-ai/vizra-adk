@@ -1,6 +1,6 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 use Illuminate\Support\Collection;
 
 it('can create agent context with minimal data', function () {

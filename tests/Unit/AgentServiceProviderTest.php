@@ -1,7 +1,7 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
-use AaronLumsden\LaravelAgentADK\Services\AgentManager;
+use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
+use AaronLumsden\LaravelAiADK\Services\AgentManager;
 
 it('can instantiate the agent registry', function () {
     $registry = app(AgentRegistry::class);
@@ -16,7 +16,7 @@ it('can instantiate the agent manager', function () {
 });
 
 it('has the agent facade available', function () {
-    expect(class_exists('AaronLumsden\LaravelAgentADK\Facades\Agent'))->toBeTrue();
+    expect(class_exists('AaronLumsden\LaravelAiADK\Facades\Agent'))->toBeTrue();
 });
 
 it('can resolve agent registry from container', function () {

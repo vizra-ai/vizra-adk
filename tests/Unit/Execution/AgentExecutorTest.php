@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\Execution;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\Execution;
 
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Execution\AgentExecutor;
-use AaronLumsden\LaravelAgentADK\Services\AgentManager;
-use AaronLumsden\LaravelAgentADK\Services\StateManager;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Execution\AgentExecutor;
+use AaronLumsden\LaravelAiADK\Services\AgentManager;
+use AaronLumsden\LaravelAiADK\Services\StateManager;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 use Illuminate\Database\Eloquent\Model;
 use Mockery;
 

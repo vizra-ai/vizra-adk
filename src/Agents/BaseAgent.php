@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Agents;
+namespace AaronLumsden\LaravelAiADK\Agents;
 
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Execution\AgentExecutor;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Execution\AgentExecutor;
 
 /**
  * Abstract Class BaseAgent

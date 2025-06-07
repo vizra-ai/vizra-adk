@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Console\Commands;
+namespace AaronLumsden\LaravelAiADK\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
@@ -19,7 +19,24 @@ class MakeAgentCommand extends GeneratorCommand
 
     protected function getDefaultNamespace($rootNamespace): string
     {
-        return config('agent-adk.namespaces.agents', $rootNamespace.'\Agents');
+        $configuredNamespace = config('agent-adk.namespaces.agents');
+        
+        if ($configuredNamespace) {
+            return $configuredNamespace;
+        }
+        
+        // Fallback to rootNamespace + \Agents, or just App\Agents if no root namespace
+        $baseNamespace = $rootNamespace ?: 'App';
+        return $baseNamespace . '\Agents';
+    }
+
+    protected function rootNamespace()
+    {
+        try {
+            return $this->laravel ? $this->laravel->getNamespace() : 'App\\';
+        } catch (\Exception $e) {
+            return 'App\\';
+        }
     }
 
     protected function qualifyClass($name): string

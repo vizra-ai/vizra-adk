@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Jobs;
+namespace AaronLumsden\LaravelAiADK\Jobs;
 
-use AaronLumsden\LaravelAgentADK\Services\AgentManager;
-use AaronLumsden\LaravelAgentADK\Services\StateManager;
+use AaronLumsden\LaravelAiADK\Services\AgentManager;
+use AaronLumsden\LaravelAiADK\Services\StateManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Listeners;
+namespace AaronLumsden\LaravelAiADK\Listeners;
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseAgent;
+use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
 use Illuminate\Support\Facades\Log;
 
 /**

@@ -1,16 +1,16 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Livewire;
+namespace AaronLumsden\LaravelAiADK\Livewire;
 
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Layout;
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Services\StateManager;
-use AaronLumsden\LaravelAgentADK\Models\AgentSession;
-use AaronLumsden\LaravelAgentADK\Models\TraceSpan;
-use AaronLumsden\LaravelAgentADK\Services\Tracer;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Services\StateManager;
+use AaronLumsden\LaravelAiADK\Models\AgentSession;
+use AaronLumsden\LaravelAiADK\Models\TraceSpan;
+use AaronLumsden\LaravelAiADK\Services\Tracer;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 

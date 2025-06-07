@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\VectorMemory\Providers;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\VectorMemory\Providers;
 
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Providers\CohereEmbeddingProvider;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Providers\CohereEmbeddingProvider;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
 

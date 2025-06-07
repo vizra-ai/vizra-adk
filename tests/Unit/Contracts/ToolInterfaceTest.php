@@ -1,7 +1,7 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 
 it('implements tool interface contract correctly', function () {
     $tool = new TestTool();

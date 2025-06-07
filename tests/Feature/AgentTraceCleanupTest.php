@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use AaronLumsden\LaravelAgentADK\Models\TraceSpan;
-use AaronLumsden\LaravelAgentADK\Services\Tracer;
+use AaronLumsden\LaravelAiADK\Models\TraceSpan;
+use AaronLumsden\LaravelAiADK\Services\Tracer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

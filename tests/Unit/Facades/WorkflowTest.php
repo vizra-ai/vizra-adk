@@ -1,19 +1,23 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\Facades;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\Facades;
 
-use AaronLumsden\LaravelAgentADK\Facades\Workflow;
-use AaronLumsden\LaravelAgentADK\Agents\SequentialWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\ParallelWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\ConditionalWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\LoopWorkflow;
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Facades\Workflow;
+use AaronLumsden\LaravelAiADK\Agents\SequentialWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\ParallelWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\ConditionalWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\LoopWorkflow;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
 
 class WorkflowTest extends TestCase
 {
     public function test_facade_accessor_is_correct()
     {
-        $this->assertEquals('laravel-agent-adk.workflow', Workflow::getFacadeAccessor());
+        $reflection = new \ReflectionClass(Workflow::class);
+        $method = $reflection->getMethod('getFacadeAccessor');
+        $method->setAccessible(true);
+        
+        $this->assertEquals('laravel-ai-adk.workflow', $method->invoke(new Workflow()));
     }
 
     public function test_sequential_method_creates_sequential_workflow()

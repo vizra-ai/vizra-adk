@@ -1,7 +1,7 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Models\AgentMessage;
-use AaronLumsden\LaravelAgentADK\Models\AgentSession;
+use AaronLumsden\LaravelAiADK\Models\AgentMessage;
+use AaronLumsden\LaravelAiADK\Models\AgentSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

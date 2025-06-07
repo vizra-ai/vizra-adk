@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Livewire;
+namespace AaronLumsden\LaravelAiADK\Livewire;
 
 use Livewire\Component;
-use AaronLumsden\LaravelAgentADK\Services\AnalyticsService;
+use AaronLumsden\LaravelAiADK\Services\AnalyticsService;
 use Illuminate\Support\Facades\Cache;
 
 class Analytics extends Component

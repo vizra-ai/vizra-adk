@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\Agents;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\Agents;
 
-use AaronLumsden\LaravelAgentADK\Agents\LoopWorkflow;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\Agents\LoopWorkflow;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
 use Mockery;
 
 class LoopWorkflowTest extends TestCase
@@ -17,7 +17,7 @@ class LoopWorkflowTest extends TestCase
     {
         parent::setUp();
         $this->workflow = new LoopWorkflow();
-        $this->context = new AgentContext();
+        $this->context = new AgentContext('test-session');
     }
 
     protected function tearDown(): void

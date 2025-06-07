@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Services;
+namespace AaronLumsden\LaravelAiADK\Services;
 
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Models\TraceSpan;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Models\TraceSpan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;

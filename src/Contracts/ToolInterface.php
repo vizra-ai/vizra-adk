@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Contracts;
+namespace AaronLumsden\LaravelAiADK\Contracts;
 
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 
 /**
  * Interface ToolInterface

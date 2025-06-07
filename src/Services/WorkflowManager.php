@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Services;
+namespace AaronLumsden\LaravelAiADK\Services;
 
-use AaronLumsden\LaravelAgentADK\Agents\SequentialWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\ParallelWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\ConditionalWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\LoopWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\SequentialWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\ParallelWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\ConditionalWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\LoopWorkflow;
 
 /**
  * Workflow Manager Service
@@ -252,19 +252,27 @@ class WorkflowManager
         
         switch ($loopType) {
             case 'while':
-                $workflow->while($definition['condition']);
+                if (isset($definition['condition'])) {
+                    $workflow->while($definition['condition']);
+                }
                 break;
                 
             case 'until':
-                $workflow->until($definition['condition']);
+                if (isset($definition['condition'])) {
+                    $workflow->until($definition['condition']);
+                }
                 break;
                 
             case 'times':
-                $workflow->times($definition['times']);
+                if (isset($definition['times'])) {
+                    $workflow->times($definition['times']);
+                }
                 break;
                 
             case 'forEach':
-                $workflow->forEach($definition['collection']);
+                if (isset($definition['collection'])) {
+                    $workflow->forEach($definition['collection']);
+                }
                 break;
         }
         

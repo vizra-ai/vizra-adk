@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit;
 
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Services\Tracer;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Models\TraceSpan;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Services\Tracer;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Models\TraceSpan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;

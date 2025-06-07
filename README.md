@@ -39,7 +39,7 @@ Get your first AI agent running in under 5 minutes:
 composer require aaronlumsden/laravel-agent-adk
 
 # Publish the config and run migrations
-php artisan vendor:publish --provider="AaronLumsden\LaravelAgentADK\AgentAdkServiceProvider"
+php artisan vendor:publish --provider="AaronLumsden\LaravelAiADK\AgentAdkServiceProvider"
 php artisan migrate
 
 # Create your first agent

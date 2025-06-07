@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Console\Commands;
+namespace AaronLumsden\LaravelAiADK\Console\Commands;
 
-use AaronLumsden\LaravelAgentADK\Services\VectorMemoryManager;
+use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AaronLumsden\LaravelAgentADK\Console\Commands;
+namespace AaronLumsden\LaravelAiADK\Console\Commands;
 
-use AaronLumsden\LaravelAgentADK\Services\Tracer;
+use AaronLumsden\LaravelAiADK\Services\Tracer;
 use Illuminate\Console\Command;
 
 class AgentTraceCleanupCommand extends Command

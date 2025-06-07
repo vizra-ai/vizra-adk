@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Console\Commands;
+namespace AaronLumsden\LaravelAiADK\Console\Commands;
 
-use AaronLumsden\LaravelAgentADK\Services\Tracer;
-use AaronLumsden\LaravelAgentADK\Models\TraceSpan;
+use AaronLumsden\LaravelAiADK\Services\Tracer;
+use AaronLumsden\LaravelAiADK\Models\TraceSpan;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 

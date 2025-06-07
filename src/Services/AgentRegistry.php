@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Services;
+namespace AaronLumsden\LaravelAiADK\Services;
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseAgent;
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent; // Added
-use AaronLumsden\LaravelAgentADK\Agents\GenericLlmAgent; // Will be created
-use AaronLumsden\LaravelAgentADK\Exceptions\AgentNotFoundException;
-use AaronLumsden\LaravelAgentADK\Exceptions\AgentConfigurationException; // Added
+use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent; // Added
+use AaronLumsden\LaravelAiADK\Agents\GenericLlmAgent; // Will be created
+use AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException;
+use AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException; // Added
 use Illuminate\Contracts\Foundation\Application;
 
 class AgentRegistry

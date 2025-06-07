@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Events;
+namespace AaronLumsden\LaravelAiADK\Events;
 
-use AaronLumsden\LaravelAgentADK\Models\AgentMemory;
-use AaronLumsden\LaravelAgentADK\Models\AgentSession;
+use AaronLumsden\LaravelAiADK\Models\AgentMemory;
+use AaronLumsden\LaravelAiADK\Models\AgentSession;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 

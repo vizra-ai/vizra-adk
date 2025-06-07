@@ -1,7 +1,7 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Livewire\Dashboard;
-use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
+use AaronLumsden\LaravelAiADK\Livewire\Dashboard;
+use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
 use Livewire\Livewire;
 
 it('can render dashboard component', function () {

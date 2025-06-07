@@ -1,10 +1,10 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\VectorMemory\Drivers;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\VectorMemory\Drivers;
 
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Services\Drivers\MeilisearchVectorDriver;
-use AaronLumsden\LaravelAgentADK\Models\VectorMemory;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Services\Drivers\MeilisearchVectorDriver;
+use AaronLumsden\LaravelAiADK\Models\VectorMemory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Collection;

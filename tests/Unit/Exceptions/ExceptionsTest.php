@@ -1,8 +1,8 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Exceptions\AgentNotFoundException;
-use AaronLumsden\LaravelAgentADK\Exceptions\AgentConfigurationException;
-use AaronLumsden\LaravelAgentADK\Exceptions\ToolExecutionException;
+use AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException;
+use AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException;
+use AaronLumsden\LaravelAiADK\Exceptions\ToolExecutionException;
 
 it('creates agent not found exception correctly', function () {
     $exception = new AgentNotFoundException('Agent not found');

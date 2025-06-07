@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Agents;
+namespace AaronLumsden\LaravelAiADK\Agents;
 
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Collection;
 
@@ -203,7 +203,7 @@ class ParallelWorkflow extends BaseWorkflowAgent
         $sessionId = $context->getSessionId() ?: uniqid('workflow_');
 
         foreach ($this->steps as $step) {
-            $job = new \AaronLumsden\LaravelAgentADK\Jobs\AgentJob(
+            $job = new \AaronLumsden\LaravelAiADK\Jobs\AgentJob(
                 $step['agent'],
                 $this->prepareStepParams($step['params'], $input, $context),
                 $sessionId

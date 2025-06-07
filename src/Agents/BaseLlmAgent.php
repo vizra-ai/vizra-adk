@@ -1,16 +1,16 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Agents;
+namespace AaronLumsden\LaravelAiADK\Agents;
 
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAgentADK\Events\LlmCallInitiating;
-use AaronLumsden\LaravelAgentADK\Events\LlmResponseReceived;
-use AaronLumsden\LaravelAgentADK\Events\ToolCallCompleted;
-use AaronLumsden\LaravelAgentADK\Events\ToolCallInitiating;
-use AaronLumsden\LaravelAgentADK\Events\AgentResponseGenerated;
-use AaronLumsden\LaravelAgentADK\Exceptions\ToolExecutionException;
-use AaronLumsden\LaravelAgentADK\Services\Tracer;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
+use AaronLumsden\LaravelAiADK\Events\LlmCallInitiating;
+use AaronLumsden\LaravelAiADK\Events\LlmResponseReceived;
+use AaronLumsden\LaravelAiADK\Events\ToolCallCompleted;
+use AaronLumsden\LaravelAiADK\Events\ToolCallInitiating;
+use AaronLumsden\LaravelAiADK\Events\AgentResponseGenerated;
+use AaronLumsden\LaravelAiADK\Exceptions\ToolExecutionException;
+use AaronLumsden\LaravelAiADK\Services\Tracer;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Arr;
 use Prism\Prism\Prism;
@@ -266,7 +266,7 @@ abstract class BaseLlmAgent extends BaseAgent
         // Include delegation tool if sub-agents are available
         $allTools = $this->loadedTools;
         if (!empty($this->loadedSubAgents)) {
-            $allTools[] = new \AaronLumsden\LaravelAgentADK\Tools\DelegateToSubAgentTool($this);
+            $allTools[] = new \AaronLumsden\LaravelAiADK\Tools\DelegateToSubAgentTool($this);
         }
 
         foreach ($allTools as $tool) {
@@ -413,7 +413,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 $prismRequest = $prismRequest->withMessages($messages);
 
                 // Add tools if available
-                $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \AaronLumsden\LaravelAgentADK\Tools\DelegateToSubAgentTool($this)] : []);
+                $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \AaronLumsden\LaravelAiADK\Tools\DelegateToSubAgentTool($this)] : []);
                 if (!empty($allTools)) {
                     $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
                         ->withMaxSteps(5); // Prism will handle tool execution internally

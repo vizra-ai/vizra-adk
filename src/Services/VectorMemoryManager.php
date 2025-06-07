@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Services;
+namespace AaronLumsden\LaravelAiADK\Services;
 
-use AaronLumsden\LaravelAgentADK\Contracts\EmbeddingProviderInterface;
-use AaronLumsden\LaravelAgentADK\Models\VectorMemory;
-use AaronLumsden\LaravelAgentADK\Services\DocumentChunker;
-use AaronLumsden\LaravelAgentADK\Services\Drivers\MeilisearchVectorDriver;
+use AaronLumsden\LaravelAiADK\Contracts\EmbeddingProviderInterface;
+use AaronLumsden\LaravelAiADK\Models\VectorMemory;
+use AaronLumsden\LaravelAiADK\Services\DocumentChunker;
+use AaronLumsden\LaravelAiADK\Services\Drivers\MeilisearchVectorDriver;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;

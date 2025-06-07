@@ -1,6 +1,6 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Evaluations\BaseEvaluation;
+use AaronLumsden\LaravelAiADK\Evaluations\BaseEvaluation;
 
 beforeEach(function () {
     $this->evaluation = new TestEvaluation();

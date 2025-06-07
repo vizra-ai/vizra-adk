@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\Agents;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\Agents;
 
-use AaronLumsden\LaravelAgentADK\Agents\SequentialWorkflow;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\Agents\SequentialWorkflow;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
 use Mockery;
 
 class SequentialWorkflowTest extends TestCase
@@ -17,7 +17,7 @@ class SequentialWorkflowTest extends TestCase
     {
         parent::setUp();
         $this->workflow = new SequentialWorkflow();
-        $this->context = new AgentContext();
+        $this->context = new AgentContext('test-session');
     }
 
     protected function tearDown(): void

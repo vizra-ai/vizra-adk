@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\Console\Commands;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\Console\Commands;
 
-use AaronLumsden\LaravelAgentADK\Console\Commands\MakeToolCommand;
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Console\Commands\MakeToolCommand;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Config;
 use Mockery;
@@ -323,8 +323,8 @@ class MakeToolCommandTest extends TestCase
 
 namespace {{ namespace }};
 
-use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 
 class {{ class }} implements ToolInterface
 {

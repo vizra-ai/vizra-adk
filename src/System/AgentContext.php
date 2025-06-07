@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\System;
+namespace AaronLumsden\LaravelAiADK\System;
 
 use Illuminate\Support\Collection;
 

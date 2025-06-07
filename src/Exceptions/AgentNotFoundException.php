@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Exceptions;
+namespace AaronLumsden\LaravelAiADK\Exceptions;
 
 class AgentNotFoundException extends \Exception
 {

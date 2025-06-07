@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\Tools;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\Tools;
 
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Tools\VectorMemoryTool;
-use AaronLumsden\LaravelAgentADK\Services\VectorMemoryManager;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Tools\VectorMemoryTool;
+use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Mockery;

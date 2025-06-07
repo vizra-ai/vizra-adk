@@ -48,7 +48,7 @@ This creates `app/Evaluations/CustomerSupportEvaluation.php`:
 
 namespace App\Evaluations;
 
-use AaronLumsden\LaravelAgentADK\Evaluations\BaseLlmJudgeEvaluation;
+use AaronLumsden\LaravelAiADK\Evaluations\BaseLlmJudgeEvaluation;
 
 class CustomerSupportEvaluation extends BaseLlmJudgeEvaluation
 {
@@ -194,7 +194,7 @@ Navigate to `/ai-adk/eval` in your Laravel application to use the visual evaluat
 
 ```php
 use App\Evaluations\CustomerSupportEvaluation;
-use AaronLumsden\LaravelAgentADK\Services\EvaluationRunner;
+use AaronLumsden\LaravelAiADK\Services\EvaluationRunner;
 
 $evaluation = new CustomerSupportEvaluation();
 $runner = new EvaluationRunner();
@@ -222,7 +222,7 @@ For more precise, programmatic testing, create evaluations with specific asserti
 
 namespace App\Evaluations;
 
-use AaronLumsden\LaravelAgentADK\Evaluations\BaseEvaluation;
+use AaronLumsden\LaravelAiADK\Evaluations\BaseEvaluation;
 
 class OrderResponseEvaluation extends BaseEvaluation
 {
@@ -479,7 +479,7 @@ class PerformanceEvaluation extends BaseEvaluation
 Compare different agent versions or configurations:
 
 ```php
-use AaronLumsden\LaravelAgentADK\Services\AbTestRunner;
+use AaronLumsden\LaravelAiADK\Services\AbTestRunner;
 
 $abTest = new AbTestRunner();
 
@@ -518,7 +518,7 @@ Navigate to `/ai-adk/analytics` to see:
 ### Custom Analytics Queries
 
 ```php
-use AaronLumsden\LaravelAgentADK\Models\EvaluationResult;
+use AaronLumsden\LaravelAiADK\Models\EvaluationResult;
 
 // Get pass rates by evaluation type
 $pasRates = EvaluationResult::selectRaw('

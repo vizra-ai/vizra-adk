@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Services;
+namespace AaronLumsden\LaravelAiADK\Services;
 
-use AaronLumsden\LaravelAgentADK\Models\AgentMemory;
-use AaronLumsden\LaravelAgentADK\Models\AgentSession;
-use AaronLumsden\LaravelAgentADK\Models\AgentMessage;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Events\MemoryUpdated;
+use AaronLumsden\LaravelAiADK\Models\AgentMemory;
+use AaronLumsden\LaravelAiADK\Models\AgentSession;
+use AaronLumsden\LaravelAiADK\Models\AgentMessage;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Events\MemoryUpdated;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
 

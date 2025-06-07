@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Console\Commands;
+namespace AaronLumsden\LaravelAiADK\Console\Commands;
 
-use AaronLumsden\LaravelAgentADK\Services\VectorMemoryManager;
-use AaronLumsden\LaravelAgentADK\Models\VectorMemory;
+use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
+use AaronLumsden\LaravelAiADK\Models\VectorMemory;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 

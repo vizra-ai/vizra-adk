@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laravel Agent ADK - {{ $title ?? 'Dashboard' }}</title>
+    <title>Laravel AI ADK - {{ $title ?? 'Dashboard' }}</title>
 
     <!-- Tailwind CSS CDN for quick styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -53,7 +53,7 @@
                 <div class="flex items-center space-x-8">
                     <div class="flex-shrink-0">
                         <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
-                            🤖 Laravel Agent ADK
+                            🤖 Laravel AI ADK
                         </h1>
                     </div>
                     <div class="hidden md:flex space-x-2">

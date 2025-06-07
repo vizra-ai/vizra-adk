@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Feature;
+namespace AaronLumsden\LaravelAiADK\Tests\Feature;
 
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Services\Tracer;
-use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Services\Tracer;
+use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
@@ -116,7 +116,7 @@ class AgentTracingIntegrationTest extends TestCase
             public function run(mixed $input, AgentContext $context): mixed
             {
                 // Simulate starting a trace manually
-                $tracer = app(\AaronLumsden\LaravelAgentADK\Services\Tracer::class);
+                $tracer = app(\AaronLumsden\LaravelAiADK\Services\Tracer::class);
                 $tracer->startTrace($context, 'ErrorTestAgent');
 
                 try {

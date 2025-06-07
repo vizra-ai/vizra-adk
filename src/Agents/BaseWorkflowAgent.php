@@ -1,10 +1,10 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Agents;
+namespace AaronLumsden\LaravelAiADK\Agents;
 
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Exceptions\AgentNotFoundException;
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
 use Closure;
 use Illuminate\Support\Collection;
 
@@ -125,12 +125,12 @@ abstract class BaseWorkflowAgent extends BaseAgent
         while ($attempts < $maxAttempts) {
             try {
                 // Check if step has a condition
-                if ($step['condition'] && !$this->evaluateCondition($step['condition'], $input, $context)) {
+                if (isset($step['condition']) && $step['condition'] && !$this->evaluateCondition($step['condition'], $input, $context)) {
                     return null; // Skip this step
                 }
 
                 // Prepare parameters
-                $params = $this->prepareStepParams($step['params'], $input, $context);
+                $params = $this->prepareStepParams($step['params'] ?? null, $input, $context);
 
                 // Execute the agent
                 $result = Agent::run($step['agent'], $params, $context->getSessionId());

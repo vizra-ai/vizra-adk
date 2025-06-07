@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Providers;
+namespace AaronLumsden\LaravelAiADK\Providers;
 
-use AaronLumsden\LaravelAgentADK\Contracts\EmbeddingProviderInterface;
+use AaronLumsden\LaravelAiADK\Contracts\EmbeddingProviderInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;

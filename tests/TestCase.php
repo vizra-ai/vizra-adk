@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests;
+namespace AaronLumsden\LaravelAiADK\Tests;
 
-use AaronLumsden\LaravelAgentADK\Providers\AgentServiceProvider;
+use AaronLumsden\LaravelAiADK\Providers\AgentServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -19,7 +19,7 @@ class TestCase extends Orchestra
     protected function getPackageAliases($app)
     {
         return [
-            'Agent' => \AaronLumsden\LaravelAgentADK\Facades\Agent::class,
+            'Agent' => \AaronLumsden\LaravelAiADK\Facades\Agent::class,
         ];
     }
 

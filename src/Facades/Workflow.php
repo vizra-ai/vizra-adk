@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Facades;
+namespace AaronLumsden\LaravelAiADK\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use AaronLumsden\LaravelAgentADK\Agents\SequentialWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\ParallelWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\ConditionalWorkflow;
-use AaronLumsden\LaravelAgentADK\Agents\LoopWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\SequentialWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\ParallelWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\ConditionalWorkflow;
+use AaronLumsden\LaravelAiADK\Agents\LoopWorkflow;
 
 /**
  * @method static SequentialWorkflow sequential(string ...$agentNames)
@@ -19,7 +19,7 @@ use AaronLumsden\LaravelAgentADK\Agents\LoopWorkflow;
  * @method static LoopWorkflow forEach(string $agentName, array|\Traversable $collection)
  * @method static SequentialWorkflow|ParallelWorkflow|ConditionalWorkflow|LoopWorkflow fromArray(array $definition)
  *
- * @see \AaronLumsden\LaravelAgentADK\Services\WorkflowManager
+ * @see \AaronLumsden\LaravelAiADK\Services\WorkflowManager
  */
 class Workflow extends Facade
 {
@@ -30,6 +30,6 @@ class Workflow extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return 'laravel-agent-adk.workflow';
+        return 'laravel-ai-adk.workflow';
     }
 }

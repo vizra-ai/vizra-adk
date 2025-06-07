@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\Console\Commands;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\Console\Commands;
 
-use AaronLumsden\LaravelAgentADK\Console\Commands\MakeEvalCommand;
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Console\Commands\MakeEvalCommand;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
 use Illuminate\Filesystem\Filesystem;
 use Mockery;
 
@@ -324,7 +324,7 @@ class MakeEvalCommandTest extends TestCase
 
 namespace {{ namespace }};
 
-use AaronLumsden\LaravelAgentADK\Evaluations\BaseEvaluation;
+use AaronLumsden\LaravelAiADK\Evaluations\BaseEvaluation;
 use InvalidArgumentException;
 
 class {{ class }} extends BaseEvaluation

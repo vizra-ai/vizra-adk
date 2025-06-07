@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use AaronLumsden\LaravelAgentADK\Livewire\Dashboard;
-use AaronLumsden\LaravelAgentADK\Livewire\ChatInterface;
-use AaronLumsden\LaravelAgentADK\Livewire\EvalRunner;
-use AaronLumsden\LaravelAgentADK\Livewire\Analytics;
+use AaronLumsden\LaravelAiADK\Livewire\Dashboard;
+use AaronLumsden\LaravelAiADK\Livewire\ChatInterface;
+use AaronLumsden\LaravelAiADK\Livewire\EvalRunner;
+use AaronLumsden\LaravelAiADK\Livewire\Analytics;
 
 /*
 |--------------------------------------------------------------------------

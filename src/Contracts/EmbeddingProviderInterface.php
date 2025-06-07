@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Contracts;
+namespace AaronLumsden\LaravelAiADK\Contracts;
 
 interface EmbeddingProviderInterface
 {

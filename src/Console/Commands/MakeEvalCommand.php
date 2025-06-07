@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Console\Commands;
+namespace AaronLumsden\LaravelAiADK\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -24,7 +24,24 @@ class MakeEvalCommand extends GeneratorCommand
 
     protected function getDefaultNamespace($rootNamespace)
     {
-        return $rootNamespace.'\\Evaluations';
+        $configuredNamespace = config('agent-adk.namespaces.evaluations');
+        
+        if ($configuredNamespace) {
+            return $configuredNamespace;
+        }
+        
+        // Fallback to rootNamespace + \Evaluations, or just App\Evaluations if no root namespace
+        $baseNamespace = $rootNamespace ?: 'App';
+        return $baseNamespace . '\\Evaluations';
+    }
+
+    protected function rootNamespace()
+    {
+        try {
+            return $this->laravel ? $this->laravel->getNamespace() : 'App\\';
+        } catch (\Exception $e) {
+            return 'App\\';
+        }
     }
 
     protected function buildClass($name)

@@ -1,11 +1,11 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
-use AaronLumsden\LaravelAgentADK\Services\AgentManager;
-use AaronLumsden\LaravelAgentADK\Services\StateManager;
-use AaronLumsden\LaravelAgentADK\Agents\BaseAgent;
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
+use AaronLumsden\LaravelAiADK\Services\AgentManager;
+use AaronLumsden\LaravelAiADK\Services\StateManager;
+use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -121,7 +121,7 @@ it('integrates with facade', function () {
     $registry->register('facade-test-agent', IntegrationTestAgent::class);
 
     // Test using the Agent facade if available
-    if (class_exists('\AaronLumsden\LaravelAgentADK\Facades\Agent')) {
+    if (class_exists('\AaronLumsden\LaravelAiADK\Facades\Agent')) {
         $response = \Agent::run('facade-test-agent', 'Facade test input');
         expect($response)->toBeString();
         expect($response)->toContain('Integration response');

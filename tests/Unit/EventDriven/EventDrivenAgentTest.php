@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\EventDriven;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\EventDriven;
 
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Agents\BaseAgent;
-use AaronLumsden\LaravelAgentADK\Execution\AgentExecutor;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
+use AaronLumsden\LaravelAiADK\Execution\AgentExecutor;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 use Illuminate\Database\Eloquent\Model;
 use Mockery;
 
@@ -125,10 +125,10 @@ class EventDrivenAgentTest extends TestCase
     public function test_execution_mode_is_passed_to_context()
     {
         // Mock the dependencies to test mode passing
-        $mockAgentManager = Mockery::mock(\AaronLumsden\LaravelAgentADK\Services\AgentManager::class);
-        $mockStateManager = Mockery::mock(\AaronLumsden\LaravelAgentADK\Services\StateManager::class);
+        $mockAgentManager = Mockery::mock(\AaronLumsden\LaravelAiADK\Services\AgentManager::class);
+        $mockStateManager = Mockery::mock(\AaronLumsden\LaravelAiADK\Services\StateManager::class);
         
-        $mockContext = Mockery::mock(\AaronLumsden\LaravelAgentADK\System\AgentContext::class);
+        $mockContext = Mockery::mock(\AaronLumsden\LaravelAiADK\System\AgentContext::class);
         $mockContext->shouldReceive('setState')->with('execution_mode', 'trigger')->once();
         $mockContext->shouldReceive('setState')->withAnyArgs()->zeroOrMoreTimes();
         
@@ -141,8 +141,8 @@ class EventDrivenAgentTest extends TestCase
             ->andReturn('Test response');
 
         // Bind mocks to container
-        $this->app->instance(\AaronLumsden\LaravelAgentADK\Services\AgentManager::class, $mockAgentManager);
-        $this->app->instance(\AaronLumsden\LaravelAgentADK\Services\StateManager::class, $mockStateManager);
+        $this->app->instance(\AaronLumsden\LaravelAiADK\Services\AgentManager::class, $mockAgentManager);
+        $this->app->instance(\AaronLumsden\LaravelAiADK\Services\StateManager::class, $mockStateManager);
         $this->app->instance(TestEventDrivenAgent::class, new TestEventDrivenAgent());
 
         // Execute and verify mode is set correctly
@@ -212,19 +212,19 @@ class EventDrivenAgentTest extends TestCase
         $agent = new TestEventDrivenAgent();
         
         // Test ask mode
-        $askContext = Mockery::mock(\AaronLumsden\LaravelAgentADK\System\AgentContext::class);
+        $askContext = Mockery::mock(\AaronLumsden\LaravelAiADK\System\AgentContext::class);
         $askContext->shouldReceive('getState')->with('execution_mode', 'ask')->andReturn('ask');
         $result = $agent->run('test input', $askContext);
         $this->assertEquals('Asked: test input', $result);
         
         // Test trigger mode
-        $triggerContext = Mockery::mock(\AaronLumsden\LaravelAgentADK\System\AgentContext::class);
+        $triggerContext = Mockery::mock(\AaronLumsden\LaravelAiADK\System\AgentContext::class);
         $triggerContext->shouldReceive('getState')->with('execution_mode', 'ask')->andReturn('trigger');
         $result = $agent->run(['event' => 'data'], $triggerContext);
         $this->assertEquals('Triggered with: {"event":"data"}', $result);
         
         // Test analyze mode
-        $analyzeContext = Mockery::mock(\AaronLumsden\LaravelAgentADK\System\AgentContext::class);
+        $analyzeContext = Mockery::mock(\AaronLumsden\LaravelAiADK\System\AgentContext::class);
         $analyzeContext->shouldReceive('getState')->with('execution_mode', 'ask')->andReturn('analyze');
         $result = $agent->run(['data' => 'analyze'], $analyzeContext);
         $this->assertEquals('Analyzed: {"data":"analyze"}', $result);

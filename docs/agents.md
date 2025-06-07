@@ -30,7 +30,7 @@ User Input → Context Loading → Tool Execution → LLM Processing → Respons
 
 namespace App\Agents;
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
 
 class CustomerSupportAgent extends BaseLlmAgent
 {
@@ -170,8 +170,8 @@ Creating custom tools is straightforward:
 
 namespace App\Tools;
 
-use AaronLumsden\LaravelAgentADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 
 class OrderLookupTool implements ToolInterface
 {

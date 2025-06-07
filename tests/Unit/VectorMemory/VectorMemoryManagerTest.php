@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\VectorMemory;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\VectorMemory;
 
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Services\VectorMemoryManager;
-use AaronLumsden\LaravelAgentADK\Services\DocumentChunker;
-use AaronLumsden\LaravelAgentADK\Contracts\EmbeddingProviderInterface;
-use AaronLumsden\LaravelAgentADK\Models\VectorMemory;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
+use AaronLumsden\LaravelAiADK\Services\DocumentChunker;
+use AaronLumsden\LaravelAiADK\Contracts\EmbeddingProviderInterface;
+use AaronLumsden\LaravelAiADK\Models\VectorMemory;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Collection;
 use Mockery;

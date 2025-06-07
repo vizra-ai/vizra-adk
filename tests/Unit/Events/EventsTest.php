@@ -1,10 +1,10 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Events\AgentResponseGenerated;
-use AaronLumsden\LaravelAgentADK\Events\AgentExecutionStarting;
-use AaronLumsden\LaravelAgentADK\Events\AgentExecutionFinished;
-use AaronLumsden\LaravelAgentADK\Events\TaskDelegated;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Events\AgentResponseGenerated;
+use AaronLumsden\LaravelAiADK\Events\AgentExecutionStarting;
+use AaronLumsden\LaravelAiADK\Events\AgentExecutionFinished;
+use AaronLumsden\LaravelAiADK\Events\TaskDelegated;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 use Illuminate\Support\Facades\Event;
 
 it('creates agent response generated event correctly', function () {

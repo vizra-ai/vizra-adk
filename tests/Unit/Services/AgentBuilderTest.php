@@ -1,10 +1,10 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Services\AgentBuilder;
-use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAgentADK\Exceptions\AgentConfigurationException;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Services\AgentBuilder;
+use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 
 beforeEach(function () {
     $this->registry = new AgentRegistry($this->app);

@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Tests\Unit\Agents;
+namespace AaronLumsden\LaravelAiADK\Tests\Unit\Agents;
 
-use AaronLumsden\LaravelAgentADK\Agents\ConditionalWorkflow;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Tests\TestCase;
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\Agents\ConditionalWorkflow;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
 use Mockery;
 
 class ConditionalWorkflowTest extends TestCase
@@ -17,7 +17,7 @@ class ConditionalWorkflowTest extends TestCase
     {
         parent::setUp();
         $this->workflow = new ConditionalWorkflow();
-        $this->context = new AgentContext();
+        $this->context = new AgentContext('test-session');
     }
 
     protected function tearDown(): void
@@ -103,7 +103,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_execute_first_matching_condition()
     {
         Agent::shouldReceive('run')
-            ->with('PremiumAgent', ['type' => 'premium', 'score' => 95], null)
+            ->with('PremiumAgent', ['type' => 'premium', 'score' => 95], 'test-session')
             ->once()
             ->andReturn('premium_result');
 

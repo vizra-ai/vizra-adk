@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Examples;
+namespace AaronLumsden\LaravelAiADK\Examples;
 
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
 
 /**
  * Billing support sub-agent specialized in handling billing and payment issues.

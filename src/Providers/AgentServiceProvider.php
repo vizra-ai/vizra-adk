@@ -1,32 +1,32 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Providers;
+namespace AaronLumsden\LaravelAiADK\Providers;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Foundation\Application;
 use Livewire\Livewire;
-use AaronLumsden\LaravelAgentADK\Services\AgentBuilder;
-use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
-use AaronLumsden\LaravelAgentADK\Services\StateManager;
-use AaronLumsden\LaravelAgentADK\Services\MemoryManager;
-use AaronLumsden\LaravelAgentADK\Services\AgentManager;
-use AaronLumsden\LaravelAgentADK\Services\WorkflowManager;
-use AaronLumsden\LaravelAgentADK\Services\Tracer;
-use AaronLumsden\LaravelAgentADK\Services\AnalyticsService;
-use AaronLumsden\LaravelAgentADK\Livewire\Dashboard;
-use AaronLumsden\LaravelAgentADK\Livewire\ChatInterface;
-use AaronLumsden\LaravelAgentADK\Livewire\EvalRunner;
-use AaronLumsden\LaravelAgentADK\Livewire\Analytics;
-use AaronLumsden\LaravelAgentADK\Console\Commands\InstallCommand;
-use AaronLumsden\LaravelAgentADK\Console\Commands\MakeAgentCommand;
-use AaronLumsden\LaravelAgentADK\Console\Commands\MakeToolCommand;
-use AaronLumsden\LaravelAgentADK\Console\Commands\AgentChatCommand;
-use AaronLumsden\LaravelAgentADK\Console\Commands\MakeEvalCommand;
-use AaronLumsden\LaravelAgentADK\Console\Commands\RunEvalCommand;
-use AaronLumsden\LaravelAgentADK\Console\Commands\AgentTraceCleanupCommand;
-use AaronLumsden\LaravelAgentADK\Console\Commands\AgentTraceCommand;
-use AaronLumsden\LaravelAgentADK\Console\Commands\DashboardCommand;
+use AaronLumsden\LaravelAiADK\Services\AgentBuilder;
+use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
+use AaronLumsden\LaravelAiADK\Services\StateManager;
+use AaronLumsden\LaravelAiADK\Services\MemoryManager;
+use AaronLumsden\LaravelAiADK\Services\AgentManager;
+use AaronLumsden\LaravelAiADK\Services\WorkflowManager;
+use AaronLumsden\LaravelAiADK\Services\Tracer;
+use AaronLumsden\LaravelAiADK\Services\AnalyticsService;
+use AaronLumsden\LaravelAiADK\Livewire\Dashboard;
+use AaronLumsden\LaravelAiADK\Livewire\ChatInterface;
+use AaronLumsden\LaravelAiADK\Livewire\EvalRunner;
+use AaronLumsden\LaravelAiADK\Livewire\Analytics;
+use AaronLumsden\LaravelAiADK\Console\Commands\InstallCommand;
+use AaronLumsden\LaravelAiADK\Console\Commands\MakeAgentCommand;
+use AaronLumsden\LaravelAiADK\Console\Commands\MakeToolCommand;
+use AaronLumsden\LaravelAiADK\Console\Commands\AgentChatCommand;
+use AaronLumsden\LaravelAiADK\Console\Commands\MakeEvalCommand;
+use AaronLumsden\LaravelAiADK\Console\Commands\RunEvalCommand;
+use AaronLumsden\LaravelAiADK\Console\Commands\AgentTraceCleanupCommand;
+use AaronLumsden\LaravelAiADK\Console\Commands\AgentTraceCommand;
+use AaronLumsden\LaravelAiADK\Console\Commands\DashboardCommand;
 
 class AgentServiceProvider extends ServiceProvider
 {
@@ -72,14 +72,14 @@ class AgentServiceProvider extends ServiceProvider
         });
 
         // Ensure the facade accessor points to the AgentManager binding
-        $this->app->alias(AgentManager::class, 'laravel-agent-adk.manager');
+        $this->app->alias(AgentManager::class, 'laravel-ai-adk.manager');
 
         // Register WorkflowManager for the Workflow facade
         $this->app->singleton(WorkflowManager::class, function (Application $app) {
             return new WorkflowManager();
         });
 
-        $this->app->alias(WorkflowManager::class, 'laravel-agent-adk.workflow');
+        $this->app->alias(WorkflowManager::class, 'laravel-ai-adk.workflow');
     }
 
     public function boot(): void

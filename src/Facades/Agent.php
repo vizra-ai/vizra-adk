@@ -1,10 +1,10 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Facades;
+namespace AaronLumsden\LaravelAiADK\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use AaronLumsden\LaravelAgentADK\Services\AgentBuilder; // For type hinting
-use AaronLumsden\LaravelAgentADK\Agents\BaseAgent; // For type hinting
+use AaronLumsden\LaravelAiADK\Services\AgentBuilder; // For type hinting
+use AaronLumsden\LaravelAiADK\Agents\BaseAgent; // For type hinting
 
 /**
  * @method static AgentBuilder build(string $agentClass)
@@ -14,7 +14,7 @@ use AaronLumsden\LaravelAgentADK\Agents\BaseAgent; // For type hinting
  * @method static array getAllRegisteredAgents()
  * @method static bool hasAgent(string $name)
  *
- * @see \AaronLumsden\LaravelAgentADK\Services\AgentManager // The underlying class facade will point to
+ * @see \AaronLumsden\LaravelAiADK\Services\AgentManager // The underlying class facade will point to
  */
 class Agent extends Facade
 {
@@ -28,6 +28,6 @@ class Agent extends Facade
         // This will point to a new AgentManager class that combines AgentBuilder and AgentRegistry functionalities
         // For now, let's make it point to AgentBuilder, and we'll create AgentManager in Step 12 or refine this.
         // return AgentBuilder::class; // Temporary - will be AgentManager::class
-        return 'laravel-agent-adk.manager'; // Binding name for AgentManager
+        return 'laravel-ai-adk.manager'; // Binding name for AgentManager
     }
 }

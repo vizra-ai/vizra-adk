@@ -1,9 +1,9 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Events\TaskDelegated;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Tools\DelegateToSubAgentTool;
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\Events\TaskDelegated;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Tools\DelegateToSubAgentTool;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
 use Illuminate\Support\Facades\Event;
 
 describe('TaskDelegated Event', function () {

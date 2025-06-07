@@ -1,13 +1,13 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
-use AaronLumsden\LaravelAgentADK\Services\AgentManager;
-use AaronLumsden\LaravelAgentADK\Services\AgentBuilder;
-use AaronLumsden\LaravelAgentADK\Services\StateManager;
-use AaronLumsden\LaravelAgentADK\Agents\BaseAgent;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Models\AgentSession;
-use AaronLumsden\LaravelAgentADK\Models\AgentMessage;
+use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
+use AaronLumsden\LaravelAiADK\Services\AgentManager;
+use AaronLumsden\LaravelAiADK\Services\AgentBuilder;
+use AaronLumsden\LaravelAiADK\Services\StateManager;
+use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Models\AgentSession;
+use AaronLumsden\LaravelAiADK\Models\AgentMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -122,7 +122,7 @@ it('loads package configuration', function () {
 
 it('has facade alias available', function () {
     // Test that the Agent facade alias is properly registered
-    expect(class_exists('\AaronLumsden\LaravelAgentADK\Facades\Agent'))->toBeTrue();
+    expect(class_exists('\AaronLumsden\LaravelAiADK\Facades\Agent'))->toBeTrue();
 });
 
 it('registers services properly via service provider', function () {

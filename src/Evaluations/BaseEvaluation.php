@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Evaluations;
+namespace AaronLumsden\LaravelAiADK\Evaluations;
 
 use InvalidArgumentException;
 
@@ -580,7 +580,7 @@ abstract class BaseEvaluation
         $judgePrompt = $this->buildJudgePrompt($actualResponse, $criteria);
 
         try {
-            $judgeResponse = \AaronLumsden\LaravelAgentADK\Facades\Agent::run(
+            $judgeResponse = \AaronLumsden\LaravelAiADK\Facades\Agent::run(
                 $judgeAgentName,
                 $judgePrompt,
                 \Illuminate\Support\Str::uuid()->toString()
@@ -621,7 +621,7 @@ abstract class BaseEvaluation
         $judgePrompt = $this->buildQualityJudgePrompt($actualResponse, $qualityCriteria);
 
         try {
-            $judgeResponse = \AaronLumsden\LaravelAgentADK\Facades\Agent::run(
+            $judgeResponse = \AaronLumsden\LaravelAiADK\Facades\Agent::run(
                 $judgeAgentName,
                 $judgePrompt,
                 \Illuminate\Support\Str::uuid()->toString()
@@ -663,7 +663,7 @@ abstract class BaseEvaluation
         $judgePrompt = $this->buildComparisonJudgePrompt($actualResponse, $referenceResponse, $comparisonCriteria);
 
         try {
-            $judgeResponse = \AaronLumsden\LaravelAgentADK\Facades\Agent::run(
+            $judgeResponse = \AaronLumsden\LaravelAiADK\Facades\Agent::run(
                 $judgeAgentName,
                 $judgePrompt,
                 \Illuminate\Support\Str::uuid()->toString()

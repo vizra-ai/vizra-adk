@@ -1,8 +1,8 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Tools\DelegateToSubAgentTool;
-use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Tools\DelegateToSubAgentTool;
+use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
 
 beforeEach(function () {
     $this->parentAgent = new TestDelegationParentAgent();

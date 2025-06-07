@@ -1,11 +1,11 @@
 <?php
 
-use AaronLumsden\LaravelAgentADK\Tools\MemoryTool;
-use AaronLumsden\LaravelAgentADK\System\AgentContext;
-use AaronLumsden\LaravelAgentADK\Models\AgentMemory;
-use AaronLumsden\LaravelAgentADK\Models\AgentSession;
-use AaronLumsden\LaravelAgentADK\Models\AgentMessage;
-use AaronLumsden\LaravelAgentADK\Services\MemoryManager;
+use AaronLumsden\LaravelAiADK\Tools\MemoryTool;
+use AaronLumsden\LaravelAiADK\System\AgentContext;
+use AaronLumsden\LaravelAiADK\Models\AgentMemory;
+use AaronLumsden\LaravelAiADK\Models\AgentSession;
+use AaronLumsden\LaravelAiADK\Models\AgentMessage;
+use AaronLumsden\LaravelAiADK\Services\MemoryManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 

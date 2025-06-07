@@ -1,10 +1,10 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Livewire;
+namespace AaronLumsden\LaravelAiADK\Livewire;
 
 use Livewire\Component;
-use AaronLumsden\LaravelAgentADK\Facades\Agent;
-use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
+use AaronLumsden\LaravelAiADK\Facades\Agent;
+use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
 
 class Dashboard extends Component
 {

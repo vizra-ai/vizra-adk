@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAgentADK\Services;
+namespace AaronLumsden\LaravelAiADK\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
