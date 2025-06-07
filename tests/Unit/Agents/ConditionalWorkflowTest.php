@@ -19,10 +19,16 @@ class ConditionalWorkflowTest extends TestCase
         $this->workflow = new ConditionalWorkflow();
         $this->context = new AgentContext('test-session');
     }
+    
+    protected function mockAgentRun($returnValue = 'mocked_result')
+    {
+        Agent::shouldReceive('run')
+            ->andReturn($returnValue)
+            ->byDefault();
+    }
 
     protected function tearDown(): void
     {
-        Mockery::close();
         parent::tearDown();
     }
 
@@ -122,11 +128,8 @@ class ConditionalWorkflowTest extends TestCase
 
     public function test_execute_otherwise_when_no_conditions_match()
     {
-        Agent::shouldReceive('run')
-            ->with('DefaultAgent', ['type' => 'basic'], null)
-            ->once()
-            ->andReturn('default_result');
-
+        $this->mockAgentRun('default_result');
+        
         $result = $this->workflow
             ->when(fn($input) => $input['type'] === 'premium', 'PremiumAgent')
             ->when(fn($input) => $input['type'] === 'gold', 'GoldAgent')

@@ -18,11 +18,11 @@ class MakeEvalCommandTest extends TestCase
         
         $this->filesystem = Mockery::mock(Filesystem::class);
         $this->command = new MakeEvalCommand($this->filesystem);
+        $this->command->setLaravel($this->app);
     }
 
     protected function tearDown(): void
     {
-        Mockery::close();
         parent::tearDown();
     }
 
@@ -123,8 +123,8 @@ class MakeEvalCommandTest extends TestCase
 
         $result = $method->invoke($this->command, 'App\\Evaluations\\ProductReviewEvaluation');
         
-        $this->assertStringContains('Product Review', $result);
-        $this->assertStringContains('product_review', $result);
+        $this->assertStringContainsString('Product Review', $result);
+        $this->assertStringContainsString('product_review', $result);
     }
 
     public function test_build_class_removes_evaluation_suffix_from_placeholders()
@@ -145,12 +145,12 @@ class MakeEvalCommandTest extends TestCase
         $result = $method->invoke($this->command, 'App\\Evaluations\\ProductReviewEvaluation');
         
         // Should be "Product Review" not "Product Review Evaluation"
-        $this->assertStringContains('Product Review', $result);
-        $this->assertStringNotContains('Product Review Evaluation', $result);
+        $this->assertStringContainsString('Product Review', $result);
+        $this->assertStringNotContainsString('Product Review Evaluation', $result);
         
         // Should be "product_review" not "product_review_evaluation"
-        $this->assertStringContains('product_review', $result);
-        $this->assertStringNotContains('product_review_evaluation', $result);
+        $this->assertStringContainsString('product_review', $result);
+        $this->assertStringNotContainsString('product_review_evaluation', $result);
     }
 
     public function test_build_class_handles_camel_case_names()
@@ -170,8 +170,8 @@ class MakeEvalCommandTest extends TestCase
 
         $result = $method->invoke($this->command, 'App\\Evaluations\\ContentQualityAnalysisEvaluation');
         
-        $this->assertStringContains('Content Quality Analysis', $result);
-        $this->assertStringContains('content_quality_analysis', $result);
+        $this->assertStringContainsString('Content Quality Analysis', $result);
+        $this->assertStringContainsString('content_quality_analysis', $result);
     }
 
     public function test_get_arguments_returns_correct_structure()

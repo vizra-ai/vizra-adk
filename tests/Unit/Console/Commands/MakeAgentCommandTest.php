@@ -24,7 +24,6 @@ class MakeAgentCommandTest extends TestCase
 
     protected function tearDown(): void
     {
-        Mockery::close();
         parent::tearDown();
     }
 
@@ -139,106 +138,111 @@ class MakeAgentCommandTest extends TestCase
 
     public function test_command_creates_file_with_correct_content()
     {
-        $expectedPath = app_path('Agents/TestAgent.php');
-        $expectedContent = $this->getExpectedAgentContent();
-
-        $this->filesystem->shouldReceive('exists')
-            ->with($expectedPath)
-            ->once()
-            ->andReturn(false);
-
-        $this->filesystem->shouldReceive('makeDirectory')
-            ->once()
-            ->andReturn(true);
-
-        $this->filesystem->shouldReceive('put')
-            ->once()
-            ->with($expectedPath, Mockery::on(function ($content) {
-                return str_contains($content, 'class TestAgent extends BaseLlmAgent') &&
-                       str_contains($content, "protected string \$name = 'test_agent'") &&
-                       str_contains($content, 'namespace App\Agents');
-            }))
-            ->andReturn(true);
-
-        $this->filesystem->shouldReceive('get')
-            ->once()
-            ->andReturn($this->getStubContent());
-
+        // Create a temporary directory for this test
+        $tempDir = sys_get_temp_dir() . '/agent-test-' . uniqid();
+        mkdir($tempDir, 0755, true);
+        
+        // Mock the app_path to return our temp directory
+        $this->app->bind('path', fn() => $tempDir);
+        
         $this->artisan('agent:make:agent', ['name' => 'TestAgent'])
             ->assertExitCode(0);
+            
+        // Verify the file was created
+        $expectedPath = $tempDir . '/Agents/TestAgent.php';
+        $this->assertFileExists($expectedPath);
+        
+        // Verify the file content
+        $content = file_get_contents($expectedPath);
+        $this->assertStringContainsString('class TestAgent extends BaseLlmAgent', $content);
+        $this->assertStringContainsString("protected string \$name = 'test_agent'", $content);
+        $this->assertStringContainsString('namespace App\Agents', $content);
+        
+        // Cleanup
+        unlink($expectedPath);
+        rmdir(dirname($expectedPath));
+        rmdir($tempDir);
     }
 
     public function test_command_handles_existing_file()
     {
-        $expectedPath = app_path('Agents/TestAgent.php');
-
-        $this->filesystem->shouldReceive('exists')
-            ->with($expectedPath)
-            ->once()
-            ->andReturn(true);
+        // Create a temporary directory for this test
+        $tempDir = sys_get_temp_dir() . '/agent-test-' . uniqid();
+        mkdir($tempDir . '/Agents', 0755, true);
+        
+        // Create an existing file
+        $existingFile = $tempDir . '/Agents/TestAgent.php';
+        file_put_contents($existingFile, '<?php // existing file');
+        
+        // Mock the app_path to return our temp directory  
+        $this->app->bind('path', fn() => $tempDir);
 
         $this->artisan('agent:make:agent', ['name' => 'TestAgent'])
-            ->expectsOutput('Agent [App/Agents/TestAgent.php] already exists.')
+            ->expectsOutput('Agent already exists!')
             ->assertExitCode(0);
+            
+        // Cleanup
+        unlink($existingFile);
+        rmdir(dirname($existingFile));
+        rmdir($tempDir);
     }
 
     public function test_command_with_custom_namespace()
     {
         Config::set('agent-adk.namespaces.agents', 'Custom\MyAgents');
         
-        $expectedPath = base_path('Custom/MyAgents/TestAgent.php');
-
-        $this->filesystem->shouldReceive('exists')
-            ->with($expectedPath)
-            ->once()
-            ->andReturn(false);
-
-        $this->filesystem->shouldReceive('makeDirectory')
-            ->once()
-            ->andReturn(true);
-
-        $this->filesystem->shouldReceive('put')
-            ->once()
-            ->with($expectedPath, Mockery::on(function ($content) {
-                return str_contains($content, 'namespace Custom\MyAgents');
-            }))
-            ->andReturn(true);
-
-        $this->filesystem->shouldReceive('get')
-            ->once()
-            ->andReturn($this->getStubContent());
+        // Create a temporary directory for this test
+        $tempDir = sys_get_temp_dir() . '/agent-test-' . uniqid();
+        mkdir($tempDir, 0755, true);
+        
+        // Mock the base_path to return our temp directory
+        $this->app->bind('path.base', fn() => $tempDir);
 
         $this->artisan('agent:make:agent', ['name' => 'TestAgent'])
             ->assertExitCode(0);
+            
+        // Verify the file was created in the custom namespace path
+        $expectedPath = $tempDir . '/Custom/MyAgents/TestAgent.php';
+        $this->assertFileExists($expectedPath);
+        
+        // Verify the content has the custom namespace
+        $content = file_get_contents($expectedPath);
+        $this->assertStringContainsString('namespace Custom\MyAgents', $content);
+        
+        // Cleanup
+        unlink($expectedPath);
+        rmdir(dirname($expectedPath));
+        rmdir(dirname(dirname($expectedPath)));
+        rmdir($tempDir);
     }
 
     public function test_command_with_nested_class_name()
     {
-        // In the test environment, we're using a mock filesystem, so we need to be more flexible
-        $this->filesystem->shouldReceive('exists')
-            ->once()
-            ->andReturn(false);
-
-        $this->filesystem->shouldReceive('makeDirectory')
-            ->once()
-            ->andReturn(true);
-
-        $this->filesystem->shouldReceive('put')
-            ->once()
-            ->withArgs(function ($path, $content) {
-                return str_contains($path, 'Support/CustomerAgent.php') &&
-                       str_contains($content, 'namespace App\Agents\Support') &&
-                       str_contains($content, 'class CustomerAgent extends BaseLlmAgent') &&
-                       str_contains($content, "protected string \$name = 'customer_agent'");
-            })
-            ->andReturn(true);
-
-        $this->filesystem->shouldReceive('get')
-            ->once()
-            ->andReturn($this->getStubContent());
+        // Create a temporary directory for this test
+        $tempDir = sys_get_temp_dir() . '/agent-test-' . uniqid();
+        mkdir($tempDir, 0755, true);
+        
+        // Mock the app_path to return our temp directory
+        $this->app->bind('path', fn() => $tempDir);
 
         $this->artisan('agent:make:agent', ['name' => 'Support/CustomerAgent'])
             ->assertExitCode(0);
+            
+        // Verify the file was created in the nested directory
+        $expectedPath = $tempDir . '/Agents/Support/CustomerAgent.php';
+        $this->assertFileExists($expectedPath);
+        
+        // Verify the content has the nested namespace and correct class
+        $content = file_get_contents($expectedPath);
+        $this->assertStringContainsString('namespace App\Agents\Support', $content);
+        $this->assertStringContainsString('class CustomerAgent extends BaseLlmAgent', $content);
+        $this->assertStringContainsString("protected string \$name = 'customer_agent'", $content);
+        
+        // Cleanup
+        unlink($expectedPath);
+        rmdir(dirname($expectedPath));
+        rmdir(dirname(dirname($expectedPath)));
+        rmdir($tempDir);
     }
 
     protected function getStubContent(): string

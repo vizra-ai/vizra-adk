@@ -20,6 +20,7 @@ class TestCase extends Orchestra
     {
         return [
             'Agent' => \AaronLumsden\LaravelAiADK\Facades\Agent::class,
+            'Workflow' => \AaronLumsden\LaravelAiADK\Facades\Workflow::class,
         ];
     }
 
@@ -37,10 +38,21 @@ class TestCase extends Orchestra
         $app['config']->set('app.key', 'base64:843sTC/OSjCKW+ZnImGjVdbrib089tC87dXdVlI+vc8=');
 
         // Load your package config if needed
-        $app['config']->set('agent-adk', require __DIR__ . '/../config/agent-adk.php');
+        $config = require __DIR__ . '/../config/agent-adk.php';
+        $app['config']->set('agent-adk', $config);
         
-        // Override vector memory driver for tests (SQLite doesn't support pgvector)
+        // Override problematic settings for tests
         $app['config']->set('agent-adk.vector_memory.driver', 'sqlite');
+        $app['config']->set('agent-adk.default_provider', 'mock');
+        $app['config']->set('agent-adk.default_model', 'mock-model');
+        
+        // Set dummy API keys to prevent missing key errors
+        $app['config']->set('services.openai.key', 'test-key');
+        $app['config']->set('services.anthropic.key', 'test-key');
+        $app['config']->set('services.google.key', 'test-key');
+        
+        // Disable tracing in tests to avoid database complexity
+        $app['config']->set('agent-adk.tracing.enabled', false);
     }
 
     protected function setUp(): void
@@ -49,5 +61,15 @@ class TestCase extends Orchestra
 
         // Run migrations for testing
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+    }
+
+    protected function tearDown(): void
+    {
+        // Clear Mockery between tests to prevent conflicts
+        if (class_exists(\Mockery::class)) {
+            \Mockery::close();
+        }
+        
+        parent::tearDown();
     }
 }

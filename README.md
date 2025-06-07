@@ -4,10 +4,10 @@
 
 Transform your Laravel applications into intelligent, conversation-driven experiences. The Laravel Ai ADK brings the power of AI agents to your favorite framework with the elegance and simplicity you already love.
 
-[![Latest Version](https://img.shields.io/packagist/v/aaronlumsden/laravel-agent-adk)](https://packagist.org/packages/aaronlumsden/laravel-agent-adk)
-[![Total Downloads](https://img.shields.io/packagist/dt/aaronlumsden/laravel-agent-adk)](https://packagist.org/packages/aaronlumsden/laravel-agent-adk)
-[![Tests](https://github.com/aaronlumsden/laravel-agent-adk/workflows/tests/badge.svg)](https://github.com/aaronlumsden/laravel-agent-adk/actions)
-[![License](https://img.shields.io/packagist/l/aaronlumsden/laravel-agent-adk)](https://packagist.org/packages/aaronlumsden/laravel-agent-adk)
+[![Latest Version](https://img.shields.io/packagist/v/aaronlumsden/laravel-ai-adk)](https://packagist.org/packages/aaronlumsden/laravel-ai-adk)
+[![Total Downloads](https://img.shields.io/packagist/dt/aaronlumsden/laravel-ai-adk)](https://packagist.org/packages/aaronlumsden/laravel-ai-adk)
+[![Tests](https://github.com/aaronlumsden/laravel-ai-adk/workflows/tests/badge.svg)](https://github.com/aaronlumsden/laravel-ai-adk/actions)
+[![License](https://img.shields.io/packagist/l/aaronlumsden/laravel-ai-adk)](https://packagist.org/packages/aaronlumsden/laravel-ai-adk)
 
 ## ✨ What Makes It Special?
 
@@ -36,7 +36,7 @@ Get your first AI agent running in under 5 minutes:
 
 ```bash
 # Install the package
-composer require aaronlumsden/laravel-agent-adk
+composer require aaronlumsden/laravel-ai-adk
 
 # Publish the config and run migrations
 php artisan vendor:publish --provider="AaronLumsden\LaravelAiADK\AgentAdkServiceProvider"
@@ -153,9 +153,9 @@ $analysis = DataAnalystAgent::ask('How many users signed up last month?')->forUs
 
 ## 🤝 Community & Support
 
-- **[GitHub Discussions](https://github.com/aaronlumsden/laravel-agent-adk/discussions)** - Ask questions, share ideas
-- **[Issues](https://github.com/aaronlumsden/laravel-agent-adk/issues)** - Report bugs, request features
-- **[Examples Repository](https://github.com/aaronlumsden/laravel-agent-adk-examples)** - Real-world examples and templates
+- **[GitHub Discussions](https://github.com/aaronlumsden/laravel-ai-adk/discussions)** - Ask questions, share ideas
+- **[Issues](https://github.com/aaronlumsden/laravel-ai-adk/issues)** - Report bugs, request features
+- **[Examples Repository](https://github.com/aaronlumsden/laravel-ai-adk-examples)** - Real-world examples and templates
 
 ## 🔧 Requirements
 

@@ -19,10 +19,16 @@ class ParallelWorkflowTest extends TestCase
         $this->workflow = new ParallelWorkflow();
         $this->context = new AgentContext('test-session');
     }
+    
+    protected function mockAgentRun($returnValue = 'mocked_result')
+    {
+        Agent::shouldReceive('run')
+            ->andReturn($returnValue)
+            ->byDefault();
+    }
 
     protected function tearDown(): void
     {
-        Mockery::close();
         parent::tearDown();
     }
 

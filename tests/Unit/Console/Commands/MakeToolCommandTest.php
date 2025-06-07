@@ -19,11 +19,11 @@ class MakeToolCommandTest extends TestCase
         
         $this->filesystem = Mockery::mock(Filesystem::class);
         $this->command = new MakeToolCommand($this->filesystem);
+        $this->command->setLaravel($this->app);
     }
 
     protected function tearDown(): void
     {
-        Mockery::close();
         parent::tearDown();
     }
 
@@ -109,8 +109,8 @@ class MakeToolCommandTest extends TestCase
 
         $result = $method->invoke($this->command, 'App\Tools\WeatherTool');
         
-        $this->assertStringContains('weather', $result);
-        $this->assertStringContains('Weather', $result);
+        $this->assertStringContainsString('weather', $result);
+        $this->assertStringContainsString('Weather', $result);
     }
 
     public function test_build_class_removes_tool_suffix_from_name()
@@ -126,8 +126,8 @@ class MakeToolCommandTest extends TestCase
         $result = $method->invoke($this->command, 'App\Tools\WeatherTool');
         
         // Should be "weather" not "weather_tool"
-        $this->assertStringContains('weather', $result);
-        $this->assertStringNotContains('weather_tool', $result);
+        $this->assertStringContainsString('weather', $result);
+        $this->assertStringNotContainsString('weather_tool', $result);
     }
 
     public function test_build_class_handles_camel_case_names()
@@ -142,8 +142,8 @@ class MakeToolCommandTest extends TestCase
 
         $result = $method->invoke($this->command, 'App\Tools\GetCurrentWeatherTool');
         
-        $this->assertStringContains('get_current_weather', $result);
-        $this->assertStringContains('Get Current Weather', $result);
+        $this->assertStringContainsString('get_current_weather', $result);
+        $this->assertStringContainsString('Get Current Weather', $result);
     }
 
     public function test_get_arguments_returns_correct_structure()
