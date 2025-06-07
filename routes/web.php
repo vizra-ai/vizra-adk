@@ -8,10 +8,10 @@ use AaronLumsden\LaravelAiADK\Livewire\Analytics;
 
 /*
 |--------------------------------------------------------------------------
-| Laravel Agent ADK Web Routes
+| Laravel Ai ADK Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register web routes for the Laravel Agent ADK package.
+| Here is where you can register web routes for the Laravel Ai ADK package.
 | These routes provide a web interface for managing and monitoring your agents.
 |
 */

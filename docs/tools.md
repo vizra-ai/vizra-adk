@@ -27,7 +27,7 @@ Think of tools as superpowers for your agents. While LLMs are great at understan
 
 ## 🚀 Built-in Tools
 
-The Laravel Agent ADK comes with several powerful tools ready to use:
+The Laravel Ai ADK comes with several powerful tools ready to use:
 
 ### 📊 Vector Memory Tool
 
@@ -40,16 +40,18 @@ protected array $tools = [
 ```
 
 **Capabilities:**
+
 - Store documents and knowledge
 - Semantic search across stored content
 - RAG (Retrieval-Augmented Generation) context
 - Memory statistics and management
 
 **Example agent instruction:**
+
 ```php
 protected string $instructions = "
-When customers ask about our policies or procedures, search your memory 
-for relevant information before responding. If you learn something new 
+When customers ask about our policies or procedures, search your memory
+for relevant information before responding. If you learn something new
 about a customer, store it for future conversations.
 
 Use the vector_memory tool to:
@@ -66,7 +68,7 @@ We're actively developing additional built-in tools:
 // Database operations
 DatabaseQueryTool::class,     // Execute safe database queries
 
-// External integrations  
+// External integrations
 WebSearchTool::class,         // Search the internet
 EmailTool::class,             // Send emails via Laravel Mail
 SlackTool::class,            // Post to Slack channels
@@ -155,7 +157,7 @@ public function execute(array $arguments, AgentContext $context): string
 {
     // Build the query based on provided parameters
     $query = Order::with(['items.product', 'customer']);
-    
+
     if (isset($arguments['order_number'])) {
         $query->where('order_number', $arguments['order_number']);
     } elseif (isset($arguments['email'])) {
@@ -167,16 +169,16 @@ public function execute(array $arguments, AgentContext $context): string
             $q->where('phone', $arguments['phone']);
         });
     }
-    
+
     $orders = $query->latest()->take(5)->get();
-    
+
     if ($orders->isEmpty()) {
         return json_encode([
             'found' => false,
             'message' => 'No orders found with the provided information'
         ]);
     }
-    
+
     // Format the response
     $result = [
         'found' => true,
@@ -193,7 +195,7 @@ public function execute(array $arguments, AgentContext $context): string
                 ],
                 'shipping_address' => $order->shipping_address,
             ];
-            
+
             // Include items if requested
             if ($arguments['include_items'] ?? true) {
                 $orderData['items'] = $order->items->map(function($item) {
@@ -204,7 +206,7 @@ public function execute(array $arguments, AgentContext $context): string
                     ];
                 });
             }
-            
+
             // Add tracking info if available
             if ($order->tracking_number) {
                 $orderData['tracking'] = [
@@ -213,11 +215,11 @@ public function execute(array $arguments, AgentContext $context): string
                     'estimated_delivery' => $order->estimated_delivery_date?->format('M j, Y'),
                 ];
             }
-            
+
             return $orderData;
         }),
     ];
-    
+
     return json_encode($result);
 }
 ```
@@ -227,6 +229,7 @@ public function execute(array $arguments, AgentContext $context): string
 ### ✅ Good Tool Design
 
 **1. Clear, Descriptive Names**
+
 ```php
 // Good
 'name' => 'lookup_customer_orders',
@@ -240,8 +243,9 @@ public function execute(array $arguments, AgentContext $context): string
 ```
 
 **2. Detailed Descriptions**
+
 ```php
-'description' => 'Look up customer orders by order number, email, or phone number. 
+'description' => 'Look up customer orders by order number, email, or phone number.
 Returns order details including status, items, and tracking information.',
 
 // Not just:
@@ -249,6 +253,7 @@ Returns order details including status, items, and tracking information.',
 ```
 
 **3. Well-Defined Parameters**
+
 ```php
 'parameters' => [
     'type' => 'object',
@@ -275,6 +280,7 @@ Returns order details including status, items, and tracking information.',
 ```
 
 **4. Helpful Error Handling**
+
 ```php
 public function execute(array $arguments, AgentContext $context): string
 {
@@ -287,23 +293,23 @@ public function execute(array $arguments, AgentContext $context): string
                 'suggestion' => 'Try searching for a product name or category'
             ]);
         }
-        
+
         // Perform the operation
         $results = $this->searchProducts($arguments);
-        
+
         return json_encode([
             'success' => true,
             'results' => $results,
             'total' => count($results),
         ]);
-        
+
     } catch (\Exception $e) {
         // Log the error for debugging
         \Log::error('Product search tool error', [
             'arguments' => $arguments,
             'error' => $e->getMessage(),
         ]);
-        
+
         return json_encode([
             'success' => false,
             'error' => 'Search temporarily unavailable',
@@ -316,6 +322,7 @@ public function execute(array $arguments, AgentContext $context): string
 ### ❌ Common Pitfalls
 
 **1. Returning Raw Exceptions**
+
 ```php
 // Don't do this
 public function execute(array $arguments, AgentContext $context): string
@@ -326,6 +333,7 @@ public function execute(array $arguments, AgentContext $context): string
 ```
 
 **2. Inconsistent Response Formats**
+
 ```php
 // Don't mix formats
 return "Order not found"; // Sometimes string
@@ -333,6 +341,7 @@ return json_encode(['error' => 'Order not found']); // Sometimes JSON
 ```
 
 **3. Security Issues**
+
 ```php
 // Never do this - SQL injection risk!
 $query = "SELECT * FROM users WHERE email = '{$arguments['email']}'";
@@ -357,7 +366,7 @@ public function execute(array $arguments, AgentContext $context): string
         'amount' => 'required|numeric|min:0|max:10000',
         'order_id' => 'required|string|regex:/^ORD-[A-Z0-9]+$/',
     ]);
-    
+
     if ($validator->fails()) {
         return json_encode([
             'success' => false,
@@ -365,7 +374,7 @@ public function execute(array $arguments, AgentContext $context): string
             'details' => $validator->errors()->first(),
         ]);
     }
-    
+
     // Proceed with validated data
     $validatedData = $validator->validated();
     // ...
@@ -382,7 +391,7 @@ public function execute(array $arguments, AgentContext $context): string
     // Get the current user from context
     $userId = $context->getState('user_id');
     $user = User::find($userId);
-    
+
     // Check permissions
     if (!$user || !$user->can('view-orders')) {
         return json_encode([
@@ -390,7 +399,7 @@ public function execute(array $arguments, AgentContext $context): string
             'error' => 'Insufficient permissions',
         ]);
     }
-    
+
     // Scope data to user's access level
     $orders = Order::where('user_id', $userId)->get();
     // ...
@@ -407,18 +416,18 @@ use Illuminate\Support\Facades\RateLimiter;
 public function execute(array $arguments, AgentContext $context): string
 {
     $key = 'api-calls:' . $context->getSessionId();
-    
+
     if (RateLimiter::tooManyAttempts($key, 10)) {
         $seconds = RateLimiter::availableIn($key);
-        
+
         return json_encode([
             'success' => false,
             'error' => "Rate limit exceeded. Try again in {$seconds} seconds.",
         ]);
     }
-    
+
     RateLimiter::hit($key, 60); // 10 calls per minute
-    
+
     // Make the API call
     // ...
 }
@@ -436,14 +445,14 @@ public function execute(array $arguments, AgentContext $context): string
     // Get previous conversation context
     $customerName = $context->getState('customer_name');
     $preferredLanguage = $context->getState('language', 'en');
-    
+
     // Perform operation with context
     $result = $this->performSearch($arguments, $preferredLanguage);
-    
+
     // Update context for future use
     $context->setState('last_search_query', $arguments['query']);
     $context->setState('search_results_count', count($result));
-    
+
     return json_encode($result);
 }
 ```
@@ -457,12 +466,12 @@ public function execute(array $arguments, AgentContext $context): string
 {
     $totalSteps = 100;
     $results = [];
-    
+
     for ($i = 0; $i < $totalSteps; $i++) {
         // Perform work
         $stepResult = $this->processStep($i);
         $results[] = $stepResult;
-        
+
         // Send progress update
         if ($i % 10 === 0) {
             $progress = intval(($i / $totalSteps) * 100);
@@ -473,7 +482,7 @@ public function execute(array $arguments, AgentContext $context): string
             ]);
         }
     }
-    
+
     return json_encode([
         'success' => true,
         'results' => $results,
@@ -497,16 +506,16 @@ class CompleteOrderTool implements ToolInterface
             if (!$inventory['available']) {
                 return json_encode(['success' => false, 'error' => 'Items not available']);
             }
-            
+
             // Step 2: Calculate pricing
             $pricing = $this->calculatePricing($arguments['items'], $arguments['customer_id']);
-            
+
             // Step 3: Process payment
             $payment = $this->processPayment($pricing['total'], $arguments['payment_method']);
             if (!$payment['success']) {
                 return json_encode(['success' => false, 'error' => 'Payment failed']);
             }
-            
+
             // Step 4: Create order
             $order = $this->createOrder([
                 'customer_id' => $arguments['customer_id'],
@@ -514,20 +523,20 @@ class CompleteOrderTool implements ToolInterface
                 'payment_id' => $payment['payment_id'],
                 'total' => $pricing['total'],
             ]);
-            
+
             // Step 5: Send confirmation
             $this->sendOrderConfirmation($order);
-            
+
             return json_encode([
                 'success' => true,
                 'order' => $order,
                 'message' => 'Order completed successfully',
             ]);
-            
+
         } catch (\Exception $e) {
             // Rollback any partial operations
             $this->rollbackPartialOrder($context->getState('partial_order_id'));
-            
+
             return json_encode([
                 'success' => false,
                 'error' => 'Order processing failed',
@@ -557,36 +566,36 @@ class OrderLookupToolTest extends TestCase
         $order = Order::factory()->create(['order_number' => 'ORD-12345']);
         $tool = new OrderLookupTool();
         $context = new AgentContext();
-        
+
         // Act
         $result = $tool->execute(['order_number' => 'ORD-12345'], $context);
         $response = json_decode($result, true);
-        
+
         // Assert
         $this->assertTrue($response['found']);
         $this->assertEquals('ORD-12345', $response['orders'][0]['order_number']);
     }
-    
+
     public function test_handles_missing_order()
     {
         $tool = new OrderLookupTool();
         $context = new AgentContext();
-        
+
         $result = $tool->execute(['order_number' => 'NONEXISTENT'], $context);
         $response = json_decode($result, true);
-        
+
         $this->assertFalse($response['found']);
         $this->assertStringContainsString('No orders found', $response['message']);
     }
-    
+
     public function test_validates_required_parameters()
     {
         $tool = new OrderLookupTool();
         $context = new AgentContext();
-        
+
         $result = $tool->execute([], $context);
         $response = json_decode($result, true);
-        
+
         $this->assertFalse($response['success']);
         $this->assertStringContainsString('required', $response['error']);
     }
@@ -602,17 +611,17 @@ public function test_agent_can_use_order_lookup_tool()
 {
     // Create test data
     $order = Order::factory()->create(['order_number' => 'ORD-TEST-123']);
-    
+
     // Create agent with tool
     $agent = new CustomerSupportAgent();
     $context = new AgentContext();
-    
+
     // Test agent using the tool
     $response = $agent->run(
-        "Can you look up order ORD-TEST-123?", 
+        "Can you look up order ORD-TEST-123?",
         $context
     );
-    
+
     // Verify the agent found and used the order data
     $this->assertStringContainsString('ORD-TEST-123', $response);
     $this->assertStringContainsString($order->customer->name, $response);

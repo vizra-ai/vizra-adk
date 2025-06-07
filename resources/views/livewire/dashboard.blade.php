@@ -29,7 +29,7 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Minimal Header -->
         <div class="text-center mb-12">
-            <h1 class="text-3xl font-bold text-gray-900 mb-3">Laravel Agent ADK</h1>
+            <h1 class="text-3xl font-bold text-gray-900 mb-3">Laravel Ai ADK</h1>
             <p class="text-gray-600 max-w-2xl mx-auto mb-6">
                 Build, test, and deploy intelligent AI agents with Laravel's elegant framework
             </p>

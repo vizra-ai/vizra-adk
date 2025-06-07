@@ -1,8 +1,8 @@
-# Laravel Agent ADK - Web Dashboard Implementation
+# Laravel Ai ADK - Web Dashboard Implementation
 
 ## Overview
 
-Successfully implemented a Livewire-based web dashboard for the Laravel Agent ADK package that provides a user-friendly interface for managing and monitoring AI agents.
+Successfully implemented a Livewire-based web dashboard for the Laravel Ai ADK package that provides a user-friendly interface for managing and monitoring AI agents.
 
 ## Features Implemented
 
@@ -162,4 +162,4 @@ Potential additions for future versions:
 
 ---
 
-The web dashboard successfully provides a modern, user-friendly interface for the Laravel Agent ADK package, making it easier for developers to work with AI agents in their Laravel applications.
+The web dashboard successfully provides a modern, user-friendly interface for the Laravel Ai ADK package, making it easier for developers to work with AI agents in their Laravel applications.

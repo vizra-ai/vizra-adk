@@ -7,7 +7,7 @@ use Livewire\Livewire;
 it('can render dashboard component', function () {
     Livewire::test(Dashboard::class)
         ->assertSuccessful()
-        ->assertSee('Laravel Agent ADK')
+        ->assertSee('Laravel Ai ADK')
         ->assertSee('Build, test, and deploy intelligent AI agents');
 });
 

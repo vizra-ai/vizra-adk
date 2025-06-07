@@ -1,6 +1,6 @@
 # 📊 Evaluation & Testing
 
-Building great AI agents requires more than just good code—you need systematic testing and evaluation. The Laravel Agent ADK includes powerful evaluation tools, including LLM-as-a-Judge capabilities, to help you build confidence in your agents.
+Building great AI agents requires more than just good code—you need systematic testing and evaluation. The Laravel Ai ADK includes powerful evaluation tools, including LLM-as-a-Judge capabilities, to help you build confidence in your agents.
 
 ## 🎯 Why Evaluation Matters
 
@@ -23,7 +23,7 @@ AI agents are different from traditional software:
 
 ### The Solution: Systematic Evaluation
 
-The Laravel Agent ADK provides multiple evaluation approaches:
+The Laravel Ai ADK provides multiple evaluation approaches:
 
 1. **LLM-as-a-Judge** - Use AI to evaluate AI (surprisingly effective!)
 2. **Traditional Assertions** - Programmatic checks for specific criteria
@@ -58,39 +58,39 @@ class CustomerSupportEvaluation extends BaseLlmJudgeEvaluation
     protected function getJudgePrompt(): string
     {
         return "
-        You are evaluating a customer support agent's response. 
-        
+        You are evaluating a customer support agent's response.
+
         Rate the response on these criteria (1-5 scale):
-        
+
         **Helpfulness (1-5):**
         - Does the response address the customer's question or concern?
         - Does it provide actionable next steps?
         - Is it genuinely useful to the customer?
-        
+
         **Accuracy (1-5):**
         - Is the information provided correct?
         - Are any policies or procedures mentioned accurately?
         - Are there any factual errors?
-        
+
         **Professionalism (1-5):**
         - Is the tone appropriate for customer service?
         - Is the language clear and professional?
         - Does it maintain a helpful, friendly demeanor?
-        
+
         **Completeness (1-5):**
         - Does the response fully address the question?
         - Are all parts of multi-part questions answered?
         - Is any important information missing?
-        
+
         Provide your evaluation in this format:
-        
+
         Helpfulness: [score] - [brief explanation]
-        Accuracy: [score] - [brief explanation]  
+        Accuracy: [score] - [brief explanation]
         Professionalism: [score] - [brief explanation]
         Completeness: [score] - [brief explanation]
-        
+
         Overall Score: [average of all scores]
-        
+
         Summary: [2-3 sentence summary of the response quality and any major issues]
         ";
     }
@@ -100,42 +100,42 @@ class CustomerSupportEvaluation extends BaseLlmJudgeEvaluation
         // Extract scores from the judge's response
         $scores = [];
         $summary = '';
-        
+
         // Parse helpfulness score
         if (preg_match('/Helpfulness:\s*(\d+(?:\.\d+)?)/i', $judgeResponse, $matches)) {
             $scores['helpfulness'] = (float) $matches[1];
         }
-        
+
         // Parse accuracy score
         if (preg_match('/Accuracy:\s*(\d+(?:\.\d+)?)/i', $judgeResponse, $matches)) {
             $scores['accuracy'] = (float) $matches[1];
         }
-        
+
         // Parse professionalism score
         if (preg_match('/Professionalism:\s*(\d+(?:\.\d+)?)/i', $judgeResponse, $matches)) {
             $scores['professionalism'] = (float) $matches[1];
         }
-        
+
         // Parse completeness score
         if (preg_match('/Completeness:\s*(\d+(?:\.\d+)?)/i', $judgeResponse, $matches)) {
             $scores['completeness'] = (float) $matches[1];
         }
-        
+
         // Parse overall score
         if (preg_match('/Overall Score:\s*(\d+(?:\.\d+)?)/i', $judgeResponse, $matches)) {
             $scores['overall'] = (float) $matches[1];
         }
-        
+
         // Extract summary
         if (preg_match('/Summary:\s*(.+)/is', $judgeResponse, $matches)) {
             $summary = trim($matches[1]);
         }
-        
+
         // Calculate overall score if not provided
         if (!isset($scores['overall']) && count($scores) > 0) {
             $scores['overall'] = array_sum($scores) / count($scores);
         }
-        
+
         return [
             'scores' => $scores,
             'summary' => $summary,
@@ -158,7 +158,7 @@ Create a CSV file with test scenarios:
 ```csv
 input,expected_context,scenario_type
 "My order is late, what's happening?",Order tracking and status updates,complaint
-"Can I return this item?",Return policy and process,policy_question  
+"Can I return this item?",Return policy and process,policy_question
 "I need to change my shipping address",Address modification procedures,change_request
 "Your website is broken",Technical issue escalation,technical_issue
 "I love this product! Can I buy more?",Positive feedback and upselling,positive_feedback
@@ -208,7 +208,7 @@ $results = $runner->run(
 
 // Results include:
 // - Overall pass rate
-// - Individual test results  
+// - Individual test results
 // - Score breakdowns
 // - Detailed feedback
 ```
@@ -227,11 +227,11 @@ use AaronLumsden\LaravelAiADK\Evaluations\BaseEvaluation;
 class OrderResponseEvaluation extends BaseEvaluation
 {
     protected string $name = 'Order Response Validation';
-    
+
     public function evaluate(string $input, string $response, array $context = []): array
     {
         $assertions = [];
-        
+
         // Check if order number is mentioned when provided
         if (isset($context['order_number'])) {
             $assertions['mentions_order_number'] = [
@@ -241,7 +241,7 @@ class OrderResponseEvaluation extends BaseEvaluation
                 'actual' => $this->extractOrderNumber($response),
             ];
         }
-        
+
         // Check response length (not too short, not too long)
         $wordCount = str_word_count($response);
         $assertions['appropriate_length'] = [
@@ -250,7 +250,7 @@ class OrderResponseEvaluation extends BaseEvaluation
             'expected' => '10-200 words',
             'actual' => "{$wordCount} words",
         ];
-        
+
         // Check for professional tone (no caps, no offensive language)
         $assertions['professional_tone'] = [
             'pass' => !$this->hasUnprofessionalLanguage($response),
@@ -258,7 +258,7 @@ class OrderResponseEvaluation extends BaseEvaluation
             'expected' => 'Professional language',
             'actual' => $this->hasUnprofessionalLanguage($response) ? 'Unprofessional detected' : 'Professional',
         ];
-        
+
         // Check for helpful elements (suggestions, next steps, contact info)
         $assertions['provides_help'] = [
             'pass' => $this->providesActionableHelp($response),
@@ -266,11 +266,11 @@ class OrderResponseEvaluation extends BaseEvaluation
             'expected' => 'Actionable help provided',
             'actual' => $this->providesActionableHelp($response) ? 'Help provided' : 'No clear help',
         ];
-        
+
         // Calculate overall pass rate
         $passedAssertions = array_filter($assertions, fn($a) => $a['pass']);
         $passRate = count($passedAssertions) / count($assertions);
-        
+
         return [
             'pass' => $passRate >= 0.75, // Pass if 75% of assertions pass
             'pass_rate' => $passRate,
@@ -278,7 +278,7 @@ class OrderResponseEvaluation extends BaseEvaluation
             'summary' => $this->generateSummary($assertions),
         ];
     }
-    
+
     private function extractOrderNumber(string $response): ?string
     {
         if (preg_match('/ORD-[A-Z0-9]+/', $response, $matches)) {
@@ -286,7 +286,7 @@ class OrderResponseEvaluation extends BaseEvaluation
         }
         return null;
     }
-    
+
     private function hasUnprofessionalLanguage(string $response): bool
     {
         $unprofessionalPatterns = [
@@ -294,16 +294,16 @@ class OrderResponseEvaluation extends BaseEvaluation
             '/damn|crap|stupid/i', // Inappropriate words
             '/!!{2,}/', // Multiple exclamation marks
         ];
-        
+
         foreach ($unprofessionalPatterns as $pattern) {
             if (preg_match($pattern, $response)) {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     private function providesActionableHelp(string $response): bool
     {
         $helpfulPatterns = [
@@ -312,13 +312,13 @@ class OrderResponseEvaluation extends BaseEvaluation
             '/contact|call|email|visit/i',
             '/let me|I\'ll help|I can/i',
         ];
-        
+
         foreach ($helpfulPatterns as $pattern) {
             if (preg_match($pattern, $response)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 }
@@ -335,12 +335,12 @@ class CreativeWritingEvaluation extends BaseLlmJudgeEvaluation
     {
         return "
         Evaluate this creative writing piece on:
-        
+
         **Creativity (1-5):** Original ideas, unique perspective
-        **Clarity (1-5):** Clear communication and structure  
+        **Clarity (1-5):** Clear communication and structure
         **Engagement (1-5):** Compelling and interesting content
         **Tone Consistency (1-5):** Maintains appropriate voice throughout
-        
+
         Consider the target audience and content type when evaluating.
         ";
     }
@@ -349,13 +349,13 @@ class CreativeWritingEvaluation extends BaseLlmJudgeEvaluation
 
 ### Technical Accuracy Evaluation
 
-```php
+````php
 class TechnicalAccuracyEvaluation extends BaseEvaluation
 {
     public function evaluate(string $input, string $response, array $context = []): array
     {
         $assertions = [];
-        
+
         // Check for technical terminology usage
         if (isset($context['technical_terms'])) {
             foreach ($context['technical_terms'] as $term) {
@@ -365,7 +365,7 @@ class TechnicalAccuracyEvaluation extends BaseEvaluation
                 ];
             }
         }
-        
+
         // Check for accurate code examples
         if (str_contains($input, 'code') || str_contains($input, 'example')) {
             $assertions['includes_code_example'] = [
@@ -373,7 +373,7 @@ class TechnicalAccuracyEvaluation extends BaseEvaluation
                 'message' => 'Should include code examples when requested',
             ];
         }
-        
+
         // Check for security considerations
         if (str_contains($input, 'security') || str_contains($input, 'password')) {
             $assertions['mentions_security'] = [
@@ -381,11 +381,11 @@ class TechnicalAccuracyEvaluation extends BaseEvaluation
                 'message' => 'Should address security considerations',
             ];
         }
-        
+
         return $this->calculateResults($assertions);
     }
 }
-```
+````
 
 ### Conversation Flow Evaluation
 
@@ -396,31 +396,31 @@ class ConversationFlowEvaluation extends BaseLlmJudgeEvaluation
     {
         return "
         Evaluate this conversational response considering the conversation history:
-        
+
         **Context Awareness (1-5):** Does the response show understanding of previous conversation?
         **Natural Flow (1-5):** Does the response follow naturally from the conversation?
         **Memory Usage (1-5):** Does it appropriately reference or build on previous information?
         **Question Handling (1-5):** Does it address questions or requests appropriately?
-        
+
         Consider the entire conversation context, not just the individual response.
         ";
     }
-    
+
     public function preparePrompt(string $input, string $response, array $context = []): string
     {
         $conversationHistory = $context['conversation_history'] ?? [];
-        
+
         $prompt = "CONVERSATION HISTORY:\n";
         foreach ($conversationHistory as $turn) {
             $prompt .= "User: {$turn['user']}\nAgent: {$turn['agent']}\n\n";
         }
-        
+
         $prompt .= "CURRENT EXCHANGE:\n";
         $prompt .= "User: {$input}\n";
         $prompt .= "Agent: {$response}\n\n";
-        
+
         $prompt .= $this->getJudgePrompt();
-        
+
         return $prompt;
     }
 }
@@ -437,7 +437,7 @@ class PerformanceEvaluation extends BaseEvaluation
     {
         $assertions = [];
         $metrics = $context['metrics'] ?? [];
-        
+
         // Response time evaluation
         if (isset($metrics['response_time'])) {
             $assertions['response_time'] = [
@@ -447,7 +447,7 @@ class PerformanceEvaluation extends BaseEvaluation
                 'actual' => $metrics['response_time'] . 'ms',
             ];
         }
-        
+
         // Token usage evaluation
         if (isset($metrics['tokens_used'])) {
             $assertions['token_efficiency'] = [
@@ -457,7 +457,7 @@ class PerformanceEvaluation extends BaseEvaluation
                 'actual' => $metrics['tokens_used'] . ' tokens',
             ];
         }
-        
+
         // Tool usage evaluation
         if (isset($metrics['tools_called'])) {
             $toolCallCount = count($metrics['tools_called']);
@@ -468,7 +468,7 @@ class PerformanceEvaluation extends BaseEvaluation
                 'actual' => $toolCallCount . ' tool calls',
             ];
         }
-        
+
         return $this->calculateResults($assertions);
     }
 }
@@ -489,7 +489,7 @@ $results = $abTest->run([
         'config' => ['temperature' => 0.7],
     ],
     'variant' => [
-        'agent' => 'customer_support_v2', 
+        'agent' => 'customer_support_v2',
         'config' => ['temperature' => 0.3],
     ],
 ], [
@@ -594,7 +594,7 @@ input,scenario_type,difficulty,expected_behavior
 # Daily smoke tests
 php artisan agent:evaluate customer_support BasicEvaluation --file=smoke_tests.csv
 
-# Weekly comprehensive evaluation  
+# Weekly comprehensive evaluation
 php artisan agent:evaluate customer_support ComprehensiveEvaluation --file=full_test_suite.csv
 
 # Monthly A/B tests
@@ -632,13 +632,13 @@ class MultiAgentEvaluation extends BaseEvaluation
     {
         // Test handoffs between agents
         $handoffQuality = $this->evaluateHandoff($context['conversation_flow']);
-        
+
         // Test consistency across agents
         $consistencyScore = $this->evaluateConsistency($context['agent_responses']);
-        
+
         // Test collaborative problem solving
         $collaborationScore = $this->evaluateCollaboration($context['agent_interactions']);
-        
+
         return [
             'pass' => ($handoffQuality + $consistencyScore + $collaborationScore) / 3 >= 0.7,
             'scores' => compact('handoffQuality', 'consistencyScore', 'collaborationScore'),
@@ -657,25 +657,25 @@ class AdversarialEvaluation extends BaseEvaluation
     public function evaluate(string $input, string $response, array $context = []): array
     {
         $assertions = [];
-        
+
         // Test prompt injection resistance
         $assertions['prompt_injection_resistance'] = [
             'pass' => !$this->isPromptInjection($input, $response),
             'message' => 'Should resist prompt injection attempts',
         ];
-        
+
         // Test inappropriate content filtering
         $assertions['content_filtering'] = [
             'pass' => !$this->hasInappropriateContent($response),
             'message' => 'Should not generate inappropriate content',
         ];
-        
+
         // Test information leakage
         $assertions['no_info_leakage'] = [
             'pass' => !$this->leaksSystemInfo($response),
             'message' => 'Should not leak system information',
         ];
-        
+
         return $this->calculateResults($assertions);
     }
 }

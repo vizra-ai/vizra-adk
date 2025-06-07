@@ -1,6 +1,6 @@
 # 🚀 Getting Started
 
-Welcome to Laravel Agent ADK! If you're familiar with Laravel, you'll feel right at home. If you're new to AI agents, don't worry—we'll have you building intelligent applications in no time.
+Welcome to Laravel Ai ADK! If you're familiar with Laravel, you'll feel right at home. If you're new to AI agents, don't worry—we'll have you building intelligent applications in no time.
 
 ## 📋 What You'll Need
 
@@ -68,10 +68,10 @@ use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
 
 class WeatherAgent extends BaseLlmAgent
 {
-    protected string $instructions = "You are a helpful weather assistant. 
-    Provide current weather information and forecasts in a friendly, 
-    conversational manner. Always be specific about locations and 
-    include relevant details like temperature, conditions, and any 
+    protected string $instructions = "You are a helpful weather assistant.
+    Provide current weather information and forecasts in a friendly,
+    conversational manner. Always be specific about locations and
+    include relevant details like temperature, conditions, and any
     weather warnings.";
 
     protected array $tools = [
@@ -147,7 +147,7 @@ class WeatherTool implements ToolInterface
     public function execute(array $arguments, AgentContext $context): string
     {
         $location = $arguments['location'];
-        
+
         // Call a weather API (you'll need an API key)
         $response = Http::get('https://api.openweathermap.org/data/2.5/weather', [
             'q' => $location,
@@ -162,7 +162,7 @@ class WeatherTool implements ToolInterface
         }
 
         $data = $response->json();
-        
+
         return json_encode([
             'location' => $data['name'] . ', ' . $data['sys']['country'],
             'temperature' => round($data['main']['temp']) . '°C',
@@ -292,7 +292,7 @@ class CustomerSupportAgent extends BaseLlmAgent
         $userId = $context->getState('user_id');
         $userName = $context->getState('user_name');
         $userEmail = $context->getState('user_email');
-        
+
         // Load user-specific data, preferences, order history, etc.
     }
 }
@@ -300,7 +300,7 @@ class CustomerSupportAgent extends BaseLlmAgent
 
 ## 🎨 Web Interface
 
-The Laravel Agent ADK comes with a beautiful web interface for testing and monitoring your agents.
+The Laravel Ai ADK comes with a beautiful web interface for testing and monitoring your agents.
 
 ### Step 1: Add Routes
 
@@ -364,18 +364,22 @@ In `config/agent-adk.php`:
 Now that you have a basic agent running, here's what to explore next:
 
 ### 🧠 **Make Agents Smarter**
+
 - [Agent Development Guide](agents.md) - Advanced instructions, memory, and context
 - [Tools & Capabilities](tools.md) - Database queries, API calls, file operations
 
 ### 📊 **Test & Evaluate**
+
 - [Evaluation & Testing](evaluation.md) - LLM-as-a-judge, automated testing
 - Create evaluation datasets to measure agent performance
 
 ### 💾 **Add Memory**
+
 - [Vector Memory & RAG](vector-memory.md) - Long-term memory and knowledge retrieval
 - Give agents persistent knowledge and context
 
 ### 🚀 **Deploy & Scale**
+
 - [Configuration](configuration.md) - Production settings and optimization
 - [Deployment](deployment.md) - Laravel Forge, Docker, and cloud deployment
 
@@ -384,18 +388,21 @@ Now that you have a basic agent running, here's what to explore next:
 ### Common Issues
 
 **"Agent not found" error:**
+
 ```bash
 # Make sure you've registered your agent
 php artisan agent:list
 ```
 
 **API key errors:**
+
 ```bash
 # Check your .env file and test the connection
 php artisan agent:test-connection openai
 ```
 
 **Database errors:**
+
 ```bash
 # Ensure migrations are run
 php artisan migrate:status
@@ -403,6 +410,7 @@ php artisan migrate
 ```
 
 **Tool not working:**
+
 ```php
 // Test tools individually
 $tool = new WeatherTool();

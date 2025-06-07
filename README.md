@@ -1,8 +1,8 @@
-# 🤖 Laravel Agent ADK
+# 🤖 Laravel Ai ADK
 
 > **Build, test, and deploy intelligent AI agents with Laravel's elegant syntax**
 
-Transform your Laravel applications into intelligent, conversation-driven experiences. The Laravel Agent ADK brings the power of AI agents to your favorite framework with the elegance and simplicity you already love.
+Transform your Laravel applications into intelligent, conversation-driven experiences. The Laravel Ai ADK brings the power of AI agents to your favorite framework with the elegance and simplicity you already love.
 
 [![Latest Version](https://img.shields.io/packagist/v/aaronlumsden/laravel-agent-adk)](https://packagist.org/packages/aaronlumsden/laravel-agent-adk)
 [![Total Downloads](https://img.shields.io/packagist/dt/aaronlumsden/laravel-agent-adk)](https://packagist.org/packages/aaronlumsden/laravel-agent-adk)
@@ -18,7 +18,7 @@ Transform your Laravel applications into intelligent, conversation-driven experi
 class CustomerSupportAgent extends BaseLlmAgent
 {
     protected string $instructions = "You're a helpful customer support agent...";
-    
+
     protected array $tools = [
         OrderLookupTool::class,
         RefundTool::class,
@@ -61,24 +61,31 @@ php artisan agent:chat weather_agent
 ## 🔥 Core Features
 
 ### 🧠 **Intelligent Agents**
+
 Build agents that remember, reason, and react. Each agent has persistent memory, can use tools, and maintains conversation context across sessions.
 
 ### 🛠️ **Powerful Tools**
+
 Agents can interact with your Laravel application, databases, APIs, and external services through a simple tool interface.
 
 ### 📊 **LLM-as-a-Judge Evaluation**
+
 Test your agents at scale with AI-powered quality assessment. No more manual testing—let AI judge AI performance.
 
 ### 💾 **Vector Memory & RAG**
+
 Give your agents long-term memory with semantic search. Store documents, conversations, and knowledge for intelligent retrieval.
 
 ### 🎨 **Beautiful Web Interface**
+
 A clean, modern dashboard for chatting with agents, running evaluations, and monitoring performance.
 
 ### ⚡ **Streaming Responses**
+
 Real-time, streaming conversations that feel natural and responsive.
 
 ### 🔧 **Laravel-Native**
+
 Built for Laravel developers. Uses Eloquent, Jobs, Events, and all the Laravel patterns you know and love.
 
 ## 🏗️ Architecture Overview
@@ -108,17 +115,20 @@ Built for Laravel developers. Uses Eloquent, Jobs, Events, and all the Laravel p
 ## 📚 Documentation
 
 **Just Getting Started?**
+
 - [🚀 Installation & Setup](docs/getting-started.md)
 - [🤖 Creating Your First Agent](docs/your-first-agent.md)
 - [🎯 Quick Examples](docs/examples/README.md)
 
 **Building Powerful Agents**
+
 - [🧠 Agent Development Guide](docs/agents.md)
 - [🛠️ Tools & Capabilities](docs/tools.md)
 - [💾 Vector Memory & RAG](docs/vector-memory.md)
 - [📊 Evaluation & Testing](docs/evaluation.md)
 
 **Advanced Topics**
+
 - [⚙️ Configuration](docs/configuration.md)
 - [🚀 Deployment](docs/deployment.md)
 - [🔧 Extending the ADK](docs/extending.md)
@@ -157,6 +167,7 @@ $analysis = DataAnalystAgent::ask('How many users signed up last month?')->forUs
 ## 💡 What's Different?
 
 **Other AI Libraries:**
+
 ```python
 # Complex setup, multiple configs, non-Laravel patterns
 from some_ai_lib import Agent, Tools, Memory
@@ -168,6 +179,7 @@ agent = Agent(
 ```
 
 **Laravel AI ADK:**
+
 ```php
 // Pure Laravel elegance
 class MyAgent extends BaseLlmAgent
@@ -181,13 +193,13 @@ MyAgent::ask('Help me with something')->forUser($user);
 
 ## 🎉 What Developers Are Saying
 
-> *"Finally, an AI framework that feels like Laravel. The tool system is brilliant!"*  
+> _"Finally, an AI framework that feels like Laravel. The tool system is brilliant!"_  
 > — **Sarah Chen**, Senior Laravel Developer
 
-> *"The evaluation system saved us weeks of testing. LLM-as-a-judge is a game changer."*  
+> _"The evaluation system saved us weeks of testing. LLM-as-a-judge is a game changer."_  
 > — **Marcus Rodriguez**, Technical Lead
 
-> *"Vector memory just works. No complex setup, no vendor lock-in."*  
+> _"Vector memory just works. No complex setup, no vendor lock-in."_  
 > — **Emily Watson**, Founder at StartupCo
 
 ## 🚧 Roadmap
@@ -211,13 +223,14 @@ Check out our [Contributing Guide](CONTRIBUTING.md) to get started.
 
 ## 📄 License
 
-The Laravel Agent ADK is open-sourced software licensed under the [MIT license](LICENSE.md).
+The Laravel Ai ADK is open-sourced software licensed under the [MIT license](LICENSE.md).
 
 ## 🙏 Credits
 
 Built with ❤️ by [Aaron Lumsden](https://github.com/aaronlumsden) and the Laravel community.
 
 Special thanks to:
+
 - The Laravel team for creating such an elegant framework
 - The open-source AI community for pushing boundaries
 - All our contributors and users who make this project better

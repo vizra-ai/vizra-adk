@@ -1,10 +1,10 @@
 # ⚙️ Configuration & Deployment
 
-Turn your Laravel Agent ADK from development prototype to production powerhouse. This guide covers everything from basic configuration to enterprise-scale deployment.
+Turn your Laravel Ai ADK from development prototype to production powerhouse. This guide covers everything from basic configuration to enterprise-scale deployment.
 
 ## 🎯 Configuration Overview
 
-The Laravel Agent ADK uses Laravel's familiar configuration patterns. All settings live in `config/agent-adk.php` with environment-specific overrides in `.env`.
+The Laravel Ai ADK uses Laravel's familiar configuration patterns. All settings live in `config/agent-adk.php` with environment-specific overrides in `.env`.
 
 ### Core Configuration Structure
 
@@ -170,7 +170,7 @@ SENTRY_DSN=your-sentry-dsn
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 services:
   app:
     build: .
@@ -217,7 +217,7 @@ volumes:
 
 ```yaml
 # docker-compose.production.yml
-version: '3.8'
+version: "3.8"
 services:
   # Load Balancer
   nginx:
@@ -294,23 +294,23 @@ spec:
         app: agent-adk-app
     spec:
       containers:
-      - name: app
-        image: your-registry/agent-adk:latest
-        env:
-        - name: APP_ENV
-          value: "production"
-        - name: OPENAI_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: agent-adk-secrets
-              key: openai-api-key
-        resources:
-          requests:
-            cpu: 200m
-            memory: 512Mi
-          limits:
-            cpu: 500m
-            memory: 1Gi
+        - name: app
+          image: your-registry/agent-adk:latest
+          env:
+            - name: APP_ENV
+              value: "production"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: agent-adk-secrets
+                  key: openai-api-key
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
 ---
 apiVersion: v1
 kind: Service
@@ -320,8 +320,8 @@ spec:
   selector:
     app: agent-adk-app
   ports:
-  - port: 80
-    targetPort: 8000
+    - port: 80
+      targetPort: 8000
   type: LoadBalancer
 ```
 
@@ -343,10 +343,10 @@ $FORGE_COMPOSER install --no-interaction --prefer-dist --optimize-autoloader
 if [ -f artisan ]; then
     # Update vector memory indexes
     php artisan agent:vector-memory:optimize
-    
+
     # Warm up agent caches
     php artisan agent:cache:warm
-    
+
     # Run any pending evaluations
     php artisan agent:evaluation:cleanup
 fi
@@ -382,8 +382,8 @@ AGENT_ADK_UI_ENABLED=false
 
 ```yaml
 # aws/cloudformation-template.yml
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Laravel Agent ADK Infrastructure'
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Laravel Ai ADK Infrastructure"
 
 Resources:
   # ECS Cluster for Application
@@ -407,7 +407,7 @@ Resources:
     Properties:
       DBInstanceClass: db.t3.medium
       Engine: mysql
-      EngineVersion: '8.0'
+      EngineVersion: "8.0"
       AllocatedStorage: 100
       MasterUsername: !Ref DBUsername
       MasterUserPassword: !Ref DBPassword
@@ -425,7 +425,7 @@ Resources:
     Type: AWS::OpenSearchService::Domain
     Properties:
       DomainName: agent-adk-vectors
-      ElasticsearchVersion: '7.10'
+      ElasticsearchVersion: "7.10"
       ClusterConfig:
         InstanceType: t3.small.search
         InstanceCount: 1
@@ -437,33 +437,33 @@ Resources:
 # gcp/cloudbuild.yml
 steps:
   # Build Docker image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/agent-adk:$COMMIT_SHA', '.']
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/$PROJECT_ID/agent-adk:$COMMIT_SHA", "."]
 
   # Push to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/agent-adk:$COMMIT_SHA']
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/$PROJECT_ID/agent-adk:$COMMIT_SHA"]
 
   # Deploy to Cloud Run
-  - name: 'gcr.io/cloud-builders/gcloud'
+  - name: "gcr.io/cloud-builders/gcloud"
     args:
-    - 'run'
-    - 'deploy'
-    - 'agent-adk'
-    - '--image'
-    - 'gcr.io/$PROJECT_ID/agent-adk:$COMMIT_SHA'
-    - '--region'
-    - 'us-central1'
-    - '--platform'
-    - 'managed'
-    - '--set-env-vars'
-    - 'APP_ENV=production,OPENAI_API_KEY=$$OPENAI_API_KEY'
-    secretEnv: ['OPENAI_API_KEY']
+      - "run"
+      - "deploy"
+      - "agent-adk"
+      - "--image"
+      - "gcr.io/$PROJECT_ID/agent-adk:$COMMIT_SHA"
+      - "--region"
+      - "us-central1"
+      - "--platform"
+      - "managed"
+      - "--set-env-vars"
+      - "APP_ENV=production,OPENAI_API_KEY=$$OPENAI_API_KEY"
+    secretEnv: ["OPENAI_API_KEY"]
 
 availableSecrets:
   secretManager:
-  - versionName: projects/$PROJECT_ID/secrets/openai-api-key/versions/latest
-    env: 'OPENAI_API_KEY'
+    - versionName: projects/$PROJECT_ID/secrets/openai-api-key/versions/latest
+      env: "OPENAI_API_KEY"
 ```
 
 ## 📊 Performance Optimization
@@ -529,7 +529,7 @@ public function up()
 
     // Add partitioning for large tables (MySQL 8.0+)
     DB::statement('
-        ALTER TABLE agent_messages 
+        ALTER TABLE agent_messages
         PARTITION BY RANGE (YEAR(created_at)) (
             PARTITION p2024 VALUES LESS THAN (2025),
             PARTITION p2025 VALUES LESS THAN (2026),

@@ -1,4 +1,4 @@
-# Comprehensive Feature Test Plan for Laravel Agent ADK
+# Comprehensive Feature Test Plan for Laravel Ai ADK
 
 ## Overview
 
@@ -7,16 +7,19 @@ This document outlines a comprehensive feature test plan to validate all major f
 ## Current Test Coverage Analysis
 
 ### Existing Feature Tests
+
 - `AgentFacadeTest.php` - Basic facade functionality
-- `AgentIntegrationTest.php` - Integration workflows 
+- `AgentIntegrationTest.php` - Integration workflows
 - `PackageComponentsTest.php` - Component resolution and registration
 
 ### Coverage Gaps Identified
+
 Based on README analysis, the following areas need comprehensive feature test coverage:
 
 ## 1. Agent Creation and Registration Workflows
 
 ### 1.1 Class-Based Agent Registration
+
 **File**: `tests/Feature/AgentRegistrationTest.php`
 
 - **Test**: Agent class registration via AgentBuilder
@@ -28,6 +31,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Agent registration with fluent configuration overrides
 
 ### 1.2 Ad-Hoc Agent Definition
+
 **File**: `tests/Feature/AdHocAgentTest.php`
 
 - **Test**: Creating agents with `Agent::define()` fluent builder
@@ -37,7 +41,8 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Ad-hoc agent registration and retrieval
 - **Test**: Ad-hoc agent execution and response generation
 
-### 1.3 Agent Lifecycle Management  
+### 1.3 Agent Lifecycle Management
+
 **File**: `tests/Feature/AgentLifecycleTest.php`
 
 - **Test**: Agent instantiation and configuration loading
@@ -48,6 +53,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 2. Tool System Integration
 
 ### 2.1 Tool Registration and Discovery
+
 **File**: `tests/Feature/ToolSystemTest.php`
 
 - **Test**: Tool registration via agent `registerTools()` method
@@ -59,6 +65,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Multiple tools registration and selection
 
 ### 2.2 Tool Execution Workflows
+
 **File**: `tests/Feature/ToolExecutionTest.php`
 
 - **Test**: Sequential tool execution within single agent interaction
@@ -69,6 +76,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Tool execution logging and monitoring
 
 ### 2.3 Built-in Tools
+
 **File**: `tests/Feature/BuiltinToolsTest.php`
 
 - **Test**: DelegateToSubAgentTool automatic registration
@@ -79,6 +87,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 3. Sub-Agent Delegation System
 
 ### 3.1 Sub-Agent Registration
+
 **File**: `tests/Feature/SubAgentRegistrationTest.php`
 
 - **Test**: Sub-agent registration via `registerSubAgents()` method
@@ -89,6 +98,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Sub-agent retrieval by name
 
 ### 3.2 Delegation Workflows
+
 **File**: `tests/Feature/SubAgentDelegationTest.php`
 
 - **Test**: Parent agent delegates task to sub-agent
@@ -99,6 +109,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Failed delegation handling and fallback
 
 ### 3.3 Nested Sub-Agent Systems
+
 **File**: `tests/Feature/NestedSubAgentTest.php`
 
 - **Test**: Multi-level delegation (sub-agents with their own sub-agents)
@@ -108,6 +119,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Performance impact of nested delegations
 
 ### 3.4 Delegation Event System
+
 **File**: `tests/Feature/DelegationEventsTest.php`
 
 - **Test**: TaskDelegated event dispatch on delegation
@@ -119,6 +131,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 4. Context and State Management
 
 ### 4.1 Session Management
+
 **File**: `tests/Feature/SessionManagementTest.php`
 
 - **Test**: Session creation with unique session IDs
@@ -129,6 +142,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Session data integrity and validation
 
 ### 4.2 Conversation History
+
 **File**: `tests/Feature/ConversationHistoryTest.php`
 
 - **Test**: Message history accumulation over multiple turns
@@ -139,6 +153,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Tool call history tracking
 
 ### 4.3 State Persistence
+
 **File**: `tests/Feature/StatePersistenceTest.php`
 
 - **Test**: Agent state storage and retrieval
@@ -150,16 +165,18 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 5. Multi-LLM Provider Support
 
 ### 5.1 Provider Configuration
+
 **File**: `tests/Feature/LlmProviderTest.php`
 
 - **Test**: OpenAI provider configuration and usage
-- **Test**: Anthropic provider configuration and usage  
+- **Test**: Anthropic provider configuration and usage
 - **Test**: Gemini provider configuration and usage
 - **Test**: Provider switching between agents
 - **Test**: Provider fallback mechanisms
 - **Test**: Provider-specific parameter handling
 
 ### 5.2 Model Configuration
+
 **File**: `tests/Feature/ModelConfigurationTest.php`
 
 - **Test**: Model selection per agent
@@ -171,6 +188,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 6. Event System Integration
 
 ### 6.1 Core Events
+
 **File**: `tests/Feature/EventSystemTest.php`
 
 - **Test**: AgentExecutionStarting event dispatch
@@ -183,6 +201,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: StateUpdated event dispatch
 
 ### 6.2 Event Listeners
+
 **File**: `tests/Feature/EventListenersTest.php`
 
 - **Test**: Event listener registration and execution
@@ -194,6 +213,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 7. Evaluation Framework
 
 ### 7.1 Evaluation Creation and Execution
+
 **File**: `tests/Feature/EvaluationSystemTest.php`
 
 - **Test**: Evaluation class generation via Artisan command
@@ -204,6 +224,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Evaluation error handling and recovery
 
 ### 7.2 Assertion Methods
+
 **File**: `tests/Feature/EvaluationAssertionsTest.php`
 
 - **Test**: Basic content assertions (contains, length, format)
@@ -214,6 +235,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Custom assertion method creation
 
 ### 7.3 LLM Judge Integration
+
 **File**: `tests/Feature/LlmJudgeTest.php`
 
 - **Test**: LLM judge configuration and setup
@@ -225,6 +247,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 8. API Endpoints and Routes
 
 ### 8.1 Built-in API Routes
+
 **File**: `tests/Feature/ApiRoutesTest.php`
 
 - **Test**: Agent interaction endpoint functionality
@@ -235,6 +258,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Authentication and authorization
 
 ### 8.2 Middleware Integration
+
 **File**: `tests/Feature/MiddlewareTest.php`
 
 - **Test**: Custom middleware application
@@ -246,6 +270,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 9. Configuration Management
 
 ### 9.1 Package Configuration
+
 **File**: `tests/Feature/ConfigurationTest.php`
 
 - **Test**: Configuration file publishing and loading
@@ -255,6 +280,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Configuration validation and error reporting
 
 ### 9.2 Runtime Configuration
+
 **File**: `tests/Feature/RuntimeConfigTest.php`
 
 - **Test**: Dynamic configuration changes
@@ -265,6 +291,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 10. Error Handling and Recovery
 
 ### 10.1 Exception Handling
+
 **File**: `tests/Feature/ErrorHandlingTest.php`
 
 - **Test**: LLM API error handling and user-friendly messages
@@ -275,6 +302,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Validation error handling and reporting
 
 ### 10.2 Graceful Degradation
+
 **File**: `tests/Feature/GracefulDegradationTest.php`
 
 - **Test**: Service unavailability handling
@@ -286,6 +314,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 11. Performance and Optimization
 
 ### 11.1 Response Caching
+
 **File**: `tests/Feature/CachingTest.php`
 
 - **Test**: Agent response caching implementation
@@ -295,6 +324,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Cache key generation and uniqueness
 
 ### 11.2 Memory and Resource Management
+
 **File**: `tests/Feature/ResourceManagementTest.php`
 
 - **Test**: Memory usage monitoring and limits
@@ -306,6 +336,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 12. Security Features
 
 ### 12.1 Input Validation and Sanitization
+
 **File**: `tests/Feature/SecurityTest.php`
 
 - **Test**: Input length validation and limits
@@ -316,6 +347,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: File upload security
 
 ### 12.2 Authentication and Authorization
+
 **File**: `tests/Feature/AuthenticationTest.php`
 
 - **Test**: API key validation and security
@@ -327,6 +359,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 13. Database Integration
 
 ### 13.1 Migration and Schema
+
 **File**: `tests/Feature/DatabaseSchemaTest.php`
 
 - **Test**: Migration execution and rollback
@@ -336,6 +369,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Data type validation
 
 ### 13.2 Model Relationships
+
 **File**: `tests/Feature/ModelRelationshipsTest.php`
 
 - **Test**: AgentSession and AgentMessage relationships
@@ -347,6 +381,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 14. Artisan Commands
 
 ### 14.1 Generation Commands
+
 **File**: `tests/Feature/ArtisanCommandsTest.php`
 
 - **Test**: `agent:make:agent` command functionality
@@ -356,6 +391,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Generated file validation and structure
 
 ### 14.2 Management Commands
+
 **File**: `tests/Feature/ManagementCommandsTest.php`
 
 - **Test**: `agent:chat` interactive command
@@ -367,6 +403,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## 15. Package Installation and Setup
 
 ### 15.1 Installation Process
+
 **File**: `tests/Feature/InstallationTest.php`
 
 - **Test**: Package installation via Composer
@@ -376,6 +413,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 - **Test**: Directory structure creation
 
 ### 15.2 Environment Setup
+
 **File**: `tests/Feature/EnvironmentSetupTest.php`
 
 - **Test**: Environment variable configuration
@@ -387,24 +425,28 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## Implementation Priority
 
 ### Phase 1: Core Functionality (Immediate)
+
 1. Agent Creation and Registration Workflows
 2. Tool System Integration
 3. Context and State Management
 4. Error Handling and Recovery
 
 ### Phase 2: Advanced Features (Next Sprint)
+
 5. Sub-Agent Delegation System
 6. Multi-LLM Provider Support
 7. Event System Integration
 8. API Endpoints and Routes
 
 ### Phase 3: Quality and Performance (Following Sprint)
+
 9. Evaluation Framework
 10. Performance and Optimization
 11. Security Features
 12. Configuration Management
 
 ### Phase 4: Operations and Maintenance (Final)
+
 13. Database Integration
 14. Artisan Commands
 15. Package Installation and Setup
@@ -412,17 +454,20 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## Test Data Requirements
 
 ### CSV Files for Evaluations
+
 - `customer_service_scenarios.csv` - Customer support test cases
 - `technical_support_scenarios.csv` - Technical issue test cases
 - `quality_assessment_scenarios.csv` - Response quality evaluation
 - `safety_content_scenarios.csv` - Content safety validation
 
 ### Mock Services
+
 - Mock LLM providers for testing without API calls
 - Mock external APIs for tool testing
 - Mock database connections for isolation testing
 
 ### Test Agents and Tools
+
 - Simple test agents for basic functionality
 - Complex test agents with multiple tools and sub-agents
 - Test tools with various parameter types and validation
@@ -431,6 +476,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 ## Success Criteria
 
 Each test area should achieve:
+
 - **100% code coverage** for critical paths
 - **Comprehensive edge case testing** for all user inputs
 - **Performance benchmarking** with acceptable thresholds

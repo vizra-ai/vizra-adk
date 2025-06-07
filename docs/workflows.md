@@ -1,6 +1,6 @@
 # Workflow Agents Guide
 
-Workflow Agents provide powerful orchestration capabilities for your Laravel Agent ADK applications. Unlike LLM agents that use artificial intelligence for decision-making, Workflow Agents control the execution flow of other agents in predefined, deterministic patterns.
+Workflow Agents provide powerful orchestration capabilities for your Laravel Ai ADK applications. Unlike LLM agents that use artificial intelligence for decision-making, Workflow Agents control the execution flow of other agents in predefined, deterministic patterns.
 
 ## Table of Contents
 
@@ -18,6 +18,7 @@ Workflow Agents provide powerful orchestration capabilities for your Laravel Age
 ## Overview
 
 Workflow Agents are perfect for:
+
 - **Structured Processes**: When you need predictable execution patterns
 - **Multi-step Operations**: Breaking complex tasks into manageable steps
 - **Parallel Processing**: Running multiple agents simultaneously
@@ -30,11 +31,11 @@ Workflow Agents are perfect for:
 ✅ **Efficient**: No LLM overhead for flow control  
 ✅ **Flexible**: Combine different workflow types  
 ✅ **Laravel-friendly**: Familiar fluent syntax  
-✅ **Testable**: Easy to unit test and debug  
+✅ **Testable**: Easy to unit test and debug
 
 ## Installation & Setup
 
-Workflow Agents are included with Laravel Agent ADK v2.0+. No additional installation required.
+Workflow Agents are included with Laravel Ai ADK v2.0+. No additional installation required.
 
 ```php
 use AaronLumsden\LaravelAiADK\Facades\Workflow;
@@ -43,15 +44,19 @@ use AaronLumsden\LaravelAiADK\Facades\Workflow;
 ## Workflow Types
 
 ### 1. Sequential Workflows
+
 Execute agents one after another, passing results between steps.
 
-### 2. Parallel Workflows  
+### 2. Parallel Workflows
+
 Run multiple agents simultaneously and collect results.
 
 ### 3. Conditional Workflows
+
 Route to different agents based on conditions (if-else logic).
 
 ### 4. Loop Workflows
+
 Repeat agent execution based on conditions (while, until, times, forEach).
 
 ## Sequential Workflows
@@ -250,18 +255,18 @@ $result = Workflow::conditional()
 $result = Workflow::conditional()
     // Equality check
     ->whenEquals('status', 'active', 'ActiveUserAgent')
-    
+
     // Numeric comparisons
     ->whenGreaterThan('score', 90, 'HighScoreAgent')
     ->whenLessThan('age', 18, 'MinorAgent')
-    
+
     // Existence checks
     ->whenExists('email', 'EmailAgent')
     ->whenEmpty('description', 'NoDescriptionAgent')
-    
+
     // Regular expression matching
     ->whenMatches('email', '/^.+@.+\..+$/', 'ValidEmailAgent')
-    
+
     // Fallback
     ->otherwise('DefaultAgent')
     ->execute($input);
@@ -288,7 +293,7 @@ $result = Workflow::conditional()
 ```php
 $result = Workflow::conditional()
     ->when(function($input) {
-        return $input['user']['age'] >= 18 && 
+        return $input['user']['age'] >= 18 &&
                $input['user']['verified'] === true &&
                $input['user']['subscription'] === 'active';
     }, 'FullAccessAgent')
@@ -647,10 +652,10 @@ class UserOnboardingWorkflow extends SequentialWorkflow
 public function test_user_onboarding_workflow()
 {
     Agent::fake();
-    
+
     $workflow = new UserOnboardingWorkflow();
     $result = $workflow->build()->execute($userData);
-    
+
     Agent::assertCalled('ValidateUserAgent');
     Agent::assertCalled('CreateAccountAgent');
     $this->assertTrue($result['final_result']['success']);
@@ -792,4 +797,4 @@ reset(): self
 
 ---
 
-For more information, see the [Laravel Agent ADK Documentation](../README.md).
+For more information, see the [Laravel Ai ADK Documentation](../README.md).
