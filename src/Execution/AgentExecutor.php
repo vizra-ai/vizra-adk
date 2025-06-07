@@ -1,0 +1,343 @@
+<?php
+
+namespace AaronLumsden\LaravelAgentADK\Execution;
+
+use AaronLumsden\LaravelAgentADK\Services\AgentManager;
+use AaronLumsden\LaravelAgentADK\Services\StateManager;
+use AaronLumsden\LaravelAgentADK\Jobs\AgentJob;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+use Illuminate\Foundation\Bus\Dispatchable;
+
+class AgentExecutor
+{
+    protected string $agentClass;
+    protected mixed $input;
+    protected string $mode;
+    protected ?Model $user = null;
+    protected ?string $sessionId = null;
+    protected array $context = [];
+    protected bool $streaming = false;
+    protected array $parameters = [];
+    protected bool $async = false;
+    protected ?string $queue = null;
+    protected ?int $delay = null;
+    protected int $tries = 3;
+    protected ?int $timeout = null;
+
+    public function __construct(string $agentClass, mixed $input, string $mode = 'ask')
+    {
+        $this->agentClass = $agentClass;
+        $this->input = $input;
+        $this->mode = $mode;
+    }
+
+    /**
+     * Set the user context for this execution
+     */
+    public function forUser(?Model $user): self
+    {
+        $this->user = $user;
+        return $this;
+    }
+
+    /**
+     * Set a specific session ID
+     */
+    public function withSession(string $sessionId): self
+    {
+        $this->sessionId = $sessionId;
+        return $this;
+    }
+
+    /**
+     * Add additional context data
+     */
+    public function withContext(array $context): self
+    {
+        $this->context = array_merge($this->context, $context);
+        return $this;
+    }
+
+    /**
+     * Enable streaming for this execution
+     */
+    public function streaming(bool $enabled = true): self
+    {
+        $this->streaming = $enabled;
+        return $this;
+    }
+
+    /**
+     * Set agent parameters (temperature, max_tokens, etc.)
+     */
+    public function withParameters(array $parameters): self
+    {
+        $this->parameters = array_merge($this->parameters, $parameters);
+        return $this;
+    }
+
+    /**
+     * Set temperature for this execution
+     */
+    public function temperature(float $temperature): self
+    {
+        $this->parameters['temperature'] = $temperature;
+        return $this;
+    }
+
+    /**
+     * Set max tokens for this execution
+     */
+    public function maxTokens(int $maxTokens): self
+    {
+        $this->parameters['max_tokens'] = $maxTokens;
+        return $this;
+    }
+
+    /**
+     * Execute the agent asynchronously using Laravel queues
+     */
+    public function async(bool $enabled = true): self
+    {
+        $this->async = $enabled;
+        return $this;
+    }
+
+    /**
+     * Specify which queue to use for async execution
+     */
+    public function onQueue(string $queue): self
+    {
+        $this->queue = $queue;
+        $this->async = true; // Auto-enable async when queue is specified
+        return $this;
+    }
+
+    /**
+     * Delay the execution by specified seconds
+     */
+    public function delay(int $seconds): self
+    {
+        $this->delay = $seconds;
+        return $this;
+    }
+
+    /**
+     * Set number of retry attempts for failed executions
+     */
+    public function tries(int $tries): self
+    {
+        $this->tries = $tries;
+        return $this;
+    }
+
+    /**
+     * Set timeout for agent execution
+     */
+    public function timeout(int $seconds): self
+    {
+        $this->timeout = $seconds;
+        return $this;
+    }
+
+    /**
+     * Execute the agent and return the response
+     */
+    public function execute(): mixed
+    {
+        // If async execution is requested, dispatch to queue
+        if ($this->async) {
+            return $this->dispatchAsync();
+        }
+
+        return $this->executeSynchronously();
+    }
+
+    /**
+     * Execute the agent synchronously
+     */
+    protected function executeSynchronously(): mixed
+    {
+        $agentManager = app(AgentManager::class);
+        $stateManager = app(StateManager::class);
+
+        // Generate session ID if not provided
+        $sessionId = $this->resolveSessionId();
+        
+        // Get agent name
+        $agentName = $this->getAgentName();
+
+        // Load or create agent context
+        $agentContext = $stateManager->loadContext($agentName, $sessionId, $this->input);
+
+        // Add execution mode to context
+        $agentContext->setState('execution_mode', $this->mode);
+
+        // Add user information to context
+        if ($this->user) {
+            $agentContext->setState('user_id', $this->user->getKey());
+            $agentContext->setState('user_model', get_class($this->user));
+            $agentContext->setState('user_data', $this->user->toArray());
+            
+            // Add user-specific context helpers
+            if (method_exists($this->user, 'email')) {
+                $agentContext->setState('user_email', $this->user->email);
+            }
+            if (method_exists($this->user, 'name')) {
+                $agentContext->setState('user_name', $this->user->name);
+            }
+        }
+
+        // Add additional context
+        foreach ($this->context as $key => $value) {
+            $agentContext->setState($key, $value);
+        }
+
+        // Add agent parameters
+        if (!empty($this->parameters)) {
+            $agentContext->setState('agent_parameters', $this->parameters);
+        }
+
+        // Set streaming mode
+        if ($this->streaming) {
+            $agentContext->setState('streaming', true);
+        }
+
+        // Set timeout if specified
+        if ($this->timeout) {
+            set_time_limit($this->timeout);
+        }
+
+        // Execute the agent
+        return $agentManager->run($agentName, $this->input, $sessionId);
+    }
+
+    /**
+     * Dispatch the agent execution to a queue
+     */
+    protected function dispatchAsync(): mixed
+    {
+        $job = new AgentJob(
+            $this->agentClass,
+            $this->input,
+            $this->mode,
+            $this->resolveSessionId(),
+            $this->buildJobContext()
+        );
+
+        // Configure job settings
+        if ($this->queue) {
+            $job->onQueue($this->queue);
+        }
+
+        if ($this->delay) {
+            $job->delay($this->delay);
+        }
+
+        if ($this->tries) {
+            $job->tries = $this->tries;
+        }
+
+        if ($this->timeout) {
+            $job->timeout = $this->timeout;
+        }
+
+        // Dispatch the job
+        dispatch($job);
+
+        // Return job ID for tracking
+        return [
+            'job_dispatched' => true,
+            'job_id' => $job->getJobId(),
+            'queue' => $this->queue ?: 'default',
+            'agent' => $this->getAgentName(),
+            'mode' => $this->mode,
+        ];
+    }
+
+    /**
+     * Build context data for job serialization
+     */
+    protected function buildJobContext(): array
+    {
+        $context = [
+            'execution_mode' => $this->mode,
+            'context_data' => $this->context,
+            'parameters' => $this->parameters,
+            'streaming' => $this->streaming,
+        ];
+
+        if ($this->user) {
+            $context['user'] = [
+                'id' => $this->user->getKey(),
+                'model' => get_class($this->user),
+                'data' => $this->user->toArray(),
+            ];
+
+            // Add user-specific helpers
+            if (method_exists($this->user, 'email')) {
+                $context['user']['email'] = $this->user->email;
+            }
+            if (method_exists($this->user, 'name')) {
+                $context['user']['name'] = $this->user->name;
+            }
+        }
+
+        return $context;
+    }
+
+    /**
+     * Get the agent name from the class
+     */
+    protected function getAgentName(): string
+    {
+        // Try to instantiate the agent to get its name
+        $agent = app($this->agentClass);
+        
+        if (method_exists($agent, 'getName')) {
+            return $agent->getName();
+        }
+
+        // Fallback to class name transformation
+        $className = class_basename($this->agentClass);
+        return Str::snake(str_replace('Agent', '', $className));
+    }
+
+    /**
+     * Resolve the session ID
+     */
+    protected function resolveSessionId(): string
+    {
+        if ($this->sessionId) {
+            return $this->sessionId;
+        }
+
+        if ($this->user) {
+            return 'user_' . $this->user->getKey() . '_' . Str::random(8);
+        }
+
+        return 'session_' . Str::random(12);
+    }
+
+    /**
+     * Magic method to auto-execute when used as string
+     */
+    public function __toString(): string
+    {
+        try {
+            $result = $this->execute();
+            return is_string($result) ? $result : (string) $result;
+        } catch (\Exception $e) {
+            return "Error executing agent: " . $e->getMessage();
+        }
+    }
+
+    /**
+     * Magic method to execute when called
+     */
+    public function __invoke(): mixed
+    {
+        return $this->execute();
+    }
+}
