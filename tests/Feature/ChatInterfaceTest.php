@@ -6,7 +6,8 @@ use Livewire\Livewire;
 test('chat interface loads correctly', function () {
     Livewire::test(ChatInterface::class)
         ->assertStatus(200)
-        ->assertSee('Agent Chat Interface');
+        ->assertSee('Chat Interface')
+        ->assertSee('Interactive conversations with your AI agents');
 });
 
 test('can open and close load session modal', function () {

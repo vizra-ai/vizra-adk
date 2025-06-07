@@ -292,11 +292,15 @@ class AgentExecutor
      */
     protected function getAgentName(): string
     {
-        // Try to instantiate the agent to get its name
-        $agent = app($this->agentClass);
-        
-        if (method_exists($agent, 'getName')) {
-            return $agent->getName();
+        try {
+            // Try to instantiate the agent to get its name
+            $agent = app($this->agentClass);
+            
+            if (method_exists($agent, 'getName')) {
+                return $agent->getName();
+            }
+        } catch (\Exception $e) {
+            // If agent instantiation fails, fall back to class name transformation
         }
 
         // Fallback to class name transformation

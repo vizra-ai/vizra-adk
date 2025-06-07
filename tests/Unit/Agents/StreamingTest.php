@@ -3,7 +3,6 @@
 use AaronLumsden\LaravelAgentADK\Agents\BaseLlmAgent;
 use AaronLumsden\LaravelAgentADK\System\AgentContext;
 use Prism\Prism\Enums\Provider;
-use Generator;
 use Prism\Prism\Text\Response;
 
 beforeEach(function () {

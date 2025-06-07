@@ -11,6 +11,7 @@ use AaronLumsden\LaravelAgentADK\Services\AgentRegistry;
 use AaronLumsden\LaravelAgentADK\Services\StateManager;
 use AaronLumsden\LaravelAgentADK\Services\MemoryManager;
 use AaronLumsden\LaravelAgentADK\Services\AgentManager;
+use AaronLumsden\LaravelAgentADK\Services\WorkflowManager;
 use AaronLumsden\LaravelAgentADK\Services\Tracer;
 use AaronLumsden\LaravelAgentADK\Services\AnalyticsService;
 use AaronLumsden\LaravelAgentADK\Livewire\Dashboard;
@@ -72,6 +73,13 @@ class AgentServiceProvider extends ServiceProvider
 
         // Ensure the facade accessor points to the AgentManager binding
         $this->app->alias(AgentManager::class, 'laravel-agent-adk.manager');
+
+        // Register WorkflowManager for the Workflow facade
+        $this->app->singleton(WorkflowManager::class, function (Application $app) {
+            return new WorkflowManager();
+        });
+
+        $this->app->alias(WorkflowManager::class, 'laravel-agent-adk.workflow');
     }
 
     public function boot(): void

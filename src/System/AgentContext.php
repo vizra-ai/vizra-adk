@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
  */
 class AgentContext
 {
-    protected string $sessionId;
+    protected ?string $sessionId;
     protected mixed $userInput;
     protected array $state = [];
     protected Collection $conversationHistory; // Collection of AgentMessage arrays or objects
@@ -18,13 +18,13 @@ class AgentContext
     /**
      * AgentContext constructor.
      *
-     * @param string $sessionId Unique identifier for the session.
+     * @param string|null $sessionId Unique identifier for the session.
      * @param mixed|null $userInput Initial user input.
      * @param array $initialState Optional initial state data.
      * @param Collection|null $conversationHistory Optional initial conversation history.
      */
     public function __construct(
-        string $sessionId,
+        ?string $sessionId,
         mixed $userInput = null,
         array $initialState = [],
         ?Collection $conversationHistory = null
@@ -37,9 +37,9 @@ class AgentContext
 
     /**
      * Get the session identifier.
-     * @return string
+     * @return string|null
      */
-    public function getSessionId(): string
+    public function getSessionId(): ?string
     {
         return $this->sessionId;
     }

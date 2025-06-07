@@ -38,6 +38,9 @@ class TestCase extends Orchestra
 
         // Load your package config if needed
         $app['config']->set('agent-adk', require __DIR__ . '/../config/agent-adk.php');
+        
+        // Override vector memory driver for tests (SQLite doesn't support pgvector)
+        $app['config']->set('agent-adk.vector_memory.driver', 'sqlite');
     }
 
     protected function setUp(): void

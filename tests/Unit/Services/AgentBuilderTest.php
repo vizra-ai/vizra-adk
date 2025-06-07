@@ -120,7 +120,7 @@ class TestBuilderAgent extends BaseLlmAgent
     protected string $instructions = 'Default test instructions';
     protected string $model = 'gpt-3.5-turbo';
 
-    protected function loadTools(): void
+    public function loadTools(): void
     {
         // No tools for testing
     }

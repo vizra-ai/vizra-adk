@@ -7,21 +7,21 @@ use Livewire\Livewire;
 it('can render dashboard component', function () {
     Livewire::test(Dashboard::class)
         ->assertSuccessful()
-        ->assertSee('Welcome to Laravel Agent ADK')
-        ->assertSee('Build powerful AI agents with Laravel');
+        ->assertSee('Laravel Agent ADK')
+        ->assertSee('Build, test, and deploy intelligent AI agents');
 });
 
 it('displays package information', function () {
     Livewire::test(Dashboard::class)
-        ->assertSee('Package Version')
-        ->assertSee('Registered Agents')
-        ->assertSee('Status');
+        ->assertSee('agents')
+        ->assertSee('Quick Start')
+        ->assertSee('Your Agents');
 });
 
 it('shows quick start commands', function () {
     Livewire::test(Dashboard::class)
         ->assertSee('php artisan agent:make:agent MyAgent')
         ->assertSee('php artisan agent:make:tool MyTool')
-        ->assertSee('php artisan agent:chat agent_name')
-        ->assertSee('php artisan agent:eval eval_name');
+        ->assertSee('php artisan agent:make:eval MyEvaluation')
+        ->assertSee('php artisan agent:list');
 });
