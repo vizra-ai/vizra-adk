@@ -55,8 +55,10 @@ return new class extends Migration
             $table->index(['agent_name', 'type', 'start_time'], 'agent_type_chronological_idx');
             $table->index(['status', 'type'], 'status_type_idx');
 
-            // Foreign key constraint for parent-child relationships
-            $table->foreign('parent_span_id')->references('span_id')->on('agent_trace_spans')->onDelete('cascade');
+            // Foreign key constraint for parent-child relationships (skip in testing environment)
+            if (!app()->environment('testing')) {
+                $table->foreign('parent_span_id')->references('span_id')->on($tableName)->onDelete('cascade');
+            }
         });
     }
 

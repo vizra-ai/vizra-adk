@@ -16,6 +16,10 @@ class LoopWorkflowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        
+        // Ensure fresh Mockery state for each test
+        Mockery::close();
+        
         $this->workflow = new LoopWorkflow();
         $this->context = new AgentContext('test-session');
     }
@@ -25,6 +29,14 @@ class LoopWorkflowTest extends TestCase
         Agent::shouldReceive('run')
             ->andReturn($returnValue)
             ->byDefault();
+    }
+    
+    protected function resetAgentMock()
+    {
+        // Clear any existing Agent facade expectations
+        if (Agent::isFake()) {
+            Agent::clearResolvedInstances();
+        }
     }
 
     protected function tearDown(): void
@@ -96,7 +108,7 @@ class LoopWorkflowTest extends TestCase
         
         Agent::shouldReceive('run')
             ->times(3)
-            ->with('CounterAgent', Mockery::any(), null)
+            ->with('CounterAgent', Mockery::any(), 'test-session')
             ->andReturnUsing(function() use (&$counter) {
                 return ['counter' => ++$counter];
             });
@@ -116,17 +128,17 @@ class LoopWorkflowTest extends TestCase
     public function test_while_loop_execution()
     {
         Agent::shouldReceive('run')
-            ->with('CounterAgent', ['counter' => 0], null)
+            ->with('CounterAgent', ['counter' => 0], 'test-session')
             ->once()
             ->andReturn(['counter' => 1]);
 
         Agent::shouldReceive('run')
-            ->with('CounterAgent', ['counter' => 1], null)
+            ->with('CounterAgent', ['counter' => 1], 'test-session')
             ->once()
             ->andReturn(['counter' => 2]);
 
         Agent::shouldReceive('run')
-            ->with('CounterAgent', ['counter' => 2], null)
+            ->with('CounterAgent', ['counter' => 2], 'test-session')
             ->once()
             ->andReturn(['counter' => 3]);
 
@@ -143,17 +155,17 @@ class LoopWorkflowTest extends TestCase
     public function test_until_loop_execution()
     {
         Agent::shouldReceive('run')
-            ->with('CounterAgent', ['counter' => 0], null)
+            ->with('CounterAgent', ['counter' => 0], 'test-session')
             ->once()
             ->andReturn(['counter' => 1]);
 
         Agent::shouldReceive('run')
-            ->with('CounterAgent', ['counter' => 1], null)
+            ->with('CounterAgent', ['counter' => 1], 'test-session')
             ->once()
             ->andReturn(['counter' => 2]);
 
         Agent::shouldReceive('run')
-            ->with('CounterAgent', ['counter' => 2], null)
+            ->with('CounterAgent', ['counter' => 2], 'test-session')
             ->once()
             ->andReturn(['counter' => 3]);
 
@@ -173,7 +185,7 @@ class LoopWorkflowTest extends TestCase
 
         Agent::shouldReceive('run')
             ->times(3)
-            ->with('ProcessItemAgent', Mockery::type('array'), null)
+            ->with('ProcessItemAgent', Mockery::type('array'), 'test-session')
             ->andReturnUsing(function($agent, $params) {
                 return ['processed' => $params['item']];
             });
@@ -197,7 +209,7 @@ class LoopWorkflowTest extends TestCase
     {
         Agent::shouldReceive('run')
             ->times(5) // Should stop at max iterations
-            ->with('InfiniteAgent', Mockery::any(), null)
+            ->with('InfiniteAgent', Mockery::any(), 'test-session')
             ->andReturn(['continue' => true]);
 
         $result = $this->workflow
@@ -213,7 +225,7 @@ class LoopWorkflowTest extends TestCase
     public function test_break_on_error_true()
     {
         Agent::shouldReceive('run')
-            ->with('FailingAgent', Mockery::any(), null)
+            ->with('FailingAgent', Mockery::any(), 'test-session')
             ->once()
             ->andThrow(new \Exception('Agent failed'));
 
@@ -230,7 +242,7 @@ class LoopWorkflowTest extends TestCase
     public function test_continue_on_error()
     {
         Agent::shouldReceive('run')
-            ->with('SometimesFailingAgent', Mockery::any(), null)
+            ->with('SometimesFailingAgent', Mockery::any(), 'test-session')
             ->times(3)
             ->andReturnUsing(function($agent, $params, $session) {
                 static $call = 0;
@@ -267,7 +279,7 @@ class LoopWorkflowTest extends TestCase
     {
         Agent::shouldReceive('run')
             ->times(2)
-            ->with('TestAgent', Mockery::any(), null)
+            ->with('TestAgent', Mockery::any(), 'test-session')
             ->andReturn('result_1', 'result_2');
 
         $this->workflow
@@ -289,7 +301,7 @@ class LoopWorkflowTest extends TestCase
     public function test_get_successful_results()
     {
         Agent::shouldReceive('run')
-            ->with('SometimesFailingAgent', Mockery::any(), null)
+            ->with('SometimesFailingAgent', Mockery::any(), 'test-session')
             ->times(3)
             ->andReturnUsing(function($agent, $params, $session) {
                 static $call = 0;
@@ -345,7 +357,7 @@ class LoopWorkflowTest extends TestCase
 
         Agent::shouldReceive('run')
             ->times(2)
-            ->with('TestAgent', Mockery::any(), null)
+            ->with('TestAgent', Mockery::any(), 'test-session')
             ->andReturn('result');
 
         $this->workflow
@@ -381,7 +393,7 @@ class LoopWorkflowTest extends TestCase
 
         Agent::shouldReceive('run')
             ->times(2)
-            ->with('ProcessItemAgent', Mockery::type('array'), null)
+            ->with('ProcessItemAgent', Mockery::type('array'), 'test-session')
             ->andReturnUsing(function($agent, $params) {
                 return ['processed' => $params['item'], 'key' => $params['key']];
             });
@@ -402,7 +414,7 @@ class LoopWorkflowTest extends TestCase
     {
         Agent::shouldReceive('run')
             ->times(2)
-            ->with('TestAgent', Mockery::type('array'), null)
+            ->with('TestAgent', Mockery::type('array'), 'test-session')
             ->andReturnUsing(function($agent, $params) {
                 return ['iteration' => $params['iteration']];
             });

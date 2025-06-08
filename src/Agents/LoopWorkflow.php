@@ -7,7 +7,7 @@ use Closure;
 
 /**
  * Loop Workflow Agent
- * 
+ *
  * Repeats agent execution based on conditions, with support for different loop types:
  * - while: continue while condition is true
  * - until: continue until condition is true
@@ -134,10 +134,10 @@ class LoopWorkflow extends BaseWorkflowAgent
 
             // Prepare step for execution
             $step = $this->getStepForIteration($currentInput);
-            
+
             try {
                 $result = $this->executeStep($step, $currentInput, $context);
-                
+
                 $this->iterationResults[$this->currentIteration] = [
                     'iteration' => $this->currentIteration,
                     'input' => $currentInput,
@@ -175,7 +175,7 @@ class LoopWorkflow extends BaseWorkflowAgent
             'iterations' => $this->currentIteration,
             'results' => $this->iterationResults,
             'loop_type' => $this->loopType,
-            'completed_normally' => $this->currentIteration < $this->maxIterations,
+            'completed_normally' => $this->didCompleteNormally(),
             'final_input' => $currentInput
         ];
     }
@@ -197,16 +197,16 @@ class LoopWorkflow extends BaseWorkflowAgent
         switch ($this->loopType) {
             case 'while':
                 return $this->evaluateCondition($this->condition, $input, $context);
-                
+
             case 'until':
                 return !$this->evaluateCondition($this->condition, $input, $context);
-                
+
             case 'times':
                 return $this->currentIteration < $this->maxIterations;
-                
+
             case 'forEach':
                 return $this->setupNextForEachIteration();
-                
+
             default:
                 return false;
         }
@@ -225,26 +225,20 @@ class LoopWorkflow extends BaseWorkflowAgent
 
         // Convert to array if needed
         $array = is_array($this->collection) ? $this->collection : iterator_to_array($this->collection);
-        
+
         // Get keys and check if we have more items
         $keys = array_keys($array);
-        
+
         if ($this->currentIteration >= count($keys)) {
             return false;
         }
 
         $this->currentKey = $keys[$this->currentIteration];
         $this->currentValue = $array[$this->currentKey];
-        
+
         return true;
     }
 
-    /**
-     * Get the step configuration for current iteration
-     *
-     * @param mixed $input
-     * @return array
-     */
     /**
      * Add an agent to the loop
      *
@@ -275,7 +269,7 @@ class LoopWorkflow extends BaseWorkflowAgent
         // For forEach loops, modify params to include current item
         if ($this->loopType === 'forEach') {
             $originalParams = $step['params'];
-            
+
             if ($originalParams instanceof Closure) {
                 $step['params'] = fn($input, $results, $context) => $originalParams($this->currentValue, $this->currentKey, $input, $results, $context);
             } else {
@@ -392,5 +386,36 @@ class LoopWorkflow extends BaseWorkflowAgent
     {
         $context = $context ?: new AgentContext();
         return $this->run($input, $context);
+    }
+
+    /**
+     * Determine if the loop completed normally (not due to hitting max iterations safety limit)
+     *
+     * @return bool
+     */
+    private function didCompleteNormally(): bool
+    {
+        switch ($this->loopType) {
+            case 'times':
+                // Completed normally if we reached exactly the requested number of iterations
+                return $this->currentIteration === $this->maxIterations;
+
+            case 'forEach':
+                // Completed normally if we iterated through all collection items
+                if ($this->collection === null) {
+                    return false;
+                }
+                $array = is_array($this->collection) ? $this->collection : iterator_to_array($this->collection);
+                return $this->currentIteration === count($array);
+
+            case 'while':
+            case 'until':
+                // For conditional loops, completed normally if we didn't hit the safety limit
+                // The loop stopped because the condition became false, not because of max iterations
+                return $this->currentIteration < $this->maxIterations;
+
+            default:
+                return false;
+        }
     }
 }

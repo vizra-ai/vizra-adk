@@ -51,7 +51,7 @@ class TestCase extends Orchestra
         $app['config']->set('services.anthropic.key', 'test-key');
         $app['config']->set('services.google.key', 'test-key');
         
-        // Disable tracing in tests to avoid database complexity
+        // Disable tracing in tests by default (individual tests can override)
         $app['config']->set('agent-adk.tracing.enabled', false);
     }
 
@@ -59,13 +59,18 @@ class TestCase extends Orchestra
     {
         parent::setUp();
 
+        // Reset Mockery container to clean state before each test
+        if (class_exists(\Mockery::class)) {
+            \Mockery::resetContainer();
+        }
+
         // Run migrations for testing
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
     }
 
     protected function tearDown(): void
     {
-        // Clear Mockery between tests to prevent conflicts
+        // Clear all Mockery mocks and expectations
         if (class_exists(\Mockery::class)) {
             \Mockery::close();
         }

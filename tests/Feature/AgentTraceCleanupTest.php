@@ -12,6 +12,8 @@ beforeEach(function () {
     // Enable tracing for tests
     config(['agent-adk.tracing.enabled' => true]);
 
+    // Use fresh tracer instance
+    app()->forgetInstance(Tracer::class);
     $this->tracer = app(Tracer::class);
 });
 
@@ -20,7 +22,10 @@ it('can get count of old traces', function () {
     $oldDate = now()->subDays(35);
     $recentDate = now()->subDays(5);
 
-    // Create old trace
+    $oldTimestamp = $oldDate->getTimestamp() + ($oldDate->micro / 1000000);
+    $recentTimestamp = $recentDate->getTimestamp() + ($recentDate->micro / 1000000);
+
+    // Create old trace - use microtime format like Tracer service
     TraceSpan::create([
         'id' => '01JBOLD001000000000000000',
         'trace_id' => '01JBOLD001000000000000000',
@@ -28,15 +33,15 @@ it('can get count of old traces', function () {
         'parent_span_id' => null,
         'session_id' => 'old-session',
         'agent_name' => 'test_agent',
-        'type' => 'agent',
+        'type' => 'agent_run',
         'name' => 'test_agent',
-        'status' => 'completed',
-        'start_time' => $oldDate,
-        'end_time' => $oldDate->copy()->addSeconds(1),
+        'status' => 'success',
+        'start_time' => $oldTimestamp,
+        'end_time' => $oldDate->copy()->addSeconds(1)->getTimestamp() + ($oldDate->copy()->addSeconds(1)->micro / 1000000),
         'duration_ms' => 1000,
     ]);
 
-    // Create recent trace
+    // Create recent trace - use microtime format like Tracer service
     TraceSpan::create([
         'id' => '01JBNEW001000000000000000',
         'trace_id' => '01JBNEW001000000000000000',
@@ -44,11 +49,11 @@ it('can get count of old traces', function () {
         'parent_span_id' => null,
         'session_id' => 'new-session',
         'agent_name' => 'test_agent',
-        'type' => 'agent',
+        'type' => 'agent_run',
         'name' => 'test_agent',
-        'status' => 'completed',
-        'start_time' => $recentDate,
-        'end_time' => $recentDate->copy()->addSeconds(1),
+        'status' => 'success',
+        'start_time' => $recentTimestamp,
+        'end_time' => $recentDate->copy()->addSeconds(1)->getTimestamp() + ($recentDate->copy()->addSeconds(1)->micro / 1000000),
         'duration_ms' => 1000,
     ]);
 
@@ -72,7 +77,7 @@ it('can cleanup old traces', function () {
     for ($i = 1; $i <= 3; $i++) {
         $traceId = sprintf('01JBOLD%03d000000000000000', $i);
 
-        // Root span
+        // Root span - use microtime format like Tracer service
         TraceSpan::create([
             'id' => $traceId,
             'trace_id' => $traceId,
@@ -80,15 +85,15 @@ it('can cleanup old traces', function () {
             'parent_span_id' => null,
             'session_id' => "old-session-{$i}",
             'agent_name' => 'test_agent',
-            'type' => 'agent',
+            'type' => 'agent_run',
             'name' => 'test_agent',
-            'status' => 'completed',
-            'start_time' => $oldDate,
-            'end_time' => $oldDate->copy()->addSeconds(1),
+            'status' => 'success',
+            'start_time' => $oldDate->getTimestamp() + ($oldDate->micro / 1000000),
+            'end_time' => $oldDate->copy()->addSeconds(1)->getTimestamp() + ($oldDate->copy()->addSeconds(1)->micro / 1000000),
             'duration_ms' => 1000,
         ]);
 
-        // Child span
+        // Child span - use microtime format like Tracer service
         TraceSpan::create([
             'id' => sprintf('01JBOLD%03d100000000000000', $i),
             'trace_id' => $traceId,
@@ -98,14 +103,14 @@ it('can cleanup old traces', function () {
             'agent_name' => 'test_agent',
             'type' => 'llm_call',
             'name' => 'chat_completion',
-            'status' => 'completed',
-            'start_time' => $oldDate->copy()->addMilliseconds(100),
-            'end_time' => $oldDate->copy()->addMilliseconds(800),
+            'status' => 'success',
+            'start_time' => $oldDate->copy()->addMilliseconds(100)->getTimestamp() + ($oldDate->copy()->addMilliseconds(100)->micro / 1000000),
+            'end_time' => $oldDate->copy()->addMilliseconds(800)->getTimestamp() + ($oldDate->copy()->addMilliseconds(800)->micro / 1000000),
             'duration_ms' => 700,
         ]);
     }
 
-    // Create a recent trace that should not be deleted
+    // Create a recent trace that should not be deleted - use microtime format like Tracer service
     $recentDate = now()->subDays(5);
     TraceSpan::create([
         'id' => '01JBNEW001000000000000000',
@@ -114,11 +119,11 @@ it('can cleanup old traces', function () {
         'parent_span_id' => null,
         'session_id' => 'new-session',
         'agent_name' => 'test_agent',
-        'type' => 'agent',
+        'type' => 'agent_run',
         'name' => 'test_agent',
-        'status' => 'completed',
-        'start_time' => $recentDate,
-        'end_time' => $recentDate->copy()->addSeconds(1),
+        'status' => 'success',
+        'start_time' => $recentDate->getTimestamp() + ($recentDate->micro / 1000000),
+        'end_time' => $recentDate->copy()->addSeconds(1)->getTimestamp() + ($recentDate->copy()->addSeconds(1)->micro / 1000000),
         'duration_ms' => 1000,
     ]);
 
@@ -168,11 +173,11 @@ it('can run cleanup command', function () {
         'parent_span_id' => null,
         'session_id' => 'old-session',
         'agent_name' => 'test_agent',
-        'type' => 'agent',
+        'type' => 'agent_run',
         'name' => 'test_agent',
-        'status' => 'completed',
-        'start_time' => $oldDate,
-        'end_time' => $oldDate->copy()->addSeconds(1),
+        'status' => 'success',
+        'start_time' => $oldDate->getTimestamp() + ($oldDate->micro / 1000000),
+        'end_time' => $oldDate->copy()->addSeconds(1)->getTimestamp() + ($oldDate->copy()->addSeconds(1)->micro / 1000000),
         'duration_ms' => 1000,
     ]);
 
@@ -207,11 +212,11 @@ it('handles cleanup command with custom days', function () {
         'parent_span_id' => null,
         'session_id' => 'old-session',
         'agent_name' => 'test_agent',
-        'type' => 'agent',
+        'type' => 'agent_run',
         'name' => 'test_agent',
-        'status' => 'completed',
-        'start_time' => $oldDate,
-        'end_time' => $oldDate->copy()->addSeconds(1),
+        'status' => 'success',
+        'start_time' => $oldDate->getTimestamp() + ($oldDate->micro / 1000000),
+        'end_time' => $oldDate->copy()->addSeconds(1)->getTimestamp() + ($oldDate->copy()->addSeconds(1)->micro / 1000000),
         'duration_ms' => 1000,
     ]);
 
@@ -246,11 +251,11 @@ it('handles cleanup cancellation', function () {
         'parent_span_id' => null,
         'session_id' => 'old-session',
         'agent_name' => 'test_agent',
-        'type' => 'agent',
+        'type' => 'agent_run',
         'name' => 'test_agent',
-        'status' => 'completed',
-        'start_time' => $oldDate,
-        'end_time' => $oldDate->copy()->addSeconds(1),
+        'status' => 'success',
+        'start_time' => $oldDate->getTimestamp() + ($oldDate->micro / 1000000),
+        'end_time' => $oldDate->copy()->addSeconds(1)->getTimestamp() + ($oldDate->copy()->addSeconds(1)->micro / 1000000),
         'duration_ms' => 1000,
     ]);
 

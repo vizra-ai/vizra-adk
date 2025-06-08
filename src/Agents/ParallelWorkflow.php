@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Parallel Workflow Agent
- * 
+ *
  * Executes multiple agents simultaneously and collects their results.
  * Can wait for all agents to complete or return as soon as any/some complete.
  */
@@ -143,7 +143,7 @@ class ParallelWorkflow extends BaseWorkflowAgent
 
         // Use a simple approach - execute all simultaneously using promises/async simulation
         $promises = [];
-        
+
         foreach ($this->steps as $index => $step) {
             $promises[$index] = function() use ($step, $input, $context) {
                 return $this->executeStep($step, $input, $context);
@@ -170,10 +170,10 @@ class ParallelWorkflow extends BaseWorkflowAgent
             }
         }
 
-        // If we don't have enough successful completions and we're not failing fast
-        if ($completed < $targetCount && !$this->failFast) {
+        // Check if we have enough successful completions
+        if ($completed < $targetCount) {
             throw new \RuntimeException(
-                "Only {$completed} of {$targetCount} required agents completed successfully. Errors: " . 
+                "Only {$completed} of {$targetCount} required agents completed successfully. Errors: " .
                 implode(', ', array_map(fn($e) => $e->getMessage(), $errors))
             );
         }
@@ -198,7 +198,7 @@ class ParallelWorkflow extends BaseWorkflowAgent
     {
         // This would use Laravel's queue system
         // For now, we'll implement a simplified version
-        
+
         $jobIds = [];
         $sessionId = $context->getSessionId() ?: uniqid('workflow_');
 
@@ -206,7 +206,9 @@ class ParallelWorkflow extends BaseWorkflowAgent
             $job = new \AaronLumsden\LaravelAiADK\Jobs\AgentJob(
                 $step['agent'],
                 $this->prepareStepParams($step['params'], $input, $context),
-                $sessionId
+                'execute', // mode
+                $sessionId,
+                [] // context
             );
 
             $jobIds[] = Queue::push($job);
@@ -257,6 +259,6 @@ class ParallelWorkflow extends BaseWorkflowAgent
     {
         // This would query the job results from cache/database
         // Implementation depends on how you want to store async results
-        return cache()->get("workflow_results_{$sessionId}", []);
+        return \Illuminate\Support\Facades\Cache::get("workflow_results_{$sessionId}", []);
     }
 }

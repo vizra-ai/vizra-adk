@@ -6,7 +6,7 @@ use AaronLumsden\LaravelAiADK\System\AgentContext;
 
 /**
  * Sequential Workflow Agent
- * 
+ *
  * Executes agents one after another in a predefined order.
  * Each step receives the output from the previous step as input.
  */
@@ -67,17 +67,23 @@ class SequentialWorkflow extends BaseWorkflowAgent
         $currentInput = $input;
         $finalResults = [];
         $finallySteps = [];
+        $regularSteps = [];
 
+        // First pass: separate finally steps from regular steps
         foreach ($this->steps as $step) {
             // Separate finally steps for later execution
             if ($step['options']['finally'] ?? false) {
                 $finallySteps[] = $step;
-                continue;
+            } else {
+                $regularSteps[] = $step;
             }
+        }
 
+        // Second pass: execute regular steps
+        foreach ($regularSteps as $step) {
             try {
                 $result = $this->executeStep($step, $currentInput, $context);
-                
+
                 if ($result !== null) {
                     $finalResults[$step['agent']] = $result;
                     $currentInput = $result; // Pass result to next step
@@ -160,11 +166,11 @@ class SequentialWorkflow extends BaseWorkflowAgent
     public static function create(string ...$agentNames): static
     {
         $workflow = new static();
-        
+
         foreach ($agentNames as $agentName) {
             $workflow->then($agentName);
         }
-        
+
         return $workflow;
     }
 

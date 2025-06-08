@@ -19,7 +19,7 @@ class SequentialWorkflowTest extends TestCase
         $this->workflow = new SequentialWorkflow();
         $this->context = new AgentContext('test-session');
     }
-    
+
     protected function mockAgentRun($returnValue = 'mocked_result')
     {
         Agent::shouldReceive('run')
@@ -46,7 +46,7 @@ class SequentialWorkflowTest extends TestCase
             ->then('ThirdAgent');
 
         $this->assertInstanceOf(SequentialWorkflow::class, $workflow);
-        $this->assertCount(3, $workflow->getResults()); // This will be empty until executed
+        $this->assertCount(0, $workflow->getResults()); // This will be empty until executed
     }
 
     public function test_can_add_finally_step()
@@ -62,7 +62,7 @@ class SequentialWorkflowTest extends TestCase
     public function test_can_add_conditional_step()
     {
         $condition = fn($input) => $input['proceed'] === true;
-        
+
         $workflow = $this->workflow
             ->start('FirstAgent')
             ->when('ConditionalAgent', $condition);
@@ -97,17 +97,17 @@ class SequentialWorkflowTest extends TestCase
     {
         // Mock the Agent facade
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'initial_input', null)
+            ->with('FirstAgent', 'initial_input', 'test-session')
             ->once()
             ->andReturn('first_result');
 
         Agent::shouldReceive('run')
-            ->with('SecondAgent', 'first_result', null)
+            ->with('SecondAgent', 'first_result', 'test-session')
             ->once()
             ->andReturn('second_result');
 
         Agent::shouldReceive('run')
-            ->with('ThirdAgent', 'second_result', null)
+            ->with('ThirdAgent', 'second_result', 'test-session')
             ->once()
             ->andReturn('final_result');
 
@@ -126,12 +126,12 @@ class SequentialWorkflowTest extends TestCase
     public function test_execute_with_parameters()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', ['custom' => 'params'], null)
+            ->with('FirstAgent', ['custom' => 'params'], 'test-session')
             ->once()
             ->andReturn('first_result');
 
         Agent::shouldReceive('run')
-            ->with('SecondAgent', 'first_result', null)
+            ->with('SecondAgent', 'first_result', 'test-session')
             ->once()
             ->andReturn('second_result');
 
@@ -146,12 +146,12 @@ class SequentialWorkflowTest extends TestCase
     public function test_execute_with_closure_parameters()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'initial_input', null)
+            ->with('FirstAgent', 'initial_input', 'test-session')
             ->once()
             ->andReturn(['data' => 'first_result']);
 
         Agent::shouldReceive('run')
-            ->with('SecondAgent', 'first_result', null)
+            ->with('SecondAgent', 'first_result', 'test-session')
             ->once()
             ->andReturn('final_result');
 
@@ -166,12 +166,12 @@ class SequentialWorkflowTest extends TestCase
     public function test_finally_steps_execute_on_success()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'input', null)
+            ->with('FirstAgent', 'input', 'test-session')
             ->once()
             ->andReturn('result');
 
         Agent::shouldReceive('run')
-            ->with('CleanupAgent', 'result', null)
+            ->with('CleanupAgent', 'result', 'test-session')
             ->once()
             ->andReturn('cleanup_result');
 
@@ -186,12 +186,12 @@ class SequentialWorkflowTest extends TestCase
     public function test_finally_steps_execute_on_failure()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'input', null)
+            ->with('FirstAgent', 'input', 'test-session')
             ->once()
             ->andThrow(new \Exception('Agent failed'));
 
         Agent::shouldReceive('run')
-            ->with('CleanupAgent', 'input', null)
+            ->with('CleanupAgent', 'input', 'test-session')
             ->once()
             ->andReturn('cleanup_result');
 
@@ -207,12 +207,12 @@ class SequentialWorkflowTest extends TestCase
     public function test_conditional_step_executes_when_condition_true()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', ['proceed' => true], null)
+            ->with('FirstAgent', ['proceed' => true], 'test-session')
             ->once()
             ->andReturn(['proceed' => true]);
 
         Agent::shouldReceive('run')
-            ->with('ConditionalAgent', ['proceed' => true], null)
+            ->with('ConditionalAgent', ['proceed' => true], 'test-session')
             ->once()
             ->andReturn('conditional_result');
 
@@ -227,7 +227,7 @@ class SequentialWorkflowTest extends TestCase
     public function test_conditional_step_skips_when_condition_false()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', ['proceed' => false], null)
+            ->with('FirstAgent', ['proceed' => false], 'test-session')
             ->once()
             ->andReturn(['proceed' => false]);
 
@@ -266,7 +266,7 @@ class SequentialWorkflowTest extends TestCase
         $callbackResult = null;
 
         Agent::shouldReceive('run')
-            ->with('TestAgent', 'input', null)
+            ->with('TestAgent', 'input', 'test-session')
             ->once()
             ->andReturn('result');
 
@@ -288,7 +288,7 @@ class SequentialWorkflowTest extends TestCase
         $callbackError = null;
 
         Agent::shouldReceive('run')
-            ->with('TestAgent', 'input', null)
+            ->with('TestAgent', 'input', 'test-session')
             ->once()
             ->andThrow(new \Exception('Test error'));
 
@@ -312,7 +312,7 @@ class SequentialWorkflowTest extends TestCase
         $callbackSuccess = null;
 
         Agent::shouldReceive('run')
-            ->with('TestAgent', 'input', null)
+            ->with('TestAgent', 'input', 'test-session')
             ->once()
             ->andReturn('result');
 
@@ -334,7 +334,7 @@ class SequentialWorkflowTest extends TestCase
         $callbackSuccess = null;
 
         Agent::shouldReceive('run')
-            ->with('TestAgent', 'input', null)
+            ->with('TestAgent', 'input', 'test-session')
             ->once()
             ->andThrow(new \Exception('Test error'));
 
@@ -355,12 +355,12 @@ class SequentialWorkflowTest extends TestCase
     public function test_can_get_step_results()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'input', null)
+            ->with('FirstAgent', 'input', 'test-session')
             ->once()
             ->andReturn('first_result');
 
         Agent::shouldReceive('run')
-            ->with('SecondAgent', 'first_result', null)
+            ->with('SecondAgent', 'first_result', 'test-session')
             ->once()
             ->andReturn('second_result');
 

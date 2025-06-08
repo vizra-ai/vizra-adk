@@ -380,7 +380,7 @@ class Tracer
      * Clean up old trace data.
      * Removes traces older than the specified number of days.
      */
-        /**
+    /**
      * Clean up old trace data with optional progress callback.
      */
     public function cleanupOldTraces(int $days = 30, ?callable $progressCallback = null): int
@@ -391,11 +391,12 @@ class Tracer
 
         try {
             $cutoffDate = now()->subDays($days);
+            $cutoffTimestamp = $cutoffDate->getTimestamp() + ($cutoffDate->micro / 1000000);
             $tableName = config('agent-adk.tracing.table', 'agent_trace_spans');
 
             // Get distinct trace IDs to delete
             $traceIds = DB::table($tableName)
-                ->where('start_time', '<', $cutoffDate)
+                ->where('start_time', '<', $cutoffTimestamp)
                 ->distinct()
                 ->pluck('trace_id')
                 ->toArray();
@@ -512,9 +513,10 @@ class Tracer
 
         try {
             $cutoffDate = now()->subDays($days);
+            $cutoffTimestamp = $cutoffDate->getTimestamp() + ($cutoffDate->micro / 1000000);
 
             return DB::table(config('agent-adk.tracing.table', 'agent_trace_spans'))
-                ->where('start_time', '<', $cutoffDate)
+                ->where('start_time', '<', $cutoffTimestamp)
                 ->distinct('trace_id')
                 ->count('trace_id');
         } catch (Throwable $e) {

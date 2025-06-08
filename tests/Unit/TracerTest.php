@@ -1,8 +1,5 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit;
-
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
 use AaronLumsden\LaravelAiADK\Services\Tracer;
 use AaronLumsden\LaravelAiADK\System\AgentContext;
 use AaronLumsden\LaravelAiADK\Models\TraceSpan;
@@ -10,65 +7,64 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 
-class TracerTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    protected Tracer $tracer;
-    protected AgentContext $context;
+beforeEach(function () {
+    // Enable tracing for these tests
+    config(['agent-adk.tracing.enabled' => true]);
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    // Use fresh tracer instance to avoid cached disabled state
+    app()->forgetInstance(Tracer::class);
+    $this->tracer = app(Tracer::class);
 
-        $this->tracer = app(Tracer::class);
-        $this->context = new AgentContext(
-            sessionId: 'test-session-123',
-            userInput: 'Hello, test agent!',
-            initialState: ['test_key' => 'test_value']
-        );
-    }
+    $this->context = new AgentContext(
+        'test-session-123',
+        'Hello, test agent!',
+        ['test_key' => 'test_value']
+    );
+});
 
-    /** @test */
-    public function it_can_create_and_manage_traces()
-    {
-        // Start a trace
-        $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+it('has tracing enabled', function () {
+    expect($this->tracer->isEnabled())->toBeTrue();
+});
 
-        expect($traceId)->toBeString()->not->toBeEmpty();
-        expect($this->tracer->getCurrentTraceId())->toBe($traceId);
+it('can create and manage traces', function () {
+    // Start a trace
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
 
-        // Verify root span was created
-        $rootSpan = DB::table('agent_trace_spans')
-            ->where('trace_id', $traceId)
-            ->whereNull('parent_span_id')
-            ->first();
+    expect($traceId)->toBeString()->not->toBeEmpty();
+    expect($this->tracer->getCurrentTraceId())->toBe($traceId);
 
-        expect($rootSpan)->not->toBeNull();
-        expect($rootSpan->type)->toBe('agent_run');
-        expect($rootSpan->name)->toBe('test_agent');
-        expect($rootSpan->status)->toBe('running');
-    }
+    // Verify root span was created
+    $rootSpan = DB::table('agent_trace_spans')
+        ->where('trace_id', $traceId)
+        ->whereNull('parent_span_id')
+        ->first();
 
-    /** @test */
-    public function it_can_create_hierarchical_spans()
+    expect($rootSpan)->not->toBeNull();
+    expect($rootSpan->type)->toBe('agent_run');
+    expect($rootSpan->name)->toBe('test_agent');
+    expect($rootSpan->status)->toBe('running');
+});
+
+it('can create hierarchical spans', function ()
     {
         // Start trace
         $traceId = $this->tracer->startTrace($this->context, 'test_agent');
 
         // Create LLM call span
         $llmSpanId = $this->tracer->startSpan(
-            type: 'llm_call',
-            name: 'gpt-4o',
-            input: ['messages' => [['role' => 'user', 'content' => 'test']]],
-            metadata: ['temperature' => 0.7]
+            'llm_call',
+            'gpt-4o',
+            ['messages' => [['role' => 'user', 'content' => 'test']]],
+            ['temperature' => 0.7]
         );
 
         // Create tool call span (child of LLM call)
         $toolSpanId = $this->tracer->startSpan(
-            type: 'tool_call',
-            name: 'weather_tool',
-            input: ['city' => 'London']
+            'tool_call',
+            'weather_tool',
+            ['city' => 'London']
         );
 
         // Add small delays to ensure duration > 0
@@ -87,229 +83,215 @@ class TracerTest extends TestCase
             ->orderBy('start_time')
             ->get();
 
-        expect($spans)->toHaveCount(3);
+    expect($spans)->toHaveCount(3);
 
-        $rootSpan = $spans->where('type', 'agent_run')->first();
-        $llmSpan = $spans->where('type', 'llm_call')->first();
-        $toolSpan = $spans->where('type', 'tool_call')->first();
+    $rootSpan = $spans->where('type', 'agent_run')->first();
+    $llmSpan = $spans->where('type', 'llm_call')->first();
+    $toolSpan = $spans->where('type', 'tool_call')->first();
 
-        // Check parent-child relationships
-        expect($rootSpan->parent_span_id)->toBeNull();
-        expect($llmSpan->parent_span_id)->toBe($rootSpan->span_id);
-        expect($toolSpan->parent_span_id)->toBe($llmSpan->span_id);
+    // Check parent-child relationships
+    expect($rootSpan->parent_span_id)->toBeNull();
+    expect($llmSpan->parent_span_id)->toBe($rootSpan->span_id);
+    expect($toolSpan->parent_span_id)->toBe($llmSpan->span_id);
 
-        // Check all spans completed successfully
-        expect($rootSpan->status)->toBe('success');
-        expect($llmSpan->status)->toBe('success');
-        expect($toolSpan->status)->toBe('success');
+    // Check all spans completed successfully
+    expect($rootSpan->status)->toBe('success');
+    expect($llmSpan->status)->toBe('success');
+    expect($toolSpan->status)->toBe('success');
 
-        // Check durations are calculated
-        expect($rootSpan->duration_ms)->toBeGreaterThan(0);
-        expect($llmSpan->duration_ms)->toBeGreaterThan(0);
-        expect($toolSpan->duration_ms)->toBeGreaterThan(0);
-    }
+    // Check durations are calculated
+    expect($rootSpan->duration_ms)->toBeGreaterThan(0);
+    expect($llmSpan->duration_ms)->toBeGreaterThan(0);
+    expect($toolSpan->duration_ms)->toBeGreaterThan(0);
+});
 
-    /** @test */
-    public function it_handles_span_failures()
-    {
-        // Start trace and span
-        $traceId = $this->tracer->startTrace($this->context, 'test_agent');
-        $spanId = $this->tracer->startSpan('tool_call', 'failing_tool');
+it('handles span failures', function () {
+    // Start trace and span
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    $spanId = $this->tracer->startSpan('tool_call', 'failing_tool');
 
-        // Add small delay to ensure duration > 0
-        usleep(1000); // 1ms delay
+    // Add small delay to ensure duration > 0
+    usleep(1000); // 1ms delay
 
-        // Simulate failure
-        $exception = new \Exception('Tool execution failed');
-        $this->tracer->failSpan($spanId, $exception);
+    // Simulate failure
+    $exception = new \Exception('Tool execution failed');
+    $this->tracer->failSpan($spanId, $exception);
 
-        // Verify error handling
-        $span = DB::table('agent_trace_spans')
-            ->where('span_id', $spanId)
-            ->first();
+    // Verify error handling
+    $span = DB::table('agent_trace_spans')
+        ->where('span_id', $spanId)
+        ->first();
 
+    expect($span->status)->toBe('error');
+    expect($span->error_message)->toBe('Tool execution failed');
+    expect($span->duration_ms)->toBeGreaterThan(0);
+});
+
+it('handles trace failures', function () {
+    // Start trace with some spans
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    $spanId1 = $this->tracer->startSpan('llm_call', 'gpt-4o');
+    $spanId2 = $this->tracer->startSpan('tool_call', 'weather_tool');
+
+    // Simulate trace-level failure
+    $exception = new \Exception('Agent execution failed');
+    $this->tracer->failTrace($exception);
+
+    // Verify all spans are marked as failed
+    $spans = DB::table('agent_trace_spans')
+        ->where('trace_id', $traceId)
+        ->get();
+
+    foreach ($spans as $span) {
         expect($span->status)->toBe('error');
-        expect($span->error_message)->toBe('Tool execution failed');
-        expect($span->duration_ms)->toBeGreaterThan(0);
     }
 
-    /** @test */
-    public function it_handles_trace_failures()
-    {
-        // Start trace with some spans
-        $traceId = $this->tracer->startTrace($this->context, 'test_agent');
-        $spanId1 = $this->tracer->startSpan('llm_call', 'gpt-4o');
-        $spanId2 = $this->tracer->startSpan('tool_call', 'weather_tool');
+    // Verify trace is cleaned up
+    expect($this->tracer->getCurrentTraceId())->toBeNull();
+    expect($this->tracer->getCurrentSpanId())->toBeNull();
+});
 
-        // Simulate trace-level failure
-        $exception = new \Exception('Agent execution failed');
-        $this->tracer->failTrace($exception);
+it('can retrieve spans by session', function () {
+    // Create multiple traces for the same session
+    $traceId1 = $this->tracer->startTrace($this->context, 'agent1');
+    $this->tracer->endTrace();
 
-        // Verify all spans are marked as failed
-        $spans = DB::table('agent_trace_spans')
-            ->where('trace_id', $traceId)
-            ->get();
+    $traceId2 = $this->tracer->startTrace($this->context, 'agent2');
+    $this->tracer->endTrace();
 
-        foreach ($spans as $span) {
-            expect($span->status)->toBe('error');
-        }
+    // Debug: check what's actually in the database
+    $allSpans = DB::table('agent_trace_spans')->get();
+    expect($allSpans)->toHaveCount(2); // Two root spans should be created
 
-        // Verify trace is cleaned up
-        expect($this->tracer->getCurrentTraceId())->toBeNull();
-        expect($this->tracer->getCurrentSpanId())->toBeNull();
-    }
+    // Retrieve all spans for session
+    $spans = $this->tracer->getSpansForSession('test-session-123');
 
-    /** @test */
-    public function it_can_retrieve_spans_by_session()
-    {
-        // Create multiple traces for the same session
-        $traceId1 = $this->tracer->startTrace($this->context, 'agent1');
-        $this->tracer->endTrace();
+    expect($spans)->toHaveCount(2); // Two root spans
+    expect(collect($spans)->pluck('trace_id')->unique())->toHaveCount(2);
+});
 
-        $traceId2 = $this->tracer->startTrace($this->context, 'agent2');
-        $this->tracer->endTrace();
+it('can retrieve spans by trace', function () {
+    // Create trace with multiple spans
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    $llmSpanId = $this->tracer->startSpan('llm_call', 'gpt-4o');
+    $toolSpanId = $this->tracer->startSpan('tool_call', 'weather_tool');
 
-        // Debug: check what's actually in the database
-        $allSpans = DB::table('agent_trace_spans')->get();
-        expect($allSpans)->toHaveCount(2); // Two root spans should be created
+    $this->tracer->endSpan($toolSpanId);
+    $this->tracer->endSpan($llmSpanId);
+    $this->tracer->endTrace();
 
-        // Retrieve all spans for session
-        $spans = $this->tracer->getSpansForSession('test-session-123');
+    // Retrieve spans for this specific trace
+    $spans = $this->tracer->getSpansForTrace($traceId);
 
-        expect($spans)->toHaveCount(2); // Two root spans
-        expect(collect($spans)->pluck('trace_id')->unique())->toHaveCount(2);
-    }
+    expect($spans)->toHaveCount(3);
+    expect(collect($spans)->pluck('trace_id')->unique())->toHaveCount(1);
+    expect(collect($spans)->first()->trace_id)->toBe($traceId);
+});
 
-    /** @test */
-    public function it_can_retrieve_spans_by_trace()
-    {
-        // Create trace with multiple spans
-        $traceId = $this->tracer->startTrace($this->context, 'test_agent');
-        $llmSpanId = $this->tracer->startSpan('llm_call', 'gpt-4o');
-        $toolSpanId = $this->tracer->startSpan('tool_call', 'weather_tool');
+it('respects tracing enabled configuration', function () {
+    // Disable tracing
+    config(['agent-adk.tracing.enabled' => false]);
+    $tracer = new Tracer();
 
-        $this->tracer->endSpan($toolSpanId);
-        $this->tracer->endSpan($llmSpanId);
-        $this->tracer->endTrace();
+    expect($tracer->isEnabled())->toBeFalse();
 
-        // Retrieve spans for this specific trace
-        $spans = $this->tracer->getSpansForTrace($traceId);
+    // Operations should return empty/null without errors
+    $traceId = $tracer->startTrace($this->context, 'test_agent');
+    expect($traceId)->toBe('');
 
-        expect($spans)->toHaveCount(3);
-        expect(collect($spans)->pluck('trace_id')->unique())->toHaveCount(1);
-        expect(collect($spans)->first()->trace_id)->toBe($traceId);
-    }
+    $spanId = $tracer->startSpan('test', 'test');
+    expect($spanId)->toBe('');
 
-    /** @test */
-    public function it_respects_tracing_enabled_configuration()
-    {
-        // Disable tracing
-        config(['agent-adk.tracing.enabled' => false]);
-        $tracer = new Tracer();
+    $spans = $tracer->getSpansForSession('test-session');
+    expect($spans)->toBeArray()->toBeEmpty();
+});
 
-        expect($tracer->isEnabled())->toBeFalse();
+it('handles database errors gracefully', function () {
+    // Temporarily break the database table name to simulate error
+    config(['agent-adk.tracing.table' => 'non_existent_table']);
 
-        // Operations should return empty/null without errors
-        $traceId = $tracer->startTrace($this->context, 'test_agent');
-        expect($traceId)->toBe('');
+    // Operations should not throw exceptions
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    expect($traceId)->toBeString(); // Still generates trace ID
 
-        $spanId = $tracer->startSpan('test', 'test');
-        expect($spanId)->toBe('');
+    $spanId = $this->tracer->startSpan('test', 'test');
+    expect($spanId)->toBe(''); // But span creation fails gracefully
 
-        $spans = $tracer->getSpansForSession('test-session');
-        expect($spans)->toBeArray()->toBeEmpty();
-    }
+    // Should not throw exceptions
+    $this->tracer->endSpan('fake-span-id');
+    $this->tracer->failSpan('fake-span-id', new \Exception('test'));
+    $this->tracer->endTrace();
+});
 
-    /** @test */
-    public function it_handles_database_errors_gracefully()
-    {
-        // Temporarily break the database table name to simulate error
-        config(['agent-adk.tracing.table' => 'non_existent_table']);
+it('trace span model relationships work', function () {
+    // Create test data
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    $llmSpanId = $this->tracer->startSpan('llm_call', 'gpt-4o');
+    $toolSpanId = $this->tracer->startSpan('tool_call', 'weather_tool');
 
-        // Operations should not throw exceptions
-        $traceId = $this->tracer->startTrace($this->context, 'test_agent');
-        expect($traceId)->toBeString(); // Still generates trace ID
+    $this->tracer->endSpan($toolSpanId);
+    $this->tracer->endSpan($llmSpanId);
+    $this->tracer->endTrace();
 
-        $spanId = $this->tracer->startSpan('test', 'test');
-        expect($spanId)->toBe(''); // But span creation fails gracefully
+    // Test model relationships
+    $rootSpan = TraceSpan::where('trace_id', $traceId)
+        ->whereNull('parent_span_id')
+        ->first();
 
-        // Should not throw exceptions
-        $this->tracer->endSpan('fake-span-id');
-        $this->tracer->failSpan('fake-span-id', new \Exception('test'));
-        $this->tracer->endTrace();
-    }
+    $llmSpan = TraceSpan::where('trace_id', $traceId)
+        ->where('type', 'llm_call')
+        ->first();
 
-    /** @test */
-    public function trace_span_model_relationships_work()
-    {
-        // Create test data
-        $traceId = $this->tracer->startTrace($this->context, 'test_agent');
-        $llmSpanId = $this->tracer->startSpan('llm_call', 'gpt-4o');
-        $toolSpanId = $this->tracer->startSpan('tool_call', 'weather_tool');
+    $toolSpan = TraceSpan::where('trace_id', $traceId)
+        ->where('type', 'tool_call')
+        ->first();
 
-        $this->tracer->endSpan($toolSpanId);
-        $this->tracer->endSpan($llmSpanId);
-        $this->tracer->endTrace();
+    // Test parent-child relationships
+    expect($rootSpan->children)->toHaveCount(1);
+    expect($rootSpan->children->first()->span_id)->toBe($llmSpan->span_id);
 
-        // Test model relationships
-        $rootSpan = TraceSpan::where('trace_id', $traceId)
-            ->whereNull('parent_span_id')
-            ->first();
+    expect($llmSpan->parent->span_id)->toBe($rootSpan->span_id);
+    expect($llmSpan->children)->toHaveCount(1);
+    expect($llmSpan->children->first()->span_id)->toBe($toolSpan->span_id);
 
-        $llmSpan = TraceSpan::where('trace_id', $traceId)
-            ->where('type', 'llm_call')
-            ->first();
+    expect($toolSpan->parent->span_id)->toBe($llmSpan->span_id);
+    expect($toolSpan->children)->toHaveCount(0);
 
-        $toolSpan = TraceSpan::where('trace_id', $traceId)
-            ->where('type', 'tool_call')
-            ->first();
+    // Test utility methods
+    expect($rootSpan->isRoot())->toBeTrue();
+    expect($llmSpan->isRoot())->toBeFalse();
+    expect($toolSpan->isCompleted())->toBeTrue();
+    expect($rootSpan->hasError())->toBeFalse();
 
-        // Test parent-child relationships
-        expect($rootSpan->children)->toHaveCount(1);
-        expect($rootSpan->children->first()->span_id)->toBe($llmSpan->span_id);
+    // Test formatted methods
+    expect($rootSpan->getFormattedDuration())->toContain('ms');
+    expect($rootSpan->getStatusIcon())->toBe('✅');
+    expect($rootSpan->getTypeIcon())->toBe('🤖');
+    expect($rootSpan->getSummary())->toContain('🤖 agent_run: test_agent');
+});
 
-        expect($llmSpan->parent->span_id)->toBe($rootSpan->span_id);
-        expect($llmSpan->children)->toHaveCount(1);
-        expect($llmSpan->children->first()->span_id)->toBe($toolSpan->span_id);
+it('can clean up old traces', function () {
+    // Create some test traces
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    $this->tracer->endTrace();
 
-        expect($toolSpan->parent->span_id)->toBe($llmSpan->span_id);
-        expect($toolSpan->children)->toHaveCount(0);
+    // Manually update start_time to simulate old data (use same format as Tracer service)
+    $oldDate = now()->subDays(35);
+    $oldTimestamp = $oldDate->getTimestamp() + ($oldDate->micro / 1000000);
 
-        // Test utility methods
-        expect($rootSpan->isRoot())->toBeTrue();
-        expect($llmSpan->isRoot())->toBeFalse();
-        expect($toolSpan->isCompleted())->toBeTrue();
-        expect($rootSpan->hasError())->toBeFalse();
+    DB::table('agent_trace_spans')
+        ->where('trace_id', $traceId)
+        ->update(['start_time' => $oldTimestamp]);
 
-        // Test formatted methods
-        expect($rootSpan->getFormattedDuration())->toContain('ms');
-        expect($rootSpan->getStatusIcon())->toBe('✅');
-        expect($rootSpan->getTypeIcon())->toBe('🤖');
-        expect($rootSpan->getSummary())->toContain('🤖 agent_run: test_agent');
-    }
+    // Clean up traces older than 30 days
+    $deletedCount = $this->tracer->cleanupOldTraces(30);
 
-    /** @test */
-    public function it_can_clean_up_old_traces()
-    {
-        // Create some test traces
-        $traceId = $this->tracer->startTrace($this->context, 'test_agent');
-        $this->tracer->endTrace();
+    expect($deletedCount)->toBe(1);
 
-        // Manually update created_at to simulate old data
-        DB::table('agent_trace_spans')
-            ->where('trace_id', $traceId)
-            ->update(['created_at' => now()->subDays(35)]);
+    // Verify trace was deleted
+    $remainingSpans = DB::table('agent_trace_spans')
+        ->where('trace_id', $traceId)
+        ->count();
 
-        // Clean up traces older than 30 days
-        $deletedCount = $this->tracer->cleanupOldTraces(30);
-
-        expect($deletedCount)->toBe(1);
-
-        // Verify trace was deleted
-        $remainingSpans = DB::table('agent_trace_spans')
-            ->where('trace_id', $traceId)
-            ->count();
-
-        expect($remainingSpans)->toBe(0);
-    }
-}
+    expect($remainingSpans)->toBe(0);
+});

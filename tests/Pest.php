@@ -17,6 +17,32 @@ uses(AaronLumsden\LaravelAiADK\Tests\TestCase::class)->in('Integration');
 
 /*
 |--------------------------------------------------------------------------
+| Mockery Setup
+|--------------------------------------------------------------------------
+|
+| Ensure Mockery is properly cleaned up between tests to prevent
+| redeclaration errors with facade mocks.
+|
+*/
+
+// Global setup before each test
+beforeEach(function () {
+    // Reset Mockery to clean state (only for Pest tests)
+    if (class_exists(\Mockery::class)) {
+        \Mockery::resetContainer();
+    }
+});
+
+// Global teardown after each test  
+afterEach(function () {
+    // Close Mockery to clean up all mocks and prevent redeclaration errors (only for Pest tests)
+    if (class_exists(\Mockery::class)) {
+        \Mockery::close();
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
 | Expectations
 |--------------------------------------------------------------------------
 |

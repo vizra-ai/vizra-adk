@@ -154,7 +154,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_when_equals_with_array_input()
     {
         Agent::shouldReceive('run')
-            ->with('ActiveAgent', ['status' => 'active'], null)
+            ->with('ActiveAgent', ['status' => 'active'], 'test-session')
             ->once()
             ->andReturn('active_result');
 
@@ -169,7 +169,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_when_greater_than_with_array_input()
     {
         Agent::shouldReceive('run')
-            ->with('HighScoreAgent', ['score' => 95], null)
+            ->with('HighScoreAgent', ['score' => 95], 'test-session')
             ->once()
             ->andReturn('high_score_result');
 
@@ -184,7 +184,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_when_less_than_with_array_input()
     {
         Agent::shouldReceive('run')
-            ->with('MinorAgent', ['age' => 16], null)
+            ->with('MinorAgent', ['age' => 16], 'test-session')
             ->once()
             ->andReturn('minor_result');
 
@@ -199,7 +199,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_when_exists_with_array_input()
     {
         Agent::shouldReceive('run')
-            ->with('EmailAgent', ['email' => 'test@example.com'], null)
+            ->with('EmailAgent', ['email' => 'test@example.com'], 'test-session')
             ->once()
             ->andReturn('email_result');
 
@@ -214,7 +214,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_when_empty_with_array_input()
     {
         Agent::shouldReceive('run')
-            ->with('NoDescriptionAgent', ['description' => ''], null)
+            ->with('NoDescriptionAgent', ['description' => ''], 'test-session')
             ->once()
             ->andReturn('no_description_result');
 
@@ -229,7 +229,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_when_matches_with_valid_email()
     {
         Agent::shouldReceive('run')
-            ->with('ValidEmailAgent', ['email' => 'test@example.com'], null)
+            ->with('ValidEmailAgent', ['email' => 'test@example.com'], 'test-session')
             ->once()
             ->andReturn('valid_email_result');
 
@@ -244,7 +244,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_when_matches_with_invalid_email()
     {
         Agent::shouldReceive('run')
-            ->with('InvalidEmailAgent', ['email' => 'invalid-email'], null)
+            ->with('InvalidEmailAgent', ['email' => 'invalid-email'], 'test-session')
             ->once()
             ->andReturn('invalid_email_result');
 
@@ -259,7 +259,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_conditions_with_parameters()
     {
         Agent::shouldReceive('run')
-            ->with('PremiumAgent', ['custom' => 'params'], null)
+            ->with('PremiumAgent', ['custom' => 'params'], 'test-session')
             ->once()
             ->andReturn('premium_result');
 
@@ -273,7 +273,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_conditions_with_closure_parameters()
     {
         Agent::shouldReceive('run')
-            ->with('PremiumAgent', 'premium', null)
+            ->with('PremiumAgent', 'premium', 'test-session')
             ->once()
             ->andReturn('premium_result');
 
@@ -291,7 +291,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_dot_notation_for_nested_arrays()
     {
         Agent::shouldReceive('run')
-            ->with('PremiumAgent', ['user' => ['membership' => ['type' => 'premium']]], null)
+            ->with('PremiumAgent', ['user' => ['membership' => ['type' => 'premium']]], 'test-session')
             ->once()
             ->andReturn('premium_result');
 
@@ -306,7 +306,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_scalar_input_with_dot_accessor()
     {
         Agent::shouldReceive('run')
-            ->with('StringAgent', 'test_string', null)
+            ->with('StringAgent', 'test_string', 'test-session')
             ->once()
             ->andReturn('string_result');
 
@@ -340,7 +340,7 @@ class ConditionalWorkflowTest extends TestCase
         $completeCallbackCalled = false;
 
         Agent::shouldReceive('run')
-            ->with('PremiumAgent', ['type' => 'premium'], null)
+            ->with('PremiumAgent', ['type' => 'premium'], 'test-session')
             ->once()
             ->andReturn('premium_result');
 
