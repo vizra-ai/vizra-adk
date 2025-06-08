@@ -16,14 +16,13 @@ class CustomerServiceAgent extends BaseLlmAgent
     protected string $model = 'gpt-4o';
 
     /**
-     * Register tools for this agent (if any).
+     * Tools this agent can use.
+     *
+     * @var array<class-string<ToolInterface>>
      */
-    protected function registerTools(): array
-    {
-        return [
-            // Add any general customer service tools here
-        ];
-    }
+    protected array $tools = [
+        // Add any general customer service tools here
+    ];
 
     /**
      * Register sub-agents for delegation.

@@ -447,6 +447,8 @@ class StreamingTestAgent extends BaseLlmAgent
     protected string $instructions = 'Test streaming agent';
     protected string $model = 'gpt-4o';
 
+    protected array $tools = [];
+
     public function run(mixed $input, AgentContext $context): mixed
     {
         $context->setUserInput($input);
@@ -459,11 +461,6 @@ class StreamingTestAgent extends BaseLlmAgent
             // Mock regular response
             return "Mock response for: " . $input;
         }
-    }
-
-    protected function registerTools(): array
-    {
-        return [];
     }
 }
 

@@ -14,13 +14,15 @@ class TechnicalSupportAgent extends BaseLlmAgent
     protected string $instructions = 'You are a technical support specialist. You excel at diagnosing technical problems, providing step-by-step troubleshooting guides, and explaining technical concepts in simple terms. Focus on practical solutions and clear instructions.';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [
-            // Add technical support specific tools here
-            // e.g., SystemDiagnosticTool::class, LogAnalyzerTool::class
-        ];
-    }
+    /**
+     * Tools this agent can use.
+     *
+     * @var array<class-string<ToolInterface>>
+     */
+    protected array $tools = [
+        // Add technical support specific tools here
+        // e.g., SystemDiagnosticTool::class, LogAnalyzerTool::class
+    ];
 
     protected function registerSubAgents(): array
     {

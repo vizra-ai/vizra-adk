@@ -190,10 +190,7 @@ class TestDelegationParentAgent extends BaseLlmAgent
     protected string $instructions = 'Parent agent with delegation capabilities';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {
@@ -216,10 +213,7 @@ class TestSpecialistAgentA extends BaseLlmAgent
     protected string $instructions = 'Specialist A instructions';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {
@@ -239,10 +233,7 @@ class TestSpecialistAgentB extends BaseLlmAgent
     protected string $instructions = 'Specialist B instructions';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {
@@ -262,10 +253,7 @@ class TestDelegationParentAgentWithError extends BaseLlmAgent
     protected string $instructions = 'Parent with error sub-agents';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {
@@ -287,10 +275,7 @@ class TestErrorSubAgent extends BaseLlmAgent
     protected string $instructions = 'Error sub-agent';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {

@@ -159,8 +159,8 @@ $analysis = DataAnalystAgent::ask('How many users signed up last month?')->forUs
 
 ## 🔧 Requirements
 
-- **PHP 8.1+**
-- **Laravel 10.0+**
+- **PHP 8.2+**
+- **Laravel 11.0+ | 12.0+**
 - **OpenAI API key** (or other LLM provider)
 - **MySQL/PostgreSQL** for agent sessions and memory
 

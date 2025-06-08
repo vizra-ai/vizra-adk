@@ -283,12 +283,12 @@ class {{ class }} extends BaseLlmAgent
 
     protected string $model = \'\';
 
-    protected function registerTools(): array
-    {
-        return [
-            // Example: YourTool::class,
-        ];
-    }
+    /**
+     * @var array<class-string<ToolInterface>>
+     */
+    protected array $tools = [
+        // Example: YourTool::class,
+    ];
 
     public function beforeLlmCall(array $inputMessages, AgentContext $context): array
     {
@@ -316,12 +316,12 @@ class TestAgent extends BaseLlmAgent
 
     protected string $model = \'\';
 
-    protected function registerTools(): array
-    {
-        return [
-            // Example: YourTool::class,
-        ];
-    }
+    /**
+     * @var array<class-string<ToolInterface>>
+     */
+    protected array $tools = [
+        // Example: YourTool::class,
+    ];
 
     public function beforeLlmCall(array $inputMessages, AgentContext $context): array
     {

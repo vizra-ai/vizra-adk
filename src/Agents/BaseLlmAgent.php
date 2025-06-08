@@ -35,6 +35,9 @@ abstract class BaseLlmAgent extends BaseAgent
     protected ?float $topP = null;
     protected bool $streaming = false;
 
+    /** @var array<class-string<ToolInterface>> */
+    protected array $tools = [];
+
     /** @var array<ToolInterface> */
     protected array $loadedTools = [];
 
@@ -191,14 +194,6 @@ abstract class BaseLlmAgent extends BaseAgent
     }
 
     /**
-     * @return array<class-string<ToolInterface>>
-     */
-    protected function registerTools(): array
-    {
-        return [];
-    }
-
-    /**
      * Register sub-agents for this agent.
      * Return an associative array where keys are unique names and values are class names.
      *
@@ -214,7 +209,7 @@ abstract class BaseLlmAgent extends BaseAgent
         if (!empty($this->loadedTools)) {
             return;
         }
-        foreach ($this->registerTools() as $toolClass) {
+        foreach ($this->tools as $toolClass) {
             if (class_exists($toolClass) && is_subclass_of($toolClass, ToolInterface::class)) {
                 $toolInstance = app($toolClass); // Resolve from container
                 $this->loadedTools[$toolInstance->definition()['name']] = $toolInstance;

@@ -149,10 +149,7 @@ class TestParentAgent extends BaseLlmAgent
     protected string $instructions = 'Test parent agent instructions';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {
@@ -175,10 +172,7 @@ class TestSubAgent1 extends BaseLlmAgent
     protected string $instructions = 'Test sub-agent 1 instructions';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {
@@ -198,10 +192,7 @@ class TestSubAgent2 extends BaseLlmAgent
     protected string $instructions = 'Test sub-agent 2 instructions';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {
@@ -221,10 +212,7 @@ class TestSimpleAgent extends BaseLlmAgent
     protected string $instructions = 'Simple agent instructions';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {
@@ -244,10 +232,7 @@ class TestNestedParentAgent extends BaseLlmAgent
     protected string $instructions = 'Nested parent instructions';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {
@@ -269,10 +254,7 @@ class TestNestedSubAgent extends BaseLlmAgent
     protected string $instructions = 'Nested sub-agent instructions';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {
@@ -294,10 +276,7 @@ class TestDeepSubAgent extends BaseLlmAgent
     protected string $instructions = 'Deep sub-agent instructions';
     protected string $model = 'gpt-4o';
 
-    protected function registerTools(): array
-    {
-        return [];
-    }
+    protected array $tools = [];
 
     protected function registerSubAgents(): array
     {

@@ -6,8 +6,8 @@ Welcome to Laravel Ai ADK! If you're familiar with Laravel, you'll feel right at
 
 Before we dive in, make sure you have:
 
-- **PHP 8.1+** (same as modern Laravel)
-- **Laravel 10.0+** (fresh install or existing project)
+- **PHP 8.2+** (same as modern Laravel)
+- **Laravel 11.0+ | 12.0+** (fresh install or existing project)
 - **Database** (MySQL, PostgreSQL, SQLite)
 - **LLM API Access** (OpenAI, Anthropic, Cohere, or local models)
 
@@ -16,7 +16,7 @@ Before we dive in, make sure you have:
 ### Step 1: Install the Package
 
 ```bash
-composer require aaronlumsden/laravel-agent-adk
+composer require aaronlumsden/laravel-ai-adk
 ```
 
 ### Step 2: Publish Configuration & Migrations

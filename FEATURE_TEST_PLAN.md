@@ -56,7 +56,7 @@ Based on README analysis, the following areas need comprehensive feature test co
 
 **File**: `tests/Feature/ToolSystemTest.php`
 
-- **Test**: Tool registration via agent `registerTools()` method
+- **Test**: Tool registration via agent `$tools` property
 - **Test**: Tool definition validation (name, description, parameters)
 - **Test**: Tool parameter schema validation (JSON Schema compliance)
 - **Test**: Tool execution with valid parameters
