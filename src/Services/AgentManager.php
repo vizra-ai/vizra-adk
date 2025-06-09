@@ -1,15 +1,15 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Services;
+namespace Vizra\VizraSdk\Services;
 
-use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
-use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException;
+use Vizra\VizraSdk\Agents\BaseAgent;
+use Vizra\VizraSdk\Agents\BaseLlmAgent;
+use Vizra\VizraSdk\Exceptions\AgentConfigurationException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Event; // For AgentResponseGenerated
-use AaronLumsden\LaravelAiADK\Events\AgentResponseGenerated; // For AgentResponseGenerated
-use AaronLumsden\LaravelAiADK\Events\AgentExecutionStarting;
-use AaronLumsden\LaravelAiADK\Events\AgentExecutionFinished;
+use Vizra\VizraSdk\Events\AgentResponseGenerated; // For AgentResponseGenerated
+use Vizra\VizraSdk\Events\AgentExecutionStarting;
+use Vizra\VizraSdk\Events\AgentExecutionFinished;
 
 
 class AgentManager
@@ -52,8 +52,8 @@ class AgentManager
      *
      * @param string $agentName The name of the agent.
      * @return BaseAgent The agent instance.
-     * @throws \AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException
-     * @throws \AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException
+     * @throws \Vizra\VizraSdk\Exceptions\AgentNotFoundException
+     * @throws \Vizra\VizraSdk\Exceptions\AgentConfigurationException
      */
     public function named(string $agentName): BaseAgent
     {
@@ -67,8 +67,8 @@ class AgentManager
      * @param mixed $input The input for the agent.
      * @param string|null $sessionId Optional session ID. If null, a new session is created/managed.
      * @return mixed The final response from the agent.
-     * @throws \AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException
-     * @throws \AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException
+     * @throws \Vizra\VizraSdk\Exceptions\AgentNotFoundException
+     * @throws \Vizra\VizraSdk\Exceptions\AgentConfigurationException
      * @throws \Throwable
      */
     public function run(string $agentName, mixed $input, ?string $sessionId = null): mixed

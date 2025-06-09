@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Services;
+namespace Vizra\VizraSdk\Services;
 
-use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
-use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent; // Added
-use AaronLumsden\LaravelAiADK\Agents\GenericLlmAgent; // Will be created
-use AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException;
-use AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException; // Added
+use Vizra\VizraSdk\Agents\BaseAgent;
+use Vizra\VizraSdk\Agents\BaseLlmAgent; // Added
+use Vizra\VizraSdk\Agents\GenericLlmAgent; // Will be created
+use Vizra\VizraSdk\Exceptions\AgentNotFoundException;
+use Vizra\VizraSdk\Exceptions\AgentConfigurationException; // Added
 use Illuminate\Contracts\Foundation\Application;
 
 class AgentRegistry

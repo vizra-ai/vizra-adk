@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\Agents;
+namespace Vizra\VizraSdk\Tests\Unit\Agents;
 
-use AaronLumsden\LaravelAiADK\Agents\ConditionalWorkflow;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
-use AaronLumsden\LaravelAiADK\Facades\Agent;
+use Vizra\VizraSdk\Agents\ConditionalWorkflow;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraSdk\Facades\Agent;
 use Mockery;
 
 class ConditionalWorkflowTest extends TestCase

@@ -1,15 +1,15 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Http\Controllers;
+namespace Vizra\VizraSdk\Http\Controllers;
 
-namespace AaronLumsden\LaravelAiADK\Http\Controllers;
+namespace Vizra\VizraSdk\Http\Controllers;
 
-use AaronLumsden\LaravelAiADK\Facades\Agent;
+use Vizra\VizraSdk\Facades\Agent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller; // Base controller
 use Illuminate\Support\Facades\Validator;
-use AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException;
+use Vizra\VizraSdk\Exceptions\AgentNotFoundException;
 
 class AgentApiController extends Controller
 {
@@ -54,11 +54,11 @@ class AgentApiController extends Controller
         } catch (AgentNotFoundException $e) {
             // This might be redundant if Agent::hasAgent() check is solid, but good for safety
             return response()->json(['error' => "Agent '{$agentName}' could not be found or loaded.", 'detail' => $e->getMessage()], 404);
-        } catch (\AaronLumsden\LaravelAiADK\Exceptions\ToolExecutionException $e) {
+        } catch (\Vizra\VizraSdk\Exceptions\ToolExecutionException $e) {
             // Log the full error for server-side diagnostics
             logger()->error("Tool execution error for agent {$agentName}: " . $e->getMessage(), ['exception' => $e]);
             return response()->json(['error' => 'A tool required by the agent failed to execute.', 'detail' => $e->getMessage()], 500);
-        } catch (\AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException $e) {
+        } catch (\Vizra\VizraSdk\Exceptions\AgentConfigurationException $e) {
             logger()->error("Agent configuration error for agent {$agentName}: " . $e->getMessage(), ['exception' => $e]);
             return response()->json(['error' => 'Agent configuration error.', 'detail' => $e->getMessage()], 500);
         } catch (\Throwable $e) {

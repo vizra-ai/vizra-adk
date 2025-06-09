@@ -1,8 +1,8 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Services\Tracer;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Models\TraceSpan;
+use Vizra\VizraSdk\Services\Tracer;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Models\TraceSpan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;

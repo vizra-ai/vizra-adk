@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Examples;
+namespace Vizra\VizraSdk\Examples;
 
-use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use Vizra\VizraSdk\Agents\BaseLlmAgent;
 
 /**
  * Billing support sub-agent specialized in handling billing and payment issues.

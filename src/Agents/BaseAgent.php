@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Agents;
+namespace Vizra\VizraSdk\Agents;
 
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Execution\AgentExecutor;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Execution\AgentExecutor;
 
 /**
  * Abstract Class BaseAgent

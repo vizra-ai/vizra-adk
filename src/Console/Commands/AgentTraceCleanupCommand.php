@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AaronLumsden\LaravelAiADK\Console\Commands;
+namespace Vizra\VizraSdk\Console\Commands;
 
-use AaronLumsden\LaravelAiADK\Services\Tracer;
+use Vizra\VizraSdk\Services\Tracer;
 use Illuminate\Console\Command;
 
 class AgentTraceCleanupCommand extends Command

@@ -1,10 +1,10 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Services;
+namespace Vizra\VizraSdk\Services;
 
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Models\AgentSession;
-use AaronLumsden\LaravelAiADK\Models\AgentMessage;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Models\AgentSession;
+use Vizra\VizraSdk\Models\AgentMessage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;

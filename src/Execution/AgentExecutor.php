@@ -1,13 +1,15 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Execution;
+namespace Vizra\VizraSdk\Execution;
 
-use AaronLumsden\LaravelAiADK\Services\AgentManager;
-use AaronLumsden\LaravelAiADK\Services\StateManager;
-use AaronLumsden\LaravelAiADK\Jobs\AgentJob;
+use Vizra\VizraSdk\Services\AgentManager;
+use Vizra\VizraSdk\Services\StateManager;
+use Vizra\VizraSdk\Jobs\AgentJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Prism\Prism\ValueObjects\Messages\Support\Image;
+use Prism\Prism\ValueObjects\Messages\Support\Document;
 
 class AgentExecutor
 {
@@ -24,6 +26,10 @@ class AgentExecutor
     protected ?int $delay = null;
     protected int $tries = 3;
     protected ?int $timeout = null;
+    /** @var array<Image> */
+    protected array $images = [];
+    /** @var array<Document> */
+    protected array $documents = [];
 
     public function __construct(string $agentClass, mixed $input, string $mode = 'ask')
     {
@@ -142,6 +148,82 @@ class AgentExecutor
     }
 
     /**
+     * Add an image to the conversation using Prism's Image class.
+     *
+     * @param string $path Path to the image file
+     * @param string|null $mimeType Optional MIME type (auto-detected if not provided)
+     * @return self
+     */
+    public function withImage(string $path, ?string $mimeType = null): self
+    {
+        $this->images[] = Image::fromPath($path, $mimeType);
+        return $this;
+    }
+
+    /**
+     * Add an image from base64 data using Prism's Image class.
+     *
+     * @param string $base64Data Base64 encoded image data
+     * @param string $mimeType MIME type of the image
+     * @return self
+     */
+    public function withImageFromBase64(string $base64Data, string $mimeType): self
+    {
+        $this->images[] = Image::fromBase64($base64Data, $mimeType);
+        return $this;
+    }
+
+    /**
+     * Add an image from a URL using Prism's Image class.
+     *
+     * @param string $url URL to the image
+     * @return self
+     */
+    public function withImageFromUrl(string $url): self
+    {
+        $this->images[] = Image::fromUrl($url);
+        return $this;
+    }
+
+    /**
+     * Add a document to the conversation using Prism's Document class.
+     *
+     * @param string $path Path to the document file
+     * @param string|null $mimeType Optional MIME type (auto-detected if not provided)
+     * @return self
+     */
+    public function withDocument(string $path, ?string $mimeType = null): self
+    {
+        $this->documents[] = Document::fromPath($path, $mimeType);
+        return $this;
+    }
+
+    /**
+     * Add a document from base64 data using Prism's Document class.
+     *
+     * @param string $base64Data Base64 encoded document data
+     * @param string $mimeType MIME type of the document
+     * @return self
+     */
+    public function withDocumentFromBase64(string $base64Data, string $mimeType): self
+    {
+        $this->documents[] = Document::fromBase64($base64Data, $mimeType);
+        return $this;
+    }
+
+    /**
+     * Add a document from a URL using Prism's Document class.
+     *
+     * @param string $url URL to the document
+     * @return self
+     */
+    public function withDocumentFromUrl(string $url): self
+    {
+        $this->documents[] = Document::fromUrl($url);
+        return $this;
+    }
+
+    /**
      * Execute the agent and return the response
      */
     public function execute(): mixed
@@ -192,6 +274,14 @@ class AgentExecutor
         // Add additional context
         foreach ($this->context as $key => $value) {
             $agentContext->setState($key, $value);
+        }
+
+        // Add Prism Image and Document objects to context
+        if (!empty($this->images)) {
+            $agentContext->setState('prism_images', $this->images);
+        }
+        if (!empty($this->documents)) {
+            $agentContext->setState('prism_documents', $this->documents);
         }
 
         // Add agent parameters
@@ -266,6 +356,9 @@ class AgentExecutor
             'context_data' => $this->context,
             'parameters' => $this->parameters,
             'streaming' => $this->streaming,
+            // Note: Prism Image/Document objects need special serialization for queue jobs
+            'images' => array_map(fn($img) => ['type' => 'serialized', 'data' => serialize($img)], $this->images),
+            'documents' => array_map(fn($doc) => ['type' => 'serialized', 'data' => serialize($doc)], $this->documents),
         ];
 
         if ($this->user) {

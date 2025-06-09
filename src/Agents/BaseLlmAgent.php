@@ -1,16 +1,16 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Agents;
+namespace Vizra\VizraSdk\Agents;
 
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAiADK\Events\LlmCallInitiating;
-use AaronLumsden\LaravelAiADK\Events\LlmResponseReceived;
-use AaronLumsden\LaravelAiADK\Events\ToolCallCompleted;
-use AaronLumsden\LaravelAiADK\Events\ToolCallInitiating;
-use AaronLumsden\LaravelAiADK\Events\AgentResponseGenerated;
-use AaronLumsden\LaravelAiADK\Exceptions\ToolExecutionException;
-use AaronLumsden\LaravelAiADK\Services\Tracer;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Contracts\ToolInterface;
+use Vizra\VizraSdk\Events\LlmCallInitiating;
+use Vizra\VizraSdk\Events\LlmResponseReceived;
+use Vizra\VizraSdk\Events\ToolCallCompleted;
+use Vizra\VizraSdk\Events\ToolCallInitiating;
+use Vizra\VizraSdk\Events\AgentResponseGenerated;
+use Vizra\VizraSdk\Exceptions\ToolExecutionException;
+use Vizra\VizraSdk\Services\Tracer;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Arr;
 use Prism\Prism\Prism;
@@ -24,6 +24,8 @@ use Prism\Prism\ValueObjects\Messages\UserMessage;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Messages\SystemMessage;
 use Prism\Prism\ValueObjects\Messages\ToolResultMessage;
+use Prism\Prism\ValueObjects\Messages\Support\Image;
+use Prism\Prism\ValueObjects\Messages\Support\Document;
 
 abstract class BaseLlmAgent extends BaseAgent
 {
@@ -261,7 +263,7 @@ abstract class BaseLlmAgent extends BaseAgent
         // Include delegation tool if sub-agents are available
         $allTools = $this->loadedTools;
         if (!empty($this->loadedSubAgents)) {
-            $allTools[] = new \AaronLumsden\LaravelAiADK\Tools\DelegateToSubAgentTool($this);
+            $allTools[] = new \Vizra\VizraSdk\Tools\DelegateToSubAgentTool($this);
         }
 
         foreach ($allTools as $tool) {
@@ -385,7 +387,21 @@ abstract class BaseLlmAgent extends BaseAgent
 
         try {
             $context->setUserInput($input);
-            $context->addMessage(['role' => 'user', 'content' => $input ?: '']);
+            
+            // Check for Prism Image and Document objects in context from AgentExecutor
+            $images = $context->getState('prism_images', []);
+            $documents = $context->getState('prism_documents', []);
+            
+            // Add user message with attachments if present
+            $userMessage = ['role' => 'user', 'content' => $input ?: ''];
+            if (!empty($images)) {
+                $userMessage['images'] = $images;
+            }
+            if (!empty($documents)) {
+                $userMessage['documents'] = $documents;
+            }
+            
+            $context->addMessage($userMessage);
 
             // Since Prism handles tool execution internally with maxSteps,
             // we don't need the manual tool execution loop
@@ -408,7 +424,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 $prismRequest = $prismRequest->withMessages($messages);
 
                 // Add tools if available
-                $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \AaronLumsden\LaravelAiADK\Tools\DelegateToSubAgentTool($this)] : []);
+                $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \Vizra\VizraSdk\Tools\DelegateToSubAgentTool($this)] : []);
                 if (!empty($allTools)) {
                     $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
                         ->withMaxSteps(5); // Prism will handle tool execution internally
@@ -496,7 +512,29 @@ abstract class BaseLlmAgent extends BaseAgent
                     $content = $message['content'] ?? '';
                     // Only add user messages if they have actual content
                     if (!empty(trim($content))) {
-                        $messages[] = new UserMessage($content);
+                        // Collect additional content (images and documents)
+                        $additionalContent = [];
+                        
+                        // Add Prism Image objects if present
+                        if (isset($message['images']) && !empty($message['images'])) {
+                            foreach ($message['images'] as $image) {
+                                if ($image instanceof Image) {
+                                    $additionalContent[] = $image;
+                                }
+                            }
+                        }
+                        
+                        // Add Prism Document objects if present
+                        if (isset($message['documents']) && !empty($message['documents'])) {
+                            foreach ($message['documents'] as $document) {
+                                if ($document instanceof Document) {
+                                    $additionalContent[] = $document;
+                                }
+                            }
+                        }
+                        
+                        // Create UserMessage with content and additional content
+                        $messages[] = new UserMessage($content, $additionalContent);
                     }
                     break;
 

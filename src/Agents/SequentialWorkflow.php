@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Agents;
+namespace Vizra\VizraSdk\Agents;
 
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\System\AgentContext;
 
 /**
  * Sequential Workflow Agent

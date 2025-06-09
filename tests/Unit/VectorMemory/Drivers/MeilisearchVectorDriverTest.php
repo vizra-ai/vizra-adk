@@ -1,10 +1,10 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\VectorMemory\Drivers;
+namespace Vizra\VizraSdk\Tests\Unit\VectorMemory\Drivers;
 
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
-use AaronLumsden\LaravelAiADK\Services\Drivers\MeilisearchVectorDriver;
-use AaronLumsden\LaravelAiADK\Models\VectorMemory;
+use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraSdk\Services\Drivers\MeilisearchVectorDriver;
+use Vizra\VizraSdk\Models\VectorMemory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Collection;

@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Services;
+namespace Vizra\VizraSdk\Services;
 
-use AaronLumsden\LaravelAiADK\Contracts\EmbeddingProviderInterface;
-use AaronLumsden\LaravelAiADK\Models\VectorMemory;
-use AaronLumsden\LaravelAiADK\Services\DocumentChunker;
-use AaronLumsden\LaravelAiADK\Services\Drivers\MeilisearchVectorDriver;
+use Vizra\VizraSdk\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraSdk\Models\VectorMemory;
+use Vizra\VizraSdk\Services\DocumentChunker;
+use Vizra\VizraSdk\Services\Drivers\MeilisearchVectorDriver;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;

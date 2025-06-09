@@ -1,10 +1,10 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Agents;
+namespace Vizra\VizraSdk\Agents;
 
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException;
-use AaronLumsden\LaravelAiADK\Facades\Agent;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Exceptions\AgentNotFoundException;
+use Vizra\VizraSdk\Facades\Agent;
 use Closure;
 use Illuminate\Support\Collection;
 

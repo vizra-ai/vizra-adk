@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Services;
+namespace Vizra\VizraSdk\Services;
 
-use AaronLumsden\LaravelAiADK\Models\AgentMemory;
-use AaronLumsden\LaravelAiADK\Models\AgentSession;
-use AaronLumsden\LaravelAiADK\Models\AgentMessage;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Events\MemoryUpdated;
+use Vizra\VizraSdk\Models\AgentMemory;
+use Vizra\VizraSdk\Models\AgentSession;
+use Vizra\VizraSdk\Models\AgentMessage;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Events\MemoryUpdated;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Console\Commands;
+namespace Vizra\VizraSdk\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Input\InputArgument;

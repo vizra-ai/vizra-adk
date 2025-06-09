@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use AaronLumsden\LaravelAiADK\Http\Controllers\AgentApiController;
+use Vizra\VizraSdk\Http\Controllers\AgentApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +21,7 @@ Route::post('/interact', [AgentApiController::class, 'handleAgentInteraction'])
 //     $input = $request->input('message');
 //     $sessionId = $request->input('session_id', session()->getId());
 //     try {
-//         $response = \AaronLumsden\LaravelAiADK\Facades\Agent::run('weather_reporter', $input, $sessionId);
+//         $response = \Vizra\VizraSdk\Facades\Agent::run('weather_reporter', $input, $sessionId);
 //         return response()->json(['response' => $response, 'session_id' => $sessionId]);
 //     } catch (\Throwable $e) {
 //         return response()->json(['error' => $e->getMessage()], 500);

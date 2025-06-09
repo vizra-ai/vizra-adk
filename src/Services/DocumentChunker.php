@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Services;
+namespace Vizra\VizraSdk\Services;
 
 class DocumentChunker
 {

@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\Agents;
+namespace Vizra\VizraSdk\Tests\Unit\Agents;
 
-use AaronLumsden\LaravelAiADK\Agents\ParallelWorkflow;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
-use AaronLumsden\LaravelAiADK\Facades\Agent;
+use Vizra\VizraSdk\Agents\ParallelWorkflow;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraSdk\Facades\Agent;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Cache;
 use Mockery;
@@ -263,7 +263,7 @@ class ParallelWorkflowTest extends TestCase
         $this->assertArrayHasKey('session_id', $result);
 
         // Verify that jobs were pushed to the queue (don't check specific count as implementation may vary)
-        Queue::assertPushed(\AaronLumsden\LaravelAiADK\Jobs\AgentJob::class);
+        Queue::assertPushed(\Vizra\VizraSdk\Jobs\AgentJob::class);
     }
 
     public function test_static_create_method()

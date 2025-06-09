@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Console\Commands;
+namespace Vizra\VizraSdk\Console\Commands;
 
-use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
-use AaronLumsden\LaravelAiADK\Models\VectorMemory;
+use Vizra\VizraSdk\Services\VectorMemoryManager;
+use Vizra\VizraSdk\Models\VectorMemory;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 

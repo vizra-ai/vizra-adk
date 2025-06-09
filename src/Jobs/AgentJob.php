@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Jobs;
+namespace Vizra\VizraSdk\Jobs;
 
-use AaronLumsden\LaravelAiADK\Services\AgentManager;
-use AaronLumsden\LaravelAiADK\Services\StateManager;
+use Vizra\VizraSdk\Services\AgentManager;
+use Vizra\VizraSdk\Services\StateManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

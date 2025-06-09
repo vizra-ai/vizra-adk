@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\VectorMemory;
+namespace Vizra\VizraSdk\Tests\Unit\VectorMemory;
 
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
-use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
-use AaronLumsden\LaravelAiADK\Services\DocumentChunker;
-use AaronLumsden\LaravelAiADK\Contracts\EmbeddingProviderInterface;
-use AaronLumsden\LaravelAiADK\Models\VectorMemory;
+use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraSdk\Services\VectorMemoryManager;
+use Vizra\VizraSdk\Services\DocumentChunker;
+use Vizra\VizraSdk\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraSdk\Models\VectorMemory;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Collection;
 use Mockery;

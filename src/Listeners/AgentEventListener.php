@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Listeners;
+namespace Vizra\VizraSdk\Listeners;
 
-use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
+use Vizra\VizraSdk\Agents\BaseAgent;
 use Illuminate\Support\Facades\Log;
 
 /**

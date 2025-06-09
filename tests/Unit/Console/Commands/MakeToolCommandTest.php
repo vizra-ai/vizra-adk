@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\Console\Commands;
+namespace Vizra\VizraSdk\Tests\Unit\Console\Commands;
 
-use AaronLumsden\LaravelAiADK\Console\Commands\MakeToolCommand;
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use Vizra\VizraSdk\Console\Commands\MakeToolCommand;
+use Vizra\VizraSdk\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Illuminate\Filesystem\Filesystem;

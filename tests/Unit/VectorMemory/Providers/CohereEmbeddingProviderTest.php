@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\VectorMemory\Providers;
+namespace Vizra\VizraSdk\Tests\Unit\VectorMemory\Providers;
 
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
-use AaronLumsden\LaravelAiADK\Providers\CohereEmbeddingProvider;
+use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraSdk\Providers\CohereEmbeddingProvider;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
 

@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\Agents;
+namespace Vizra\VizraSdk\Tests\Unit\Agents;
 
-use AaronLumsden\LaravelAiADK\Agents\LoopWorkflow;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
-use AaronLumsden\LaravelAiADK\Facades\Agent;
+use Vizra\VizraSdk\Agents\LoopWorkflow;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraSdk\Facades\Agent;
 use Mockery;
 
 class LoopWorkflowTest extends TestCase

@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Services;
+namespace Vizra\VizraSdk\Services;
 
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Models\TraceSpan;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Models\TraceSpan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;

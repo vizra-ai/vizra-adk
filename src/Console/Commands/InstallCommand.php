@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Console\Commands;
+namespace Vizra\VizraSdk\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
@@ -14,13 +14,13 @@ class InstallCommand extends Command
     {
         $this->info('Publishing Laravel Ai ADK configuration...');
         $this->call('vendor:publish', [
-            '--provider' => "AaronLumsden\LaravelAiADK\Providers\AgentServiceProvider",
+            '--provider' => "Vizra\VizraSdk\Providers\AgentServiceProvider",
             '--tag' => "agent-adk-config"
         ]);
 
         $this->info('Publishing Laravel Ai ADK migrations...');
         $this->call('vendor:publish', [
-            '--provider' => "AaronLumsden\LaravelAiADK\Providers\AgentServiceProvider",
+            '--provider' => "Vizra\VizraSdk\Providers\AgentServiceProvider",
             '--tag' => "agent-adk-migrations"
         ]);
 

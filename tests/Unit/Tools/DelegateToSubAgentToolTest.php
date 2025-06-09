@@ -1,8 +1,8 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Tools\DelegateToSubAgentTool;
-use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\Tools\DelegateToSubAgentTool;
+use Vizra\VizraSdk\Agents\BaseLlmAgent;
+use Vizra\VizraSdk\System\AgentContext;
 
 beforeEach(function () {
     $this->parentAgent = new TestDelegationParentAgent();

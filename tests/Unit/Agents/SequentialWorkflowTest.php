@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\Agents;
+namespace Vizra\VizraSdk\Tests\Unit\Agents;
 
-use AaronLumsden\LaravelAiADK\Agents\SequentialWorkflow;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
-use AaronLumsden\LaravelAiADK\Facades\Agent;
+use Vizra\VizraSdk\Agents\SequentialWorkflow;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraSdk\Facades\Agent;
 use Mockery;
 
 class SequentialWorkflowTest extends TestCase

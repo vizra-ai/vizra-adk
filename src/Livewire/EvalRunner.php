@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Livewire;
+namespace Vizra\VizraSdk\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use AaronLumsden\LaravelAiADK\Evaluations\BaseEvaluation;
-use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
-use AaronLumsden\LaravelAiADK\Facades\Agent;
+use Vizra\VizraSdk\Evaluations\BaseEvaluation;
+use Vizra\VizraSdk\Services\AgentRegistry;
+use Vizra\VizraSdk\Facades\Agent;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -115,7 +115,7 @@ class EvalRunner extends Component
             foreach ($files as $file) {
                 if ($file->getExtension() === 'php') {
                     $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-                    $fullClassName = "AaronLumsden\\LaravelAiADK\\Evaluations\\{$className}";
+                    $fullClassName = "Vizra\\VizraSdk\\Evaluations\\{$className}";
 
                     if (class_exists($fullClassName) && is_subclass_of($fullClassName, BaseEvaluation::class)) {
                         try {

@@ -94,7 +94,7 @@ Added new configuration options in `config/agent-adk.php`:
 
 ```bash
 # Install the package
-composer require aaronlumsden/laravel-ai-adk
+composer require vizra/vizra-sdk
 
 # Run the install command
 php artisan agent:install

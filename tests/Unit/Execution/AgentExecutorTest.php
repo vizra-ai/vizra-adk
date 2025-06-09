@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\Execution;
+namespace Vizra\VizraSdk\Tests\Unit\Execution;
 
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
-use AaronLumsden\LaravelAiADK\Execution\AgentExecutor;
-use AaronLumsden\LaravelAiADK\Services\AgentManager;
-use AaronLumsden\LaravelAiADK\Services\StateManager;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraSdk\Execution\AgentExecutor;
+use Vizra\VizraSdk\Services\AgentManager;
+use Vizra\VizraSdk\Services\StateManager;
+use Vizra\VizraSdk\System\AgentContext;
 use Illuminate\Database\Eloquent\Model;
 use Mockery;
 

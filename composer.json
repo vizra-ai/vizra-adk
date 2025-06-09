@@ -1,5 +1,5 @@
 {
-  "name": "aaronlumsden/laravel-ai-adk",
+  "name": "vizra/vizra-sdk",
   "description": "A Laravel package for building AI-driven agents, inspired by Google ADK.",
   "type": "laravel-package",
   "license": "MIT",
@@ -23,22 +23,22 @@
   },
   "autoload": {
     "psr-4": {
-      "AaronLumsden\\LaravelAiADK\\": "src/"
+      "Vizra\\VizraSdk\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "AaronLumsden\\LaravelAiADK\\Tests\\": "tests/"
+      "Vizra\\VizraSdk\\Tests\\": "tests/"
     }
   },
   "extra": {
     "laravel": {
       "providers": [
-        "AaronLumsden\\LaravelAiADK\\Providers\\AgentServiceProvider"
+        "Vizra\\VizraSdk\\Providers\\AgentServiceProvider"
       ],
       "aliases": {
-        "Agent": "AaronLumsden\\LaravelAiADK\\Facades\\Agent",
-        "Workflow": "AaronLumsden\\LaravelAiADK\\Facades\\Workflow"
+        "Agent": "Vizra\\VizraSdk\\Facades\\Agent",
+        "Workflow": "Vizra\\VizraSdk\\Facades\\Workflow"
       }
     }
   },

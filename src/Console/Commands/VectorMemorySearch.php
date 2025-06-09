@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Console\Commands;
+namespace Vizra\VizraSdk\Console\Commands;
 
-use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
+use Vizra\VizraSdk\Services\VectorMemoryManager;
 use Illuminate\Console\Command;
 
 class VectorMemorySearch extends Command

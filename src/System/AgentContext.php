@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\System;
+namespace Vizra\VizraSdk\System;
 
 use Illuminate\Support\Collection;
 

@@ -1,14 +1,14 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Console\Commands;
+namespace Vizra\VizraSdk\Console\Commands;
 
 use Illuminate\Console\Command;
-use AaronLumsden\LaravelAiADK\Facades\Agent;
+use Vizra\VizraSdk\Facades\Agent;
 use Illuminate\Support\Str; // For generating session ID
 use Symfony\Component\Console\Input\InputArgument;
-use AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException;
-use AaronLumsden\LaravelAiADK\Exceptions\ToolExecutionException;
-use AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException;
+use Vizra\VizraSdk\Exceptions\AgentNotFoundException;
+use Vizra\VizraSdk\Exceptions\ToolExecutionException;
+use Vizra\VizraSdk\Exceptions\AgentConfigurationException;
 
 class AgentChatCommand extends Command
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Events;
+namespace Vizra\VizraSdk\Events;
 
-use AaronLumsden\LaravelAiADK\Models\AgentMemory;
-use AaronLumsden\LaravelAiADK\Models\AgentSession;
+use Vizra\VizraSdk\Models\AgentMemory;
+use Vizra\VizraSdk\Models\AgentSession;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 

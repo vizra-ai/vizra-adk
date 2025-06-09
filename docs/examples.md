@@ -15,7 +15,7 @@ See Laravel AI ADK in action with real-world examples. From simple chatbots to s
 
 namespace App\Agents;
 
-use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use Vizra\VizraSdk\Agents\BaseLlmAgent;
 use App\Tools\OrderLookupTool;
 use App\Tools\ProductSearchTool;
 use App\Tools\ReturnProcessTool;
@@ -788,5 +788,5 @@ Ready to build your own AI-powered Laravel application? Pick an example that mat
 
 <p align="center">
 <strong>Questions about implementation?</strong><br>
-<a href="https://github.com/aaronlumsden/laravel-ai-adk/discussions">Join the Discussion →</a>
+<a href="https://github.com/vizra/vizra-sdk/discussions">Join the Discussion →</a>
 </p>

@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Contracts;
+namespace Vizra\VizraSdk\Contracts;
 
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\System\AgentContext;
 
 /**
  * Interface ToolInterface

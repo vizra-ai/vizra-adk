@@ -1,7 +1,7 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Models\AgentSession;
-use AaronLumsden\LaravelAiADK\Models\AgentMessage;
+use Vizra\VizraSdk\Models\AgentSession;
+use Vizra\VizraSdk\Models\AgentMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 
@@ -126,7 +126,7 @@ it('manages timestamps', function () {
 });
 
 it('can have memory relationship', function () {
-    $memory = \AaronLumsden\LaravelAiADK\Models\AgentMemory::create([
+    $memory = \Vizra\VizraSdk\Models\AgentMemory::create([
         'agent_name' => 'test-agent'
     ]);
 
@@ -135,7 +135,7 @@ it('can have memory relationship', function () {
         'agent_memory_id' => $memory->id
     ]);
 
-    expect($session->memory)->toBeInstanceOf(\AaronLumsden\LaravelAiADK\Models\AgentMemory::class);
+    expect($session->memory)->toBeInstanceOf(\Vizra\VizraSdk\Models\AgentMemory::class);
     expect($session->memory->id)->toBe($memory->id);
     expect($session->memory->agent_name)->toBe('test-agent');
 });
@@ -160,7 +160,7 @@ it('can get or create memory', function () {
     // Should create new memory
     $memory = $session->getOrCreateMemory();
 
-    expect($memory)->toBeInstanceOf(\AaronLumsden\LaravelAiADK\Models\AgentMemory::class);
+    expect($memory)->toBeInstanceOf(\Vizra\VizraSdk\Models\AgentMemory::class);
     expect($memory->agent_name)->toBe('memory-test-agent');
 
     // Session should now be linked to memory

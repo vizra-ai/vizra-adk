@@ -194,7 +194,7 @@ The CLI uses visual indicators for different span types and statuses:
 ### Using the Tracer Service
 
 ```php
-use AaronLumsden\LaravelAiADK\Services\Tracer;
+use Vizra\VizraSdk\Services\Tracer;
 
 // Get tracer instance
 $tracer = app(Tracer::class);
@@ -212,7 +212,7 @@ $deleted = $tracer->cleanupOldTraces(30);
 ### Using the TraceSpan Model
 
 ```php
-use AaronLumsden\LaravelAiADK\Models\TraceSpan;
+use Vizra\VizraSdk\Models\TraceSpan;
 
 // Query spans directly
 $spans = TraceSpan::forSession('session-123')->get();

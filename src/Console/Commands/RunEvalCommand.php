@@ -1,12 +1,12 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Console\Commands; // Updated namespace
+namespace Vizra\VizraSdk\Console\Commands; // Updated namespace
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str; // Added for UUID
-use AaronLumsden\LaravelAiADK\Evaluations\BaseEvaluation; // Updated namespace
-use AaronLumsden\LaravelAiADK\Facades\Agent; // Added Agent Facade
+use Vizra\VizraSdk\Evaluations\BaseEvaluation; // Updated namespace
+use Vizra\VizraSdk\Facades\Agent; // Added Agent Facade
 use Exception;
 use InvalidArgumentException;
 use League\Csv\Writer;
@@ -32,7 +32,7 @@ class RunEvalCommand extends Command
         // Resolve evaluation class name (considering App namespace first, then package namespace)
         $studlyEvalName = Str::studly($evaluationNameArgument);
         $evaluationAppNamespace = $this->laravel->getNamespace().'Evaluations\\'.$studlyEvalName;
-        $evaluationPackageNamespace = 'AaronLumsden\\LaravelAiADK\\Evaluations\\'.$studlyEvalName;
+        $evaluationPackageNamespace = 'Vizra\\VizraSdk\\Evaluations\\'.$studlyEvalName;
 
         if (class_exists($evaluationAppNamespace)) {
             $evaluationClass = $evaluationAppNamespace;

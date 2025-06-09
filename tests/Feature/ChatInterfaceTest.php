@@ -1,6 +1,6 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Livewire\ChatInterface;
+use Vizra\VizraSdk\Livewire\ChatInterface;
 use Livewire\Livewire;
 
 test('chat interface loads correctly', function () {

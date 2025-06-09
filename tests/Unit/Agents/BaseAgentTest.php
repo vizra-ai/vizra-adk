@@ -1,7 +1,7 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\Agents\BaseAgent;
+use Vizra\VizraSdk\System\AgentContext;
 
 /**
  * Test implementation of BaseAgent for testing purposes

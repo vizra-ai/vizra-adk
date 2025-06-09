@@ -1,9 +1,9 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Models\AgentSession;
-use AaronLumsden\LaravelAiADK\Models\AgentMemory;
-use AaronLumsden\LaravelAiADK\Models\AgentMessage;
-use AaronLumsden\LaravelAiADK\Services\MemoryManager;
+use Vizra\VizraSdk\Models\AgentSession;
+use Vizra\VizraSdk\Models\AgentMemory;
+use Vizra\VizraSdk\Models\AgentMessage;
+use Vizra\VizraSdk\Services\MemoryManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 

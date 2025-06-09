@@ -16,14 +16,14 @@ Before we dive in, make sure you have:
 ### Step 1: Install the Package
 
 ```bash
-composer require aaronlumsden/laravel-ai-adk
+composer require vizra/vizra-sdk
 ```
 
 ### Step 2: Publish Configuration & Migrations
 
 ```bash
 # Publish config file and migrations
-php artisan vendor:publish --provider="AaronLumsden\LaravelAiADK\AgentAdkServiceProvider"
+php artisan vendor:publish --provider="Vizra\VizraSdk\AgentAdkServiceProvider"
 
 # Run the migrations (creates agent sessions, messages, and memory tables)
 php artisan migrate
@@ -64,7 +64,7 @@ This creates `app/Agents/WeatherAgent.php`:
 
 namespace App\Agents;
 
-use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use Vizra\VizraSdk\Agents\BaseLlmAgent;
 
 class WeatherAgent extends BaseLlmAgent
 {
@@ -98,7 +98,7 @@ $response = WeatherAgent::ask('What\'s the weather like today?')->forUser(auth()
 echo $response;
 
 // Or using the facade (legacy approach)
-use AaronLumsden\LaravelAiADK\Facades\Agent;
+use Vizra\VizraSdk\Facades\Agent;
 $response = Agent::run('weather_agent', 'What\'s the weather like today?');
 echo $response;
 ```
@@ -120,8 +120,8 @@ This creates `app/Tools/WeatherTool.php`:
 
 namespace App\Tools;
 
-use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\Contracts\ToolInterface;
+use Vizra\VizraSdk\System\AgentContext;
 use Illuminate\Support\Facades\Http;
 
 class WeatherTool implements ToolInterface
@@ -307,7 +307,7 @@ The Laravel Ai ADK comes with a beautiful web interface for testing and monitori
 In your `routes/web.php`:
 
 ```php
-use AaronLumsden\LaravelAiADK\AgentAdkRouteServiceProvider;
+use Vizra\VizraSdk\AgentAdkRouteServiceProvider;
 
 // The service provider automatically registers routes under /ai-adk
 // Visit: http://your-app.test/ai-adk

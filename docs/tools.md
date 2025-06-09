@@ -102,8 +102,8 @@ php artisan agent:make:tool OrderLookupTool
 
 namespace App\Tools;
 
-use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\Contracts\ToolInterface;
+use Vizra\VizraSdk\System\AgentContext;
 
 class OrderLookupTool implements ToolInterface
 {
@@ -556,7 +556,7 @@ class CompleteOrderTool implements ToolInterface
 
 use Tests\TestCase;
 use App\Tools\OrderLookupTool;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\System\AgentContext;
 
 class OrderLookupToolTest extends TestCase
 {

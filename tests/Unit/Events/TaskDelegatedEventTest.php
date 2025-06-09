@@ -1,9 +1,9 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Events\TaskDelegated;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Tools\DelegateToSubAgentTool;
-use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use Vizra\VizraSdk\Events\TaskDelegated;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Tools\DelegateToSubAgentTool;
+use Vizra\VizraSdk\Agents\BaseLlmAgent;
 use Illuminate\Support\Facades\Event;
 
 describe('TaskDelegated Event', function () {

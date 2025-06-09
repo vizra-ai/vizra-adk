@@ -1,10 +1,10 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Events\AgentResponseGenerated;
-use AaronLumsden\LaravelAiADK\Events\AgentExecutionStarting;
-use AaronLumsden\LaravelAiADK\Events\AgentExecutionFinished;
-use AaronLumsden\LaravelAiADK\Events\TaskDelegated;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\Events\AgentResponseGenerated;
+use Vizra\VizraSdk\Events\AgentExecutionStarting;
+use Vizra\VizraSdk\Events\AgentExecutionFinished;
+use Vizra\VizraSdk\Events\TaskDelegated;
+use Vizra\VizraSdk\System\AgentContext;
 use Illuminate\Support\Facades\Event;
 
 it('creates agent response generated event correctly', function () {

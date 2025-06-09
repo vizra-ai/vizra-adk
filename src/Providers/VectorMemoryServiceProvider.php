@@ -1,16 +1,16 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Providers;
+namespace Vizra\VizraSdk\Providers;
 
-use AaronLumsden\LaravelAiADK\Contracts\EmbeddingProviderInterface;
-use AaronLumsden\LaravelAiADK\Providers\OpenAIEmbeddingProvider;
-use AaronLumsden\LaravelAiADK\Providers\CohereEmbeddingProvider;
-use AaronLumsden\LaravelAiADK\Providers\OllamaEmbeddingProvider;
-use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
-use AaronLumsden\LaravelAiADK\Services\DocumentChunker;
-use AaronLumsden\LaravelAiADK\Console\Commands\VectorMemoryStore;
-use AaronLumsden\LaravelAiADK\Console\Commands\VectorMemorySearch;
-use AaronLumsden\LaravelAiADK\Console\Commands\VectorMemoryStats;
+use Vizra\VizraSdk\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraSdk\Providers\OpenAIEmbeddingProvider;
+use Vizra\VizraSdk\Providers\CohereEmbeddingProvider;
+use Vizra\VizraSdk\Providers\OllamaEmbeddingProvider;
+use Vizra\VizraSdk\Services\VectorMemoryManager;
+use Vizra\VizraSdk\Services\DocumentChunker;
+use Vizra\VizraSdk\Console\Commands\VectorMemoryStore;
+use Vizra\VizraSdk\Console\Commands\VectorMemorySearch;
+use Vizra\VizraSdk\Console\Commands\VectorMemoryStats;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;

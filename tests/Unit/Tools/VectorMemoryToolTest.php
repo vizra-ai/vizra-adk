@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\Tools;
+namespace Vizra\VizraSdk\Tests\Unit\Tools;
 
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
-use AaronLumsden\LaravelAiADK\Tools\VectorMemoryTool;
-use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraSdk\Tools\VectorMemoryTool;
+use Vizra\VizraSdk\Services\VectorMemoryManager;
+use Vizra\VizraSdk\System\AgentContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Mockery;

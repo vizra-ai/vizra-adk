@@ -1,10 +1,10 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tools;
+namespace Vizra\VizraSdk\Tools;
 
-use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Services\VectorMemoryManager;
+use Vizra\VizraSdk\Contracts\ToolInterface;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Services\VectorMemoryManager;
 use Illuminate\Support\Facades\Log;
 
 class VectorMemoryTool implements ToolInterface

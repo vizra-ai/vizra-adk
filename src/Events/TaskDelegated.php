@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Events;
+namespace Vizra\VizraSdk\Events;
 
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\System\AgentContext;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 

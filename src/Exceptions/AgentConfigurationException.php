@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Exceptions;
+namespace Vizra\VizraSdk\Exceptions;
 
 class AgentConfigurationException extends \Exception
 {

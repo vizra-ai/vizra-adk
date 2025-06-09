@@ -1,10 +1,10 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
-use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
-use AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException;
-use AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\Services\AgentRegistry;
+use Vizra\VizraSdk\Agents\BaseAgent;
+use Vizra\VizraSdk\Exceptions\AgentNotFoundException;
+use Vizra\VizraSdk\Exceptions\AgentConfigurationException;
+use Vizra\VizraSdk\System\AgentContext;
 
 beforeEach(function () {
     $this->registry = new AgentRegistry($this->app);
@@ -32,7 +32,7 @@ it('can register agent with ad hoc LLM configuration', function () {
 
     // Test that we can actually get the agent instance
     $agent = $this->registry->getAgent('ad-hoc-agent');
-    expect($agent)->toBeInstanceOf(\AaronLumsden\LaravelAiADK\Agents\GenericLlmAgent::class);
+    expect($agent)->toBeInstanceOf(\Vizra\VizraSdk\Agents\GenericLlmAgent::class);
     expect($agent->getName())->toBe('Test Ad Hoc Agent');
     expect($agent->getInstructions())->toBe('You are a test agent.');
 });

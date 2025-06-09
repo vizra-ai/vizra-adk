@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Console\Commands;
+namespace Vizra\VizraSdk\Console\Commands;
 
-use AaronLumsden\LaravelAiADK\Services\Tracer;
-use AaronLumsden\LaravelAiADK\Models\TraceSpan;
+use Vizra\VizraSdk\Services\Tracer;
+use Vizra\VizraSdk\Models\TraceSpan;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 

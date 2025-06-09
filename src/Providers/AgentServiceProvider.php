@@ -1,32 +1,32 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Providers;
+namespace Vizra\VizraSdk\Providers;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Foundation\Application;
 use Livewire\Livewire;
-use AaronLumsden\LaravelAiADK\Services\AgentBuilder;
-use AaronLumsden\LaravelAiADK\Services\AgentRegistry;
-use AaronLumsden\LaravelAiADK\Services\StateManager;
-use AaronLumsden\LaravelAiADK\Services\MemoryManager;
-use AaronLumsden\LaravelAiADK\Services\AgentManager;
-use AaronLumsden\LaravelAiADK\Services\WorkflowManager;
-use AaronLumsden\LaravelAiADK\Services\Tracer;
-use AaronLumsden\LaravelAiADK\Services\AnalyticsService;
-use AaronLumsden\LaravelAiADK\Livewire\Dashboard;
-use AaronLumsden\LaravelAiADK\Livewire\ChatInterface;
-use AaronLumsden\LaravelAiADK\Livewire\EvalRunner;
-use AaronLumsden\LaravelAiADK\Livewire\Analytics;
-use AaronLumsden\LaravelAiADK\Console\Commands\InstallCommand;
-use AaronLumsden\LaravelAiADK\Console\Commands\MakeAgentCommand;
-use AaronLumsden\LaravelAiADK\Console\Commands\MakeToolCommand;
-use AaronLumsden\LaravelAiADK\Console\Commands\AgentChatCommand;
-use AaronLumsden\LaravelAiADK\Console\Commands\MakeEvalCommand;
-use AaronLumsden\LaravelAiADK\Console\Commands\RunEvalCommand;
-use AaronLumsden\LaravelAiADK\Console\Commands\AgentTraceCleanupCommand;
-use AaronLumsden\LaravelAiADK\Console\Commands\AgentTraceCommand;
-use AaronLumsden\LaravelAiADK\Console\Commands\DashboardCommand;
+use Vizra\VizraSdk\Services\AgentBuilder;
+use Vizra\VizraSdk\Services\AgentRegistry;
+use Vizra\VizraSdk\Services\StateManager;
+use Vizra\VizraSdk\Services\MemoryManager;
+use Vizra\VizraSdk\Services\AgentManager;
+use Vizra\VizraSdk\Services\WorkflowManager;
+use Vizra\VizraSdk\Services\Tracer;
+use Vizra\VizraSdk\Services\AnalyticsService;
+use Vizra\VizraSdk\Livewire\Dashboard;
+use Vizra\VizraSdk\Livewire\ChatInterface;
+use Vizra\VizraSdk\Livewire\EvalRunner;
+use Vizra\VizraSdk\Livewire\Analytics;
+use Vizra\VizraSdk\Console\Commands\InstallCommand;
+use Vizra\VizraSdk\Console\Commands\MakeAgentCommand;
+use Vizra\VizraSdk\Console\Commands\MakeToolCommand;
+use Vizra\VizraSdk\Console\Commands\AgentChatCommand;
+use Vizra\VizraSdk\Console\Commands\MakeEvalCommand;
+use Vizra\VizraSdk\Console\Commands\RunEvalCommand;
+use Vizra\VizraSdk\Console\Commands\AgentTraceCleanupCommand;
+use Vizra\VizraSdk\Console\Commands\AgentTraceCommand;
+use Vizra\VizraSdk\Console\Commands\DashboardCommand;
 
 class AgentServiceProvider extends ServiceProvider
 {

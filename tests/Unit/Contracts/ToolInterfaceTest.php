@@ -1,7 +1,7 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\Contracts\ToolInterface;
+use Vizra\VizraSdk\System\AgentContext;
 
 it('implements tool interface contract correctly', function () {
     $tool = new TestTool();

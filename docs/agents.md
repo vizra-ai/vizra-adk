@@ -31,7 +31,7 @@ User Input → Context Loading → Tool Execution → LLM Processing → Respons
 
 namespace App\Agents;
 
-use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use Vizra\VizraSdk\Agents\BaseLlmAgent;
 
 class CustomerSupportAgent extends BaseLlmAgent
 {
@@ -175,8 +175,8 @@ Creating custom tools is straightforward:
 
 namespace App\Tools;
 
-use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraSdk\Contracts\ToolInterface;
+use Vizra\VizraSdk\System\AgentContext;
 
 class OrderLookupTool implements ToolInterface
 {

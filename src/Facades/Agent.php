@@ -1,10 +1,10 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Facades;
+namespace Vizra\VizraSdk\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use AaronLumsden\LaravelAiADK\Services\AgentBuilder; // For type hinting
-use AaronLumsden\LaravelAiADK\Agents\BaseAgent; // For type hinting
+use Vizra\VizraSdk\Services\AgentBuilder; // For type hinting
+use Vizra\VizraSdk\Agents\BaseAgent; // For type hinting
 
 /**
  * @method static AgentBuilder build(string $agentClass)
@@ -14,7 +14,7 @@ use AaronLumsden\LaravelAiADK\Agents\BaseAgent; // For type hinting
  * @method static array getAllRegisteredAgents()
  * @method static bool hasAgent(string $name)
  *
- * @see \AaronLumsden\LaravelAiADK\Services\AgentManager // The underlying class facade will point to
+ * @see \Vizra\VizraSdk\Services\AgentManager // The underlying class facade will point to
  */
 class Agent extends Facade
 {

@@ -48,7 +48,7 @@ This creates `app/Evaluations/CustomerSupportEvaluation.php`:
 
 namespace App\Evaluations;
 
-use AaronLumsden\LaravelAiADK\Evaluations\BaseLlmJudgeEvaluation;
+use Vizra\VizraSdk\Evaluations\BaseLlmJudgeEvaluation;
 
 class CustomerSupportEvaluation extends BaseLlmJudgeEvaluation
 {
@@ -194,7 +194,7 @@ Navigate to `/ai-adk/eval` in your Laravel application to use the visual evaluat
 
 ```php
 use App\Evaluations\CustomerSupportEvaluation;
-use AaronLumsden\LaravelAiADK\Services\EvaluationRunner;
+use Vizra\VizraSdk\Services\EvaluationRunner;
 
 $evaluation = new CustomerSupportEvaluation();
 $runner = new EvaluationRunner();
@@ -222,7 +222,7 @@ For more precise, programmatic testing, create evaluations with specific asserti
 
 namespace App\Evaluations;
 
-use AaronLumsden\LaravelAiADK\Evaluations\BaseEvaluation;
+use Vizra\VizraSdk\Evaluations\BaseEvaluation;
 
 class OrderResponseEvaluation extends BaseEvaluation
 {
@@ -479,7 +479,7 @@ class PerformanceEvaluation extends BaseEvaluation
 Compare different agent versions or configurations:
 
 ```php
-use AaronLumsden\LaravelAiADK\Services\AbTestRunner;
+use Vizra\VizraSdk\Services\AbTestRunner;
 
 $abTest = new AbTestRunner();
 
@@ -518,7 +518,7 @@ Navigate to `/ai-adk/analytics` to see:
 ### Custom Analytics Queries
 
 ```php
-use AaronLumsden\LaravelAiADK\Models\EvaluationResult;
+use Vizra\VizraSdk\Models\EvaluationResult;
 
 // Get pass rates by evaluation type
 $pasRates = EvaluationResult::selectRaw('

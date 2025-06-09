@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Services\Drivers;
+namespace Vizra\VizraSdk\Services\Drivers;
 
-use AaronLumsden\LaravelAiADK\Models\VectorMemory;
+use Vizra\VizraSdk\Models\VectorMemory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;

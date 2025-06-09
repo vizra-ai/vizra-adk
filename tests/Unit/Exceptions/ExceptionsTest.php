@@ -1,8 +1,8 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Exceptions\AgentNotFoundException;
-use AaronLumsden\LaravelAiADK\Exceptions\AgentConfigurationException;
-use AaronLumsden\LaravelAiADK\Exceptions\ToolExecutionException;
+use Vizra\VizraSdk\Exceptions\AgentNotFoundException;
+use Vizra\VizraSdk\Exceptions\AgentConfigurationException;
+use Vizra\VizraSdk\Exceptions\ToolExecutionException;
 
 it('creates agent not found exception correctly', function () {
     $exception = new AgentNotFoundException('Agent not found');

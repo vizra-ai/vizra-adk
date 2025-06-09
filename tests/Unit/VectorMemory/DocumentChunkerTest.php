@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\VectorMemory;
+namespace Vizra\VizraSdk\Tests\Unit\VectorMemory;
 
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
-use AaronLumsden\LaravelAiADK\Services\DocumentChunker;
+use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraSdk\Services\DocumentChunker;
 use Illuminate\Support\Facades\Config;
 
 class DocumentChunkerTest extends TestCase

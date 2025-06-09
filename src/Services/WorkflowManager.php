@@ -1,11 +1,11 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Services;
+namespace Vizra\VizraSdk\Services;
 
-use AaronLumsden\LaravelAiADK\Agents\SequentialWorkflow;
-use AaronLumsden\LaravelAiADK\Agents\ParallelWorkflow;
-use AaronLumsden\LaravelAiADK\Agents\ConditionalWorkflow;
-use AaronLumsden\LaravelAiADK\Agents\LoopWorkflow;
+use Vizra\VizraSdk\Agents\SequentialWorkflow;
+use Vizra\VizraSdk\Agents\ParallelWorkflow;
+use Vizra\VizraSdk\Agents\ConditionalWorkflow;
+use Vizra\VizraSdk\Agents\LoopWorkflow;
 
 /**
  * Workflow Manager Service

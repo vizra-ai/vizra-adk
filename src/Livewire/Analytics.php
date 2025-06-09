@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Livewire;
+namespace Vizra\VizraSdk\Livewire;
 
 use Livewire\Component;
-use AaronLumsden\LaravelAiADK\Services\AnalyticsService;
+use Vizra\VizraSdk\Services\AnalyticsService;
 use Illuminate\Support\Facades\Cache;
 
 class Analytics extends Component

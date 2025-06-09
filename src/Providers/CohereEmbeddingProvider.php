@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Providers;
+namespace Vizra\VizraSdk\Providers;
 
-use AaronLumsden\LaravelAiADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraSdk\Contracts\EmbeddingProviderInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;

@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Examples;
+namespace Vizra\VizraSdk\Examples;
 
-use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use Vizra\VizraSdk\Agents\BaseLlmAgent;
 
 /**
  * Example parent agent that demonstrates sub-agent delegation capabilities.

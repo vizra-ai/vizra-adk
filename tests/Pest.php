@@ -11,9 +11,9 @@
 |
 */
 
-uses(AaronLumsden\LaravelAiADK\Tests\TestCase::class)->in('Feature');
-uses(AaronLumsden\LaravelAiADK\Tests\TestCase::class)->in('Unit');
-uses(AaronLumsden\LaravelAiADK\Tests\TestCase::class)->in('Integration');
+uses(Vizra\VizraSdk\Tests\TestCase::class)->in('Feature');
+uses(Vizra\VizraSdk\Tests\TestCase::class)->in('Unit');
+uses(Vizra\VizraSdk\Tests\TestCase::class)->in('Integration');
 
 /*
 |--------------------------------------------------------------------------

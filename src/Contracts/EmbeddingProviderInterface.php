@@ -1,6 +1,6 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Contracts;
+namespace Vizra\VizraSdk\Contracts;
 
 interface EmbeddingProviderInterface
 {

@@ -1,8 +1,8 @@
 <?php
 
-use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Tools\DelegateToSubAgentTool;
+use Vizra\VizraSdk\Agents\BaseLlmAgent;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Tools\DelegateToSubAgentTool;
 
 describe('Sub-Agent Delegation Hooks', function () {
     beforeEach(function () {

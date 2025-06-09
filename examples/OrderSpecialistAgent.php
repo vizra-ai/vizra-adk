@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Examples;
+namespace Vizra\VizraSdk\Examples;
 
-use AaronLumsden\LaravelAiADK\Agents\BaseLlmAgent;
+use Vizra\VizraSdk\Agents\BaseLlmAgent;
 
 /**
  * Order specialist sub-agent focused on order management and tracking.

@@ -1,13 +1,13 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\Services;
+namespace Vizra\VizraSdk\Tests\Unit\Services;
 
-use AaronLumsden\LaravelAiADK\Services\WorkflowManager;
-use AaronLumsden\LaravelAiADK\Agents\SequentialWorkflow;
-use AaronLumsden\LaravelAiADK\Agents\ParallelWorkflow;
-use AaronLumsden\LaravelAiADK\Agents\ConditionalWorkflow;
-use AaronLumsden\LaravelAiADK\Agents\LoopWorkflow;
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use Vizra\VizraSdk\Services\WorkflowManager;
+use Vizra\VizraSdk\Agents\SequentialWorkflow;
+use Vizra\VizraSdk\Agents\ParallelWorkflow;
+use Vizra\VizraSdk\Agents\ConditionalWorkflow;
+use Vizra\VizraSdk\Agents\LoopWorkflow;
+use Vizra\VizraSdk\Tests\TestCase;
 
 class WorkflowManagerTest extends TestCase
 {

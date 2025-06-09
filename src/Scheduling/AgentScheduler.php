@@ -1,8 +1,8 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Scheduling;
+namespace Vizra\VizraSdk\Scheduling;
 
-use AaronLumsden\LaravelAiADK\Agents\BaseAgent;
+use Vizra\VizraSdk\Agents\BaseAgent;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Log;
 

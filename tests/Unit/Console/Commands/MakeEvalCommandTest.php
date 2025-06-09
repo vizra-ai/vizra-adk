@@ -1,9 +1,9 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Tests\Unit\Console\Commands;
+namespace Vizra\VizraSdk\Tests\Unit\Console\Commands;
 
-use AaronLumsden\LaravelAiADK\Console\Commands\MakeEvalCommand;
-use AaronLumsden\LaravelAiADK\Tests\TestCase;
+use Vizra\VizraSdk\Console\Commands\MakeEvalCommand;
+use Vizra\VizraSdk\Tests\TestCase;
 use Illuminate\Filesystem\Filesystem;
 use Mockery;
 
@@ -395,7 +395,7 @@ class MakeEvalCommandTest extends TestCase
 
 namespace {{ namespace }};
 
-use AaronLumsden\LaravelAiADK\Evaluations\BaseEvaluation;
+use Vizra\VizraSdk\Evaluations\BaseEvaluation;
 use InvalidArgumentException;
 
 class {{ class }} extends BaseEvaluation

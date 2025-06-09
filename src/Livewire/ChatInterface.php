@@ -1,16 +1,16 @@
 <?php
 
-namespace AaronLumsden\LaravelAiADK\Livewire;
+namespace Vizra\VizraSdk\Livewire;
 
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Layout;
-use AaronLumsden\LaravelAiADK\Facades\Agent;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
-use AaronLumsden\LaravelAiADK\Services\StateManager;
-use AaronLumsden\LaravelAiADK\Models\AgentSession;
-use AaronLumsden\LaravelAiADK\Models\TraceSpan;
-use AaronLumsden\LaravelAiADK\Services\Tracer;
+use Vizra\VizraSdk\Facades\Agent;
+use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraSdk\Services\StateManager;
+use Vizra\VizraSdk\Models\AgentSession;
+use Vizra\VizraSdk\Models\TraceSpan;
+use Vizra\VizraSdk\Services\Tracer;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
