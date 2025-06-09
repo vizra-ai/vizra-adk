@@ -150,7 +150,7 @@ Tools are what make agents truly powerful. They can interact with your applicati
 
 ### Built-in Tools
 
-The Laravel Ai ADK comes with several ready-to-use tools:
+The Vizra SDK comes with several ready-to-use tools:
 
 ```php
 protected array $tools = [

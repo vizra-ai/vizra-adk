@@ -27,7 +27,7 @@ Think of tools as superpowers for your agents. While LLMs are great at understan
 
 ## 🚀 Built-in Tools
 
-The Laravel Ai ADK comes with several powerful tools ready to use:
+The Vizra SDK comes with several powerful tools ready to use:
 
 ### 📊 Vector Memory Tool
 

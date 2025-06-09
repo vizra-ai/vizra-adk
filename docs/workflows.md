@@ -1,6 +1,6 @@
 # Workflow Agents Guide
 
-Workflow Agents provide powerful orchestration capabilities for your Laravel Ai ADK applications. Unlike LLM agents that use artificial intelligence for decision-making, Workflow Agents control the execution flow of other agents in predefined, deterministic patterns.
+Workflow Agents provide powerful orchestration capabilities for your Vizra SDK applications. Unlike LLM agents that use artificial intelligence for decision-making, Workflow Agents control the execution flow of other agents in predefined, deterministic patterns.
 
 ## Table of Contents
 
@@ -35,7 +35,7 @@ Workflow Agents are perfect for:
 
 ## Installation & Setup
 
-Workflow Agents are included with Laravel Ai ADK v2.0+. No additional installation required.
+Workflow Agents are included with Vizra SDK v2.0+. No additional installation required.
 
 ```php
 use Vizra\VizraSdk\Facades\Workflow;
@@ -797,4 +797,4 @@ reset(): self
 
 ---
 
-For more information, see the [Laravel Ai ADK Documentation](../README.md).
+For more information, see the [Vizra SDK Documentation](../README.md).

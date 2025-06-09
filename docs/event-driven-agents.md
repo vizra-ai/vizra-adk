@@ -1,6 +1,6 @@
 # ⚡ Event-Driven Agents
 
-Transform your Laravel AI ADK agents from simple chatbots into intelligent automation systems that respond to events, process data autonomously, and monitor your application continuously.
+Transform your Vizra SDK agents from simple chatbots into intelligent automation systems that respond to events, process data autonomously, and monitor your application continuously.
 
 ## 🎯 Beyond Conversations
 
@@ -15,12 +15,14 @@ While conversational agents are powerful, real business applications need agents
 ## 🚀 Agent Execution Modes
 
 ### **Ask Mode** (Conversational)
+
 ```php
 // Traditional chat interaction
 $response = CustomerSupportAgent::ask('Where is my order?')->forUser($user);
 ```
 
 ### **Trigger Mode** (Event-Driven)
+
 ```php
 // React to Laravel events
 NotificationAgent::trigger($orderCreatedEvent)
@@ -30,6 +32,7 @@ NotificationAgent::trigger($orderCreatedEvent)
 ```
 
 ### **Analyze Mode** (Data Analysis)
+
 ```php
 // Analyze data for insights
 $insights = FraudDetectionAgent::analyze($paymentData)
@@ -38,6 +41,7 @@ $insights = FraudDetectionAgent::analyze($paymentData)
 ```
 
 ### **Process Mode** (Batch Operations)
+
 ```php
 // Handle large datasets
 DataProcessorAgent::process($largeDataset)
@@ -48,6 +52,7 @@ DataProcessorAgent::process($largeDataset)
 ```
 
 ### **Monitor Mode** (Continuous Monitoring)
+
 ```php
 // Monitor system health
 SystemMonitorAgent::monitor($metrics)
@@ -57,6 +62,7 @@ SystemMonitorAgent::monitor($metrics)
 ```
 
 ### **Generate Mode** (Report Generation)
+
 ```php
 // Create reports and summaries
 ReportAgent::generate('weekly_sales')
@@ -80,7 +86,7 @@ use Vizra\VizraSdk\System\AgentContext;
 class OrderProcessingAgent extends BaseLlmAgent
 {
     protected string $name = 'order_processing';
-    
+
     protected string $instructions = "
     You are an intelligent order processing agent that handles different aspects of order management.
 
@@ -137,7 +143,7 @@ class OrderProcessingAgent extends BaseLlmAgent
     protected function handleEvent($event, AgentContext $context): string
     {
         $eventType = get_class($event);
-        
+
         return match($eventType) {
             'App\Events\OrderCreated' => $this->processOrderCreated($event, $context),
             'App\Events\PaymentReceived' => $this->processPaymentReceived($event, $context),
@@ -150,16 +156,16 @@ class OrderProcessingAgent extends BaseLlmAgent
     protected function processOrderCreated($event, AgentContext $context): string
     {
         $order = $event->order;
-        
+
         // Use tools to validate and process the order
         $validation = $this->validateOrder($order);
         $inventory = $this->checkInventory($order);
         $shipping = $this->calculateShipping($order);
-        
+
         if ($validation['valid'] && $inventory['available']) {
             // Auto-approve the order
             $this->approveOrder($order);
-            
+
             // Trigger customer notification
             CustomerNotificationAgent::trigger('order_approved')
                 ->forUser($order->customer)
@@ -169,7 +175,7 @@ class OrderProcessingAgent extends BaseLlmAgent
                 ])
                 ->async()
                 ->execute();
-                
+
             return "Order {$order->id} processed successfully and customer notified.";
         } else {
             // Flag for manual review
@@ -183,7 +189,7 @@ class OrderProcessingAgent extends BaseLlmAgent
         // Analyze order patterns, fraud detection, etc.
         $patterns = $this->identifyPatterns($data);
         $anomalies = $this->detectAnomalies($data);
-        
+
         return "Analysis completed: {$patterns['insights']}. Anomalies detected: {$anomalies['count']}.";
     }
 
@@ -198,7 +204,7 @@ class OrderProcessingAgent extends BaseLlmAgent
     {
         // Monitor order processing health
         $metrics = $this->checkOrderMetrics($data);
-        
+
         if ($metrics['issues_detected']) {
             // Alert the team
             AlertAgent::trigger('order_processing_issues')
@@ -206,7 +212,7 @@ class OrderProcessingAgent extends BaseLlmAgent
                 ->async()
                 ->execute();
         }
-        
+
         return "Monitoring completed. Issues detected: {$metrics['issues_detected']}.";
     }
 }
@@ -506,7 +512,7 @@ class AnalyticsController extends Controller
     public function generateReport(Request $request)
     {
         $reportType = $request->input('type');
-        
+
         $report = BusinessIntelligenceAgent::generate($reportType)
             ->withContext([
                 'date_range' => $request->input('date_range'),

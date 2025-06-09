@@ -9,14 +9,14 @@ class DashboardCommand extends Command
 {
     protected $signature = 'agent:dashboard {--open : Open the dashboard URL in your default browser}';
 
-    protected $description = 'Show the Laravel Ai ADK dashboard URL';
+    protected $description = 'Show the Vizra SDK dashboard URL';
 
     public function handle(): void
     {
         $prefix = config('agent-adk.routes.web.prefix', 'ai-adk');
         $url = url($prefix);
 
-        $this->info('🤖 Laravel Ai ADK Dashboard');
+        $this->info('🤖 Vizra SDK Dashboard');
         $this->line('');
         $this->line("Dashboard URL: <fg=green>{$url}</fg=green>");
         $this->line('');

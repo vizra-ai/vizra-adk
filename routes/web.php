@@ -8,10 +8,10 @@ use Vizra\VizraSdk\Livewire\Analytics;
 
 /*
 |--------------------------------------------------------------------------
-| Laravel Ai ADK Web Routes
+| Vizra SDK Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register web routes for the Laravel Ai ADK package.
+| Here is where you can register web routes for the Vizra SDK package.
 | These routes provide a web interface for managing and monitoring your agents.
 |
 */

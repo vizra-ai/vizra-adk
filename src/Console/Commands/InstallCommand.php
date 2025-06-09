@@ -8,17 +8,17 @@ use Illuminate\Support\Facades\File;
 class InstallCommand extends Command
 {
     protected $signature = 'agent:install';
-    protected $description = 'Install Laravel Ai ADK assets (config and migrations).';
+    protected $description = 'Install Vizra SDK assets (config and migrations).';
 
     public function handle(): void
     {
-        $this->info('Publishing Laravel Ai ADK configuration...');
+        $this->info('Publishing Vizra SDK configuration...');
         $this->call('vendor:publish', [
             '--provider' => "Vizra\VizraSdk\Providers\AgentServiceProvider",
             '--tag' => "agent-adk-config"
         ]);
 
-        $this->info('Publishing Laravel Ai ADK migrations...');
+        $this->info('Publishing Vizra SDK migrations...');
         $this->call('vendor:publish', [
             '--provider' => "Vizra\VizraSdk\Providers\AgentServiceProvider",
             '--tag' => "agent-adk-migrations"
@@ -27,7 +27,7 @@ class InstallCommand extends Command
         // Check if migrations were already published and ask to overwrite if necessary,
         // or simply inform the user. For simplicity, vendor:publish handles this.
 
-        $this->info('Laravel Ai ADK installed successfully.');
+        $this->info('Vizra SDK installed successfully.');
         $this->comment('Please run "php artisan migrate" to create the necessary database tables.');
         $this->comment('Configure your LLM provider API keys in .env and in config/agent-adk.php if needed.');
 

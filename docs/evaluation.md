@@ -1,6 +1,6 @@
 # 📊 Evaluation & Testing
 
-Building great AI agents requires more than just good code—you need systematic testing and evaluation. The Laravel Ai ADK includes powerful evaluation tools, including LLM-as-a-Judge capabilities, to help you build confidence in your agents.
+Building great AI agents requires more than just good code—you need systematic testing and evaluation. The Vizra SDK includes powerful evaluation tools, including LLM-as-a-Judge capabilities, to help you build confidence in your agents.
 
 ## 🎯 Why Evaluation Matters
 
@@ -23,7 +23,7 @@ AI agents are different from traditional software:
 
 ### The Solution: Systematic Evaluation
 
-The Laravel Ai ADK provides multiple evaluation approaches:
+The Vizra SDK provides multiple evaluation approaches:
 
 1. **LLM-as-a-Judge** - Use AI to evaluate AI (surprisingly effective!)
 2. **Traditional Assertions** - Programmatic checks for specific criteria

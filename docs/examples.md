@@ -1,6 +1,6 @@
 # 🎯 Examples & Use Cases
 
-See Laravel AI ADK in action with real-world examples. From simple chatbots to sophisticated AI assistants, these examples show you exactly how to build production-ready AI agents.
+See Vizra SDK in action with real-world examples. From simple chatbots to sophisticated AI assistants, these examples show you exactly how to build production-ready AI agents.
 
 ## 🛒 E-commerce Customer Support
 
@@ -24,7 +24,7 @@ use App\Tools\VectorMemoryTool;
 class EcommerceSupport extends BaseLlmAgent
 {
     protected string $instructions = "
-    You are Alex, a friendly and knowledgeable customer support specialist for TechMart, 
+    You are Alex, a friendly and knowledgeable customer support specialist for TechMart,
     an online electronics retailer.
 
     ## Your Role
@@ -50,11 +50,11 @@ class EcommerceSupport extends BaseLlmAgent
 
     ## Example Interactions
     Customer: 'My order is late!'
-    You: 'I understand how frustrating a delayed order can be! Let me look up your order 
+    You: 'I understand how frustrating a delayed order can be! Let me look up your order
     right away and see exactly what's happening with your shipment.'
 
     Customer: 'Can this laptop run gaming software?'
-    You: 'Great question! Let me check the specifications for that laptop and see how 
+    You: 'Great question! Let me check the specifications for that laptop and see how
     it would handle the type of gaming you're interested in.'
 
     ## When to Escalate
@@ -96,7 +96,7 @@ class EcommerceSupport extends BaseLlmAgent
                 namespace: 'customer_history',
                 limit: 3
             );
-            
+
             if ($customerHistory->isNotEmpty()) {
                 $context->setState('customer_history', $customerHistory);
             }
@@ -108,7 +108,7 @@ class EcommerceSupport extends BaseLlmAgent
         // Store important interaction details
         if ($customerEmail = $context->getState('customer_email')) {
             $interactionSummary = $this->summarizeInteraction($context->getLastUserInput(), $response);
-            
+
             VectorMemory::store(
                 agentName: 'ecommerce_support',
                 content: "Customer: {$customerEmail} - {$interactionSummary}",
@@ -214,13 +214,14 @@ class SupportController extends Controller
         $response = EcommerceSupportAgent::ask($request->input('message'))
             ->forUser(auth()->user())
             ->withSession($request->session()->getId());
-            
+
         return response()->json(['response' => $response]);
     }
 }
 ```
 
 **Customer Interaction:**
+
 ```
 Customer: Hi, I'm John Smith and my order ORD-12345 hasn't arrived yet. It was supposed to be here yesterday!
 
@@ -230,7 +231,7 @@ Agent: Hi John! I completely understand your frustration about the delayed deliv
 
 I can see your order ORD-12345 for the Dell XPS 13 laptop. The good news is that your package is actually out for delivery today! It looks like there was a one-day delay due to weather in the shipping hub, but the tracking shows it's on the delivery truck now and should arrive by 6 PM today.
 
-I've also noted in your account that you prefer morning deliveries, so I'll make sure future orders are scheduled accordingly. 
+I've also noted in your account that you prefer morning deliveries, so I'll make sure future orders are scheduled accordingly.
 
 Is there anything else I can help you with today? I want to make sure we get this resolved completely for you!
 
@@ -261,7 +262,7 @@ namespace App\Agents;
 class ContentCreatorAgent extends BaseLlmAgent
 {
     protected string $instructions = "
-    You are Morgan, a skilled content creator and marketing specialist for TechStartup Inc., 
+    You are Morgan, a skilled content creator and marketing specialist for TechStartup Inc.,
     a B2B SaaS company focused on productivity tools.
 
     ## Brand Voice & Tone
@@ -315,7 +316,7 @@ class ContentCreatorAgent extends BaseLlmAgent
 ```php
 // Generate a blog post
 $blogPost = ContentCreatorAgent::ask("
-Write a blog post about remote team productivity. 
+Write a blog post about remote team productivity.
 Target audience: Operations managers at 50-200 person companies.
 Include our TaskFlow Pro product naturally.
 Focus on actionable tips, not theory.
@@ -345,19 +346,21 @@ class ContentController extends Controller
             ->forUser(auth()->user())
             ->withContext($request->input('context', []))
             ->temperature($request->input('creativity', 0.7));
-            
+
         return response()->json(['content' => $content]);
     }
 }
 ```
 
 **Results:** Complete content pieces with:
+
 - SEO-optimized headlines
 - Structured content with actionable tips
 - Natural product integration
 - Meta descriptions and tags
 - Call-to-action buttons
-```
+
+````
 
 ## 🔧 Technical Support Agent
 
@@ -375,7 +378,7 @@ namespace App\Agents;
 class TechnicalSupportAgent extends BaseLlmAgent
 {
     protected string $instructions = "
-    You are Riley, a senior technical support engineer for CloudSoft Solutions, 
+    You are Riley, a senior technical support engineer for CloudSoft Solutions,
     specializing in enterprise software troubleshooting.
 
     ## Your Expertise
@@ -417,7 +420,7 @@ class TechnicalSupportAgent extends BaseLlmAgent
     protected string $model = 'gpt-4o'; // Need advanced reasoning for technical issues
     protected float $temperature = 0.3; // Lower temperature for consistent technical accuracy
 }
-```
+````
 
 ## 📊 Data Analysis Agent
 
@@ -435,7 +438,7 @@ namespace App\Agents;
 class DataAnalystAgent extends BaseLlmAgent
 {
     protected string $instructions = "
-    You are Alex, a business intelligence analyst who transforms raw data into 
+    You are Alex, a business intelligence analyst who transforms raw data into
     actionable insights for business leaders.
 
     ## Your Role
@@ -475,7 +478,7 @@ class DataAnalystAgent extends BaseLlmAgent
 ```php
 // Customer retention analysis
 $analysis = DataAnalystAgent::ask("
-Show me our customer retention trends over the last 6 months. 
+Show me our customer retention trends over the last 6 months.
 I'm particularly concerned about our enterprise customers.
 ")->forUser($user);
 
@@ -503,15 +506,16 @@ class AnalyticsController extends Controller
                 'department' => auth()->user()->department,
                 'access_level' => auth()->user()->analytics_access_level
             ]);
-            
+
         return response()->json(['analysis' => $analysis]);
     }
 }
 ```
 
 **Results:** Comprehensive analysis including:
+
 - SQL queries executed safely
-- Retention rate calculations  
+- Retention rate calculations
 - Trend visualizations
 - Segment breakdowns (enterprise vs other)
 - Business impact assessment
@@ -533,7 +537,7 @@ namespace App\Agents;
 class MathTutorAgent extends BaseLlmAgent
 {
     protected string $instructions = "
-    You are Dr. Sarah Chen, an experienced mathematics tutor who specializes in 
+    You are Dr. Sarah Chen, an experienced mathematics tutor who specializes in
     making complex concepts accessible and engaging for students ages 12-18.
 
     ## Teaching Philosophy
@@ -606,7 +610,7 @@ namespace App\Agents;
 class HealthInfoAssistant extends BaseLlmAgent
 {
     protected string $instructions = "
-    You are Jamie, a knowledgeable health information assistant who helps people 
+    You are Jamie, a knowledgeable health information assistant who helps people
     understand general health topics and navigate healthcare resources.
 
     ## CRITICAL BOUNDARIES
@@ -667,37 +671,37 @@ class AgentOrchestrator
     {
         // Classify the inquiry type
         $classification = $this->classifyInquiry($inquiry);
-        
+
         switch ($classification['type']) {
             case 'order_issue':
                 return Agent::run('ecommerce_support', $inquiry, $context);
-                
+
             case 'technical_problem':
                 return Agent::run('technical_support', $inquiry, $context);
-                
+
             case 'content_request':
                 return Agent::run('content_creator', $inquiry, $context);
-                
+
             case 'data_question':
                 return Agent::run('data_analyst', $inquiry, $context);
-                
+
             default:
                 // Use a general agent for routing
                 return Agent::run('general_assistant', $inquiry, $context);
         }
     }
-    
+
     public function handoffBetweenAgents(string $fromAgent, string $toAgent, array $conversationContext): string
     {
         // Transfer context and continue conversation with new agent
         $handoffSummary = $this->summarizeConversation($conversationContext);
-        
+
         $newContext = array_merge($conversationContext, [
             'handoff_from' => $fromAgent,
             'conversation_summary' => $handoffSummary,
             'handoff_reason' => 'Specialized expertise required',
         ]);
-        
+
         return Agent::run($toAgent, "Continue this conversation", $newContext);
     }
 }
@@ -714,29 +718,29 @@ class CustomerServiceEvolution
     {
         return Agent::run('basic_faq', $input);
     }
-    
+
     // Version 2: Add order lookup
     public function withOrderLookup(): string
     {
         // Add OrderLookupTool to existing agent
         return Agent::run('enhanced_support', $input);
     }
-    
+
     // Version 3: Add memory and personalization
     public function withMemory(): string
     {
         // Add VectorMemoryTool for customer history
         return Agent::run('personalized_support', $input);
     }
-    
+
     // Version 4: Add AI evaluation for quality
     public function withQualityMonitoring(): string
     {
         $response = Agent::run('full_support', $input);
-        
+
         // Evaluate response quality
         $evaluation = EvaluationRunner::run('support_quality', $input, $response);
-        
+
         return $response;
     }
 }
@@ -746,13 +750,15 @@ class CustomerServiceEvolution
 
 ### Customer Support ROI
 
-**Before Laravel AI ADK:**
+**Before Vizra SDK:**
+
 - 24/7 coverage required 3 support staff = $180,000/year
 - Average response time: 4 hours
 - Resolution rate: 65%
 - Customer satisfaction: 3.2/5
 
-**After Laravel AI ADK:**
+**After Vizra SDK:**
+
 - 1 support staff + AI agent = $60,000/year + $1,200/year (API costs)
 - Average response time: 30 seconds
 - Resolution rate: 85% (AI handles 70% of inquiries)
@@ -763,11 +769,13 @@ class CustomerServiceEvolution
 ### Content Creation Efficiency
 
 **Before:**
+
 - Content writer: $75,000/year
 - Output: 8 blog posts/month, 20 social posts/week
 - Research time: 40% of total time
 
 **After:**
+
 - Content writer + AI agent: $75,000 + $600/year
 - Output: 20 blog posts/month, 50 social posts/week
 - Research time: 10% of total time

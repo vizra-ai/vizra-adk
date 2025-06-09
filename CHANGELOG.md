@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Initial release of Laravel AI ADK
+- Initial release of Vizra SDK
 - Agent system with BaseLlmAgent base class
 - Tool system with ToolInterface for declarative tools
 - Evaluation framework with BaseEvaluation classes

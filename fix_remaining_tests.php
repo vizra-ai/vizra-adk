@@ -6,18 +6,18 @@
 
 // Check for remaining issues that could cause test failures
 
-echo "=== Laravel AI ADK Test Fix Analysis ===\n";
+echo "=== Vizra SDK Test Fix Analysis ===\n";
 
 // 1. Check for remaining assertStringContains issues
 $testFiles = glob(__DIR__ . '/tests/**/*Test.php');
 
 foreach ($testFiles as $file) {
     $content = file_get_contents($file);
-    
+
     if (strpos($content, 'assertStringContains(') !== false && strpos($content, 'assertStringContainsString(') === false) {
         echo "Found assertStringContains issue in: " . basename($file) . "\n";
     }
-    
+
     if (strpos($content, 'assertStringNotContains(') !== false && strpos($content, 'assertStringNotContainsString(') === false) {
         echo "Found assertStringNotContains issue in: " . basename($file) . "\n";
     }
@@ -28,7 +28,7 @@ $allFiles = glob(__DIR__ . '/{src,tests,config}/**/*.php', GLOB_BRACE);
 
 foreach ($allFiles as $file) {
     $content = file_get_contents($file);
-    
+
     if (strpos($content, 'LaravelAgentADK') !== false) {
         echo "Found old namespace reference in: " . str_replace(__DIR__ . '/', '', $file) . "\n";
     }
@@ -39,7 +39,7 @@ $commandTestFiles = glob(__DIR__ . '/tests/Unit/Console/Commands/*Test.php');
 
 foreach ($commandTestFiles as $file) {
     $content = file_get_contents($file);
-    
+
     if (strpos($content, 'new Make') !== false && strpos($content, 'setLaravel') === false) {
         echo "Missing setLaravel() call in: " . basename($file) . "\n";
     }
@@ -50,7 +50,7 @@ $workflowTestFiles = glob(__DIR__ . '/tests/Unit/Agents/*WorkflowTest.php');
 
 foreach ($workflowTestFiles as $file) {
     $content = file_get_contents($file);
-    
+
     if (strpos($content, 'new AgentContext()') !== false) {
         echo "AgentContext constructor issue in: " . basename($file) . "\n";
     }

@@ -1,4 +1,4 @@
-# Comprehensive Feature Test Plan for Laravel Ai ADK
+# Comprehensive Feature Test Plan for Vizra SDK
 
 ## Overview
 

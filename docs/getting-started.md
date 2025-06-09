@@ -1,6 +1,6 @@
 # 🚀 Getting Started
 
-Welcome to Laravel Ai ADK! If you're familiar with Laravel, you'll feel right at home. If you're new to AI agents, don't worry—we'll have you building intelligent applications in no time.
+Welcome to Vizra SDK! If you're familiar with Laravel, you'll feel right at home. If you're new to AI agents, don't worry—we'll have you building intelligent applications in no time.
 
 ## 📋 What You'll Need
 
@@ -209,7 +209,7 @@ And to `config/services.php`:
 
 ## 🚀 Fluent Agent API
 
-The Laravel AI ADK provides a beautiful fluent API that feels right at home in Laravel applications:
+The Vizra SDK provides a beautiful fluent API that feels right at home in Laravel applications:
 
 ### Basic Usage
 
@@ -300,7 +300,7 @@ class CustomerSupportAgent extends BaseLlmAgent
 
 ## 🎨 Web Interface
 
-The Laravel Ai ADK comes with a beautiful web interface for testing and monitoring your agents.
+The Vizra SDK comes with a beautiful web interface for testing and monitoring your agents.
 
 ### Step 1: Add Routes
 

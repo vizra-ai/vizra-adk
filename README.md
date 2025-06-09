@@ -1,8 +1,8 @@
-# 🤖 Laravel Ai ADK
+# 🤖 Vizra SDK
 
 > **Build, test, and deploy intelligent AI agents with Laravel's elegant syntax**
 
-Transform your Laravel applications into intelligent, conversation-driven experiences. The Laravel Ai ADK brings the power of AI agents to your favorite framework with the elegance and simplicity you already love.
+Transform your Laravel applications into intelligent, conversation-driven experiences. The Vizra SDK brings the power of AI agents to your favorite framework with the elegance and simplicity you already love.
 
 [![Latest Version](https://img.shields.io/packagist/v/vizra/vizra-sdk)](https://packagist.org/packages/vizra/vizra-sdk)
 [![Total Downloads](https://img.shields.io/packagist/dt/vizra/vizra-sdk)](https://packagist.org/packages/vizra/vizra-sdk)
@@ -178,7 +178,7 @@ agent = Agent(
 )
 ```
 
-**Laravel AI ADK:**
+**Vizra SDK:**
 
 ```php
 // Pure Laravel elegance
@@ -223,7 +223,7 @@ Check out our [Contributing Guide](CONTRIBUTING.md) to get started.
 
 ## 📄 License
 
-The Laravel Ai ADK is open-sourced software licensed under the [MIT license](LICENSE.md).
+The Vizra SDK is open-sourced software licensed under the [MIT license](LICENSE.md).
 
 ## 🙏 Credits
 

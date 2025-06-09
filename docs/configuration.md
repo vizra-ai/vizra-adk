@@ -1,10 +1,10 @@
 # ⚙️ Configuration & Deployment
 
-Turn your Laravel Ai ADK from development prototype to production powerhouse. This guide covers everything from basic configuration to enterprise-scale deployment.
+Turn your Vizra SDK from development prototype to production powerhouse. This guide covers everything from basic configuration to enterprise-scale deployment.
 
 ## 🎯 Configuration Overview
 
-The Laravel Ai ADK uses Laravel's familiar configuration patterns. All settings live in `config/agent-adk.php` with environment-specific overrides in `.env`.
+The Vizra SDK uses Laravel's familiar configuration patterns. All settings live in `config/agent-adk.php` with environment-specific overrides in `.env`.
 
 ### Core Configuration Structure
 
@@ -383,7 +383,7 @@ AGENT_ADK_UI_ENABLED=false
 ```yaml
 # aws/cloudformation-template.yml
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Laravel Ai ADK Infrastructure"
+Description: "Vizra SDK Infrastructure"
 
 Resources:
   # ECS Cluster for Application

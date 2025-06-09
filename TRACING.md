@@ -1,6 +1,6 @@
 # Agent Tracing System
 
-The Laravel Ai ADK includes a comprehensive tracing system that tracks agent execution, LLM calls, tool executions, and sub-agent delegations. This provides valuable insights for debugging, performance analysis, and understanding agent behavior.
+The Vizra SDK includes a comprehensive tracing system that tracks agent execution, LLM calls, tool executions, and sub-agent delegations. This provides valuable insights for debugging, performance analysis, and understanding agent behavior.
 
 ## Features
 
