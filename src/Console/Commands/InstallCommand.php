@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\File;
 
 class InstallCommand extends Command
 {
-    protected $signature = 'agent:install';
+    protected $signature = 'vizra:install';
     protected $description = 'Install Vizra SDK assets (config and migrations).';
 
     public function handle(): void
@@ -44,8 +44,8 @@ class InstallCommand extends Command
         $this->line("   <fg=green>{$url}</fg=green>");
         $this->line('');
         $this->comment('💡 Quick commands:');
-        $this->line('   <fg=cyan>php artisan agent:dashboard</fg=cyan>          # Show dashboard URL');
-        $this->line('   <fg=cyan>php artisan agent:dashboard --open</fg=cyan>   # Open dashboard in browser');
-        $this->line('   <fg=cyan>php artisan agent:make:agent MyAgent</fg=cyan> # Create a new agent');
+        $this->line('   <fg=cyan>php artisan vizra:dashboard</fg=cyan>          # Show dashboard URL');
+        $this->line('   <fg=cyan>php artisan vizra:dashboard --open</fg=cyan>   # Open dashboard in browser');
+        $this->line('   <fg=cyan>php artisan vizra:make:agent MyAgent</fg=cyan> # Create a new agent');
     }
 }

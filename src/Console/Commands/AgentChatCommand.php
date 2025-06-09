@@ -17,7 +17,7 @@ class AgentChatCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'agent:chat {agent_name : The name of the agent to chat with}';
+    protected $signature = 'vizra:chat {agent_name : The name of the agent to chat with}';
 
     /**
      * The console command description.

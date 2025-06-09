@@ -443,10 +443,10 @@ public function handleToolError(string $toolName, \Exception $error, AgentContex
 
 ```bash
 # Interactive chat testing
-php artisan agent:chat your_agent_name
+php artisan vizra:chat your_agent_name
 
 # Single message testing
-php artisan agent:test your_agent_name "Test message here"
+php artisan vizra:test your_agent_name "Test message here"
 ```
 
 ### Automated Testing

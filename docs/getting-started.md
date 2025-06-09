@@ -54,7 +54,7 @@ Let's create a simple weather agent to see how everything works:
 ### Step 1: Create the Agent
 
 ```bash
-php artisan agent:make:agent WeatherAgent
+php artisan vizra:make:agent WeatherAgent
 ```
 
 This creates `app/Agents/WeatherAgent.php`:
@@ -84,7 +84,7 @@ class WeatherAgent extends BaseLlmAgent
 
 ```bash
 # Start an interactive chat session
-php artisan agent:chat weather_agent
+php artisan vizra:chat weather_agent
 
 # Or test programmatically
 php artisan tinker
@@ -110,7 +110,7 @@ Agents become really powerful when they can use tools. Let's add a weather API t
 ### Step 1: Create a Weather Tool
 
 ```bash
-php artisan agent:make:tool WeatherTool
+php artisan vizra:make:tool WeatherTool
 ```
 
 This creates `app/Tools/WeatherTool.php`:
@@ -391,14 +391,14 @@ Now that you have a basic agent running, here's what to explore next:
 
 ```bash
 # Make sure you've registered your agent
-php artisan agent:list
+php artisan vizra:list
 ```
 
 **API key errors:**
 
 ```bash
 # Check your .env file and test the connection
-php artisan agent:test-connection openai
+php artisan vizra:test-connection openai
 ```
 
 **Database errors:**

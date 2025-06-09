@@ -18,7 +18,7 @@ class AgentTraceCommand extends Command
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'agent:trace
+    protected $signature = 'vizra:trace
                             {session_id : The session ID to show traces for}
                             {--trace-id= : Show a specific trace ID instead of all traces for the session}
                             {--show-input : Show input data for each span}

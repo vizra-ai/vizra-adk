@@ -14,7 +14,7 @@ use League\Csv\CannotInsertRecord;
 
 class RunEvalCommand extends Command
 {
-    protected $signature = 'agent:run:eval {name : The class name of the evaluation (e.g., MyTestEvaluation)}
+    protected $signature = 'vizra:run:eval {name : The class name of the evaluation (e.g., MyTestEvaluation)}
                                      {--output= : Path to the CSV file to save results (e.g., results.csv)}';
     protected $description = 'Run an LLM evaluation and output the results.';
 

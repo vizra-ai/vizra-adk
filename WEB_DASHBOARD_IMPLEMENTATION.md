@@ -31,8 +31,8 @@ Successfully implemented a Livewire-based web dashboard for the Vizra SDK packag
 1. **Dashboard Command** (`src/Console/Commands/DashboardCommand.php`)
 
    ```bash
-   php artisan agent:dashboard          # Show dashboard URL
-   php artisan agent:dashboard --open   # Open in browser
+   php artisan vizra:dashboard          # Show dashboard URL
+   php artisan vizra:dashboard --open   # Open in browser
    ```
 
 2. **Enhanced Install Command**
@@ -97,10 +97,10 @@ Added new configuration options in `config/agent-adk.php`:
 composer require vizra/vizra-sdk
 
 # Run the install command
-php artisan agent:install
+php artisan vizra:install
 
 # Visit the dashboard
-php artisan agent:dashboard --open
+php artisan vizra:dashboard --open
 ```
 
 ### Access the Dashboard

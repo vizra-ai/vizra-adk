@@ -94,7 +94,7 @@
             <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">Start Building Now</h2>
             <div class="grid md:grid-cols-3 gap-6">
                 <!-- Evaluation Runner -->
-                <a href="{{ route('agent-adk.eval-runner') }}" class="feature-card bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 hover:border-blue-300 transition-all group">
+                <a href="{{ route('vizra.eval-runner') }}" class="feature-card bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 hover:border-blue-300 transition-all group">
                     <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -111,7 +111,7 @@
                 </a>
 
                 <!-- Chat Interface -->
-                <a href="{{ route('agent-adk.chat') }}" class="feature-card bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-2xl p-6 hover:border-purple-300 transition-all group">
+                <a href="{{ route('vizra.chat') }}" class="feature-card bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-2xl p-6 hover:border-purple-300 transition-all group">
                     <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -128,7 +128,7 @@
                 </a>
 
                 <!-- Analytics -->
-                <a href="{{ route('agent-adk.analytics') }}" class="feature-card bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 hover:border-green-300 transition-all group">
+                <a href="{{ route('vizra.analytics') }}" class="feature-card bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 hover:border-green-300 transition-all group">
                     <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -161,7 +161,7 @@
                             </div>
                             <span class="text-sm font-semibold text-gray-900">Create Agent</span>
                         </div>
-                        <code class="text-xs text-gray-600 bg-white px-3 py-2 rounded-lg border block">php artisan agent:make:agent MyAgent</code>
+                        <code class="text-xs text-gray-600 bg-white px-3 py-2 rounded-lg border block">php artisan vizra:make:agent MyAgent</code>
                     </div>
                     <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
                         <div class="flex items-center mb-3">
@@ -173,7 +173,7 @@
                             </div>
                             <span class="text-sm font-semibold text-gray-900">Create Tool</span>
                         </div>
-                        <code class="text-xs text-gray-600 bg-white px-3 py-2 rounded-lg border block">php artisan agent:make:tool MyTool</code>
+                        <code class="text-xs text-gray-600 bg-white px-3 py-2 rounded-lg border block">php artisan vizra:make:tool MyTool</code>
                     </div>
                     <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
                         <div class="flex items-center mb-3">
@@ -184,7 +184,7 @@
                             </div>
                             <span class="text-sm font-semibold text-gray-900">Create Evaluation</span>
                         </div>
-                        <code class="text-xs text-gray-600 bg-white px-3 py-2 rounded-lg border block">php artisan agent:make:eval MyEvaluation</code>
+                        <code class="text-xs text-gray-600 bg-white px-3 py-2 rounded-lg border block">php artisan vizra:make:eval MyEvaluation</code>
                     </div>
                     <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
                         <div class="flex items-center mb-3">
@@ -195,7 +195,7 @@
                             </div>
                             <span class="text-sm font-semibold text-gray-900">List Agents</span>
                         </div>
-                        <code class="text-xs text-gray-600 bg-white px-3 py-2 rounded-lg border block">php artisan agent:list</code>
+                        <code class="text-xs text-gray-600 bg-white px-3 py-2 rounded-lg border block">php artisan vizra:list</code>
                     </div>
                 </div>
             </div>
@@ -241,7 +241,7 @@
                     Start your AI agent development journey with Laravel's elegant framework and cutting-edge LLM capabilities.
                 </p>
                 <div class="bg-gray-100 rounded-2xl p-6 border border-gray-200">
-                    <code class="text-sm text-gray-800 font-mono">php artisan agent:make:agent MyFirstAgent</code>
+                    <code class="text-sm text-gray-800 font-mono">php artisan vizra:make:agent MyFirstAgent</code>
                 </div>
             </div>
             @endif

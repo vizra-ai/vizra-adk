@@ -254,7 +254,7 @@ class AgentJob implements ShouldQueue
     public function tags(): array
     {
         return [
-            'agent:' . $this->getAgentName(),
+            'vizra:' . $this->getAgentName(),
             'mode:' . $this->mode,
             'session:' . $this->sessionId,
         ];

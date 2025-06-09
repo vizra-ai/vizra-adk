@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 class DashboardCommand extends Command
 {
-    protected $signature = 'agent:dashboard {--open : Open the dashboard URL in your default browser}';
+    protected $signature = 'vizra:dashboard {--open : Open the dashboard URL in your default browser}';
 
     protected $description = 'Show the Vizra SDK dashboard URL';
 
@@ -30,7 +30,7 @@ class DashboardCommand extends Command
 
         $this->line('');
         $this->comment('💡 Tip: You can also run this after the install command:');
-        $this->line('   <fg=cyan>php artisan agent:install</fg=cyan>');
+        $this->line('   <fg=cyan>php artisan vizra:install</fg=cyan>');
     }
 
     protected function openUrl(string $url): void

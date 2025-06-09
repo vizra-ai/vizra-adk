@@ -38,7 +38,7 @@ This is where the magic happens. Use a powerful LLM to evaluate your agent's res
 ### Creating an Evaluation
 
 ```bash
-php artisan agent:make:evaluation CustomerSupportEvaluation
+php artisan vizra:make:evaluation CustomerSupportEvaluation
 ```
 
 This creates `app/Evaluations/CustomerSupportEvaluation.php`:
@@ -171,13 +171,13 @@ input,expected_context,scenario_type
 
 ```bash
 # Run a specific evaluation
-php artisan agent:evaluate customer_support CustomerSupportEvaluation --file=customer_support_data.csv
+php artisan vizra:evaluate customer_support CustomerSupportEvaluation --file=customer_support_data.csv
 
 # Run with specific model for judging
-php artisan agent:evaluate customer_support CustomerSupportEvaluation --judge-model=gpt-4o
+php artisan vizra:evaluate customer_support CustomerSupportEvaluation --judge-model=gpt-4o
 
 # Run and save detailed results
-php artisan agent:evaluate customer_support CustomerSupportEvaluation --output=results.json
+php artisan vizra:evaluate customer_support CustomerSupportEvaluation --output=results.json
 ```
 
 #### Via Web Interface
@@ -592,13 +592,13 @@ input,scenario_type,difficulty,expected_behavior
 # In your CI/CD pipeline or scheduled tasks
 
 # Daily smoke tests
-php artisan agent:evaluate customer_support BasicEvaluation --file=smoke_tests.csv
+php artisan vizra:evaluate customer_support BasicEvaluation --file=smoke_tests.csv
 
 # Weekly comprehensive evaluation
-php artisan agent:evaluate customer_support ComprehensiveEvaluation --file=full_test_suite.csv
+php artisan vizra:evaluate customer_support ComprehensiveEvaluation --file=full_test_suite.csv
 
 # Monthly A/B tests
-php artisan agent:ab-test customer_support_v1 customer_support_v2 --evaluation=CustomerSupportEvaluation
+php artisan vizra:ab-test customer_support_v1 customer_support_v2 --evaluation=CustomerSupportEvaluation
 ```
 
 ### 4. Monitor and Alert

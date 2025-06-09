@@ -37,12 +37,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Artisan Commands
 
-- `agent:install` - Package setup and configuration
-- `agent:make:agent` - Generate new agent classes
-- `agent:make:tool` - Generate new tool classes
-- `agent:make:eval` - Generate new evaluation classes
-- `agent:chat` - Interactive chat interface with agents
-- `agent:eval` - Run evaluation suites
+- `vizra:install` - Package setup and configuration
+- `vizra:make:agent` - Generate new agent classes
+- `vizra:make:tool` - Generate new tool classes
+- `vizra:make:eval` - Generate new evaluation classes
+- `vizra:chat` - Interactive chat interface with agents
+- `vizra:eval` - Run evaluation suites
 
 ### Requirements
 

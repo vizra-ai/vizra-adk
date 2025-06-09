@@ -23,7 +23,7 @@ class MakeToolCommandTest extends TestCase
 
     public function test_command_has_correct_name_and_description()
     {
-        $this->assertEquals('agent:make:tool', $this->command->getName());
+        $this->assertEquals('vizra:make:tool', $this->command->getName());
         $this->assertEquals('Create a new Tool class for an Agent', $this->command->getDescription());
     }
 

@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputArgument;
 
 class MakeToolCommand extends GeneratorCommand
 {
-    protected $name = 'agent:make:tool';
+    protected $name = 'vizra:make:tool';
     protected $description = 'Create a new Tool class for an Agent';
     protected $type = 'Tool';
 

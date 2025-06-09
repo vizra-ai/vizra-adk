@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 
 class AgentTraceCleanupCommand extends Command
 {
-    protected $signature = 'agent:trace:cleanup
+    protected $signature = 'vizra:trace:cleanup
                             {--days= : Number of days to keep traces (defaults to config value)}
                             {--dry-run : Show what would be deleted without actually deleting}
                             {--force : Skip confirmation prompt}';

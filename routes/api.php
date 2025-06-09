@@ -14,7 +14,7 @@ use Vizra\VizraSdk\Http\Controllers\AgentApiController;
 */
 
 Route::post('/interact', [AgentApiController::class, 'handleAgentInteraction'])
-    ->name('agent-adk.api.interact');
+    ->name('vizra.api.interact');
 
 // Example of a route for a specific, predefined agent if desired
 // Route::post('/weather', function (Request $request) {
@@ -26,4 +26,4 @@ Route::post('/interact', [AgentApiController::class, 'handleAgentInteraction'])
 //     } catch (\Throwable $e) {
 //         return response()->json(['error' => $e->getMessage()], 500);
 //     }
-// })->name('agent-adk.api.weather');
+// })->name('vizra.api.weather');

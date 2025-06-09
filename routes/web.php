@@ -21,5 +21,5 @@ Route::get('/chat', ChatInterface::class)->name('chat');
 Route::get('/eval', EvalRunner::class)->name('eval-runner');
 Route::get('/analytics', Analytics::class)->name('analytics');
 Route::get('/test-modal', function () {
-    return view('agent-adk::test-modal');
+    return view('vizra::test-modal');
 })->name('test-modal');

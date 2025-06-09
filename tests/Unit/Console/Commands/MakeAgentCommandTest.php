@@ -29,7 +29,7 @@ class MakeAgentCommandTest extends TestCase
 
     public function test_command_has_correct_name_and_description()
     {
-        $this->assertEquals('agent:make:agent', $this->command->getName());
+        $this->assertEquals('vizra:make:agent', $this->command->getName());
         $this->assertEquals('Create a new Agent class', $this->command->getDescription());
     }
 
@@ -145,7 +145,7 @@ class MakeAgentCommandTest extends TestCase
         // Mock the app_path to return our temp directory
         $this->app->bind('path', fn() => $tempDir);
 
-        $this->artisan('agent:make:agent', ['name' => 'TestAgent'])
+        $this->artisan('vizra:make:agent', ['name' => 'TestAgent'])
             ->assertExitCode(0);
 
         // Verify the file was created
@@ -176,7 +176,7 @@ class MakeAgentCommandTest extends TestCase
         $existingFile = $agentsDir . '/TestAgent.php';
         file_put_contents($existingFile, '<?php // existing file');
 
-        $this->artisan('agent:make:agent', ['name' => 'TestAgent'])
+        $this->artisan('vizra:make:agent', ['name' => 'TestAgent'])
             ->assertExitCode(0);
 
         // Check if the existing file was NOT overwritten (file should still contain original content)
@@ -202,7 +202,7 @@ class MakeAgentCommandTest extends TestCase
             mkdir($customDir, 0755, true);
         }
 
-        $this->artisan('agent:make:agent', ['name' => 'TestAgent'])
+        $this->artisan('vizra:make:agent', ['name' => 'TestAgent'])
             ->assertExitCode(0);
 
         // Verify the file was created in the custom namespace path
@@ -244,7 +244,7 @@ class MakeAgentCommandTest extends TestCase
         // Mock the app_path to return our temp directory
         $this->app->bind('path', fn() => $tempDir);
 
-        $this->artisan('agent:make:agent', ['name' => 'Support/CustomerAgent'])
+        $this->artisan('vizra:make:agent', ['name' => 'Support/CustomerAgent'])
             ->assertExitCode(0);
 
         // Verify the file was created in the nested directory

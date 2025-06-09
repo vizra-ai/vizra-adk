@@ -43,10 +43,10 @@ php artisan vendor:publish --provider="Vizra\VizraSdk\AgentAdkServiceProvider"
 php artisan migrate
 
 # Create your first agent
-php artisan agent:make:agent WeatherAgent
+php artisan vizra:make:agent WeatherAgent
 
 # Start chatting!
-php artisan agent:chat weather_agent
+php artisan vizra:chat weather_agent
 ```
 
 ## 🎯 Perfect For

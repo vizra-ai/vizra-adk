@@ -342,13 +342,13 @@ $FORGE_COMPOSER install --no-interaction --prefer-dist --optimize-autoloader
 # Agent ADK specific steps
 if [ -f artisan ]; then
     # Update vector memory indexes
-    php artisan agent:vector-memory:optimize
+    php artisan vizra:vector-memory:optimize
 
     # Warm up agent caches
-    php artisan agent:cache:warm
+    php artisan vizra:cache:warm
 
     # Run any pending evaluations
-    php artisan agent:evaluation:cleanup
+    php artisan vizra:evaluation:cleanup
 fi
 
 # Standard Laravel finalization
@@ -781,7 +781,7 @@ find $BACKUP_DIR -type f -mtime +30 -delete
         chdir: /var/www/your-app
 
     - name: Rebuild vector memory indexes
-      command: php artisan agent:vector-memory:rebuild
+      command: php artisan vizra:vector-memory:rebuild
       args:
         chdir: /var/www/your-app
 

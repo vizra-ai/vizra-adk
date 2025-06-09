@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputArgument;
 
 class MakeAgentCommand extends GeneratorCommand
 {
-    protected $name = 'agent:make:agent';
+    protected $name = 'vizra:make:agent';
     protected $description = 'Create a new Agent class';
     protected $type = 'Agent';
 

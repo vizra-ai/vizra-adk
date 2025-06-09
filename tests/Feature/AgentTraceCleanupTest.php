@@ -182,7 +182,7 @@ it('can run cleanup command', function () {
     ]);
 
     // Run dry-run cleanup
-    $this->artisan('agent:trace:cleanup --dry-run')
+    $this->artisan('vizra:trace:cleanup --dry-run')
         ->expectsOutput('Running in dry-run mode - no data will be deleted')
         ->expectsOutput('Found 1 traces older than 30 days.')
         ->expectsOutput('Would delete 1 traces (dry run).')
@@ -192,7 +192,7 @@ it('can run cleanup command', function () {
     expect(TraceSpan::count())->toBe(1);
 
     // Run actual cleanup with force flag
-    $this->artisan('agent:trace:cleanup --force')
+    $this->artisan('vizra:trace:cleanup --force')
         ->expectsOutput('Found 1 traces older than 30 days.')
         ->expectsOutput('Successfully deleted 1 traces.')
         ->assertExitCode(0);
@@ -221,12 +221,12 @@ it('handles cleanup command with custom days', function () {
     ]);
 
     // Should not find anything with default 30 days
-    $this->artisan('agent:trace:cleanup --dry-run')
+    $this->artisan('vizra:trace:cleanup --dry-run')
         ->expectsOutput('No old traces found to clean up.')
         ->assertExitCode(0);
 
     // Should find the trace with 10 days
-    $this->artisan('agent:trace:cleanup --days=10 --dry-run')
+    $this->artisan('vizra:trace:cleanup --days=10 --dry-run')
         ->expectsOutput('Found 1 traces older than 10 days.')
         ->expectsOutput('Would delete 1 traces (dry run).')
         ->assertExitCode(0);
@@ -235,7 +235,7 @@ it('handles cleanup command with custom days', function () {
 it('handles cleanup command when tracing is disabled', function () {
     config(['agent-adk.tracing.enabled' => false]);
 
-    $this->artisan('agent:trace:cleanup')
+    $this->artisan('vizra:trace:cleanup')
         ->expectsOutput('Agent tracing is not enabled in configuration.')
         ->assertExitCode(1);
 });
@@ -260,7 +260,7 @@ it('handles cleanup cancellation', function () {
     ]);
 
     // Simulate user saying "no" to confirmation
-    $this->artisan('agent:trace:cleanup')
+    $this->artisan('vizra:trace:cleanup')
         ->expectsQuestion('Are you sure you want to delete 1 traces?', false)
         ->expectsOutput('Cleanup cancelled.')
         ->assertExitCode(0);

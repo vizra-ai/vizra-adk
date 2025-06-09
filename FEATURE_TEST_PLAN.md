@@ -384,18 +384,18 @@ Based on README analysis, the following areas need comprehensive feature test co
 
 **File**: `tests/Feature/ArtisanCommandsTest.php`
 
-- **Test**: `agent:make:agent` command functionality
-- **Test**: `agent:make:tool` command functionality
-- **Test**: `agent:make:eval` command functionality
-- **Test**: `agent:install` command functionality
+- **Test**: `vizra:make:agent` command functionality
+- **Test**: `vizra:make:tool` command functionality
+- **Test**: `vizra:make:eval` command functionality
+- **Test**: `vizra:install` command functionality
 - **Test**: Generated file validation and structure
 
 ### 14.2 Management Commands
 
 **File**: `tests/Feature/ManagementCommandsTest.php`
 
-- **Test**: `agent:chat` interactive command
-- **Test**: `agent:eval` evaluation execution command
+- **Test**: `vizra:chat` interactive command
+- **Test**: `vizra:eval` evaluation execution command
 - **Test**: Context cleanup commands
 - **Test**: System health check commands
 - **Test**: Command error handling and validation

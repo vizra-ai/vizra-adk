@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class MakeEvalCommand extends GeneratorCommand
 {
-    protected $name = 'agent:make:eval';
+    protected $name = 'vizra:make:eval';
     protected $description = 'Create a new LLM evaluation class';
     protected $type = 'Evaluation';
 

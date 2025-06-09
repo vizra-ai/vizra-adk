@@ -92,7 +92,7 @@ Custom tools are where the real magic happens. Here's how to build tools tailore
 ### Step 1: Generate a Tool
 
 ```bash
-php artisan agent:make:tool OrderLookupTool
+php artisan vizra:make:tool OrderLookupTool
 ```
 
 ### Step 2: Define the Tool Interface

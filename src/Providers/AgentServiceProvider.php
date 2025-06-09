@@ -135,7 +135,7 @@ class AgentServiceProvider extends ServiceProvider
         // Load API routes
         if (config('agent-adk.routes.enabled', true)) {
             Route::group([
-                'prefix' => config('agent-adk.routes.prefix', 'api/agent-adk'),
+                'prefix' => "vizra",
                 'middleware' => config('agent-adk.routes.middleware', ['api']),
             ], function () {
                 $this->loadRoutesFrom(__DIR__.'/../../routes/api.php');
@@ -145,9 +145,9 @@ class AgentServiceProvider extends ServiceProvider
         // Load web routes
         if (config('agent-adk.routes.web.enabled', true)) {
             Route::group([
-                'prefix' => config('agent-adk.routes.web.prefix', 'ai-adk'),
+                'prefix' => "vizra",
                 'middleware' => config('agent-adk.routes.web.middleware', ['web']),
-                'as' => 'agent-adk.',
+                'as' => 'vizra.',
             ], function () {
                 $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
             });

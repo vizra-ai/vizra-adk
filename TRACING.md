@@ -90,38 +90,38 @@ The system tracks different types of operations:
 
 ```bash
 # View traces for a specific session
-php artisan agent:trace --session=session-123
+php artisan vizra:trace --session=session-123
 
 # View a specific trace
-php artisan agent:trace --trace=01JBXXX...
+php artisan vizra:trace --trace=01JBXXX...
 
 # Different output formats
-php artisan agent:trace --session=session-123 --format=tree
-php artisan agent:trace --session=session-123 --format=table
-php artisan agent:trace --session=session-123 --format=json
+php artisan vizra:trace --session=session-123 --format=tree
+php artisan vizra:trace --session=session-123 --format=table
+php artisan vizra:trace --session=session-123 --format=json
 
 # Filter by status
-php artisan agent:trace --session=session-123 --status=error
-php artisan agent:trace --session=session-123 --status=completed
+php artisan vizra:trace --session=session-123 --status=error
+php artisan vizra:trace --session=session-123 --status=completed
 
 # Limit results
-php artisan agent:trace --session=session-123 --limit=10
+php artisan vizra:trace --session=session-123 --limit=10
 ```
 
 ### Cleaning Up Old Traces
 
 ```bash
 # Clean up traces older than 30 days (default)
-php artisan agent:trace:cleanup
+php artisan vizra:trace:cleanup
 
 # Specify custom retention period
-php artisan agent:trace:cleanup --days=7
+php artisan vizra:trace:cleanup --days=7
 
 # Dry run to see what would be deleted
-php artisan agent:trace:cleanup --dry-run
+php artisan vizra:trace:cleanup --dry-run
 
 # Skip confirmation prompt
-php artisan agent:trace:cleanup --force
+php artisan vizra:trace:cleanup --force
 ```
 
 ## Output Formats
@@ -280,7 +280,7 @@ $context->addTraceMetadata([
 ### Performance Issues
 
 1. Reduce retention period: Lower `cleanup_days` in config
-2. Run cleanup more frequently: `php artisan agent:trace:cleanup`
+2. Run cleanup more frequently: `php artisan vizra:trace:cleanup`
 3. Consider disabling tracing in high-volume production environments
 4. Index the database table for better query performance
 

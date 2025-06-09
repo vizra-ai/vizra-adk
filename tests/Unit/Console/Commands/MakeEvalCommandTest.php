@@ -28,7 +28,7 @@ class MakeEvalCommandTest extends TestCase
 
     public function test_command_has_correct_name_and_description()
     {
-        $this->assertEquals('agent:make:eval', $this->command->getName());
+        $this->assertEquals('vizra:make:eval', $this->command->getName());
         $this->assertEquals('Create a new LLM evaluation class', $this->command->getDescription());
     }
 
@@ -227,7 +227,7 @@ class MakeEvalCommandTest extends TestCase
             unlink($expectedPath);
         }
 
-        $this->artisan('agent:make:eval', ['name' => 'ProductReview'])
+        $this->artisan('vizra:make:eval', ['name' => 'ProductReview'])
             ->assertExitCode(0);
 
         // Verify the file was created with correct content
@@ -258,7 +258,7 @@ class MakeEvalCommandTest extends TestCase
         $existingFile = $evaluationsDir . '/ProductReviewEvaluation.php';
         file_put_contents($existingFile, '<?php // existing evaluation');
 
-        $this->artisan('agent:make:eval', ['name' => 'ProductReview'])
+        $this->artisan('vizra:make:eval', ['name' => 'ProductReview'])
             ->assertExitCode(0);
 
         // Verify the existing file was not overwritten
@@ -330,7 +330,7 @@ class MakeEvalCommandTest extends TestCase
             unlink($expectedPath);
         }
 
-        $this->artisan('agent:make:eval', ['name' => 'Math'])
+        $this->artisan('vizra:make:eval', ['name' => 'Math'])
             ->assertExitCode(0);
 
         // Verify the file was created with correct content
