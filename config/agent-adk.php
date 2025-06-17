@@ -56,50 +56,18 @@ return [
      * These are used by the artisan 'make' commands.
      */
     'namespaces' => [
-        'agents' => 'App\Agents', // Default namespace for generated Agent classes
-        'tools'  => 'App\Tools',   // Default namespace for generated Tool classes
+        'agents' => 'App\Agents',           // Default namespace for generated Agent classes
+        'tools'  => 'App\Tools',            // Default namespace for generated Tool classes
+        'evaluations' => 'App\Evaluations', // Default namespace for generated Evaluation classes
     ],
 
-    /**
-     * Agent Manager Configuration
-     * Settings related to how agents are discovered, registered, and run.
-     */
-    'manager' => [
-        // If you want to automatically discover and register agent classes from a specific directory:
-        // 'auto_discover_agents' => true,
-        // 'agent_paths' => [
-        //    app_path('Agents') => 'App\Agents', // path => namespace
-        // ],
-    ],
-
-    /**
-     * Prism-PHP specific configurations.
-     * You can specify your Prism-PHP client settings here.
-     * Refer to Prism-PHP documentation for available options.
-     *
-     * Example:
-     * 'prism' => [
-     *     'api_key' => env('PRISM_API_KEY'),
-     *     'client_options' => [
-     *         // 'base_uri' => '...',
-     *         // 'timeout' => 60,
-     *     ]
-     * ]
-     */
-    'prism' => [
-        'api_key' => env('PRISM_API_KEY'), // Example, user should configure their Prism provider
-        'client_options' => [],
-        // 'default_provider' => 'openai', // Example: 'openai', 'gemini', 'anthropic'
-                                        // This might be useful if Prism-PHP evolves to support multiple providers directly
-                                        // For now, Prism client is usually instantiated for a specific provider
-    ],
     'routes' => [
         'enabled' => true, // Master switch for package routes
         'prefix' => 'api/agent-adk', // Default prefix for all package API routes
         'middleware' => ['api'], // Default middleware group for package routes
         'web' => [
             'enabled' => env('AGENT_ADK_WEB_ENABLED', true), // Enable web interface
-            'prefix' => 'ai-adk', // Prefix for web routes
+            'prefix' => 'vizra', // Prefix for web routes
             'middleware' => ['web'], // Middleware for web routes
         ],
     ],

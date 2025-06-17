@@ -7,7 +7,7 @@
 
     .eval-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
     }
 
     .hero-icon {
@@ -33,7 +33,7 @@
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
         transition: left 0.6s ease-in-out;
     }
 
@@ -43,7 +43,7 @@
 
     .stat-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.3);
     }
 
     .evaluation-item {
@@ -70,7 +70,7 @@
 
     .evaluation-item:hover {
         transform: translateY(-4px);
-        box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.3);
     }
 
     .gradient-text {
@@ -126,7 +126,7 @@
 
     .results-card:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .success-glow {
@@ -204,8 +204,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (passRateBarEl) {
                 passRateBarEl.style.width = passRate + '%';
                 // Update bar color
-                const colorClass = passRate >= 80 ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 
-                                 (passRate < 50 ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-yellow-500 to-orange-600');
+                const colorClass = passRate >= 80 ? 'bg-gradient-to-r from-green-600 to-emerald-700' : 
+                                 (passRate < 50 ? 'bg-gradient-to-r from-red-600 to-red-700' : 'bg-gradient-to-r from-yellow-600 to-orange-700');
                 passRateBarEl.className = passRateBarEl.className.replace(/bg-gradient-to-r from-\w+-\d+ to-\w+-\d+/, colorClass);
             }
         }
@@ -254,18 +254,18 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen bg-gray-950">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <!-- Minimal Header -->
         <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-gray-900 mb-2">Evaluation Runner</h1>
-            <p class="text-gray-600">Test your agents with comprehensive evaluations</p>
+            <h1 class="text-2xl font-bold text-white mb-2">Evaluation Runner</h1>
+            <p class="text-gray-400">Test your agents with comprehensive evaluations</p>
         </div>
 
         <!-- Debug Section -->
         @if(session()->has('message'))
-            <div class="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                <p class="text-blue-800 text-sm">{{ session('message') }}</p>
+            <div class="mb-6 p-3 bg-blue-900/20 border border-blue-700/50 rounded-lg text-center">
+                <p class="text-blue-300 text-sm">{{ session('message') }}</p>
             </div>
         @endif
 
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="relative inline-block">
                         <select id="evaluation-select" 
                                 wire:change="selectEvaluation($event.target.value)"
-                                class="appearance-none bg-white border-2 border-gray-200 rounded-2xl px-6 py-4 pr-12 text-lg font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer min-w-96">
+                                class="appearance-none bg-gray-800 border-2 border-gray-700 rounded-2xl px-6 py-4 pr-12 text-lg font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer min-w-96 text-gray-200">
                             <option value="">Choose an evaluation to run...</option>
                             @foreach($availableEvaluations as $evaluation)
                                 <option value="{{ $evaluation['key'] }}" 
@@ -294,13 +294,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 @else
-                    <div class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-12">
+                    <div class="bg-gray-900/50 border-2 border-dashed border-gray-700 rounded-2xl p-12">
                         <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">No Evaluations Found</h3>
-                        <p class="text-gray-600 mb-4">Create an evaluation to get started</p>
-                        <code class="bg-gray-100 px-3 py-2 rounded text-sm">php artisan agent:make:eval MyEvaluation</code>
+                        <h3 class="text-xl font-bold text-white mb-2">No Evaluations Found</h3>
+                        <p class="text-gray-400 mb-4">Create an evaluation to get started</p>
+                        <code class="bg-gray-800 px-3 py-2 rounded text-sm text-gray-300">php artisan agent:make:eval MyEvaluation</code>
                     </div>
                 @endif
             </div>
@@ -316,15 +316,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 @endphp
                 
-                <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-3xl p-8 text-center shadow-xl">
-                    <div class="flex items-center justify-center w-16 h-16 bg-green-500 rounded-full mx-auto mb-6 shadow-lg">
+                <div class="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-2 border-green-700/50 rounded-3xl p-8 text-center shadow-xl">
+                    <div class="flex items-center justify-center w-16 h-16 bg-green-600 rounded-full mx-auto mb-6 shadow-lg">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
                     
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ $selectedEval['name'] }}</h2>
-                    <p class="text-gray-600 mb-6">Ready to test <strong>{{ $selectedEval['agent_name'] }}</strong> with {{ $testCount }} test cases</p>
+                    <h2 class="text-2xl font-bold text-white mb-2">{{ $selectedEval['name'] }}</h2>
+                    <p class="text-gray-400 mb-6">Ready to test <strong class="text-gray-300">{{ $selectedEval['agent_name'] }}</strong> with {{ $testCount }} test cases</p>
                     
                     <!-- Big Action Button -->
                     <button wire:click="runEvaluation"
@@ -340,32 +340,32 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- Expandable Details -->
                     <div class="mt-8">
                         <button onclick="this.nextElementSibling.classList.toggle('hidden')" 
-                                class="text-gray-600 hover:text-gray-800 text-sm font-medium flex items-center mx-auto">
+                                class="text-gray-400 hover:text-gray-200 text-sm font-medium flex items-center mx-auto">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                             View evaluation details
                         </button>
                         
-                        <div class="hidden mt-4 bg-white rounded-2xl p-6 border border-gray-200">
+                        <div class="hidden mt-4 bg-gray-900/50 rounded-2xl p-6 border border-gray-800">
                             <div class="grid md:grid-cols-2 gap-6">
                                 <!-- Test Criteria -->
                                 <div>
-                                    <h4 class="font-semibold text-gray-900 mb-3">Test Criteria</h4>
+                                    <h4 class="font-semibold text-white mb-3">Test Criteria</h4>
                                     <div class="space-y-2 text-sm">
-                                        <div class="flex items-center text-gray-700">
+                                        <div class="flex items-center text-gray-300">
                                             <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                                             Response completeness & length
                                         </div>
-                                        <div class="flex items-center text-gray-700">
+                                        <div class="flex items-center text-gray-300">
                                             <div class="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
                                             AI quality assessment
                                         </div>
-                                        <div class="flex items-center text-gray-700">
+                                        <div class="flex items-center text-gray-300">
                                             <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                                             Content accuracy & relevance
                                         </div>
-                                        <div class="flex items-center text-gray-700">
+                                        <div class="flex items-center text-gray-300">
                                             <div class="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
                                             Sentiment & tone analysis
                                         </div>
@@ -388,9 +388,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                     @endphp
                                     @if(!empty($sampleData) && isset($sampleData['prompt']))
                                         <div>
-                                            <h4 class="font-semibold text-gray-900 mb-3">Sample Test</h4>
-                                            <div class="bg-gray-50 rounded-lg p-3 text-sm">
-                                                <p class="text-gray-700">"{{ Str::limit($sampleData['prompt'], 120) }}"</p>
+                                            <h4 class="font-semibold text-white mb-3">Sample Test</h4>
+                                            <div class="bg-gray-800 rounded-lg p-3 text-sm">
+                                                <p class="text-gray-300">"{{ Str::limit($sampleData['prompt'], 120) }}"</p>
                                                 @if(isset($sampleData['must_contain']))
                                                     <p class="text-xs text-gray-500 mt-2">Must contain: {{ $sampleData['must_contain'] }}</p>
                                                 @endif
@@ -409,20 +409,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 @php
                     $contextEval = collect($availableEvaluations)->firstWhere('class', $selectedEvaluation);
                 @endphp
-                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-3xl p-8 shadow-xl">
+                <div class="bg-gradient-to-br from-blue-900/20 to-indigo-900/20 border-2 border-blue-700/50 rounded-3xl p-8 shadow-xl">
                     <div class="text-center mb-6">
-                        <div class="flex items-center justify-center w-16 h-16 bg-blue-500 rounded-full mx-auto mb-4 shadow-lg">
+                        <div class="flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mx-auto mb-4 shadow-lg">
                             <svg class="w-8 h-8 text-white spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                             </svg>
                         </div>
-                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Running: {{ $contextEval['name'] ?? 'Evaluation' }}</h2>
-                        <p class="text-gray-600">Testing {{ $contextEval['agent_name'] ?? 'agent' }} • {{ $currentRowIndex }}/{{ $totalRows }} tests completed</p>
+                        <h2 class="text-2xl font-bold text-white mb-2">Running: {{ $contextEval['name'] ?? 'Evaluation' }}</h2>
+                        <p class="text-gray-400">Testing {{ $contextEval['agent_name'] ?? 'agent' }} • {{ $currentRowIndex }}/{{ $totalRows }} tests completed</p>
                     </div>
                     
                     <!-- Progress Bar -->
                     <div class="mb-6">
-                        <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <div class="flex justify-between text-sm text-gray-400 mb-2">
                             <span class="font-medium">{{ $progress }}% Complete</span>
                             @php
                                 $remainingRows = $totalRows - $currentRowIndex;
@@ -430,29 +430,29 @@ document.addEventListener('DOMContentLoaded', function() {
                             @endphp
                             <span>~{{ $estimatedMinutes }} min remaining</span>
                         </div>
-                        <div class="w-full bg-white rounded-full h-4 shadow-inner">
-                            <div class="bg-gradient-to-r from-blue-500 to-purple-600 h-4 rounded-full transition-all duration-300 shadow-lg"
+                        <div class="w-full bg-gray-800 rounded-full h-4 shadow-inner">
+                            <div class="bg-gradient-to-r from-blue-600 to-purple-600 h-4 rounded-full transition-all duration-300 shadow-lg"
                                  style="width: {{ $progress }}%"></div>
                         </div>
-                        <p class="text-sm text-gray-600 mt-2 text-center">{{ $currentStatus }}</p>
+                        <p class="text-sm text-gray-400 mt-2 text-center">{{ $currentStatus }}</p>
                     </div>
                     
                     <!-- Live Stats -->
                     <div class="grid grid-cols-3 gap-4 mb-6">
-                        <div class="bg-white rounded-xl p-4 text-center shadow-sm">
-                            <p class="text-2xl font-bold text-green-600">{{ $passCount }}</p>
-                            <p class="text-xs text-gray-600">Passed</p>
+                        <div class="bg-gray-900/50 rounded-xl p-4 text-center shadow-sm border border-gray-800">
+                            <p class="text-2xl font-bold text-green-400">{{ $passCount }}</p>
+                            <p class="text-xs text-gray-400">Passed</p>
                         </div>
-                        <div class="bg-white rounded-xl p-4 text-center shadow-sm">
-                            <p class="text-2xl font-bold text-red-600">{{ $failCount }}</p>
-                            <p class="text-xs text-gray-600">Failed</p>
+                        <div class="bg-gray-900/50 rounded-xl p-4 text-center shadow-sm border border-gray-800">
+                            <p class="text-2xl font-bold text-red-400">{{ $failCount }}</p>
+                            <p class="text-xs text-gray-400">Failed</p>
                         </div>
-                        <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                        <div class="bg-gray-900/50 rounded-xl p-4 text-center shadow-sm border border-gray-800">
                             @php
                                 $livePassRate = $totalRows > 0 ? round(($passCount / $totalRows) * 100, 1) : 0;
                             @endphp
-                            <p class="text-2xl font-bold {{ $livePassRate >= 80 ? 'text-green-600' : ($livePassRate < 50 ? 'text-red-600' : 'text-yellow-600') }}">{{ $livePassRate }}%</p>
-                            <p class="text-xs text-gray-600">Pass Rate</p>
+                            <p class="text-2xl font-bold {{ $livePassRate >= 80 ? 'text-green-400' : ($livePassRate < 50 ? 'text-red-400' : 'text-yellow-400') }}">{{ $livePassRate }}%</p>
+                            <p class="text-xs text-gray-400">Pass Rate</p>
                         </div>
                     </div>
                 </div>
@@ -465,10 +465,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     $finalPassRate = isset($resultSummary['pass_rate']) ? $resultSummary['pass_rate'] : ($totalRows > 0 ? round(($passCount / $totalRows) * 100, 1) : 0);
                 @endphp
                 
-                <div class="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-3xl p-8 shadow-xl">
+                <div class="bg-gray-900/50 border-2 border-gray-800/50 rounded-3xl p-8 shadow-xl">
                     <!-- Results Header -->
                     <div class="text-center mb-8">
-                        <div class="flex items-center justify-center w-16 h-16 {{ $finalPassRate >= 80 ? 'bg-green-500' : ($finalPassRate < 50 ? 'bg-red-500' : 'bg-yellow-500') }} rounded-full mx-auto mb-4 shadow-lg">
+                        <div class="flex items-center justify-center w-16 h-16 {{ $finalPassRate >= 80 ? 'bg-green-600' : ($finalPassRate < 50 ? 'bg-red-600' : 'bg-yellow-600') }} rounded-full mx-auto mb-4 shadow-lg">
                             @if($isRunning)
                                 <svg class="w-8 h-8 text-white spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -479,13 +479,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </svg>
                             @endif
                         </div>
-                        <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                        <h2 class="text-2xl font-bold text-white mb-2">
                             {{ $contextEval['name'] ?? 'Evaluation' }} 
                             @if(!$isRunning)
                                 - {{ $finalPassRate >= 80 ? 'Excellent!' : ($finalPassRate < 50 ? 'Needs Work' : 'Good') }}
                             @endif
                         </h2>
-                        <p class="text-gray-600">
+                        <p class="text-gray-400">
                             @if($isRunning)
                                 Running live results • {{ $passCount }}/{{ $currentRowIndex }} passed so far
                             @else
@@ -496,20 +496,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     <!-- Quick Stats -->
                     <div class="grid grid-cols-4 gap-4 mb-8">
-                        <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
-                            <p class="text-3xl font-bold text-gray-900">{{ $totalRows ?: (isset($resultSummary['total_rows']) ? $resultSummary['total_rows'] : 0) }}</p>
+                        <div class="bg-gray-800 rounded-2xl p-4 text-center shadow-sm border border-gray-700">
+                            <p class="text-3xl font-bold text-white">{{ $totalRows ?: (isset($resultSummary['total_rows']) ? $resultSummary['total_rows'] : 0) }}</p>
                             <p class="text-sm text-gray-500">Total</p>
                         </div>
-                        <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
-                            <p class="text-3xl font-bold text-green-600">{{ $passCount ?: (isset($resultSummary['passed']) ? $resultSummary['passed'] : 0) }}</p>
+                        <div class="bg-gray-800 rounded-2xl p-4 text-center shadow-sm border border-gray-700">
+                            <p class="text-3xl font-bold text-green-400">{{ $passCount ?: (isset($resultSummary['passed']) ? $resultSummary['passed'] : 0) }}</p>
                             <p class="text-sm text-gray-500">Passed</p>
                         </div>
-                        <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
-                            <p class="text-3xl font-bold text-red-600">{{ $failCount ?: (isset($resultSummary['failed']) ? $resultSummary['failed'] : 0) }}</p>
+                        <div class="bg-gray-800 rounded-2xl p-4 text-center shadow-sm border border-gray-700">
+                            <p class="text-3xl font-bold text-red-400">{{ $failCount ?: (isset($resultSummary['failed']) ? $resultSummary['failed'] : 0) }}</p>
                             <p class="text-sm text-gray-500">Failed</p>
                         </div>
-                        <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
-                            <p class="text-3xl font-bold {{ $finalPassRate >= 80 ? 'text-green-600' : ($finalPassRate < 50 ? 'text-red-600' : 'text-yellow-600') }}">{{ $finalPassRate }}%</p>
+                        <div class="bg-gray-800 rounded-2xl p-4 text-center shadow-sm border border-gray-700">
+                            <p class="text-3xl font-bold {{ $finalPassRate >= 80 ? 'text-green-400' : ($finalPassRate < 50 ? 'text-red-400' : 'text-yellow-400') }}">{{ $finalPassRate }}%</p>
                             <p class="text-sm text-gray-500">Pass Rate</p>
                         </div>
                     </div>
@@ -517,14 +517,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- Results List -->
                     @if(count($results) > 0)
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
                                 @if($isRunning)
-                                    <svg class="w-5 h-5 text-blue-500 mr-2 spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 text-blue-400 mr-2 spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                     </svg>
                                     Live Test Results
                                 @else
-                                    <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
                                     Test Results
@@ -533,15 +533,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             <div class="space-y-2 max-h-96 overflow-y-auto">
                                 @foreach($results as $result)
-                                    <div class="bg-white rounded-lg border-l-4 {{ $result['passed'] ? 'border-green-500' : 'border-red-500' }} p-4 shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md"
+                                    <div class="bg-gray-800 rounded-lg border-l-4 {{ $result['passed'] ? 'border-green-500' : 'border-red-500' }} p-4 shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-gray-750"
                                          wire:click="toggleRowExpansion({{ $result['row_index'] }})">
                                         <div class="flex items-center justify-between">
                                             <div class="flex items-center space-x-3">
-                                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold text-white {{ $result['passed'] ? 'bg-green-500' : 'bg-red-500' }}">
+                                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold text-white {{ $result['passed'] ? 'bg-green-600' : 'bg-red-600' }}">
                                                     {{ $result['row_index'] }}
                                                 </span>
                                                 <div>
-                                                    <span class="text-sm font-medium {{ $result['passed'] ? 'text-green-800' : 'text-red-800' }}">
+                                                    <span class="text-sm font-medium {{ $result['passed'] ? 'text-green-400' : 'text-red-400' }}">
                                                         {{ $result['passed'] ? 'PASSED' : 'FAILED' }}
                                                     </span>
                                                     @if(isset($result['evaluation_result']['assertions']))
@@ -550,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                             $passedAssertions = collect($assertions)->where('status', 'pass')->count();
                                                             $totalAssertions = count($assertions);
                                                         @endphp
-                                                        <span class="ml-2 text-xs px-2 py-1 rounded-full {{ $result['passed'] ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                                        <span class="ml-2 text-xs px-2 py-1 rounded-full {{ $result['passed'] ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300' }}">
                                                             {{ $passedAssertions }}/{{ $totalAssertions }} checks
                                                         </span>
                                                     @endif
@@ -562,17 +562,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </div>
                                         
                                         @if(isset($result['row_data']['prompt']))
-                                            <p class="text-sm text-gray-600 mt-2">{{ Str::limit($result['row_data']['prompt'], 100) }}</p>
+                                            <p class="text-sm text-gray-400 mt-2">{{ Str::limit($result['row_data']['prompt'], 100) }}</p>
                                         @endif
                                         
                                         <!-- Expanded Details -->
                                         @if(in_array($result['row_index'], $expandedRows))
-                                            <div class="mt-4 pt-4 border-t border-gray-100">
+                                            <div class="mt-4 pt-4 border-t border-gray-700">
                                                 <div class="grid md:grid-cols-2 gap-4">
                                                     <!-- Full Response -->
                                                     <div>
-                                                        <h5 class="text-sm font-semibold text-gray-700 mb-2">Full Response:</h5>
-                                                        <div class="bg-gray-50 p-3 rounded text-sm text-gray-700 max-h-32 overflow-y-auto">
+                                                        <h5 class="text-sm font-semibold text-gray-300 mb-2">Full Response:</h5>
+                                                        <div class="bg-gray-900 p-3 rounded text-sm text-gray-300 max-h-32 overflow-y-auto">
                                                             {{ $result['llm_response'] }}
                                                         </div>
                                                     </div>
@@ -580,10 +580,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     <!-- Assertion Results -->
                                                     @if(isset($result['evaluation_result']['assertions']) && count($result['evaluation_result']['assertions']) > 0)
                                                         <div>
-                                                            <h5 class="text-sm font-semibold text-gray-700 mb-2">Assertion Results:</h5>
+                                                            <h5 class="text-sm font-semibold text-gray-300 mb-2">Assertion Results:</h5>
                                                             <div class="space-y-1 max-h-32 overflow-y-auto">
                                                                 @foreach($result['evaluation_result']['assertions'] as $assertion)
-                                                                    <div class="flex items-center text-xs {{ $assertion['status'] === 'pass' ? 'text-green-700' : 'text-red-700' }}">
+                                                                    <div class="flex items-center text-xs {{ $assertion['status'] === 'pass' ? 'text-green-400' : 'text-red-400' }}">
                                                                         @if($assertion['status'] === 'pass')
                                                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -610,9 +610,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     <!-- Actions -->
                     @if(!$isRunning)
-                        <div class="mt-8 pt-6 border-t border-gray-200 flex justify-center space-x-4">
+                        <div class="mt-8 pt-6 border-t border-gray-700 flex justify-center space-x-4">
                             <button wire:click="resetResults"
-                                    class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-all duration-200">
+                                    class="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl transition-all duration-200 border border-gray-700">
                                 Reset & Start Over
                             </button>
                             

@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Vizra\VizraSdk\Livewire\Dashboard;
 use Vizra\VizraSdk\Livewire\ChatInterface;
 use Vizra\VizraSdk\Livewire\EvalRunner;
-use Vizra\VizraSdk\Livewire\Analytics;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,7 +18,3 @@ use Vizra\VizraSdk\Livewire\Analytics;
 Route::get('/', Dashboard::class)->name('dashboard');
 Route::get('/chat', ChatInterface::class)->name('chat');
 Route::get('/eval', EvalRunner::class)->name('eval-runner');
-Route::get('/analytics', Analytics::class)->name('analytics');
-Route::get('/test-modal', function () {
-    return view('vizra::test-modal');
-})->name('test-modal');
