@@ -1,243 +1,200 @@
-# 🤖 Vizra SDK
+# 🤖 Vizra ADK - AI Agent Development Kit for Laravel
 
-> **Build, test, and deploy intelligent AI agents with Laravel's elegant syntax**
+> **Build intelligent AI agents with Laravel's elegant syntax**
 
-Transform your Laravel applications into intelligent, conversation-driven experiences. The Vizra SDK brings the power of AI agents to your favorite framework with the elegance and simplicity you already love.
+[![Latest Version](https://img.shields.io/packagist/v/vizra/vizra-adk)](https://packagist.org/packages/vizra/vizra-adk)
+[![Total Downloads](https://img.shields.io/packagist/dt/vizra/vizra-adk)](https://packagist.org/packages/vizra/vizra-adk)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+[![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4.svg)](https://www.php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-11.0%2B-FF2D20.svg)](https://laravel.com)
 
-[![Latest Version](https://img.shields.io/packagist/v/vizra/vizra-sdk)](https://packagist.org/packages/vizra/vizra-sdk)
-[![Total Downloads](https://img.shields.io/packagist/dt/vizra/vizra-sdk)](https://packagist.org/packages/vizra/vizra-sdk)
-[![Tests](https://github.com/vizra/vizra-sdk/workflows/tests/badge.svg)](https://github.com/vizra/vizra-sdk/actions)
-[![License](https://img.shields.io/packagist/l/vizra/vizra-sdk)](https://packagist.org/packages/vizra/vizra-sdk)
+Vizra ADK is a comprehensive Laravel package for building autonomous AI agents that can reason, use tools, and maintain persistent memory. Create intelligent, conversational agents that integrate seamlessly with your Laravel application.
 
-## ✨ What Makes It Special?
+## ✨ Key Features
 
-**For Laravel Developers, By Laravel Developers**. We took everything you love about Laravel—eloquent syntax, powerful tooling, and developer happiness—and applied it to AI agent development.
-
-```php
-// Create an intelligent customer support agent in minutes
-class CustomerSupportAgent extends BaseLlmAgent
-{
-    protected string $instructions = "You're a helpful customer support agent...";
-
-    protected array $tools = [
-        OrderLookupTool::class,
-        RefundTool::class,
-        KnowledgeBaseTool::class,
-    ];
-}
-
-// That's it! Your agent is ready to help customers
-$response = CustomerSupportAgent::ask('My order is late, can you help?')->forUser($user);
-```
+- **🤖 Multi-Model AI Support** - Works with OpenAI (GPT-4, GPT-3.5), Anthropic Claude, and Google Gemini
+- **🛠️ Extensible Tool System** - Give agents abilities to interact with databases, APIs, and external services
+- **🧠 Persistent Memory** - Agents remember conversations and learn from interactions across sessions
+- **📊 LLM-as-a-Judge Evaluation** - Automated quality testing framework for agents at scale
+- **💬 Streaming Responses** - Real-time, token-by-token streaming for responsive user experiences
+- **🎯 Sub-Agent Delegation** - Agents can delegate tasks to specialized sub-agents
+- **📈 Comprehensive Tracing** - Debug and monitor agent execution with detailed traces
+- **🎨 Web Dashboard** - Beautiful Livewire-powered interface for testing and monitoring
+- **🔧 Laravel Native** - Built with Laravel patterns: Artisan commands, Eloquent models, service providers
 
 ## 🚀 Quick Start
 
-Get your first AI agent running in under 5 minutes:
-
 ```bash
-# Install the package
-composer require vizra/vizra-sdk
+# Install via Composer
+composer require vizra/vizra-adk
 
-# Publish the config and run migrations
-php artisan vendor:publish --provider="Vizra\VizraSdk\AgentAdkServiceProvider"
-php artisan migrate
+# Publish config and run migrations
+php artisan vizra:install
 
 # Create your first agent
-php artisan vizra:make:agent WeatherAgent
+php artisan vizra:make:agent CustomerSupportAgent
 
 # Start chatting!
-php artisan vizra:chat weather_agent
+php artisan vizra:chat customer_support
 ```
 
-## 🎯 Perfect For
-
-- **Customer Support** - Intelligent, context-aware support agents
-- **Content Creation** - AI writers that understand your brand
-- **Data Analysis** - Agents that can query, analyze, and explain your data
-- **Personal Assistants** - Helpful agents for productivity and organization
-- **Educational Tools** - Tutors and learning companions
-- **Process Automation** - Smart workflows that adapt and learn
-
-## 🔥 Core Features
-
-### 🧠 **Intelligent Agents**
-
-Build agents that remember, reason, and react. Each agent has persistent memory, can use tools, and maintains conversation context across sessions.
-
-### 🛠️ **Powerful Tools**
-
-Agents can interact with your Laravel application, databases, APIs, and external services through a simple tool interface.
-
-### 📊 **LLM-as-a-Judge Evaluation**
-
-Test your agents at scale with AI-powered quality assessment. No more manual testing—let AI judge AI performance.
-
-### 💾 **Vector Memory & RAG**
-
-Give your agents long-term memory with semantic search. Store documents, conversations, and knowledge for intelligent retrieval.
-
-### 🎨 **Beautiful Web Interface**
-
-A clean, modern dashboard for chatting with agents, running evaluations, and monitoring performance.
-
-### ⚡ **Streaming Responses**
-
-Real-time, streaming conversations that feel natural and responsive.
-
-### 🔧 **Laravel-Native**
-
-Built for Laravel developers. Uses Eloquent, Jobs, Events, and all the Laravel patterns you know and love.
-
-## 🏗️ Architecture Overview
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Your Agent    │    │  Tools System   │    │ Vector Memory   │
-│                 │    │                 │    │                 │
-│ • Instructions  │◄──►│ • Database      │    │ • Semantic      │
-│ • Memory        │    │ • APIs          │    │   Search        │
-│ • Tools         │    │ • Files         │    │ • RAG Context   │
-│ • Context       │    │ • Custom Logic  │    │ • Long-term     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                    ┌─────────────────┐
-                    │  Laravel ADK    │
-                    │                 │
-                    │ • Sessions      │
-                    │ • Streaming     │
-                    │ • Evaluation    │
-                    │ • Web Interface │
-                    └─────────────────┘
-```
-
-## 📚 Documentation
-
-**Just Getting Started?**
-
-- [🚀 Installation & Setup](docs/getting-started.md)
-- [🤖 Creating Your First Agent](docs/your-first-agent.md)
-- [🎯 Quick Examples](docs/examples/README.md)
-
-**Building Powerful Agents**
-
-- [🧠 Agent Development Guide](docs/agents.md)
-- [🛠️ Tools & Capabilities](docs/tools.md)
-- [💾 Vector Memory & RAG](docs/vector-memory.md)
-- [📊 Evaluation & Testing](docs/evaluation.md)
-
-**Advanced Topics**
-
-- [⚙️ Configuration](docs/configuration.md)
-- [🚀 Deployment](docs/deployment.md)
-- [🔧 Extending the ADK](docs/extending.md)
-- [📈 Performance & Scaling](docs/performance.md)
-
-## 🎮 Try It Now
-
-Want to see it in action? Check out these live examples:
+## 💻 Basic Usage
 
 ```php
-// A weather agent that can check current conditions
-$weather = WeatherAgent::ask('What\'s the weather like in Tokyo?')->forUser($user);
+<?php
 
-// A code reviewer that understands Laravel
-$review = CodeReviewerAgent::ask('Review this controller method')
-    ->withContext(['code' => file_get_contents('app/Http/Controllers/UserController.php')])
-    ->forUser($user);
+use Vizra\VizraSdk\Agents\BaseLlmAgent;
+use Vizra\VizraSdk\Facades\Agent;
 
-// A data analyst that can query your database
-$analysis = DataAnalystAgent::ask('How many users signed up last month?')->forUser($user);
+// Define your agent
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'customer_support';
+    protected string $description = 'Helps customers with inquiries';
+    protected string $instructions = 'You are a helpful customer support assistant.';
+    protected string $model = 'gpt-4o';
+    
+    protected array $tools = [
+        OrderLookupTool::class,
+        RefundProcessorTool::class,
+    ];
+}
+
+// Register in AppServiceProvider
+public function boot(): void
+{
+    Agent::build(CustomerSupportAgent::class)->register();
+}
+
+// Use your agent
+$response = CustomerSupportAgent::ask('I need help with my order')
+    ->forUser($user)
+    ->execute();
 ```
 
-## 🤝 Community & Support
+## 🛠️ Creating Tools
 
-- **[GitHub Discussions](https://github.com/vizra/vizra-sdk/discussions)** - Ask questions, share ideas
-- **[Issues](https://github.com/vizra/vizra-sdk/issues)** - Report bugs, request features
-- **[Examples Repository](https://github.com/vizra/vizra-sdk-examples)** - Real-world examples and templates
+Tools extend your agent's capabilities:
+
+```php
+use Vizra\VizraSdk\Contracts\ToolInterface;
+use Vizra\VizraSdk\System\AgentContext;
+
+class OrderLookupTool implements ToolInterface
+{
+    public function definition(): array
+    {
+        return [
+            'name' => 'order_lookup',
+            'description' => 'Look up order information',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'order_id' => [
+                        'type' => 'string',
+                        'description' => 'The order ID',
+                    ],
+                ],
+                'required' => ['order_id'],
+            ],
+        ];
+    }
+    
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        $order = Order::find($arguments['order_id']);
+        
+        return json_encode([
+            'status' => 'success',
+            'order' => $order->toArray(),
+        ]);
+    }
+}
+```
+
+## 📚 Full Documentation
+
+For comprehensive documentation, tutorials, and API reference, visit:
+
+**[📖 https://vizra.ai/docs](https://vizra.ai/docs)**
+
+## 🌟 Why Vizra ADK?
+
+- **Laravel First** - Built specifically for Laravel developers with familiar patterns
+- **Production Ready** - Battle-tested with comprehensive error handling and logging
+- **No Vendor Lock-in** - Switch between AI providers without changing your code
+- **Developer Experience** - Elegant API, helpful error messages, and extensive documentation
+- **Community Driven** - Open source with active development and support
+
+## 🚀 Vizra Cloud Platform (Coming Soon!)
+
+Take your agents to production with **Vizra Cloud** - our managed hosting platform designed specifically for AI agents built with Vizra ADK.
+
+### What's Coming:
+
+- **🌐 One-Click Deployment** - Deploy agents directly from GitHub
+- **⚡ Auto-Scaling** - Handle any load with automatic scaling
+- **🔒 Enterprise Security** - SOC2 compliant infrastructure
+- **📊 Analytics Dashboard** - Monitor usage, costs, and performance
+- **🤝 Team Collaboration** - Manage agents and deployments with your team
+- **🌍 Global Edge Network** - Low latency worldwide
+- **💾 Managed Vector Database** - Built-in memory storage
+- **🔧 Zero Configuration** - We handle the infrastructure
+
+**[Join the waitlist at vizra.ai →](https://vizra.ai)**
+
+## 🤝 Sponsorship
+
+Vizra ADK is open source and free to use. If you find it valuable, please consider sponsoring the project to help us maintain and improve it.
+
+### 💖 Become a Sponsor
+
+Your sponsorship helps us:
+- 🚀 Develop new features faster
+- 🐛 Provide better support and bug fixes
+- 📚 Improve documentation and examples
+- 🌟 Keep the project sustainable
+
+**[Sponsor Vizra ADK on GitHub →](https://github.com/sponsors/vizra-ai)**
+
+Every contribution, no matter the size, makes a difference! Sponsors get:
+- 🏆 Recognition in our README and website
+- 🎯 Priority support for issues
+- 🗳️ Influence on the roadmap
+- 💬 Access to sponsor-only Discord channel
 
 ## 🔧 Requirements
 
-- **PHP 8.2+**
-- **Laravel 11.0+ | 12.0+**
-- **OpenAI API key** (or other LLM provider)
-- **MySQL/PostgreSQL** for agent sessions and memory
+- PHP 8.2+
+- Laravel 11.0+ or 12.0+
+- MySQL/PostgreSQL (SQLite for development)
+- At least one LLM API key (OpenAI, Anthropic, or Google)
 
-## 💡 What's Different?
+## 🤝 Community & Support
 
-**Other AI Libraries:**
-
-```python
-# Complex setup, multiple configs, non-Laravel patterns
-from some_ai_lib import Agent, Tools, Memory
-agent = Agent(
-    model="gpt-4",
-    tools=[DatabaseTool(), APITool()],
-    memory=VectorMemory(provider="pinecone")
-)
-```
-
-**Vizra SDK:**
-
-```php
-// Pure Laravel elegance
-class MyAgent extends BaseLlmAgent
-{
-    protected string $instructions = "You're a helpful assistant";
-    protected array $tools = [DatabaseTool::class, ApiTool::class];
-}
-
-MyAgent::ask('Help me with something')->forUser($user);
-```
-
-## 🎉 What Developers Are Saying
-
-> _"Finally, an AI framework that feels like Laravel. The tool system is brilliant!"_  
-> — **Sarah Chen**, Senior Laravel Developer
-
-> _"The evaluation system saved us weeks of testing. LLM-as-a-judge is a game changer."_  
-> — **Marcus Rodriguez**, Technical Lead
-
-> _"Vector memory just works. No complex setup, no vendor lock-in."_  
-> — **Emily Watson**, Founder at StartupCo
-
-## 🚧 Roadmap
-
-- [ ] **Multi-modal Support** - Images, audio, and file processing
-- [ ] **Agent Marketplace** - Share and discover community agents
-- [ ] **Visual Flow Builder** - Drag-and-drop agent creation
-- [ ] **Enterprise Features** - Advanced security, audit logs, and team management
-- [ ] **Mobile SDK** - Native iOS and Android agent integration
-
-## 🤝 Contributing
-
-We love contributions! Whether it's:
-
-- 🐛 **Bug reports** - Help us squash those pesky issues
-- 💡 **Feature requests** - Share your ideas for new capabilities
-- 📖 **Documentation** - Help other developers get started
-- 🔧 **Code contributions** - Submit PRs for new features or fixes
-
-Check out our [Contributing Guide](CONTRIBUTING.md) to get started.
+- **[GitHub Discussions](https://github.com/vizra-ai/vizra-adk/discussions)** - Ask questions, share ideas
+- **[GitHub Issues](https://github.com/vizra-ai/vizra-adk/issues)** - Report bugs, request features
+- **[Discord Community](https://discord.gg/vizra)** - Chat with other developers
+- **[Twitter/X](https://twitter.com/vizra_ai)** - Latest updates and tips
 
 ## 📄 License
 
-The Vizra SDK is open-sourced software licensed under the [MIT license](LICENSE.md).
+Vizra ADK is open-sourced software licensed under the [MIT license](LICENSE.md).
 
 ## 🙏 Credits
 
-Built with ❤️ by [Aaron Lumsden](https://github.com/aaronlumsden) and the Laravel community.
+Built with ❤️ by the Vizra team and contributors.
 
 Special thanks to:
-
-- The Laravel team for creating such an elegant framework
-- The open-source AI community for pushing boundaries
-- All our contributors and users who make this project better
+- The Laravel team for creating an amazing framework
+- The AI/ML community for pushing boundaries
+- All our contributors and sponsors
 
 ---
 
 <p align="center">
-<strong>Ready to build the future with AI agents?</strong><br>
-<a href="docs/getting-started.md">Get Started →</a>
+<strong>Ready to build intelligent AI agents?</strong><br>
+<a href="https://vizra.ai/docs">Get Started →</a> • 
+<a href="https://github.com/sponsors/vizra-ai">Sponsor →</a> • 
+<a href="https://vizra.ai">Join Cloud Waitlist →</a>
 </p>
