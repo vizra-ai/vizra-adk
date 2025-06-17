@@ -115,7 +115,7 @@ class EvalRunner extends Component
             foreach ($files as $file) {
                 if ($file->getExtension() === 'php') {
                     $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-                    $fullClassName = "Vizra\\VizraSdk\\Evaluations\\{$className}";
+                    $fullClassName = "Vizra\\VizraAdk\\Evaluations\\{$className}";
 
                     if (class_exists($fullClassName) && is_subclass_of($fullClassName, BaseEvaluation::class)) {
                         try {

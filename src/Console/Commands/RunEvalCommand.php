@@ -32,7 +32,7 @@ class RunEvalCommand extends Command
         // Resolve evaluation class name (considering App namespace first, then package namespace)
         $studlyEvalName = Str::studly($evaluationNameArgument);
         $evaluationAppNamespace = $this->laravel->getNamespace().'Evaluations\\'.$studlyEvalName;
-        $evaluationPackageNamespace = 'Vizra\\VizraSdk\\Evaluations\\'.$studlyEvalName;
+        $evaluationPackageNamespace = 'Vizra\\VizraAdk\\Evaluations\\'.$studlyEvalName;
 
         if (class_exists($evaluationAppNamespace)) {
             $evaluationClass = $evaluationAppNamespace;

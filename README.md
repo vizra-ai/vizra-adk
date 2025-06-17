@@ -53,8 +53,8 @@ php artisan vizra:chat customer_support
 ```php
 <?php
 
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
-use Vizra\VizraSdk\Facades\Agent;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\Facades\Agent;
 
 // Define your agent
 class CustomerSupportAgent extends BaseLlmAgent
@@ -87,8 +87,8 @@ $response = CustomerSupportAgent::ask('I need help with my order')
 Tools extend your agent's capabilities:
 
 ```php
-use Vizra\VizraSdk\Contracts\ToolInterface;
-use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraAdk\Contracts\ToolInterface;
+use Vizra\VizraAdk\System\AgentContext;
 
 class OrderLookupTool implements ToolInterface
 {

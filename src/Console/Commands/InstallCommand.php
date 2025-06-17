@@ -14,13 +14,13 @@ class InstallCommand extends Command
     {
         $this->info('Publishing Vizra SDK configuration...');
         $this->call('vendor:publish', [
-            '--provider' => "Vizra\VizraSdk\Providers\AgentServiceProvider",
+            '--provider' => "Vizra\VizraAdk\Providers\AgentServiceProvider",
             '--tag' => "agent-adk-config"
         ]);
 
         $this->info('Publishing Vizra SDK migrations...');
         $this->call('vendor:publish', [
-            '--provider' => "Vizra\VizraSdk\Providers\AgentServiceProvider",
+            '--provider' => "Vizra\VizraAdk\Providers\AgentServiceProvider",
             '--tag' => "agent-adk-migrations"
         ]);
 

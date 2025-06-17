@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Examples;
+namespace Vizra\VizraAdk\Examples;
 
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
 
 /**
  * Order specialist sub-agent focused on order management and tracking.

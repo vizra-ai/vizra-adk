@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Examples;
+namespace Vizra\VizraAdk\Examples;
 
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
 
 /**
  * Billing support sub-agent specialized in handling billing and payment issues.

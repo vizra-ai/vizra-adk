@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Examples;
+namespace Vizra\VizraAdk\Examples;
 
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
 
 /**
  * Example parent agent that demonstrates sub-agent delegation capabilities.
