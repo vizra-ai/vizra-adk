@@ -1,11 +1,11 @@
 <?php
 
-use Vizra\VizraAdk\Services\AgentRegistry;
-use Vizra\VizraAdk\Services\AgentManager;
-use Vizra\VizraAdk\Services\StateManager;
-use Vizra\VizraAdk\Agents\BaseAgent;
-use Vizra\VizraAdk\Agents\BaseLlmAgent;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\Agents\BaseAgent;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\System\AgentContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -121,7 +121,7 @@ it('integrates with facade', function () {
     $registry->register('facade-test-agent', IntegrationTestAgent::class);
 
     // Test using the Agent facade if available
-    if (class_exists('\Vizra\VizraAdk\Facades\Agent')) {
+    if (class_exists('\Vizra\VizraADK\Facades\Agent')) {
         $response = \Agent::run('facade-test-agent', 'Facade test input');
         expect($response)->toBeString();
         expect($response)->toContain('Integration response');

@@ -1,11 +1,11 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\Agents;
+namespace Vizra\VizraADK\Tests\Unit\Agents;
 
-use Vizra\VizraAdk\Agents\ConditionalWorkflow;
-use Vizra\VizraAdk\System\AgentContext;
-use Vizra\VizraAdk\Tests\TestCase;
-use Vizra\VizraAdk\Facades\Agent;
+use Vizra\VizraADK\Agents\ConditionalWorkflow;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Facades\Agent;
 use Mockery;
 
 class ConditionalWorkflowTest extends TestCase
@@ -19,7 +19,7 @@ class ConditionalWorkflowTest extends TestCase
         $this->workflow = new ConditionalWorkflow();
         $this->context = new AgentContext('test-session');
     }
-    
+
     protected function mockAgentRun($returnValue = 'mocked_result')
     {
         Agent::shouldReceive('run')
@@ -41,7 +41,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_can_add_condition_with_closure()
     {
         $condition = fn($input) => $input['type'] === 'premium';
-        
+
         $workflow = $this->workflow->when($condition, 'PremiumAgent');
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
@@ -129,7 +129,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_execute_otherwise_when_no_conditions_match()
     {
         $this->mockAgentRun('default_result');
-        
+
         $result = $this->workflow
             ->when(fn($input) => $input['type'] === 'premium', 'PremiumAgent')
             ->when(fn($input) => $input['type'] === 'gold', 'GoldAgent')
@@ -279,8 +279,8 @@ class ConditionalWorkflowTest extends TestCase
 
         $result = $this->workflow
             ->when(
-                fn($input) => $input['type'] === 'premium', 
-                'PremiumAgent', 
+                fn($input) => $input['type'] === 'premium',
+                'PremiumAgent',
                 fn($input) => $input['type']
             )
             ->execute(['type' => 'premium'], $this->context);
@@ -322,7 +322,7 @@ class ConditionalWorkflowTest extends TestCase
     {
         $condition = fn($input) => $input['type'] === 'premium';
         $workflow = ConditionalWorkflow::create($condition, 'PremiumAgent', 'DefaultAgent');
-        
+
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
 
@@ -330,7 +330,7 @@ class ConditionalWorkflowTest extends TestCase
     {
         $condition = fn($input) => $input['type'] === 'premium';
         $workflow = ConditionalWorkflow::create($condition, 'PremiumAgent');
-        
+
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
 

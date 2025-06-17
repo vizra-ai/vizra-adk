@@ -1,13 +1,13 @@
 <?php
 
-namespace Vizra\VizraAdk\Console\Commands;
+namespace Vizra\VizraADK\Console\Commands;
 
-use Vizra\VizraAdk\Services\VectorMemoryManager;
+use Vizra\VizraADK\Services\VectorMemoryManager;
 use Illuminate\Console\Command;
 
 class VectorMemorySearch extends Command
 {
-    protected $signature = 'vector:search 
+    protected $signature = 'vector:search
                            {agent : The agent name to search memory for}
                            {query : Search query}
                            {--namespace=default : Memory namespace}
@@ -52,7 +52,7 @@ class VectorMemorySearch extends Command
                 } else {
                     $this->info("🔍 Found {$ragContext['total_results']} relevant results");
                     $this->newLine();
-                    
+
                     if (!empty($ragContext['context'])) {
                         $this->info("📄 Generated RAG Context:");
                         $this->line("=" * 80);
@@ -104,12 +104,12 @@ class VectorMemorySearch extends Command
                             $this->line("Source: " . ($result->source ?? 'N/A'));
                             $this->line("Created: " . ($result->created_at ?? 'N/A'));
                             $this->line("Content: " . substr($result->content, 0, 200) . "...");
-                            
+
                             if (!empty($result->metadata)) {
                                 $metadata = is_array($result->metadata) ? $result->metadata : json_decode($result->metadata, true);
                                 $this->line("Metadata: " . json_encode($metadata));
                             }
-                            
+
                             $this->newLine();
                         }
                     }

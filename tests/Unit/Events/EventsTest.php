@@ -1,10 +1,10 @@
 <?php
 
-use Vizra\VizraAdk\Events\AgentResponseGenerated;
-use Vizra\VizraAdk\Events\AgentExecutionStarting;
-use Vizra\VizraAdk\Events\AgentExecutionFinished;
-use Vizra\VizraAdk\Events\TaskDelegated;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Events\AgentResponseGenerated;
+use Vizra\VizraADK\Events\AgentExecutionStarting;
+use Vizra\VizraADK\Events\AgentExecutionFinished;
+use Vizra\VizraADK\Events\TaskDelegated;
+use Vizra\VizraADK\System\AgentContext;
 use Illuminate\Support\Facades\Event;
 
 it('creates agent response generated event correctly', function () {

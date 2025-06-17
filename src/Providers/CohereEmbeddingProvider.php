@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraAdk\Providers;
+namespace Vizra\VizraADK\Providers;
 
-use Vizra\VizraAdk\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -17,15 +17,15 @@ class CohereEmbeddingProvider implements EmbeddingProviderInterface
     public function __construct()
     {
         $apiKey = config('services.cohere.key') ?? env('COHERE_API_KEY');
-        
+
         if (empty($apiKey)) {
             throw new \RuntimeException('Cohere API key is required. Set COHERE_API_KEY environment variable or services.cohere.key config.');
         }
-        
+
         $this->apiKey = $apiKey;
         $this->model = config('vizra-adk.vector_memory.embedding_models.cohere', 'embed-english-v3.0');
         $this->baseUrl = config('services.cohere.url', 'https://api.cohere.ai/v1');
-        
+
         $this->dimensions = config('vizra-adk.vector_memory.dimensions', [
             'embed-english-v3.0' => 1024,
             'embed-multilingual-v3.0' => 1024,
@@ -41,7 +41,7 @@ class CohereEmbeddingProvider implements EmbeddingProviderInterface
     public function embed(string|array $input): array
     {
         $inputs = is_array($input) ? $input : [$input];
-        
+
         // Validate input lengths
         foreach ($inputs as $text) {
             if (strlen($text) > $this->getMaxInputLength()) {
@@ -69,7 +69,7 @@ class CohereEmbeddingProvider implements EmbeddingProviderInterface
             }
 
             $data = $response->json();
-            
+
             if (!isset($data['embeddings']['float']) || !is_array($data['embeddings']['float'])) {
                 throw new RuntimeException('Invalid response format from Cohere embedding API');
             }

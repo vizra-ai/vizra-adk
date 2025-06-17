@@ -1,11 +1,11 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\Tools;
+namespace Vizra\VizraADK\Tests\Unit\Tools;
 
-use Vizra\VizraAdk\Tests\TestCase;
-use Vizra\VizraAdk\Tools\VectorMemoryTool;
-use Vizra\VizraAdk\Services\VectorMemoryManager;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Tools\VectorMemoryTool;
+use Vizra\VizraADK\Services\VectorMemoryManager;
+use Vizra\VizraADK\System\AgentContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Mockery;
@@ -19,7 +19,7 @@ class VectorMemoryToolTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->mockVectorMemory = Mockery::mock(VectorMemoryManager::class);
         $this->mockContext = Mockery::mock(AgentContext::class);
         $this->tool = new VectorMemoryTool($this->mockVectorMemory);
@@ -38,13 +38,13 @@ class VectorMemoryToolTest extends TestCase
         $this->assertIsArray($definition);
         $this->assertEquals('vector_memory', $definition['name']);
         $this->assertStringContainsString('semantic vector search', $definition['description']);
-        
+
         // Check required parameters
         $this->assertEquals(['action'], $definition['parameters']['required']);
-        
+
         // Check action enum values
         $this->assertEquals(['store', 'search', 'delete', 'stats'], $definition['parameters']['properties']['action']['enum']);
-        
+
         // Check parameter types
         $this->assertEquals('string', $definition['parameters']['properties']['content']['type']);
         $this->assertEquals('string', $definition['parameters']['properties']['query']['type']);
@@ -75,7 +75,7 @@ class VectorMemoryToolTest extends TestCase
             'action' => 'store',
             'content' => 'Test content'
         ], $this->mockContext);
-        
+
         $response = json_decode($result, true);
 
         $this->assertFalse($response['success']);
@@ -188,7 +188,7 @@ class VectorMemoryToolTest extends TestCase
         $this->assertEquals('default', $response['namespace']);
         $this->assertCount(2, $response['results']);
         $this->assertEquals(2, $response['total_results']);
-        
+
         // Check first result structure
         $firstResult = $response['results'][0];
         $this->assertEquals('result-1', $firstResult['id']);

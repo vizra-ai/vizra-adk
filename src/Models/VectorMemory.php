@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraAdk\Models;
+namespace Vizra\VizraADK\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -69,28 +69,28 @@ class VectorMemory extends Model
     {
         $a = $this->embedding_vector;
         $b = $vector;
-        
+
         if (empty($a) || empty($b) || count($a) !== count($b)) {
             return 0.0;
         }
-        
+
         $dotProduct = 0.0;
         $normA = 0.0;
         $normB = 0.0;
-        
+
         for ($i = 0; $i < count($a); $i++) {
             $dotProduct += $a[$i] * $b[$i];
             $normA += $a[$i] * $a[$i];
             $normB += $b[$i] * $b[$i];
         }
-        
+
         $normA = sqrt($normA);
         $normB = sqrt($normB);
-        
+
         if ($normA == 0.0 || $normB == 0.0) {
             return 0.0;
         }
-        
+
         return $dotProduct / ($normA * $normB);
     }
 

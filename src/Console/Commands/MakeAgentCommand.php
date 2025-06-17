@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraAdk\Console\Commands;
+namespace Vizra\VizraADK\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
@@ -20,11 +20,11 @@ class MakeAgentCommand extends GeneratorCommand
     protected function getDefaultNamespace($rootNamespace): string
     {
         $configuredNamespace = config('vizra-adk.namespaces.agents');
-        
+
         if ($configuredNamespace) {
             return $configuredNamespace;
         }
-        
+
         // Fallback to rootNamespace + \Agents, or just App\Agents if no root namespace
         $baseNamespace = $rootNamespace ?: 'App';
         return $baseNamespace . '\Agents';

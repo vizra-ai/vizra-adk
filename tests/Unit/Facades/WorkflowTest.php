@@ -1,13 +1,13 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\Facades;
+namespace Vizra\VizraADK\Tests\Unit\Facades;
 
-use Vizra\VizraAdk\Facades\Workflow;
-use Vizra\VizraAdk\Agents\SequentialWorkflow;
-use Vizra\VizraAdk\Agents\ParallelWorkflow;
-use Vizra\VizraAdk\Agents\ConditionalWorkflow;
-use Vizra\VizraAdk\Agents\LoopWorkflow;
-use Vizra\VizraAdk\Tests\TestCase;
+use Vizra\VizraADK\Facades\Workflow;
+use Vizra\VizraADK\Agents\SequentialWorkflow;
+use Vizra\VizraADK\Agents\ParallelWorkflow;
+use Vizra\VizraADK\Agents\ConditionalWorkflow;
+use Vizra\VizraADK\Agents\LoopWorkflow;
+use Vizra\VizraADK\Tests\TestCase;
 
 class WorkflowTest extends TestCase
 {
@@ -16,7 +16,7 @@ class WorkflowTest extends TestCase
         $reflection = new \ReflectionClass(Workflow::class);
         $method = $reflection->getMethod('getFacadeAccessor');
         $method->setAccessible(true);
-        
+
         $this->assertEquals('laravel-ai-adk.workflow', $method->invoke(new Workflow()));
     }
 
@@ -66,7 +66,7 @@ class WorkflowTest extends TestCase
     {
         $condition = fn($input) => $input['counter'] < 5;
         $workflow = Workflow::while('TestAgent', $condition);
-        
+
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
     }
 
@@ -74,7 +74,7 @@ class WorkflowTest extends TestCase
     {
         $condition = fn($input) => $input['counter'] >= 5;
         $workflow = Workflow::until('TestAgent', $condition);
-        
+
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
     }
 
@@ -88,7 +88,7 @@ class WorkflowTest extends TestCase
     {
         $collection = ['a', 'b', 'c'];
         $workflow = Workflow::forEach('TestAgent', $collection);
-        
+
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
     }
 

@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\VectorMemory;
+namespace Vizra\VizraADK\Tests\Unit\VectorMemory;
 
-use Vizra\VizraAdk\Tests\TestCase;
-use Vizra\VizraAdk\Services\DocumentChunker;
+use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Services\DocumentChunker;
 use Illuminate\Support\Facades\Config;
 
 class DocumentChunkerTest extends TestCase
@@ -13,13 +13,13 @@ class DocumentChunkerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         Config::set('vizra-adk.vector_memory.chunking', [
             'strategy' => 'sentence',
             'chunk_size' => 100,
             'overlap' => 20,
         ]);
-        
+
         $this->chunker = new DocumentChunker();
     }
 
@@ -45,7 +45,7 @@ class DocumentChunkerTest extends TestCase
         Config::set('vizra-adk.vector_memory.chunking.strategy', 'paragraph');
         Config::set('vizra-adk.vector_memory.chunking.chunk_size', 30);
         $chunker = new DocumentChunker();
-        
+
         $content = "First paragraph here.\n\nSecond paragraph follows.\n\nThird paragraph ends it.";
 
         // Act
@@ -62,7 +62,7 @@ class DocumentChunkerTest extends TestCase
         Config::set('vizra-adk.vector_memory.chunking.strategy', 'fixed');
         Config::set('vizra-adk.vector_memory.chunking.chunk_size', 50);
         $chunker = new DocumentChunker();
-        
+
         $content = str_repeat('This is a test sentence. ', 10);
 
         // Act
@@ -71,7 +71,7 @@ class DocumentChunkerTest extends TestCase
         // Assert
         $this->assertIsArray($chunks);
         $this->assertGreaterThan(1, count($chunks));
-        
+
         foreach ($chunks as $chunk) {
             $this->assertLessThanOrEqual(60, strlen($chunk)); // Some flexibility for word boundaries
         }

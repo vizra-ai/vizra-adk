@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraAdk\Contracts;
+namespace Vizra\VizraADK\Contracts;
 
 interface EmbeddingProviderInterface
 {

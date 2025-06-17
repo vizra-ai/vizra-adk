@@ -1,10 +1,10 @@
 <?php
 
-namespace Vizra\VizraAdk\Tools;
+namespace Vizra\VizraADK\Tools;
 
-use Vizra\VizraAdk\Contracts\ToolInterface;
-use Vizra\VizraAdk\System\AgentContext;
-use Vizra\VizraAdk\Services\MemoryManager;
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Services\MemoryManager;
 
 /**
  * Memory Management Tool

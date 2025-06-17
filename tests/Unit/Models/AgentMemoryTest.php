@@ -1,8 +1,8 @@
 <?php
 
-use Vizra\VizraAdk\Models\AgentMemory;
-use Vizra\VizraAdk\Models\AgentSession;
-use Vizra\VizraAdk\Models\AgentMessage;
+use Vizra\VizraADK\Models\AgentMemory;
+use Vizra\VizraADK\Models\AgentSession;
+use Vizra\VizraADK\Models\AgentMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 

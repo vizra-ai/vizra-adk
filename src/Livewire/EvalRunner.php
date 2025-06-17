@@ -1,12 +1,12 @@
 <?php
 
-namespace Vizra\VizraAdk\Livewire;
+namespace Vizra\VizraADK\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Vizra\VizraAdk\Evaluations\BaseEvaluation;
-use Vizra\VizraAdk\Services\AgentRegistry;
-use Vizra\VizraAdk\Facades\Agent;
+use Vizra\VizraADK\Evaluations\BaseEvaluation;
+use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Facades\Agent;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -115,7 +115,7 @@ class EvalRunner extends Component
             foreach ($files as $file) {
                 if ($file->getExtension() === 'php') {
                     $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-                    $fullClassName = "Vizra\\VizraAdk\\Evaluations\\{$className}";
+                    $fullClassName = "Vizra\\VizraADK\\Evaluations\\{$className}";
 
                     if (class_exists($fullClassName) && is_subclass_of($fullClassName, BaseEvaluation::class)) {
                         try {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Vizra\VizraAdk\Console\Commands;
+namespace Vizra\VizraADK\Console\Commands;
 
-use Vizra\VizraAdk\Services\Tracer;
+use Vizra\VizraADK\Services\Tracer;
 use Illuminate\Console\Command;
 
 class AgentTraceCleanupCommand extends Command

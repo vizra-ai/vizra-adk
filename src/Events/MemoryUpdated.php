@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraAdk\Events;
+namespace Vizra\VizraADK\Events;
 
-use Vizra\VizraAdk\Models\AgentMemory;
-use Vizra\VizraAdk\Models\AgentSession;
+use Vizra\VizraADK\Models\AgentMemory;
+use Vizra\VizraADK\Models\AgentSession;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 

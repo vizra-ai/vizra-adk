@@ -1,32 +1,32 @@
 <?php
 
-namespace Vizra\VizraAdk\Providers;
+namespace Vizra\VizraADK\Providers;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Foundation\Application;
 use Livewire\Livewire;
-use Vizra\VizraAdk\Services\AgentBuilder;
-use Vizra\VizraAdk\Services\AgentRegistry;
-use Vizra\VizraAdk\Services\StateManager;
-use Vizra\VizraAdk\Services\MemoryManager;
-use Vizra\VizraAdk\Services\AgentManager;
-use Vizra\VizraAdk\Services\WorkflowManager;
-use Vizra\VizraAdk\Services\Tracer;
-use Vizra\VizraAdk\Services\AnalyticsService;
-use Vizra\VizraAdk\Livewire\Dashboard;
-use Vizra\VizraAdk\Livewire\ChatInterface;
-use Vizra\VizraAdk\Livewire\EvalRunner;
-use Vizra\VizraAdk\Livewire\Analytics;
-use Vizra\VizraAdk\Console\Commands\InstallCommand;
-use Vizra\VizraAdk\Console\Commands\MakeAgentCommand;
-use Vizra\VizraAdk\Console\Commands\MakeToolCommand;
-use Vizra\VizraAdk\Console\Commands\AgentChatCommand;
-use Vizra\VizraAdk\Console\Commands\MakeEvalCommand;
-use Vizra\VizraAdk\Console\Commands\RunEvalCommand;
-use Vizra\VizraAdk\Console\Commands\AgentTraceCleanupCommand;
-use Vizra\VizraAdk\Console\Commands\AgentTraceCommand;
-use Vizra\VizraAdk\Console\Commands\DashboardCommand;
+use Vizra\VizraADK\Services\AgentBuilder;
+use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\Services\MemoryManager;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\WorkflowManager;
+use Vizra\VizraADK\Services\Tracer;
+use Vizra\VizraADK\Services\AnalyticsService;
+use Vizra\VizraADK\Livewire\Dashboard;
+use Vizra\VizraADK\Livewire\ChatInterface;
+use Vizra\VizraADK\Livewire\EvalRunner;
+use Vizra\VizraADK\Livewire\Analytics;
+use Vizra\VizraADK\Console\Commands\InstallCommand;
+use Vizra\VizraADK\Console\Commands\MakeAgentCommand;
+use Vizra\VizraADK\Console\Commands\MakeToolCommand;
+use Vizra\VizraADK\Console\Commands\AgentChatCommand;
+use Vizra\VizraADK\Console\Commands\MakeEvalCommand;
+use Vizra\VizraADK\Console\Commands\RunEvalCommand;
+use Vizra\VizraADK\Console\Commands\AgentTraceCleanupCommand;
+use Vizra\VizraADK\Console\Commands\AgentTraceCommand;
+use Vizra\VizraADK\Console\Commands\DashboardCommand;
 
 class AgentServiceProvider extends ServiceProvider
 {

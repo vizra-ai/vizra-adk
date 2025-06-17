@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests;
+namespace Vizra\VizraADK\Tests;
 
-use Vizra\VizraAdk\Providers\AgentServiceProvider;
+use Vizra\VizraADK\Providers\AgentServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -19,8 +19,8 @@ class TestCase extends Orchestra
     protected function getPackageAliases($app)
     {
         return [
-            'Agent' => \Vizra\VizraAdk\Facades\Agent::class,
-            'Workflow' => \Vizra\VizraAdk\Facades\Workflow::class,
+            'Agent' => \Vizra\VizraADK\Facades\Agent::class,
+            'Workflow' => \Vizra\VizraADK\Facades\Workflow::class,
         ];
     }
 
@@ -40,17 +40,17 @@ class TestCase extends Orchestra
         // Load your package config if needed
         $config = require __DIR__ . '/../config/vizra-adk.php';
         $app['config']->set('vizra-adk', $config);
-        
+
         // Override problematic settings for tests
         $app['config']->set('vizra-adk.vector_memory.driver', 'sqlite');
         $app['config']->set('vizra-adk.default_provider', 'mock');
         $app['config']->set('vizra-adk.default_model', 'mock-model');
-        
+
         // Set dummy API keys to prevent missing key errors
         $app['config']->set('services.openai.key', 'test-key');
         $app['config']->set('services.anthropic.key', 'test-key');
         $app['config']->set('services.google.key', 'test-key');
-        
+
         // Disable tracing in tests by default (individual tests can override)
         $app['config']->set('vizra-adk.tracing.enabled', false);
     }
@@ -74,7 +74,7 @@ class TestCase extends Orchestra
         if (class_exists(\Mockery::class)) {
             \Mockery::close();
         }
-        
+
         parent::tearDown();
     }
 }

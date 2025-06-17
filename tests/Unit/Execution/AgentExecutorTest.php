@@ -1,12 +1,12 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\Execution;
+namespace Vizra\VizraADK\Tests\Unit\Execution;
 
-use Vizra\VizraAdk\Tests\TestCase;
-use Vizra\VizraAdk\Execution\AgentExecutor;
-use Vizra\VizraAdk\Services\AgentManager;
-use Vizra\VizraAdk\Services\StateManager;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Execution\AgentExecutor;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\System\AgentContext;
 use Illuminate\Database\Eloquent\Model;
 use Mockery;
 
@@ -97,7 +97,7 @@ class AgentExecutorTest extends TestCase
         $user->shouldReceive('toArray')->andReturn(['id' => 123]);
 
         $executor = new AgentExecutor('TestAgent', 'test input');
-        
+
         $result = $executor
             ->forUser($user)
             ->withSession('test-session')
@@ -124,7 +124,7 @@ class AgentExecutorTest extends TestCase
         $method->setAccessible(true);
 
         $sessionId = $method->invoke($executor);
-        
+
         $this->assertStringStartsWith('user_123_', $sessionId);
         $this->assertEquals(17, strlen($sessionId)); // user_123_ + 8 random chars
     }
@@ -140,7 +140,7 @@ class AgentExecutorTest extends TestCase
         $method->setAccessible(true);
 
         $sessionId = $method->invoke($executor);
-        
+
         $this->assertEquals('custom-session-id', $sessionId);
     }
 
@@ -154,7 +154,7 @@ class AgentExecutorTest extends TestCase
         $method->setAccessible(true);
 
         $sessionId = $method->invoke($executor);
-        
+
         $this->assertStringStartsWith('session_', $sessionId);
         $this->assertEquals(20, strlen($sessionId)); // session_ + 12 random chars
     }
@@ -180,7 +180,7 @@ class AgentExecutorTest extends TestCase
         $method->setAccessible(true);
 
         $agentName = $method->invoke($executor);
-        
+
         $this->assertEquals('test_agent_name', $agentName);
     }
 

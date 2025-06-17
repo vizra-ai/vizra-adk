@@ -2,9 +2,9 @@
 
 namespace {{ namespace }};
 
-use Vizra\VizraAdk\Agents\BaseLlmAgent;
-use Vizra\VizraAdk\Contracts\ToolInterface;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
 // use App\Tools\YourTool; // Example: Import your tool
 
 class {{ class }} extends BaseLlmAgent

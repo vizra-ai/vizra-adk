@@ -1,12 +1,12 @@
 <?php
 
-namespace Vizra\VizraAdk\Services;
+namespace Vizra\VizraADK\Services;
 
-use Vizra\VizraAdk\Models\AgentMemory;
-use Vizra\VizraAdk\Models\AgentSession;
-use Vizra\VizraAdk\Models\AgentMessage;
-use Vizra\VizraAdk\System\AgentContext;
-use Vizra\VizraAdk\Events\MemoryUpdated;
+use Vizra\VizraADK\Models\AgentMemory;
+use Vizra\VizraADK\Models\AgentSession;
+use Vizra\VizraADK\Models\AgentMessage;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Events\MemoryUpdated;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
 

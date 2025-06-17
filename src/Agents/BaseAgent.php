@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraAdk\Agents;
+namespace Vizra\VizraADK\Agents;
 
-use Vizra\VizraAdk\System\AgentContext;
-use Vizra\VizraAdk\Execution\AgentExecutor;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Execution\AgentExecutor;
 
 /**
  * Abstract Class BaseAgent
@@ -53,7 +53,7 @@ abstract class BaseAgent
 
     /**
      * Create a fluent agent executor for conversational interaction.
-     * 
+     *
      * Usage: CustomerSupportAgent::ask('Where is my order?')->forUser($user)
      *
      * @param mixed $input The input for the agent.
@@ -66,7 +66,7 @@ abstract class BaseAgent
 
     /**
      * Trigger the agent with an event or data.
-     * 
+     *
      * Usage: NotificationAgent::trigger($orderCreatedEvent)->forUser($user)
      *
      * @param mixed $event The event or data to process.
@@ -79,7 +79,7 @@ abstract class BaseAgent
 
     /**
      * Ask the agent to analyze data or events.
-     * 
+     *
      * Usage: FraudDetectionAgent::analyze($paymentData)->withContext($context)
      *
      * @param mixed $data The data to analyze.
@@ -92,7 +92,7 @@ abstract class BaseAgent
 
     /**
      * Process data or perform batch operations.
-     * 
+     *
      * Usage: DataProcessorAgent::process($largeDataset)->async()
      *
      * @param mixed $data The data to process.
@@ -105,7 +105,7 @@ abstract class BaseAgent
 
     /**
      * Monitor metrics or conditions continuously.
-     * 
+     *
      * Usage: SystemMonitorAgent::monitor($metrics)->onQueue('monitoring')
      *
      * @param mixed $data The data to monitor.
@@ -118,7 +118,7 @@ abstract class BaseAgent
 
     /**
      * Generate reports or summaries.
-     * 
+     *
      * Usage: ReportAgent::generate('daily_sales')->withContext(['date' => today()])
      *
      * @param mixed $data The data for report generation.

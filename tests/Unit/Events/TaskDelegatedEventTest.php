@@ -1,9 +1,9 @@
 <?php
 
-use Vizra\VizraAdk\Events\TaskDelegated;
-use Vizra\VizraAdk\System\AgentContext;
-use Vizra\VizraAdk\Tools\DelegateToSubAgentTool;
-use Vizra\VizraAdk\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Events\TaskDelegated;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Tools\DelegateToSubAgentTool;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Illuminate\Support\Facades\Event;
 
 describe('TaskDelegated Event', function () {

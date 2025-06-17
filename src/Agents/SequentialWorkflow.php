@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraAdk\Agents;
+namespace Vizra\VizraADK\Agents;
 
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\System\AgentContext;
 
 /**
  * Sequential Workflow Agent

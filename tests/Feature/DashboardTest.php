@@ -1,7 +1,7 @@
 <?php
 
-use Vizra\VizraAdk\Livewire\Dashboard;
-use Vizra\VizraAdk\Services\AgentRegistry;
+use Vizra\VizraADK\Livewire\Dashboard;
+use Vizra\VizraADK\Services\AgentRegistry;
 use Livewire\Livewire;
 
 it('can render dashboard component', function () {

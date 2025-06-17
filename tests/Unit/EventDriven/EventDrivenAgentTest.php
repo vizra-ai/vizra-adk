@@ -1,11 +1,11 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\EventDriven;
+namespace Vizra\VizraADK\Tests\Unit\EventDriven;
 
-use Vizra\VizraAdk\Tests\TestCase;
-use Vizra\VizraAdk\Agents\BaseAgent;
-use Vizra\VizraAdk\Execution\AgentExecutor;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Agents\BaseAgent;
+use Vizra\VizraADK\Execution\AgentExecutor;
+use Vizra\VizraADK\System\AgentContext;
 use Illuminate\Database\Eloquent\Model;
 use Mockery;
 
@@ -17,7 +17,7 @@ class TestEventDrivenAgent extends BaseAgent
     public function run(mixed $input, AgentContext $context): mixed
     {
         $mode = $context->getState('execution_mode', 'ask');
-        
+
         return match($mode) {
             'trigger' => "Triggered with: " . json_encode($input),
             'analyze' => "Analyzed: " . json_encode($input),
@@ -50,42 +50,42 @@ class EventDrivenAgentTest extends TestCase
     public function test_ask_mode_returns_agent_executor()
     {
         $executor = TestEventDrivenAgent::ask('test input');
-        
+
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
 
     public function test_trigger_mode_returns_agent_executor()
     {
         $executor = TestEventDrivenAgent::trigger(['event' => 'test']);
-        
+
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
 
     public function test_analyze_mode_returns_agent_executor()
     {
         $executor = TestEventDrivenAgent::analyze(['data' => 'test']);
-        
+
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
 
     public function test_process_mode_returns_agent_executor()
     {
         $executor = TestEventDrivenAgent::process(['batch' => 'test']);
-        
+
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
 
     public function test_monitor_mode_returns_agent_executor()
     {
         $executor = TestEventDrivenAgent::monitor(['metrics' => 'test']);
-        
+
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
 
     public function test_generate_mode_returns_agent_executor()
     {
         $executor = TestEventDrivenAgent::generate(['report' => 'test']);
-        
+
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
 
@@ -116,7 +116,7 @@ class EventDrivenAgentTest extends TestCase
             ->timeout(300);
 
         $this->assertInstanceOf(AgentExecutor::class, $executor);
-        
+
         // Test that the fluent interface returns self for chaining
         $result = $executor->timeout(600);
         $this->assertSame($executor, $result);
@@ -125,29 +125,29 @@ class EventDrivenAgentTest extends TestCase
     public function test_execution_mode_is_passed_to_context()
     {
         // Mock the dependencies to test mode passing
-        $mockAgentManager = Mockery::mock(\Vizra\VizraAdk\Services\AgentManager::class);
-        $mockStateManager = Mockery::mock(\Vizra\VizraAdk\Services\StateManager::class);
-        
-        $mockContext = Mockery::mock(\Vizra\VizraAdk\System\AgentContext::class);
+        $mockAgentManager = Mockery::mock(\Vizra\VizraADK\Services\AgentManager::class);
+        $mockStateManager = Mockery::mock(\Vizra\VizraADK\Services\StateManager::class);
+
+        $mockContext = Mockery::mock(\Vizra\VizraADK\System\AgentContext::class);
         $mockContext->shouldReceive('setState')->with('execution_mode', 'trigger')->once();
         $mockContext->shouldReceive('setState')->withAnyArgs()->zeroOrMoreTimes();
-        
+
         $mockStateManager->shouldReceive('loadContext')
             ->once()
             ->andReturn($mockContext);
-            
+
         $mockAgentManager->shouldReceive('run')
             ->once()
             ->andReturn('Test response');
 
         // Bind mocks to container
-        $this->app->instance(\Vizra\VizraAdk\Services\AgentManager::class, $mockAgentManager);
-        $this->app->instance(\Vizra\VizraAdk\Services\StateManager::class, $mockStateManager);
+        $this->app->instance(\Vizra\VizraADK\Services\AgentManager::class, $mockAgentManager);
+        $this->app->instance(\Vizra\VizraADK\Services\StateManager::class, $mockStateManager);
         $this->app->instance(TestEventDrivenAgent::class, new TestEventDrivenAgent());
 
         // Execute and verify mode is set correctly
         $result = TestEventDrivenAgent::trigger(['test' => 'data'])->execute();
-        
+
         $this->assertEquals('Test response', $result);
     }
 
@@ -156,12 +156,12 @@ class EventDrivenAgentTest extends TestCase
         $askExecutor = TestEventDrivenAgent::ask('test');
         $triggerExecutor = TestEventDrivenAgent::trigger(['event']);
         $analyzeExecutor = TestEventDrivenAgent::analyze(['data']);
-        
+
         // All should be AgentExecutor instances but configured differently
         $this->assertInstanceOf(AgentExecutor::class, $askExecutor);
         $this->assertInstanceOf(AgentExecutor::class, $triggerExecutor);
         $this->assertInstanceOf(AgentExecutor::class, $analyzeExecutor);
-        
+
         // They should be different instances
         $this->assertNotSame($askExecutor, $triggerExecutor);
         $this->assertNotSame($triggerExecutor, $analyzeExecutor);
@@ -210,21 +210,21 @@ class EventDrivenAgentTest extends TestCase
     public function test_mode_execution_with_different_inputs()
     {
         $agent = new TestEventDrivenAgent();
-        
+
         // Test ask mode
-        $askContext = Mockery::mock(\Vizra\VizraAdk\System\AgentContext::class);
+        $askContext = Mockery::mock(\Vizra\VizraADK\System\AgentContext::class);
         $askContext->shouldReceive('getState')->with('execution_mode', 'ask')->andReturn('ask');
         $result = $agent->run('test input', $askContext);
         $this->assertEquals('Asked: test input', $result);
-        
+
         // Test trigger mode
-        $triggerContext = Mockery::mock(\Vizra\VizraAdk\System\AgentContext::class);
+        $triggerContext = Mockery::mock(\Vizra\VizraADK\System\AgentContext::class);
         $triggerContext->shouldReceive('getState')->with('execution_mode', 'ask')->andReturn('trigger');
         $result = $agent->run(['event' => 'data'], $triggerContext);
         $this->assertEquals('Triggered with: {"event":"data"}', $result);
-        
+
         // Test analyze mode
-        $analyzeContext = Mockery::mock(\Vizra\VizraAdk\System\AgentContext::class);
+        $analyzeContext = Mockery::mock(\Vizra\VizraADK\System\AgentContext::class);
         $analyzeContext->shouldReceive('getState')->with('execution_mode', 'ask')->andReturn('analyze');
         $result = $agent->run(['data' => 'analyze'], $analyzeContext);
         $this->assertEquals('Analyzed: {"data":"analyze"}', $result);

@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraAdk\Evaluations;
+namespace Vizra\VizraADK\Evaluations;
 
 use InvalidArgumentException;
 
@@ -580,7 +580,7 @@ abstract class BaseEvaluation
         $judgePrompt = $this->buildJudgePrompt($actualResponse, $criteria);
 
         try {
-            $judgeResponse = \Vizra\VizraAdk\Facades\Agent::run(
+            $judgeResponse = \Vizra\VizraADK\Facades\Agent::run(
                 $judgeAgentName,
                 $judgePrompt,
                 \Illuminate\Support\Str::uuid()->toString()
@@ -621,7 +621,7 @@ abstract class BaseEvaluation
         $judgePrompt = $this->buildQualityJudgePrompt($actualResponse, $qualityCriteria);
 
         try {
-            $judgeResponse = \Vizra\VizraAdk\Facades\Agent::run(
+            $judgeResponse = \Vizra\VizraADK\Facades\Agent::run(
                 $judgeAgentName,
                 $judgePrompt,
                 \Illuminate\Support\Str::uuid()->toString()
@@ -663,7 +663,7 @@ abstract class BaseEvaluation
         $judgePrompt = $this->buildComparisonJudgePrompt($actualResponse, $referenceResponse, $comparisonCriteria);
 
         try {
-            $judgeResponse = \Vizra\VizraAdk\Facades\Agent::run(
+            $judgeResponse = \Vizra\VizraADK\Facades\Agent::run(
                 $judgeAgentName,
                 $judgePrompt,
                 \Illuminate\Support\Str::uuid()->toString()

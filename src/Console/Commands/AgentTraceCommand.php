@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraAdk\Console\Commands;
+namespace Vizra\VizraADK\Console\Commands;
 
-use Vizra\VizraAdk\Services\Tracer;
-use Vizra\VizraAdk\Models\TraceSpan;
+use Vizra\VizraADK\Services\Tracer;
+use Vizra\VizraADK\Models\TraceSpan;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 

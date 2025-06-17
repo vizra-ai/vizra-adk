@@ -1,12 +1,12 @@
 <?php
 
-namespace Vizra\VizraAdk\Facades;
+namespace Vizra\VizraADK\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Vizra\VizraAdk\Agents\SequentialWorkflow;
-use Vizra\VizraAdk\Agents\ParallelWorkflow;
-use Vizra\VizraAdk\Agents\ConditionalWorkflow;
-use Vizra\VizraAdk\Agents\LoopWorkflow;
+use Vizra\VizraADK\Agents\SequentialWorkflow;
+use Vizra\VizraADK\Agents\ParallelWorkflow;
+use Vizra\VizraADK\Agents\ConditionalWorkflow;
+use Vizra\VizraADK\Agents\LoopWorkflow;
 
 /**
  * @method static SequentialWorkflow sequential(string ...$agentNames)
@@ -19,7 +19,7 @@ use Vizra\VizraAdk\Agents\LoopWorkflow;
  * @method static LoopWorkflow forEach(string $agentName, array|\Traversable $collection)
  * @method static SequentialWorkflow|ParallelWorkflow|ConditionalWorkflow|LoopWorkflow fromArray(array $definition)
  *
- * @see \Vizra\VizraAdk\Services\WorkflowManager
+ * @see \Vizra\VizraADK\Services\WorkflowManager
  */
 class Workflow extends Facade
 {

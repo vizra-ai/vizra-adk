@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\VectorMemory\Providers;
+namespace Vizra\VizraADK\Tests\Unit\VectorMemory\Providers;
 
-use Vizra\VizraAdk\Tests\TestCase;
-use Vizra\VizraAdk\Providers\CohereEmbeddingProvider;
+use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Providers\CohereEmbeddingProvider;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
 
@@ -14,10 +14,10 @@ class CohereEmbeddingProviderTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         Config::set('services.cohere.key', 'test-cohere-key');
         Config::set('vizra-adk.vector_memory.embedding_models.cohere', 'embed-english-v3.0');
-        
+
         $this->provider = new CohereEmbeddingProvider();
     }
 
@@ -26,7 +26,7 @@ class CohereEmbeddingProviderTest extends TestCase
         // Arrange
         $text = 'Test embedding text';
         $mockEmbedding = array_fill(0, 1024, 0.1);
-        
+
         Http::fake([
             'api.cohere.ai/v1/embed' => Http::response([
                 'embeddings' => [
@@ -64,7 +64,7 @@ class CohereEmbeddingProviderTest extends TestCase
             array_fill(0, 1024, 0.1),
             array_fill(0, 1024, 0.2)
         ];
-        
+
         Http::fake([
             'api.cohere.ai/v1/embed' => Http::response([
                 'embeddings' => [

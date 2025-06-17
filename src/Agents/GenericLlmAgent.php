@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraAdk\Agents;
+namespace Vizra\VizraADK\Agents;
 
 // This is a concrete implementation of BaseLlmAgent for ad-hoc definitions.
 // It allows setting properties directly.

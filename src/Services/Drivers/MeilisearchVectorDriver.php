@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraAdk\Services\Drivers;
+namespace Vizra\VizraADK\Services\Drivers;
 
-use Vizra\VizraAdk\Models\VectorMemory;
+use Vizra\VizraADK\Models\VectorMemory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
@@ -27,7 +27,7 @@ class MeilisearchVectorDriver
     public function store(VectorMemory $memory): bool
     {
         $indexName = $this->getIndexName($memory->agent_name, $memory->namespace);
-        
+
         try {
             // Ensure index exists and is configured
             $this->ensureIndex($indexName, $memory->embedding_dimensions);
@@ -95,7 +95,7 @@ class MeilisearchVectorDriver
             ];
 
             $response = $this->makeRequest('POST', "/indexes/{$indexName}/search", $searchParams);
-            
+
             $results = collect($response['hits'] ?? [])
                 ->filter(function ($hit) use ($threshold) {
                     // Convert Meilisearch ranking score to similarity (0-1)
@@ -113,7 +113,7 @@ class MeilisearchVectorDriver
                         'source_id' => $hit['source_id'],
                         'embedding_provider' => $hit['embedding_provider'],
                         'embedding_model' => $hit['embedding_model'],
-                        'created_at' => isset($hit['created_at']) ? 
+                        'created_at' => isset($hit['created_at']) ?
                             \Carbon\Carbon::createFromTimestamp($hit['created_at']) : null,
                         'similarity' => $hit['_rankingScore'] ?? null,
                     ];
@@ -160,7 +160,7 @@ class MeilisearchVectorDriver
 
             // Get the task to track deletion
             $taskUid = $response['taskUid'] ?? null;
-            
+
             // Wait for task completion to get actual count
             $deletedCount = $this->waitForTask($taskUid);
 
@@ -192,7 +192,7 @@ class MeilisearchVectorDriver
         try {
             // Get index stats
             $indexStats = $this->makeRequest('GET', "/indexes/{$indexName}/stats");
-            
+
             // Get sample documents to analyze
             $searchResponse = $this->makeRequest('POST', "/indexes/{$indexName}/search", [
                 'q' => '',
@@ -201,7 +201,7 @@ class MeilisearchVectorDriver
             ]);
 
             $documents = $searchResponse['hits'] ?? [];
-            
+
             $providers = [];
             $sources = [];
             $totalTokens = 0;
@@ -209,12 +209,12 @@ class MeilisearchVectorDriver
             foreach ($documents as $doc) {
                 $provider = $doc['embedding_provider'] ?? 'unknown';
                 $providers[$provider] = ($providers[$provider] ?? 0) + 1;
-                
+
                 if (!empty($doc['source'])) {
                     $source = $doc['source'];
                     $sources[$source] = ($sources[$source] ?? 0) + 1;
                 }
-                
+
                 $totalTokens += $doc['token_count'] ?? 0;
             }
 
@@ -307,7 +307,7 @@ class MeilisearchVectorDriver
     protected function makeRequest(string $method, string $endpoint, array $data = []): array
     {
         $headers = ['Content-Type' => 'application/json'];
-        
+
         if ($this->apiKey) {
             $headers['Authorization'] = 'Bearer ' . $this->apiKey;
         }
@@ -337,20 +337,20 @@ class MeilisearchVectorDriver
         }
 
         $startTime = time();
-        
+
         while (time() - $startTime < $maxWaitSeconds) {
             try {
                 $task = $this->makeRequest('GET', "/tasks/{$taskUid}");
-                
+
                 if ($task['status'] === 'succeeded') {
-                    return $task['details']['deletedDocuments'] ?? 
+                    return $task['details']['deletedDocuments'] ??
                            $task['details']['indexedDocuments'] ?? 1;
                 }
-                
+
                 if ($task['status'] === 'failed') {
                     throw new RuntimeException('Meilisearch task failed: ' . ($task['error'] ?? 'Unknown error'));
                 }
-                
+
                 sleep(1);
             } catch (\Exception $e) {
                 break;

@@ -1,10 +1,10 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\VectorMemory\Drivers;
+namespace Vizra\VizraADK\Tests\Unit\VectorMemory\Drivers;
 
-use Vizra\VizraAdk\Tests\TestCase;
-use Vizra\VizraAdk\Services\Drivers\MeilisearchVectorDriver;
-use Vizra\VizraAdk\Models\VectorMemory;
+use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Services\Drivers\MeilisearchVectorDriver;
+use Vizra\VizraADK\Models\VectorMemory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Collection;
@@ -20,12 +20,12 @@ class MeilisearchVectorDriverTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Mock configuration
         Config::set('vizra-adk.vector_memory.drivers.meilisearch.host', $this->testHost);
         Config::set('vizra-adk.vector_memory.drivers.meilisearch.api_key', $this->testApiKey);
         Config::set('vizra-adk.vector_memory.drivers.meilisearch.index_prefix', $this->testIndexPrefix);
-        
+
         $this->driver = new MeilisearchVectorDriver();
     }
 
@@ -42,18 +42,18 @@ class MeilisearchVectorDriverTest extends TestCase
             $this->testHost . '/indexes/test_vectors_testagent_default' => Http::sequence()
                 ->push(['error' => 'Index not found'], 404)
                 ->push(['uid' => 'test_vectors_testagent_default', 'primaryKey' => 'id'], 200),
-            
+
             // Create index
             $this->testHost . '/indexes' => Http::response([
                 'taskUid' => 123,
                 'indexUid' => 'test_vectors_testagent_default',
             ], 201),
-            
+
             // Update settings
             $this->testHost . '/indexes/test_vectors_testagent_default/settings' => Http::response([
                 'taskUid' => 124
             ], 202),
-            
+
             // Store document
             $this->testHost . '/indexes/test_vectors_testagent_default/documents' => Http::response([
                 'taskUid' => 125,
@@ -84,7 +84,7 @@ class MeilisearchVectorDriverTest extends TestCase
         $result = $this->driver->store($memory);
 
         $this->assertTrue($result);
-        
+
         // Verify the HTTP requests were made
         Http::assertSent(function ($request) {
             return $request->url() === $this->testHost . '/indexes/test_vectors_testagent_default/documents' &&
@@ -110,7 +110,7 @@ class MeilisearchVectorDriverTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Failed to store in Meilisearch');
-        
+
         $this->driver->store($memory);
     }
 
@@ -158,12 +158,12 @@ class MeilisearchVectorDriverTest extends TestCase
 
         $this->assertInstanceOf(Collection::class, $results);
         $this->assertCount(1, $results); // Only one result above threshold
-        
+
         $firstResult = $results->first();
         $this->assertEquals('result-1', $firstResult->id);
         $this->assertEquals('First test result', $firstResult->content);
         $this->assertEquals(0.95, $firstResult->similarity);
-        
+
         Http::assertSent(function ($request) {
             $body = $request->data();
             return $request->url() === $this->testHost . '/indexes/test_vectors_testagent_default/search' &&
@@ -182,7 +182,7 @@ class MeilisearchVectorDriverTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Meilisearch search failed');
-        
+
         $this->driver->search('TestAgent', [0.1, 0.2, 0.3], 'default', 5, 0.7);
     }
 
@@ -193,7 +193,7 @@ class MeilisearchVectorDriverTest extends TestCase
                 'taskUid' => 456,
                 'indexUid' => 'test_vectors_testagent_default',
             ], 202),
-            
+
             $this->testHost . '/tasks/456' => Http::response([
                 'uid' => 456,
                 'status' => 'succeeded',
@@ -204,7 +204,7 @@ class MeilisearchVectorDriverTest extends TestCase
         $deletedCount = $this->driver->delete('TestAgent', 'default', 'test-document.txt');
 
         $this->assertEquals(3, $deletedCount);
-        
+
         Http::assertSent(function ($request) {
             $body = $request->data();
             return $request->url() === $this->testHost . '/indexes/test_vectors_testagent_default/documents/delete' &&
@@ -220,7 +220,7 @@ class MeilisearchVectorDriverTest extends TestCase
                 'taskUid' => 789,
                 'indexUid' => 'test_vectors_testagent_default',
             ], 202),
-            
+
             $this->testHost . '/tasks/789' => Http::response([
                 'uid' => 789,
                 'status' => 'succeeded',
@@ -231,7 +231,7 @@ class MeilisearchVectorDriverTest extends TestCase
         $deletedCount = $this->driver->delete('TestAgent', 'default');
 
         $this->assertEquals(10, $deletedCount);
-        
+
         Http::assertSent(function ($request) {
             $body = $request->data();
             return $request->url() === $this->testHost . '/indexes/test_vectors_testagent_default/documents/delete' &&
@@ -333,7 +333,7 @@ class MeilisearchVectorDriverTest extends TestCase
     public function test_get_index_name_formats_correctly()
     {
         $indexName = $this->invokeMethod($this->driver, 'getIndexName', ['MyAgent', 'TestNamespace']);
-        
+
         $this->assertEquals('test_vectors_myagent_testnamespace', $indexName);
     }
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\VectorMemory;
+namespace Vizra\VizraADK\Tests\Unit\VectorMemory;
 
-use Vizra\VizraAdk\Tests\TestCase;
-use Vizra\VizraAdk\Services\VectorMemoryManager;
-use Vizra\VizraAdk\Services\DocumentChunker;
-use Vizra\VizraAdk\Contracts\EmbeddingProviderInterface;
-use Vizra\VizraAdk\Models\VectorMemory;
+use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Services\VectorMemoryManager;
+use Vizra\VizraADK\Services\DocumentChunker;
+use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Models\VectorMemory;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Collection;
 use Mockery;
@@ -191,7 +191,7 @@ class VectorMemoryManagerTest extends TestCase
         // Assert
         $this->assertInstanceOf(Collection::class, $results);
         $this->assertGreaterThan(0, $results->count());
-        
+
         // First result should be more similar
         $firstResult = $results->first();
         $this->assertEquals('Similar content one', $firstResult->content);

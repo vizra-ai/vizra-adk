@@ -1,16 +1,16 @@
 <?php
 
-namespace Vizra\VizraAdk\Providers;
+namespace Vizra\VizraADK\Providers;
 
-use Vizra\VizraAdk\Contracts\EmbeddingProviderInterface;
-use Vizra\VizraAdk\Providers\OpenAIEmbeddingProvider;
-use Vizra\VizraAdk\Providers\CohereEmbeddingProvider;
-use Vizra\VizraAdk\Providers\OllamaEmbeddingProvider;
-use Vizra\VizraAdk\Services\VectorMemoryManager;
-use Vizra\VizraAdk\Services\DocumentChunker;
-use Vizra\VizraAdk\Console\Commands\VectorMemoryStore;
-use Vizra\VizraAdk\Console\Commands\VectorMemorySearch;
-use Vizra\VizraAdk\Console\Commands\VectorMemoryStats;
+use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Providers\OpenAIEmbeddingProvider;
+use Vizra\VizraADK\Providers\CohereEmbeddingProvider;
+use Vizra\VizraADK\Providers\OllamaEmbeddingProvider;
+use Vizra\VizraADK\Services\VectorMemoryManager;
+use Vizra\VizraADK\Services\DocumentChunker;
+use Vizra\VizraADK\Console\Commands\VectorMemoryStore;
+use Vizra\VizraADK\Console\Commands\VectorMemorySearch;
+use Vizra\VizraADK\Console\Commands\VectorMemoryStats;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -25,7 +25,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
         // Register the embedding provider based on configuration
         $this->app->singleton(EmbeddingProviderInterface::class, function ($app) {
             $provider = config('vizra-adk.vector_memory.embedding_provider', 'openai');
-            
+
             try {
                 return match ($provider) {
                     'openai' => new OpenAIEmbeddingProvider(),
@@ -77,17 +77,17 @@ class VectorMemoryServiceProvider extends ServiceProvider
         }
 
         // Only validate configuration when not running artisan commands that don't need it
-        $skipValidation = $this->app->runningInConsole() && 
+        $skipValidation = $this->app->runningInConsole() &&
                           in_array(request()->server('argv.1') ?? '', ['route:list', 'route:cache', 'config:cache']);
 
         if (!$skipValidation) {
             try {
                 $this->validateConfiguration();
-                
+
                 // Log the vector memory provider being used
                 $provider = config('vizra-adk.vector_memory.embedding_provider');
                 $model = config("vizra-adk.vector_memory.embedding_models.{$provider}");
-                
+
                 Log::info('Vector Memory initialized', [
                     'provider' => $provider,
                     'model' => $model,
@@ -175,11 +175,11 @@ class VectorMemoryServiceProvider extends ServiceProvider
         switch ($driver) {
             case 'meilisearch':
                 $host = config('vizra-adk.vector_memory.drivers.meilisearch.host');
-                
+
                 if (!$host) {
                     throw new RuntimeException('Meilisearch driver requires host configuration.');
                 }
-                
+
                 // Check if Meilisearch is available (only in production)
                 if (app()->environment('production')) {
                     try {
@@ -195,11 +195,11 @@ class VectorMemoryServiceProvider extends ServiceProvider
                     }
                 }
                 break;
-                
+
             case 'pgvector':
                 $connection = config('vizra-adk.vector_memory.drivers.pgvector.connection', 'pgsql');
                 $dbConfig = config("database.connections.{$connection}");
-                
+
                 if (!$dbConfig || $dbConfig['driver'] !== 'pgsql') {
                     throw new RuntimeException("pgvector driver requires a PostgreSQL database connection. Check connection: {$connection}");
                 }
@@ -208,7 +208,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
             case 'qdrant':
                 $host = config('vizra-adk.vector_memory.drivers.qdrant.host');
                 $port = config('vizra-adk.vector_memory.drivers.qdrant.port');
-                
+
                 if (!$host || !$port) {
                     throw new RuntimeException('Qdrant driver requires host and port configuration.');
                 }
@@ -216,7 +216,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
 
             case 'in_memory':
                 $storagePath = config('vizra-adk.vector_memory.drivers.in_memory.storage_path');
-                
+
                 if ($storagePath && !is_writable(dirname($storagePath))) {
                     throw new RuntimeException("In-memory driver storage path is not writable: {$storagePath}");
                 }

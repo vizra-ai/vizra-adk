@@ -1,16 +1,16 @@
 <?php
 
-namespace Vizra\VizraAdk\Agents;
+namespace Vizra\VizraADK\Agents;
 
-use Vizra\VizraAdk\System\AgentContext;
-use Vizra\VizraAdk\Contracts\ToolInterface;
-use Vizra\VizraAdk\Events\LlmCallInitiating;
-use Vizra\VizraAdk\Events\LlmResponseReceived;
-use Vizra\VizraAdk\Events\ToolCallCompleted;
-use Vizra\VizraAdk\Events\ToolCallInitiating;
-use Vizra\VizraAdk\Events\AgentResponseGenerated;
-use Vizra\VizraAdk\Exceptions\ToolExecutionException;
-use Vizra\VizraAdk\Services\Tracer;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\Events\LlmCallInitiating;
+use Vizra\VizraADK\Events\LlmResponseReceived;
+use Vizra\VizraADK\Events\ToolCallCompleted;
+use Vizra\VizraADK\Events\ToolCallInitiating;
+use Vizra\VizraADK\Events\AgentResponseGenerated;
+use Vizra\VizraADK\Exceptions\ToolExecutionException;
+use Vizra\VizraADK\Services\Tracer;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Arr;
 use Prism\Prism\Prism;
@@ -263,7 +263,7 @@ abstract class BaseLlmAgent extends BaseAgent
         // Include delegation tool if sub-agents are available
         $allTools = $this->loadedTools;
         if (!empty($this->loadedSubAgents)) {
-            $allTools[] = new \Vizra\VizraAdk\Tools\DelegateToSubAgentTool($this);
+            $allTools[] = new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this);
         }
 
         foreach ($allTools as $tool) {
@@ -387,11 +387,11 @@ abstract class BaseLlmAgent extends BaseAgent
 
         try {
             $context->setUserInput($input);
-            
+
             // Check for Prism Image and Document objects in context from AgentExecutor
             $images = $context->getState('prism_images', []);
             $documents = $context->getState('prism_documents', []);
-            
+
             // Add user message with attachments if present
             $userMessage = ['role' => 'user', 'content' => $input ?: ''];
             if (!empty($images)) {
@@ -400,7 +400,7 @@ abstract class BaseLlmAgent extends BaseAgent
             if (!empty($documents)) {
                 $userMessage['documents'] = $documents;
             }
-            
+
             $context->addMessage($userMessage);
 
             // Since Prism handles tool execution internally with maxSteps,
@@ -424,7 +424,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 $prismRequest = $prismRequest->withMessages($messages);
 
                 // Add tools if available
-                $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \Vizra\VizraAdk\Tools\DelegateToSubAgentTool($this)] : []);
+                $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this)] : []);
                 if (!empty($allTools)) {
                     $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
                         ->withMaxSteps(5); // Prism will handle tool execution internally
@@ -514,7 +514,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     if (!empty(trim($content))) {
                         // Collect additional content (images and documents)
                         $additionalContent = [];
-                        
+
                         // Add Prism Image objects if present
                         if (isset($message['images']) && !empty($message['images'])) {
                             foreach ($message['images'] as $image) {
@@ -523,7 +523,7 @@ abstract class BaseLlmAgent extends BaseAgent
                                 }
                             }
                         }
-                        
+
                         // Add Prism Document objects if present
                         if (isset($message['documents']) && !empty($message['documents'])) {
                             foreach ($message['documents'] as $document) {
@@ -532,7 +532,7 @@ abstract class BaseLlmAgent extends BaseAgent
                                 }
                             }
                         }
-                        
+
                         // Create UserMessage with content and additional content
                         $messages[] = new UserMessage($content, $additionalContent);
                     }

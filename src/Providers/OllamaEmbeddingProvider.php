@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraAdk\Providers;
+namespace Vizra\VizraADK\Providers;
 
-use Vizra\VizraAdk\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -17,7 +17,7 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
     {
         $this->baseUrl = config('services.ollama.url', env('OLLAMA_URL', 'http://localhost:11434'));
         $this->model = config('vizra-adk.vector_memory.embedding_models.ollama', 'nomic-embed-text');
-        
+
         $this->dimensions = config('vizra-adk.vector_memory.dimensions', [
             'nomic-embed-text' => 768,
             'mxbai-embed-large' => 1024,
@@ -51,7 +51,7 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
                 }
 
                 $data = $response->json();
-                
+
                 if (!isset($data['embedding']) || !is_array($data['embedding'])) {
                     throw new RuntimeException('Invalid response format from Ollama embedding API');
                 }
@@ -120,13 +120,13 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
     {
         try {
             $response = Http::timeout(5)->get($this->baseUrl . '/api/tags');
-            
+
             if (!$response->successful()) {
                 return false;
             }
 
             $data = $response->json();
-            
+
             if (!isset($data['models']) || !is_array($data['models'])) {
                 return false;
             }

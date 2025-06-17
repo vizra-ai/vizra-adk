@@ -1,8 +1,8 @@
 <?php
 
-use Vizra\VizraAdk\Events\MemoryUpdated;
-use Vizra\VizraAdk\Models\AgentMemory;
-use Vizra\VizraAdk\Models\AgentSession;
+use Vizra\VizraADK\Events\MemoryUpdated;
+use Vizra\VizraADK\Models\AgentMemory;
+use Vizra\VizraADK\Models\AgentSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\Console\Commands;
+namespace Vizra\VizraADK\Tests\Unit\Console\Commands;
 
-use Vizra\VizraAdk\Console\Commands\MakeAgentCommand;
-use Vizra\VizraAdk\Tests\TestCase;
+use Vizra\VizraADK\Console\Commands\MakeAgentCommand;
+use Vizra\VizraADK\Tests\TestCase;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Config;
 use Mockery;
@@ -270,9 +270,9 @@ class MakeAgentCommandTest extends TestCase
 
 namespace {{ namespace }};
 
-use Vizra\VizraAdk\Agents\BaseLlmAgent;
-use Vizra\VizraAdk\Contracts\ToolInterface;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
 
 class {{ class }} extends BaseLlmAgent
 {
@@ -303,9 +303,9 @@ class {{ class }} extends BaseLlmAgent
 
 namespace App\Agents;
 
-use Vizra\VizraAdk\Agents\BaseLlmAgent;
-use Vizra\VizraAdk\Contracts\ToolInterface;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
 
 class TestAgent extends BaseLlmAgent
 {

@@ -1,11 +1,11 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\Agents;
+namespace Vizra\VizraADK\Tests\Unit\Agents;
 
-use Vizra\VizraAdk\Agents\LoopWorkflow;
-use Vizra\VizraAdk\System\AgentContext;
-use Vizra\VizraAdk\Tests\TestCase;
-use Vizra\VizraAdk\Facades\Agent;
+use Vizra\VizraADK\Agents\LoopWorkflow;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Facades\Agent;
 use Mockery;
 
 class LoopWorkflowTest extends TestCase
@@ -16,21 +16,21 @@ class LoopWorkflowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Ensure fresh Mockery state for each test
         Mockery::close();
-        
+
         $this->workflow = new LoopWorkflow();
         $this->context = new AgentContext('test-session');
     }
-    
+
     protected function mockAgentRun($returnValue = 'mocked_result')
     {
         Agent::shouldReceive('run')
             ->andReturn($returnValue)
             ->byDefault();
     }
-    
+
     protected function resetAgentMock()
     {
         // Clear any existing Agent facade expectations
@@ -54,7 +54,7 @@ class LoopWorkflowTest extends TestCase
     {
         $condition = fn($input) => $input['counter'] < 5;
         $workflow = $this->workflow->while($condition);
-        
+
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
     }
 
@@ -62,7 +62,7 @@ class LoopWorkflowTest extends TestCase
     {
         $condition = fn($input) => $input['counter'] >= 5;
         $workflow = $this->workflow->until($condition);
-        
+
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
     }
 
@@ -76,7 +76,7 @@ class LoopWorkflowTest extends TestCase
     {
         $collection = ['item1', 'item2', 'item3'];
         $workflow = $this->workflow->forEach($collection);
-        
+
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
     }
 
@@ -92,7 +92,7 @@ class LoopWorkflowTest extends TestCase
             ->breakOnError(true)
             ->breakOnError(false)
             ->continueOnError();
-        
+
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
     }
 
@@ -105,7 +105,7 @@ class LoopWorkflowTest extends TestCase
     public function test_times_loop_execution()
     {
         $counter = 0;
-        
+
         Agent::shouldReceive('run')
             ->times(3)
             ->with('CounterAgent', Mockery::any(), 'test-session')
@@ -198,7 +198,7 @@ class LoopWorkflowTest extends TestCase
         $this->assertEquals(3, $result['iterations']);
         $this->assertEquals('forEach', $result['loop_type']);
         $this->assertTrue($result['completed_normally']);
-        
+
         // Check that each iteration received the correct item
         $this->assertEquals('apple', $result['results'][1]['value']);
         $this->assertEquals('banana', $result['results'][2]['value']);
@@ -346,7 +346,7 @@ class LoopWorkflowTest extends TestCase
     {
         $collection = ['a', 'b', 'c'];
         $workflow = LoopWorkflow::createForEach('TestAgent', $collection);
-        
+
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
     }
 

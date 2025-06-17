@@ -1,13 +1,13 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\Services;
+namespace Vizra\VizraADK\Tests\Unit\Services;
 
-use Vizra\VizraAdk\Services\WorkflowManager;
-use Vizra\VizraAdk\Agents\SequentialWorkflow;
-use Vizra\VizraAdk\Agents\ParallelWorkflow;
-use Vizra\VizraAdk\Agents\ConditionalWorkflow;
-use Vizra\VizraAdk\Agents\LoopWorkflow;
-use Vizra\VizraAdk\Tests\TestCase;
+use Vizra\VizraADK\Services\WorkflowManager;
+use Vizra\VizraADK\Agents\SequentialWorkflow;
+use Vizra\VizraADK\Agents\ParallelWorkflow;
+use Vizra\VizraADK\Agents\ConditionalWorkflow;
+use Vizra\VizraADK\Agents\LoopWorkflow;
+use Vizra\VizraADK\Tests\TestCase;
 
 class WorkflowManagerTest extends TestCase
 {
@@ -65,7 +65,7 @@ class WorkflowManagerTest extends TestCase
     {
         $condition = fn($input) => $input['counter'] < 5;
         $workflow = $this->manager->while('TestAgent', $condition);
-        
+
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
     }
 
@@ -73,7 +73,7 @@ class WorkflowManagerTest extends TestCase
     {
         $condition = fn($input) => $input['counter'] >= 5;
         $workflow = $this->manager->until('TestAgent', $condition);
-        
+
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
     }
 
@@ -87,7 +87,7 @@ class WorkflowManagerTest extends TestCase
     {
         $collection = ['a', 'b', 'c'];
         $workflow = $this->manager->forEach('TestAgent', $collection);
-        
+
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
     }
 

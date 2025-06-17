@@ -1,15 +1,15 @@
 <?php
 
-namespace Vizra\VizraAdk\Services;
+namespace Vizra\VizraADK\Services;
 
-use Vizra\VizraAdk\Agents\BaseAgent;
-use Vizra\VizraAdk\Agents\BaseLlmAgent;
-use Vizra\VizraAdk\Exceptions\AgentConfigurationException;
+use Vizra\VizraADK\Agents\BaseAgent;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Exceptions\AgentConfigurationException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Event; // For AgentResponseGenerated
-use Vizra\VizraAdk\Events\AgentResponseGenerated; // For AgentResponseGenerated
-use Vizra\VizraAdk\Events\AgentExecutionStarting;
-use Vizra\VizraAdk\Events\AgentExecutionFinished;
+use Vizra\VizraADK\Events\AgentResponseGenerated; // For AgentResponseGenerated
+use Vizra\VizraADK\Events\AgentExecutionStarting;
+use Vizra\VizraADK\Events\AgentExecutionFinished;
 
 
 class AgentManager
@@ -52,8 +52,8 @@ class AgentManager
      *
      * @param string $agentName The name of the agent.
      * @return BaseAgent The agent instance.
-     * @throws \Vizra\VizraAdk\Exceptions\AgentNotFoundException
-     * @throws \Vizra\VizraAdk\Exceptions\AgentConfigurationException
+     * @throws \Vizra\VizraADK\Exceptions\AgentNotFoundException
+     * @throws \Vizra\VizraADK\Exceptions\AgentConfigurationException
      */
     public function named(string $agentName): BaseAgent
     {
@@ -67,8 +67,8 @@ class AgentManager
      * @param mixed $input The input for the agent.
      * @param string|null $sessionId Optional session ID. If null, a new session is created/managed.
      * @return mixed The final response from the agent.
-     * @throws \Vizra\VizraAdk\Exceptions\AgentNotFoundException
-     * @throws \Vizra\VizraAdk\Exceptions\AgentConfigurationException
+     * @throws \Vizra\VizraADK\Exceptions\AgentNotFoundException
+     * @throws \Vizra\VizraADK\Exceptions\AgentConfigurationException
      * @throws \Throwable
      */
     public function run(string $agentName, mixed $input, ?string $sessionId = null): mixed

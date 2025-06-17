@@ -1,7 +1,7 @@
 <?php
 
-use Vizra\VizraAdk\Agents\BaseLlmAgent;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\System\AgentContext;
 use Prism\Prism\Enums\Provider;
 
 beforeEach(function () {

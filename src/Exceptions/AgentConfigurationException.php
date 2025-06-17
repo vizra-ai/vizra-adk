@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraAdk\Exceptions;
+namespace Vizra\VizraADK\Exceptions;
 
 class AgentConfigurationException extends \Exception
 {

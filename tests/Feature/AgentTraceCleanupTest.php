@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vizra\VizraAdk\Models\TraceSpan;
-use Vizra\VizraAdk\Services\Tracer;
+use Vizra\VizraADK\Models\TraceSpan;
+use Vizra\VizraADK\Services\Tracer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

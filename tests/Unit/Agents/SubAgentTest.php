@@ -1,8 +1,8 @@
 <?php
 
-use Vizra\VizraAdk\Agents\BaseLlmAgent;
-use Vizra\VizraAdk\System\AgentContext;
-use Vizra\VizraAdk\Tools\DelegateToSubAgentTool;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Tools\DelegateToSubAgentTool;
 use Prism\Prism\Enums\Provider;
 
 beforeEach(function () {

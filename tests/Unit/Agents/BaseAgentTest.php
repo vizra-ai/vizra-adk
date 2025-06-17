@@ -1,7 +1,7 @@
 <?php
 
-use Vizra\VizraAdk\Agents\BaseAgent;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Agents\BaseAgent;
+use Vizra\VizraADK\System\AgentContext;
 
 /**
  * Test implementation of BaseAgent for testing purposes

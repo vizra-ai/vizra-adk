@@ -1,12 +1,12 @@
 <?php
 
-namespace Vizra\VizraAdk\Services;
+namespace Vizra\VizraADK\Services;
 
-use Vizra\VizraAdk\Agents\BaseAgent;
-use Vizra\VizraAdk\Agents\BaseLlmAgent; // Added
-use Vizra\VizraAdk\Agents\GenericLlmAgent; // Will be created
-use Vizra\VizraAdk\Exceptions\AgentNotFoundException;
-use Vizra\VizraAdk\Exceptions\AgentConfigurationException; // Added
+use Vizra\VizraADK\Agents\BaseAgent;
+use Vizra\VizraADK\Agents\BaseLlmAgent; // Added
+use Vizra\VizraADK\Agents\GenericLlmAgent; // Will be created
+use Vizra\VizraADK\Exceptions\AgentNotFoundException;
+use Vizra\VizraADK\Exceptions\AgentConfigurationException; // Added
 use Illuminate\Contracts\Foundation\Application;
 
 class AgentRegistry

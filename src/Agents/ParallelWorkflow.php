@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraAdk\Agents;
+namespace Vizra\VizraADK\Agents;
 
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\System\AgentContext;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Collection;
 
@@ -203,7 +203,7 @@ class ParallelWorkflow extends BaseWorkflowAgent
         $sessionId = $context->getSessionId() ?: uniqid('workflow_');
 
         foreach ($this->steps as $step) {
-            $job = new \Vizra\VizraAdk\Jobs\AgentJob(
+            $job = new \Vizra\VizraADK\Jobs\AgentJob(
                 $step['agent'],
                 $this->prepareStepParams($step['params'], $input, $context),
                 'execute', // mode

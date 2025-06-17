@@ -11,9 +11,9 @@
 |
 */
 
-uses(Vizra\VizraAdk\Tests\TestCase::class)->in('Feature');
-uses(Vizra\VizraAdk\Tests\TestCase::class)->in('Unit');
-uses(Vizra\VizraAdk\Tests\TestCase::class)->in('Integration');
+uses(Vizra\VizraADK\Tests\TestCase::class)->in('Feature');
+uses(Vizra\VizraADK\Tests\TestCase::class)->in('Unit');
+uses(Vizra\VizraADK\Tests\TestCase::class)->in('Integration');
 
 /*
 |--------------------------------------------------------------------------
@@ -33,7 +33,7 @@ beforeEach(function () {
     }
 });
 
-// Global teardown after each test  
+// Global teardown after each test
 afterEach(function () {
     // Close Mockery to clean up all mocks and prevent redeclaration errors (only for Pest tests)
     if (class_exists(\Mockery::class)) {

@@ -1,10 +1,10 @@
 <?php
 
-namespace Vizra\VizraAdk\Execution;
+namespace Vizra\VizraADK\Execution;
 
-use Vizra\VizraAdk\Services\AgentManager;
-use Vizra\VizraAdk\Services\StateManager;
-use Vizra\VizraAdk\Jobs\AgentJob;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\Jobs\AgentJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -246,7 +246,7 @@ class AgentExecutor
 
         // Generate session ID if not provided
         $sessionId = $this->resolveSessionId();
-        
+
         // Get agent name
         $agentName = $this->getAgentName();
 
@@ -261,7 +261,7 @@ class AgentExecutor
             $agentContext->setState('user_id', $this->user->getKey());
             $agentContext->setState('user_model', get_class($this->user));
             $agentContext->setState('user_data', $this->user->toArray());
-            
+
             // Add user-specific context helpers
             if (method_exists($this->user, 'email')) {
                 $agentContext->setState('user_email', $this->user->email);
@@ -388,7 +388,7 @@ class AgentExecutor
         try {
             // Try to instantiate the agent to get its name
             $agent = app($this->agentClass);
-            
+
             if (method_exists($agent, 'getName')) {
                 return $agent->getName();
             }

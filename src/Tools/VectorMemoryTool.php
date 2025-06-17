@@ -1,10 +1,10 @@
 <?php
 
-namespace Vizra\VizraAdk\Tools;
+namespace Vizra\VizraADK\Tools;
 
-use Vizra\VizraAdk\Contracts\ToolInterface;
-use Vizra\VizraAdk\System\AgentContext;
-use Vizra\VizraAdk\Services\VectorMemoryManager;
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Services\VectorMemoryManager;
 use Illuminate\Support\Facades\Log;
 
 class VectorMemoryTool implements ToolInterface
@@ -128,7 +128,7 @@ class VectorMemoryTool implements ToolInterface
         // Add context metadata
         $metadata['stored_by_agent'] = $agentName;
         $metadata['stored_at'] = now()->toISOString();
-        
+
         if ($sessionId = $context->getSessionId()) {
             $metadata['session_id'] = $sessionId;
         }

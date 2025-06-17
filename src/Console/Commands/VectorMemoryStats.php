@@ -1,15 +1,15 @@
 <?php
 
-namespace Vizra\VizraAdk\Console\Commands;
+namespace Vizra\VizraADK\Console\Commands;
 
-use Vizra\VizraAdk\Services\VectorMemoryManager;
-use Vizra\VizraAdk\Models\VectorMemory;
+use Vizra\VizraADK\Services\VectorMemoryManager;
+use Vizra\VizraADK\Models\VectorMemory;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class VectorMemoryStats extends Command
 {
-    protected $signature = 'vector:stats 
+    protected $signature = 'vector:stats
                            {agent? : The agent name to get stats for (optional)}
                            {--namespace=default : Memory namespace}
                            {--detailed : Show detailed statistics}
@@ -86,7 +86,7 @@ class VectorMemoryStats extends Command
                 $sourceData[] = [$source, number_format($count)];
             }
             $this->table(['Source', 'Count'], $sourceData);
-            
+
             if (count($stats['sources']) > 10) {
                 $this->info("... and " . (count($stats['sources']) - 10) . " more sources");
             }

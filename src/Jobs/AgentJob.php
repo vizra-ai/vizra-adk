@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraAdk\Jobs;
+namespace Vizra\VizraADK\Jobs;
 
-use Vizra\VizraAdk\Services\AgentManager;
-use Vizra\VizraAdk\Services\StateManager;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\StateManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -109,7 +109,7 @@ class AgentJob implements ShouldQueue
     protected function getAgentName(): string
     {
         $agent = app($this->agentClass);
-        
+
         if (method_exists($agent, 'getName')) {
             return $agent->getName();
         }

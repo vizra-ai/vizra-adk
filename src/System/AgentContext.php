@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraAdk\System;
+namespace Vizra\VizraADK\System;
 
 use Illuminate\Support\Collection;
 

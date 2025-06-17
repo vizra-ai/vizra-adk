@@ -1,14 +1,14 @@
 <?php
 
-namespace Vizra\VizraAdk\Console\Commands;
+namespace Vizra\VizraADK\Console\Commands;
 
-use Vizra\VizraAdk\Services\VectorMemoryManager;
+use Vizra\VizraADK\Services\VectorMemoryManager;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
 class VectorMemoryStore extends Command
 {
-    protected $signature = 'vector:store 
+    protected $signature = 'vector:store
                            {agent : The agent name to store memory for}
                            {--file= : File path to read content from}
                            {--content= : Direct content to store}
@@ -74,7 +74,7 @@ class VectorMemoryStore extends Command
             );
 
             $this->info("✅ Successfully stored {$memories->count()} chunks in vector memory");
-            
+
             if ($memories->count() > 1) {
                 $this->info("Document was automatically chunked for optimal embedding");
             }

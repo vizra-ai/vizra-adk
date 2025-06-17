@@ -1,13 +1,13 @@
 <?php
 
-namespace Vizra\VizraAdk\Agents;
+namespace Vizra\VizraADK\Agents;
 
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\System\AgentContext;
 use Closure;
 
 /**
  * Conditional Workflow Agent
- * 
+ *
  * Routes execution to different agents based on conditions, similar to if-else logic.
  * Supports complex branching with multiple conditions and fallbacks.
  */
@@ -294,11 +294,11 @@ class ConditionalWorkflow extends BaseWorkflowAgent
     {
         $workflow = new static();
         $workflow->when($condition, $thenAgent);
-        
+
         if ($elseAgent) {
             $workflow->otherwise($elseAgent);
         }
-        
+
         return $workflow;
     }
 

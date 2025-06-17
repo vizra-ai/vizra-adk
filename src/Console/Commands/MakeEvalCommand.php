@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraAdk\Console\Commands;
+namespace Vizra\VizraADK\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -25,11 +25,11 @@ class MakeEvalCommand extends GeneratorCommand
     protected function getDefaultNamespace($rootNamespace)
     {
         $configuredNamespace = config('vizra-adk.namespaces.evaluations');
-        
+
         if ($configuredNamespace) {
             return $configuredNamespace;
         }
-        
+
         // Fallback to rootNamespace + \Evaluations, or just App\Evaluations if no root namespace
         $baseNamespace = $rootNamespace ?: 'App';
         return $baseNamespace . '\\Evaluations';

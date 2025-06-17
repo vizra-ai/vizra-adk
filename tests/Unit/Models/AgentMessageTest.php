@@ -1,7 +1,7 @@
 <?php
 
-use Vizra\VizraAdk\Models\AgentMessage;
-use Vizra\VizraAdk\Models\AgentSession;
+use Vizra\VizraADK\Models\AgentMessage;
+use Vizra\VizraADK\Models\AgentSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

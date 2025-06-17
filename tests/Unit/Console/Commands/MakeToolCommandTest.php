@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\Console\Commands;
+namespace Vizra\VizraADK\Tests\Unit\Console\Commands;
 
-use Vizra\VizraAdk\Console\Commands\MakeToolCommand;
-use Vizra\VizraAdk\Tests\TestCase;
+use Vizra\VizraADK\Console\Commands\MakeToolCommand;
+use Vizra\VizraADK\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Illuminate\Filesystem\Filesystem;

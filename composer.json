@@ -23,22 +23,22 @@
   },
   "autoload": {
     "psr-4": {
-      "Vizra\\VizraAdk\\": "src/"
+      "Vizra\\VizraADK\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Vizra\\VizraAdk\\Tests\\": "tests/"
+      "Vizra\\VizraADK\\Tests\\": "tests/"
     }
   },
   "extra": {
     "laravel": {
       "providers": [
-        "Vizra\\VizraAdk\\Providers\\AgentServiceProvider"
+        "Vizra\\VizraADK\\Providers\\AgentServiceProvider"
       ],
       "aliases": {
-        "Agent": "Vizra\\VizraAdk\\Facades\\Agent",
-        "Workflow": "Vizra\\VizraAdk\\Facades\\Workflow"
+        "Agent": "Vizra\\VizraADK\\Facades\\Agent",
+        "Workflow": "Vizra\\VizraADK\\Facades\\Workflow"
       }
     }
   },

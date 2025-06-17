@@ -1,12 +1,12 @@
 <?php
 
-use Vizra\VizraAdk\Services\AgentManager;
-use Vizra\VizraAdk\Services\AgentRegistry;
-use Vizra\VizraAdk\Services\AgentBuilder;
-use Vizra\VizraAdk\Services\StateManager;
-use Vizra\VizraAdk\Agents\BaseAgent;
-use Vizra\VizraAdk\Agents\BaseLlmAgent;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Services\AgentBuilder;
+use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\Agents\BaseAgent;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\System\AgentContext;
 
 beforeEach(function () {
     $this->mockRegistry = Mockery::mock(AgentRegistry::class);

@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraAdk\Console\Commands;
+namespace Vizra\VizraADK\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
@@ -14,13 +14,13 @@ class InstallCommand extends Command
     {
         $this->info('Publishing Vizra SDK configuration...');
         $this->call('vendor:publish', [
-            '--provider' => "Vizra\VizraAdk\Providers\AgentServiceProvider",
+            '--provider' => "Vizra\VizraADK\Providers\AgentServiceProvider",
             '--tag' => "vizra-adk-config"
         ]);
 
         $this->info('Publishing Vizra SDK migrations...');
         $this->call('vendor:publish', [
-            '--provider' => "Vizra\VizraAdk\Providers\AgentServiceProvider",
+            '--provider' => "Vizra\VizraADK\Providers\AgentServiceProvider",
             '--tag' => "vizra-adk-migrations"
         ]);
 

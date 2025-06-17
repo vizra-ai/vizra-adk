@@ -1,11 +1,11 @@
 <?php
 
-namespace Vizra\VizraAdk\Tests\Unit\Agents;
+namespace Vizra\VizraADK\Tests\Unit\Agents;
 
-use Vizra\VizraAdk\Agents\SequentialWorkflow;
-use Vizra\VizraAdk\System\AgentContext;
-use Vizra\VizraAdk\Tests\TestCase;
-use Vizra\VizraAdk\Facades\Agent;
+use Vizra\VizraADK\Agents\SequentialWorkflow;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Facades\Agent;
 use Mockery;
 
 class SequentialWorkflowTest extends TestCase

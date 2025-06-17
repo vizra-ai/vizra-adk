@@ -1,8 +1,8 @@
 <?php
 
-use Vizra\VizraAdk\Tools\DelegateToSubAgentTool;
-use Vizra\VizraAdk\Agents\BaseLlmAgent;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Tools\DelegateToSubAgentTool;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\System\AgentContext;
 
 beforeEach(function () {
     $this->parentAgent = new TestDelegationParentAgent();

@@ -1,6 +1,6 @@
 <?php
 
-use Vizra\VizraAdk\Livewire\ChatInterface;
+use Vizra\VizraADK\Livewire\ChatInterface;
 use Livewire\Livewire;
 
 test('chat interface loads correctly', function () {

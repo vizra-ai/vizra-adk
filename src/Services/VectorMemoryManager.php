@@ -1,11 +1,11 @@
 <?php
 
-namespace Vizra\VizraAdk\Services;
+namespace Vizra\VizraADK\Services;
 
-use Vizra\VizraAdk\Contracts\EmbeddingProviderInterface;
-use Vizra\VizraAdk\Models\VectorMemory;
-use Vizra\VizraAdk\Services\DocumentChunker;
-use Vizra\VizraAdk\Services\Drivers\MeilisearchVectorDriver;
+use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Models\VectorMemory;
+use Vizra\VizraADK\Services\DocumentChunker;
+use Vizra\VizraADK\Services\Drivers\MeilisearchVectorDriver;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
@@ -56,7 +56,7 @@ class VectorMemoryManager
                 sourceId: $sourceId,
                 chunkIndex: $index
             );
-            
+
             if ($entry) {
                 $memoryEntries->push($entry);
             }
@@ -84,7 +84,7 @@ class VectorMemoryManager
         int $chunkIndex = 0
     ): ?VectorMemory {
         $content = trim($content);
-        
+
         if (empty($content)) {
             return null;
         }
@@ -214,14 +214,14 @@ class VectorMemoryManager
         float $threshold
     ): Collection {
         $embeddingStr = '[' . implode(',', $queryEmbedding) . ']';
-        
+
         $results = DB::select("
-            SELECT 
+            SELECT
                 id, agent_name, namespace, content, metadata, source, source_id,
                 embedding_provider, embedding_model, created_at,
                 1 - (embedding <=> ?) as similarity
-            FROM agent_vector_memories 
-            WHERE agent_name = ? 
+            FROM agent_vector_memories
+            WHERE agent_name = ?
                 AND namespace = ?
                 AND 1 - (embedding <=> ?) >= ?
             ORDER BY embedding <=> ?
@@ -283,7 +283,7 @@ class VectorMemoryManager
         float $threshold
     ): Collection {
         $meilisearchDriver = new MeilisearchVectorDriver();
-        
+
         return $meilisearchDriver->search(
             agentName: $agentName,
             queryEmbedding: $queryEmbedding,
@@ -304,7 +304,7 @@ class VectorMemoryManager
         float $threshold = 0.7
     ): array {
         $results = $this->search($agentName, $query, $namespace, $limit, $threshold);
-        
+
         if ($results->isEmpty()) {
             return [
                 'context' => '',
@@ -323,7 +323,7 @@ class VectorMemoryManager
 
         foreach ($results as $result) {
             $content = $result->content;
-            
+
             if ($includeMetadata && !empty($result->metadata)) {
                 $metadata = is_array($result->metadata) ? $result->metadata : json_decode($result->metadata, true);
                 if (!empty($metadata)) {
@@ -343,12 +343,12 @@ class VectorMemoryManager
                 'similarity' => $result->similarity ?? null,
                 'created_at' => $result->created_at,
             ];
-            
+
             $currentLength += strlen($content);
         }
 
         $context = implode("\n\n---\n\n", $contextParts);
-        
+
         // Apply template if provided
         if ($template) {
             $context = str_replace(['{context}', '{query}'], [$context, $query], $template);

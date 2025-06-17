@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraAdk\Services;
+namespace Vizra\VizraADK\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -111,7 +111,7 @@ class AnalyticsService
             $result = DB::table('agent_messages')
                 ->whereNotNull('response_time_ms')
                 ->avg('response_time_ms');
-            
+
             return round($result ?? 0, 2);
         } catch (\Exception $e) {
             return 0.0;
@@ -125,7 +125,7 @@ class AnalyticsService
             $successful = DB::table('agent_messages')
                 ->whereNull('error_message')
                 ->count();
-            
+
             return $total > 0 ? round(($successful / $total) * 100, 2) : 0;
         } catch (\Exception $e) {
             return 0.0;
@@ -167,13 +167,13 @@ class AnalyticsService
                         $hour->copy()->endOfHour()
                     ])
                     ->count();
-                
+
                 $hours[] = [
                     'hour' => $hour->format('H:00'),
                     'messages' => $count,
                 ];
             }
-            
+
             return $hours;
         } catch (\Exception $e) {
             return [];
@@ -209,7 +209,7 @@ class AnalyticsService
                 ->select('agent_sessions.id', DB::raw('COUNT(agent_messages.id) as message_count'))
                 ->groupBy('agent_sessions.id')
                 ->avg('message_count');
-            
+
             return round($result ?? 0, 2);
         } catch (\Exception $e) {
             return 0.0;
@@ -231,13 +231,13 @@ class AnalyticsService
                 $count = DB::table('agent_messages')
                     ->whereDate('created_at', $date)
                     ->count();
-                
+
                 $days[] = [
                     'date' => $date->format('M j'),
                     'messages' => $count,
                 ];
             }
-            
+
             return $days;
         } catch (\Exception $e) {
             return [];

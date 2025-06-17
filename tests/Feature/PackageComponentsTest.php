@@ -1,13 +1,13 @@
 <?php
 
-use Vizra\VizraAdk\Services\AgentRegistry;
-use Vizra\VizraAdk\Services\AgentManager;
-use Vizra\VizraAdk\Services\AgentBuilder;
-use Vizra\VizraAdk\Services\StateManager;
-use Vizra\VizraAdk\Agents\BaseAgent;
-use Vizra\VizraAdk\System\AgentContext;
-use Vizra\VizraAdk\Models\AgentSession;
-use Vizra\VizraAdk\Models\AgentMessage;
+use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\AgentBuilder;
+use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\Agents\BaseAgent;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Models\AgentSession;
+use Vizra\VizraADK\Models\AgentMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -122,7 +122,7 @@ it('loads package configuration', function () {
 
 it('has facade alias available', function () {
     // Test that the Agent facade alias is properly registered
-    expect(class_exists('\Vizra\VizraAdk\Facades\Agent'))->toBeTrue();
+    expect(class_exists('\Vizra\VizraADK\Facades\Agent'))->toBeTrue();
 });
 
 it('registers services properly via service provider', function () {

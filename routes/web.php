@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Vizra\VizraAdk\Livewire\Dashboard;
-use Vizra\VizraAdk\Livewire\ChatInterface;
-use Vizra\VizraAdk\Livewire\EvalRunner;
+use Vizra\VizraADK\Livewire\Dashboard;
+use Vizra\VizraADK\Livewire\ChatInterface;
+use Vizra\VizraADK\Livewire\EvalRunner;
 
 /*
 |--------------------------------------------------------------------------

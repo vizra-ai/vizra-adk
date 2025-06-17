@@ -1,15 +1,15 @@
 <?php
 
-namespace Vizra\VizraAdk\Services;
+namespace Vizra\VizraADK\Services;
 
-use Vizra\VizraAdk\Agents\SequentialWorkflow;
-use Vizra\VizraAdk\Agents\ParallelWorkflow;
-use Vizra\VizraAdk\Agents\ConditionalWorkflow;
-use Vizra\VizraAdk\Agents\LoopWorkflow;
+use Vizra\VizraADK\Agents\SequentialWorkflow;
+use Vizra\VizraADK\Agents\ParallelWorkflow;
+use Vizra\VizraADK\Agents\ConditionalWorkflow;
+use Vizra\VizraADK\Agents\LoopWorkflow;
 
 /**
  * Workflow Manager Service
- * 
+ *
  * Provides factory methods for creating different types of workflow agents.
  * This class powers the Workflow facade and enables fluent workflow creation.
  */
@@ -66,11 +66,11 @@ class WorkflowManager
     public function loop(?string $agentName = null): LoopWorkflow
     {
         $workflow = new LoopWorkflow();
-        
+
         if ($agentName) {
             $workflow->agent($agentName);
         }
-        
+
         return $workflow;
     }
 
@@ -136,20 +136,20 @@ class WorkflowManager
     public function fromArray(array $definition)
     {
         $type = $definition['type'] ?? 'sequential';
-        
+
         switch ($type) {
             case 'sequential':
                 return $this->createSequentialFromArray($definition);
-                
+
             case 'parallel':
                 return $this->createParallelFromArray($definition);
-                
+
             case 'conditional':
                 return $this->createConditionalFromArray($definition);
-                
+
             case 'loop':
                 return $this->createLoopFromArray($definition);
-                
+
             default:
                 throw new \InvalidArgumentException("Unknown workflow type: {$type}");
         }
@@ -164,7 +164,7 @@ class WorkflowManager
     private function createSequentialFromArray(array $definition): SequentialWorkflow
     {
         $workflow = new SequentialWorkflow();
-        
+
         foreach ($definition['steps'] ?? [] as $step) {
             $workflow->then(
                 $step['agent'],
@@ -172,7 +172,7 @@ class WorkflowManager
                 $step['options'] ?? []
             );
         }
-        
+
         return $workflow;
     }
 
@@ -185,7 +185,7 @@ class WorkflowManager
     private function createParallelFromArray(array $definition): ParallelWorkflow
     {
         $workflow = new ParallelWorkflow();
-        
+
         $agents = [];
         foreach ($definition['agents'] ?? [] as $agent) {
             if (is_string($agent)) {
@@ -194,15 +194,15 @@ class WorkflowManager
                 $agents[$agent['name']] = $agent['params'] ?? null;
             }
         }
-        
+
         $workflow->agents($agents);
-        
+
         if ($definition['wait_for_all'] ?? true) {
             $workflow->waitForAll();
         } elseif (isset($definition['wait_for_count'])) {
             $workflow->waitFor($definition['wait_for_count']);
         }
-        
+
         return $workflow;
     }
 
@@ -215,7 +215,7 @@ class WorkflowManager
     private function createConditionalFromArray(array $definition): ConditionalWorkflow
     {
         $workflow = new ConditionalWorkflow();
-        
+
         foreach ($definition['conditions'] ?? [] as $condition) {
             $workflow->when(
                 $condition['condition'],
@@ -224,7 +224,7 @@ class WorkflowManager
                 $condition['options'] ?? []
             );
         }
-        
+
         if (isset($definition['default'])) {
             $workflow->otherwise(
                 $definition['default']['agent'],
@@ -232,7 +232,7 @@ class WorkflowManager
                 $definition['default']['options'] ?? []
             );
         }
-        
+
         return $workflow;
     }
 
@@ -245,41 +245,41 @@ class WorkflowManager
     private function createLoopFromArray(array $definition): LoopWorkflow
     {
         $workflow = new LoopWorkflow();
-        
+
         $workflow->agent($definition['agent']);
-        
+
         $loopType = $definition['loop_type'] ?? 'while';
-        
+
         switch ($loopType) {
             case 'while':
                 if (isset($definition['condition'])) {
                     $workflow->while($definition['condition']);
                 }
                 break;
-                
+
             case 'until':
                 if (isset($definition['condition'])) {
                     $workflow->until($definition['condition']);
                 }
                 break;
-                
+
             case 'times':
                 if (isset($definition['times'])) {
                     $workflow->times($definition['times']);
                 }
                 break;
-                
+
             case 'forEach':
                 if (isset($definition['collection'])) {
                     $workflow->forEach($definition['collection']);
                 }
                 break;
         }
-        
+
         if (isset($definition['max_iterations'])) {
             $workflow->maxIterations($definition['max_iterations']);
         }
-        
+
         return $workflow;
     }
 }

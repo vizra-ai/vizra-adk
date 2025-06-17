@@ -2,8 +2,8 @@
 
 namespace {{ namespace }};
 
-use Vizra\VizraAdk\Contracts\ToolInterface;
-use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
 
 class {{ class }} implements ToolInterface
 {
