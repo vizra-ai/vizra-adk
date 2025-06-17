@@ -1,20 +1,30 @@
-# 🤖 Vizra ADK - AI Agent Development Kit for Laravel
+<p align="center">
+  <img src="https://vizra.ai/img/vizra-logo.svg" alt="Vizra Logo" width="200">
+</p>
 
-> **Build intelligent AI agents with Laravel's elegant syntax**
+<h1 align="center">Vizra ADK - AI Agent Development Kit for Laravel</h1>
 
-[![Latest Version](https://img.shields.io/packagist/v/vizra/vizra-adk)](https://packagist.org/packages/vizra/vizra-adk)
-[![Total Downloads](https://img.shields.io/packagist/dt/vizra/vizra-adk)](https://packagist.org/packages/vizra/vizra-adk)
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
-[![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4.svg)](https://www.php.net)
-[![Laravel](https://img.shields.io/badge/Laravel-11.0%2B-FF2D20.svg)](https://laravel.com)
+<p align="center">
+  <strong>Build intelligent AI agents with Laravel's elegant syntax</strong>
+</p>
+
+<p align="center">
+  <a href="https://packagist.org/packages/vizra/vizra-adk"><img src="https://img.shields.io/packagist/v/vizra/vizra-adk" alt="Latest Version"></a>
+  <a href="https://packagist.org/packages/vizra/vizra-adk"><img src="https://img.shields.io/packagist/dt/vizra/vizra-adk" alt="Total Downloads"></a>
+  <a href="LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+  <a href="https://www.php.net"><img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4.svg" alt="PHP"></a>
+  <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-11.0%2B-FF2D20.svg" alt="Laravel"></a>
+</p>
 
 Vizra ADK is a comprehensive Laravel package for building autonomous AI agents that can reason, use tools, and maintain persistent memory. Create intelligent, conversational agents that integrate seamlessly with your Laravel application.
 
 ## ✨ Key Features
 
-- **🤖 Multi-Model AI Support** - Works with OpenAI (GPT-4, GPT-3.5), Anthropic Claude, and Google Gemini
+- **🤖 Multi-Model AI Support** - Works with OpenAI, Anthropic Claude, and Google Gemini, thanks to prism PHP
 - **🛠️ Extensible Tool System** - Give agents abilities to interact with databases, APIs, and external services
 - **🧠 Persistent Memory** - Agents remember conversations and learn from interactions across sessions
+- **🔄 Agent Workflows** - Build complex multi-step processes with conditional logic and sub-agent orchestration
+- **⚡ Execution Modes** - Multiple trigger modes: conversational, scheduled, webhook, event-driven, and queue jobs
 - **📊 LLM-as-a-Judge Evaluation** - Automated quality testing framework for agents at scale
 - **💬 Streaming Responses** - Real-time, token-by-token streaming for responsive user experiences
 - **🎯 Sub-Agent Delegation** - Agents can delegate tasks to specialized sub-agents
@@ -53,7 +63,7 @@ class CustomerSupportAgent extends BaseLlmAgent
     protected string $description = 'Helps customers with inquiries';
     protected string $instructions = 'You are a helpful customer support assistant.';
     protected string $model = 'gpt-4o';
-    
+
     protected array $tools = [
         OrderLookupTool::class,
         RefundProcessorTool::class,
@@ -99,11 +109,11 @@ class OrderLookupTool implements ToolInterface
             ],
         ];
     }
-    
+
     public function execute(array $arguments, AgentContext $context): string
     {
         $order = Order::find($arguments['order_id']);
-        
+
         return json_encode([
             'status' => 'success',
             'order' => $order->toArray(),
@@ -150,6 +160,7 @@ Vizra ADK is open source and free to use. If you find it valuable, please consid
 ### 💖 Become a Sponsor
 
 Your sponsorship helps us:
+
 - 🚀 Develop new features faster
 - 🐛 Provide better support and bug fixes
 - 📚 Improve documentation and examples
@@ -158,6 +169,7 @@ Your sponsorship helps us:
 **[Sponsor Vizra ADK on GitHub →](https://github.com/sponsors/vizra-ai)**
 
 Every contribution, no matter the size, makes a difference! Sponsors get:
+
 - 🏆 Recognition in our README and website
 - 🎯 Priority support for issues
 - 🗳️ Influence on the roadmap
@@ -186,7 +198,10 @@ Vizra ADK is open-sourced software licensed under the [MIT license](LICENSE.md).
 Built with ❤️ by the Vizra team and contributors.
 
 Special thanks to:
+
 - The Laravel team for creating an amazing framework
+- [Prism PHP](https://github.com/prism-php/prism) for the powerful LLM integration library
+- [Livewire](https://livewire.laravel.com/) for making our web dashboard reactive and beautiful
 - The AI/ML community for pushing boundaries
 - All our contributors and sponsors
 
