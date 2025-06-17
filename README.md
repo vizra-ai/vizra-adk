@@ -173,25 +173,23 @@ Every contribution, no matter the size, makes a difference! Sponsors get:
 - 🏆 Recognition in our README and website
 - 🎯 Priority support for issues
 - 🗳️ Influence on the roadmap
-- 💬 Access to sponsor-only Discord channel
 
 ## 🔧 Requirements
 
 - PHP 8.2+
-- Laravel 11.0+ or 12.0+
-- MySQL/PostgreSQL (SQLite for development)
+- Laravel 11.0+
+- MySQL/PostgreSQL
 - At least one LLM API key (OpenAI, Anthropic, or Google)
 
 ## 🤝 Community & Support
 
 - **[GitHub Discussions](https://github.com/vizra-ai/vizra-adk/discussions)** - Ask questions, share ideas
 - **[GitHub Issues](https://github.com/vizra-ai/vizra-adk/issues)** - Report bugs, request features
-- **[Discord Community](https://discord.gg/vizra)** - Chat with other developers
 - **[Twitter/X](https://twitter.com/vizra_ai)** - Latest updates and tips
 
 ## 📄 License
 
-Vizra ADK is open-sourced software licensed under the [MIT license](LICENSE.md).
+Vizra ADK is open-sourced software licensed under the [MIT license](https://github.com/vizra-ai/vizra-adk/blob/master/license.md).
 
 ## 🙏 Credits
 
@@ -203,7 +201,6 @@ Special thanks to:
 - [Prism PHP](https://github.com/prism-php/prism) for the powerful LLM integration library
 - [Livewire](https://livewire.laravel.com/) for making our web dashboard reactive and beautiful
 - The AI/ML community for pushing boundaries
-- All our contributors and sponsors
 
 ---
 
