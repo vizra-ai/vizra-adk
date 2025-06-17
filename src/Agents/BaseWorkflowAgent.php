@@ -5,6 +5,7 @@ namespace Vizra\VizraADK\Agents;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Exceptions\AgentNotFoundException;
 use Vizra\VizraADK\Facades\Agent;
+use Vizra\VizraADK\Services\AgentRegistry;
 use Closure;
 use Illuminate\Support\Collection;
 
@@ -26,15 +27,15 @@ abstract class BaseWorkflowAgent extends BaseAgent
     /**
      * Add an agent step to the workflow
      *
-     * @param string $agentName
+     * @param string $agentClass The agent class name (e.g., DataCollector::class)
      * @param mixed $params
      * @param array $options
      * @return static
      */
-    public function addAgent(string $agentName, mixed $params = null, array $options = []): static
+    public function addAgent(string $agentClass, mixed $params = null, array $options = []): static
     {
         $this->steps[] = [
-            'agent' => $agentName,
+            'agent' => $agentClass,
             'params' => $params,
             'options' => $options,
             'retries' => $options['retries'] ?? $this->retryAttempts,
@@ -132,10 +133,15 @@ abstract class BaseWorkflowAgent extends BaseAgent
                 // Prepare parameters
                 $params = $this->prepareStepParams($step['params'] ?? null, $input, $context);
 
-                // Execute the agent
-                $result = Agent::run($step['agent'], $params, $context->getSessionId());
+                // Resolve agent class to name
+                /** @var AgentRegistry $registry */
+                $registry = app(AgentRegistry::class);
+                $agentName = $registry->resolveAgentName($step['agent']);
 
-                // Store result for future steps
+                // Execute the agent
+                $result = Agent::run($agentName, $params, $context->getSessionId());
+
+                // Store result for future steps (use class name as key for consistency)
                 $this->results[$step['agent']] = $result;
 
                 return $result;
@@ -228,12 +234,12 @@ abstract class BaseWorkflowAgent extends BaseAgent
     /**
      * Get result from a specific step
      *
-     * @param string $agentName
+     * @param string $agentClass The agent class name used when adding the step
      * @return mixed
      */
-    public function getStepResult(string $agentName): mixed
+    public function getStepResult(string $agentClass): mixed
     {
-        return $this->results[$agentName] ?? null;
+        return $this->results[$agentClass] ?? null;
     }
 
     /**
@@ -298,7 +304,7 @@ abstract class BaseWorkflowAgent extends BaseAgent
      */
     public function execute(mixed $input, ?AgentContext $context = null): mixed
     {
-        $context = $context ?: new AgentContext();
+        $context = $context ?: new AgentContext('workflow-' . uniqid());
         return $this->run($input, $context);
     }
 }

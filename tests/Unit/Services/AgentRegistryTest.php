@@ -1,10 +1,12 @@
 <?php
 
 use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Services\AgentDiscovery;
 use Vizra\VizraADK\Agents\BaseAgent;
 use Vizra\VizraADK\Exceptions\AgentNotFoundException;
 use Vizra\VizraADK\Exceptions\AgentConfigurationException;
 use Vizra\VizraADK\System\AgentContext;
+use Illuminate\Support\Facades\File;
 
 beforeEach(function () {
     $this->registry = new AgentRegistry($this->app);
@@ -104,3 +106,78 @@ class TestRegistryAgent extends BaseAgent
         return 'Registry test response: ' . $input;
     }
 }
+
+// Tests for lazy discovery
+it('triggers lazy discovery when agent not found', function () {
+    // Create a mock discovery service that returns our test agent
+    $mockDiscovery = Mockery::mock(AgentDiscovery::class);
+    $mockDiscovery->shouldReceive('clearCache')->once();
+    $mockDiscovery->shouldReceive('discover')->once()->andReturn([
+        TestRegistryAgent::class => 'test-registry-agent'
+    ]);
+    
+    $this->app->instance(AgentDiscovery::class, $mockDiscovery);
+    
+    // Agent should not be registered initially
+    expect($this->registry->hasAgent('test-registry-agent'))->toBeFalse();
+    
+    // Getting the agent should trigger discovery
+    $agent = $this->registry->getAgent('test-registry-agent');
+    
+    expect($agent)->toBeInstanceOf(TestRegistryAgent::class);
+    expect($this->registry->hasAgent('test-registry-agent'))->toBeTrue();
+});
+
+it('does not trigger discovery for already registered agents', function () {
+    // Pre-register an agent
+    $this->registry->register('test-agent', TestRegistryAgent::class);
+    
+    // Create a mock discovery that should NOT be called
+    $mockDiscovery = Mockery::mock(AgentDiscovery::class);
+    $mockDiscovery->shouldNotReceive('clearCache');
+    $mockDiscovery->shouldNotReceive('discover');
+    
+    $this->app->instance(AgentDiscovery::class, $mockDiscovery);
+    
+    // Getting the pre-registered agent should not trigger discovery
+    $agent = $this->registry->getAgent('test-agent');
+    
+    expect($agent)->toBeInstanceOf(TestRegistryAgent::class);
+});
+
+it('throws exception when agent not found even after discovery', function () {
+    // Create a mock discovery service that returns empty
+    $mockDiscovery = Mockery::mock(AgentDiscovery::class);
+    $mockDiscovery->shouldReceive('clearCache')->once();
+    $mockDiscovery->shouldReceive('discover')->once()->andReturn([]);
+    
+    $this->app->instance(AgentDiscovery::class, $mockDiscovery);
+    
+    $this->registry->getAgent('non-existent');
+})->throws(AgentNotFoundException::class, "Agent 'non-existent' is not registered.");
+
+it('lazy discovery registers all discovered agents', function () {
+    // Create a mock discovery service that returns multiple agents
+    $mockDiscovery = Mockery::mock(AgentDiscovery::class);
+    $mockDiscovery->shouldReceive('clearCache')->once();
+    $mockDiscovery->shouldReceive('discover')->once()->andReturn([
+        TestRegistryAgent::class => 'test-registry-agent',
+        'App\Agents\AnotherAgent' => 'another-agent',
+        'App\Agents\ThirdAgent' => 'third-agent'
+    ]);
+    
+    $this->app->instance(AgentDiscovery::class, $mockDiscovery);
+    
+    // None should be registered initially
+    expect($this->registry->hasAgent('test-registry-agent'))->toBeFalse();
+    expect($this->registry->hasAgent('another-agent'))->toBeFalse();
+    expect($this->registry->hasAgent('third-agent'))->toBeFalse();
+    
+    // Trigger discovery by requesting one agent
+    $agent = $this->registry->getAgent('test-registry-agent');
+    
+    // All discovered agents should now be registered
+    expect($this->registry->hasAgent('test-registry-agent'))->toBeTrue();
+    expect($this->registry->hasAgent('another-agent'))->toBeTrue();
+    expect($this->registry->hasAgent('third-agent'))->toBeTrue();
+});

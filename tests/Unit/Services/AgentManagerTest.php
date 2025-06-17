@@ -76,6 +76,16 @@ it('can run agent', function () {
     $mockAgent = Mockery::mock(BaseLlmAgent::class);
     $mockContext = Mockery::mock(AgentContext::class);
 
+    // Add expectations for execution mode handling
+    $mockContext->shouldReceive('getState')
+        ->with('execution_mode')
+        ->once()
+        ->andReturn(null);
+
+    $mockContext->shouldReceive('setState')
+        ->with('execution_mode', 'ask')
+        ->once();
+
     $mockAgent->shouldReceive('run')
         ->with($input, $mockContext)
         ->once()
@@ -86,6 +96,12 @@ it('can run agent', function () {
         ->with($agentName)
         ->once()
         ->andReturn($mockAgent);
+
+    $this->mockRegistry
+        ->shouldReceive('resolveAgentName')
+        ->with($agentName)
+        ->once()
+        ->andReturn($agentName);
 
     $this->mockStateManager
         ->shouldReceive('loadContext')

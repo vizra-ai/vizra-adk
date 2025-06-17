@@ -67,7 +67,8 @@ class Tracer
             input: ['user_input' => $context->getUserInput()],
             metadata: [
                 'session_id' => $context->getSessionId(),
-                'initial_state_keys' => array_keys($context->getAllState())
+                'initial_state_keys' => array_keys($context->getAllState()),
+                'execution_mode' => $context->getState('execution_mode', 'ask') // Default to 'ask' if not set
             ]
         );
 

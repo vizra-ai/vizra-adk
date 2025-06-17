@@ -3,11 +3,20 @@
 use Vizra\VizraADK\Tools\DelegateToSubAgentTool;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
 
 beforeEach(function () {
     $this->parentAgent = new TestDelegationParentAgent();
     $this->delegationTool = new DelegateToSubAgentTool($this->parentAgent);
     $this->context = new AgentContext('test-delegation-session');
+    
+    // Create a mock agent for AgentMemory
+    $this->mockAgent = Mockery::mock(BaseLlmAgent::class);
+    $this->mockAgent->shouldReceive('getName')->andReturn('test-agent');
+});
+
+afterEach(function () {
+    Mockery::close();
 });
 
 it('has correct tool definition structure', function () {
@@ -35,7 +44,8 @@ it('executes delegation with complete context transfer', function () {
         'context_summary' => 'Customer has been experiencing issues for 3 days'
     ];
 
-    $result = $this->delegationTool->execute($arguments, $this->context);
+    $memory = new AgentMemory($this->mockAgent);
+    $result = $this->delegationTool->execute($arguments, $this->context, $memory);
     $decodedResult = json_decode($result, true);
 
     expect($decodedResult['success'])->toBeTrue()
@@ -54,7 +64,8 @@ it('creates separate context for sub-agent execution', function () {
     // Add a message to parent context
     $this->context->addMessage(['role' => 'user', 'content' => 'Parent message']);
 
-    $result = $this->delegationTool->execute($arguments, $this->context);
+    $memory = new AgentMemory($this->mockAgent);
+    $result = $this->delegationTool->execute($arguments, $this->context, $memory);
     $decodedResult = json_decode($result, true);
 
     expect($decodedResult['success'])->toBeTrue();
@@ -74,7 +85,8 @@ it('handles sub-agent execution errors gracefully', function () {
         'task_input' => 'This will cause an error'
     ];
 
-    $result = $delegationTool->execute($arguments, $this->context);
+    $memory = new AgentMemory($this->mockAgent);
+    $result = $delegationTool->execute($arguments, $this->context, $memory);
     $decodedResult = json_decode($result, true);
 
     expect($decodedResult['success'])->toBeFalse()
@@ -88,7 +100,8 @@ it('validates parameter types and formats', function () {
         'task_input' => 'Valid input'
     ];
 
-    $result = $this->delegationTool->execute($arguments, $this->context);
+    $memory = new AgentMemory($this->mockAgent);
+    $result = $this->delegationTool->execute($arguments, $this->context, $memory);
     $decodedResult = json_decode($result, true);
 
     // Should handle gracefully, converting array to string
@@ -104,7 +117,8 @@ it('preserves context summary in sub-agent execution', function () {
         'context_summary' => $contextSummary
     ];
 
-    $result = $this->delegationTool->execute($arguments, $this->context);
+    $memory = new AgentMemory($this->mockAgent);
+    $result = $this->delegationTool->execute($arguments, $this->context, $memory);
     $decodedResult = json_decode($result, true);
 
     expect($decodedResult['success'])->toBeTrue();
@@ -121,7 +135,8 @@ it('prevents excessive delegation depth to avoid recursion', function () {
         'task_input' => 'Some task that would normally delegate',
     ];
 
-    $result = $this->delegationTool->execute($arguments, $this->context);
+    $memory = new AgentMemory($this->mockAgent);
+    $result = $this->delegationTool->execute($arguments, $this->context, $memory);
     $decoded = json_decode($result, true);
 
     expect($decoded)->toBeArray()
@@ -140,7 +155,8 @@ it('allows delegation within depth limits', function () {
         'task_input' => 'Task that should succeed',
     ];
 
-    $result = $this->delegationTool->execute($arguments, $this->context);
+    $memory = new AgentMemory($this->mockAgent);
+    $result = $this->delegationTool->execute($arguments, $this->context, $memory);
     $decoded = json_decode($result, true);
 
     expect($decoded)->toBeArray()
@@ -173,7 +189,8 @@ it('increments delegation depth for sub-agent context', function () {
     $loadedSubAgents['specialist_a'] = $mockSubAgent;
     $property->setValue($this->parentAgent, $loadedSubAgents);
 
-    $result = $this->delegationTool->execute($arguments, $this->context);
+    $memory = new AgentMemory($this->mockAgent);
+    $result = $this->delegationTool->execute($arguments, $this->context, $memory);
     $decoded = json_decode($result, true);
 
     expect($decoded)->toBeArray()

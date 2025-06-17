@@ -3,6 +3,7 @@
 namespace Vizra\VizraADK\Contracts;
 
 use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
 
 /**
  * Interface ToolInterface
@@ -34,7 +35,8 @@ interface ToolInterface
      *
      * @param array $arguments Arguments provided by the LLM.
      * @param AgentContext $context The current agent context.
+     * @param AgentMemory $memory The agent's memory manager.
      * @return string JSON string representation of the tool's result.
      */
-    public function execute(array $arguments, AgentContext $context): string;
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string;
 }

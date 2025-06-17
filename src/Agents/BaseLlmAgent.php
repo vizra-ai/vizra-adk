@@ -11,6 +11,7 @@ use Vizra\VizraADK\Events\ToolCallInitiating;
 use Vizra\VizraADK\Events\AgentResponseGenerated;
 use Vizra\VizraADK\Exceptions\ToolExecutionException;
 use Vizra\VizraADK\Services\Tracer;
+use Vizra\VizraADK\Memory\AgentMemory;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Arr;
 use Prism\Prism\Prism;
@@ -45,6 +46,12 @@ abstract class BaseLlmAgent extends BaseAgent
 
     /** @var array<string, BaseLlmAgent> */
     protected array $loadedSubAgents = [];
+    
+    /** @var AgentMemory|null */
+    protected ?AgentMemory $memory = null;
+    
+    /** @var AgentContext|null */
+    protected ?AgentContext $context = null;
 
     public function __construct()
     {
@@ -345,7 +352,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     $processedArgs = $this->beforeToolCall($tool->definition()['name'], $arguments, $context);
 
                     // Execute the tool with processed arguments
-                    $result = $tool->execute($processedArgs, $context);
+                    $result = $tool->execute($processedArgs, $context, $this->memory());
 
                     // Call the afterToolResult hook - this triggers the tracer to end the span
                     $processedResult = $this->afterToolResult($tool->definition()['name'], $result, $context);
@@ -379,6 +386,13 @@ abstract class BaseLlmAgent extends BaseAgent
 
     public function run(mixed $input, AgentContext $context): mixed
     {
+        // Store context for memory access
+        $this->context = $context;
+        
+        // Initialize memory for this agent if not already done
+        if ($this->memory === null) {
+            $this->memory = new AgentMemory($this);
+        }
         /** @var Tracer $tracer */
         $tracer = app(Tracer::class);
 
@@ -585,6 +599,33 @@ abstract class BaseLlmAgent extends BaseAgent
         return $inputMessages;
     }
 
+    /**
+     * Get the memory manager for this agent
+     */
+    protected function memory(): AgentMemory
+    {
+        if ($this->memory === null) {
+            $this->memory = new AgentMemory($this);
+        }
+        return $this->memory;
+    }
+    
+    /**
+     * Get the current context
+     */
+    public function getContext(): ?AgentContext
+    {
+        return $this->context;
+    }
+    
+    /**
+     * Get the agent ID (defaults to agent name)
+     */
+    public function getId(): string
+    {
+        return $this->getName();
+    }
+    
     public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
     {
         /** @var Tracer $tracer */

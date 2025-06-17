@@ -384,7 +384,7 @@ class LoopWorkflow extends BaseWorkflowAgent
      */
     public function execute(mixed $input, ?AgentContext $context = null): mixed
     {
-        $context = $context ?: new AgentContext();
+        $context = $context ?: new AgentContext('workflow-' . uniqid());
         return $this->run($input, $context);
     }
 

@@ -6,6 +6,7 @@ use Vizra\VizraADK\Models\AgentMemory;
 use Vizra\VizraADK\Models\AgentSession;
 use Vizra\VizraADK\Models\AgentMessage;
 use Vizra\VizraADK\Services\MemoryManager;
+use Vizra\VizraADK\Memory\AgentMemory as AgentMemoryClass;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 
@@ -17,6 +18,14 @@ beforeEach(function () {
 
     $this->memoryManager = new MemoryManager();
     $this->memoryTool = new MemoryTool($this->memoryManager);
+    
+    // Create a mock agent for AgentMemory
+    $this->mockAgent = Mockery::mock(\Vizra\VizraADK\Agents\BaseLlmAgent::class);
+    $this->mockAgent->shouldReceive('getName')->andReturn('test-agent');
+});
+
+afterEach(function () {
+    Mockery::close();
 });
 
 // Helper function to create context with agent name
@@ -63,7 +72,8 @@ it('can add learning via tool', function () {
         'content' => 'Users prefer detailed explanations'
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('Added learning to memory');
@@ -84,7 +94,8 @@ it('can add fact via tool', function () {
         'value' => 'concise responses'
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('Added fact to memory');
@@ -112,7 +123,8 @@ it('can get memory context via tool', function () {
         'action' => 'get_context'
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('Memory Summary: Customer support specialist');
@@ -133,7 +145,8 @@ it('can get conversation history via tool', function () {
         'action' => 'get_history'
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('Recent conversation history');
@@ -158,7 +171,8 @@ it('can get limited conversation history via tool', function () {
         'limit' => 3
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('Recent conversation history (last 3 messages)');
@@ -175,7 +189,8 @@ it('handles missing required parameters gracefully', function () {
     // Missing action parameter
     $arguments = [];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('Error: action parameter is required');
@@ -189,7 +204,8 @@ it('handles invalid action gracefully', function () {
         'action' => 'invalid_action'
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('Error: Unknown action');
@@ -204,7 +220,8 @@ it('handles add_learning with missing learning parameter', function () {
         // Missing 'content' parameter
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('Error: learning parameter is required');
@@ -220,7 +237,8 @@ it('handles add_fact with missing parameters', function () {
         'value' => 'some value'
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('Error: key and value parameters are required');
@@ -231,7 +249,8 @@ it('handles add_fact with missing parameters', function () {
         'key' => 'some_key'
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('Error: key and value parameters are required');
@@ -245,7 +264,8 @@ it('handles empty memory context gracefully', function () {
         'action' => 'get_context'
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('Memory Summary: None');
@@ -262,7 +282,8 @@ it('handles empty conversation history gracefully', function () {
         'action' => 'get_history'
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
 
     expect($result)->toBeString();
     expect($result)->toContain('No conversation history found');
@@ -279,7 +300,8 @@ it('can handle different data types for fact values', function () {
         'value' => 'string value'
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
     expect($result)->toContain('Added fact to memory');
 
     // Test with numeric value (as string since tool parameters are strings)
@@ -289,7 +311,8 @@ it('can handle different data types for fact values', function () {
         'value' => '42'
     ];
 
-    $result = $this->memoryTool->execute($arguments, $context);
+    $memory = new AgentMemoryClass($this->mockAgent);
+    $result = $this->memoryTool->execute($arguments, $context, $memory);
     expect($result)->toContain('Added fact to memory');
 
     // Verify both facts were stored

@@ -890,8 +890,9 @@ function testModalButton() {
                             <div class="flex-1">
                                 <div class="relative">
                                     <input type="text"
-                                           wire:model.live="message"
-                                           wire:keydown.enter="sendMessage"
+                                           id="message-input"
+                                           wire:model.defer="message"
+                                           wire:keydown.enter.prevent="sendMessage"
                                            placeholder="Type your message..."
                                            class="w-full px-4 py-3 pr-12 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-gray-800 text-gray-200 placeholder-gray-500 hover:bg-gray-750 transition-colors duration-200 disabled:bg-gray-900 disabled:cursor-not-allowed"
                                            @if($isLoading) disabled @endif>
@@ -1004,12 +1005,31 @@ function testModalButton() {
 
         <!-- Scripts -->
         <script>
-            // Auto-scroll chat messages to bottom
+            // Auto-scroll chat messages to bottom and clear input
             document.addEventListener('livewire:updated', () => {
                 const chatMessages = document.getElementById('chat-messages');
                 if (chatMessages) {
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 }
+                
+                // Clear message input after sending
+                const messageInput = document.getElementById('message-input');
+                if (messageInput && @json($isLoading) === false) {
+                    // Only clear if not loading (message was sent successfully)
+                    if (messageInput.value === '') {
+                        // Already cleared by Livewire
+                    }
+                }
+            });
+
+            // Listen for message sent event
+            document.addEventListener('livewire:load', () => {
+                Livewire.on('messageSent', () => {
+                    const messageInput = document.getElementById('message-input');
+                    if (messageInput) {
+                        messageInput.value = '';
+                    }
+                });
             });
 
             // Toggle span details in trace visualization

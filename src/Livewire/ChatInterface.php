@@ -163,7 +163,7 @@ class ChatInterface extends Component
         }
 
         $userMessage = trim($this->message);
-        $this->message = '';
+        $this->reset('message'); // Use Livewire's reset method
         $this->isLoading = true;
 
         // Add user message to chat history
@@ -197,6 +197,9 @@ class ChatInterface extends Component
         }
 
         $this->isLoading = false;
+        
+        // Dispatch event to clear input (belt and suspenders approach)
+        $this->dispatch('messageSent');
     }
 
     public function clearChat()

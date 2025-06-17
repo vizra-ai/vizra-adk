@@ -10,7 +10,8 @@ use Vizra\VizraADK\Agents\BaseAgent; // For type hinting
  * @method static AgentBuilder build(string $agentClass)
  * @method static AgentBuilder define(string $name)
  * @method static BaseAgent named(string $agentName)
- * @method static mixed run(string $agentName, mixed $input, ?string $sessionId = null)
+ * @method static BaseAgent byClass(string $agentClass)
+ * @method static mixed run(string $agentNameOrClass, mixed $input, ?string $sessionId = null)
  * @method static array getAllRegisteredAgents()
  * @method static bool hasAgent(string $name)
  *

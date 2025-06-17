@@ -18,16 +18,16 @@ class WorkflowManager
     /**
      * Create a sequential workflow
      *
-     * @param string ...$agentNames Optional agent names for quick setup
+     * @param string ...$agentClasses Optional agent class names for quick setup
      * @return SequentialWorkflow
      */
-    public function sequential(string ...$agentNames): SequentialWorkflow
+    public function sequential(string ...$agentClasses): SequentialWorkflow
     {
-        if (empty($agentNames)) {
+        if (empty($agentClasses)) {
             return new SequentialWorkflow();
         }
 
-        return SequentialWorkflow::create(...$agentNames);
+        return SequentialWorkflow::create(...$agentClasses);
     }
 
     /**
@@ -60,15 +60,15 @@ class WorkflowManager
     /**
      * Create a loop workflow
      *
-     * @param string|null $agentName Optional agent name for quick setup
+     * @param string|null $agentClass Optional agent class name for quick setup
      * @return LoopWorkflow
      */
-    public function loop(?string $agentName = null): LoopWorkflow
+    public function loop(?string $agentClass = null): LoopWorkflow
     {
         $workflow = new LoopWorkflow();
 
-        if ($agentName) {
-            $workflow->agent($agentName);
+        if ($agentClass) {
+            $workflow->agent($agentClass);
         }
 
         return $workflow;
@@ -77,28 +77,28 @@ class WorkflowManager
     /**
      * Create a while loop workflow
      *
-     * @param string $agentName
+     * @param string $agentClass
      * @param string|\Closure $condition
      * @param int $maxIterations
      * @return LoopWorkflow
      */
-    public function while(string $agentName, string|\Closure $condition, int $maxIterations = 100): LoopWorkflow
+    public function while(string $agentClass, string|\Closure $condition, int $maxIterations = 100): LoopWorkflow
     {
-        return LoopWorkflow::createWhile($agentName, $condition, $maxIterations);
+        return LoopWorkflow::createWhile($agentClass, $condition, $maxIterations);
     }
 
     /**
      * Create an until loop workflow
      *
-     * @param string $agentName
+     * @param string $agentClass
      * @param string|\Closure $condition
      * @param int $maxIterations
      * @return LoopWorkflow
      */
-    public function until(string $agentName, string|\Closure $condition, int $maxIterations = 100): LoopWorkflow
+    public function until(string $agentClass, string|\Closure $condition, int $maxIterations = 100): LoopWorkflow
     {
         return (new LoopWorkflow())
-            ->agent($agentName)
+            ->agent($agentClass)
             ->until($condition)
             ->maxIterations($maxIterations);
     }
@@ -106,25 +106,25 @@ class WorkflowManager
     /**
      * Create a times loop workflow
      *
-     * @param string $agentName
+     * @param string $agentClass
      * @param int $times
      * @return LoopWorkflow
      */
-    public function times(string $agentName, int $times): LoopWorkflow
+    public function times(string $agentClass, int $times): LoopWorkflow
     {
-        return LoopWorkflow::createTimes($agentName, $times);
+        return LoopWorkflow::createTimes($agentClass, $times);
     }
 
     /**
      * Create a forEach loop workflow
      *
-     * @param string $agentName
+     * @param string $agentClass
      * @param array|\Traversable $collection
      * @return LoopWorkflow
      */
-    public function forEach(string $agentName, array|\Traversable $collection): LoopWorkflow
+    public function forEach(string $agentClass, array|\Traversable $collection): LoopWorkflow
     {
-        return LoopWorkflow::createForEach($agentName, $collection);
+        return LoopWorkflow::createForEach($agentClass, $collection);
     }
 
     /**

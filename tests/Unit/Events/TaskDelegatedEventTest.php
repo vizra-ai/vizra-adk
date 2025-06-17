@@ -4,7 +4,9 @@ use Vizra\VizraADK\Events\TaskDelegated;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Tools\DelegateToSubAgentTool;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Memory\AgentMemory;
 use Illuminate\Support\Facades\Event;
+use Mockery;
 
 describe('TaskDelegated Event', function () {
     it('creates task delegated event correctly', function () {
@@ -95,7 +97,10 @@ describe('TaskDelegated Event Integration', function () {
         ];
 
         // Execute the tool
-        $result = $tool->execute($arguments, $context);
+        $mockAgent = Mockery::mock(BaseLlmAgent::class);
+        $mockAgent->shouldReceive('getName')->andReturn('test-agent');
+        $memory = new AgentMemory($mockAgent);
+        $result = $tool->execute($arguments, $context, $memory);
 
         // Verify the event was dispatched
         Event::assertDispatched(TaskDelegated::class, function ($event) use ($context) {
@@ -143,7 +148,10 @@ describe('TaskDelegated Event Integration', function () {
             'task_input' => 'Task input',
         ];
 
-        $tool->execute($arguments, $context);
+        $mockAgent = Mockery::mock(BaseLlmAgent::class);
+        $mockAgent->shouldReceive('getName')->andReturn('test-agent');
+        $memory = new AgentMemory($mockAgent);
+        $tool->execute($arguments, $context, $memory);
 
         // Verify the event was dispatched with correct depth
         Event::assertDispatched(TaskDelegated::class, function ($event) {
@@ -169,7 +177,10 @@ describe('TaskDelegated Event Integration', function () {
             'task_input' => 'Task input',
         ];
 
-        $result = $tool->execute($arguments, $context);
+        $mockAgent = Mockery::mock(BaseLlmAgent::class);
+        $mockAgent->shouldReceive('getName')->andReturn('test-agent');
+        $memory = new AgentMemory($mockAgent);
+        $result = $tool->execute($arguments, $context, $memory);
 
         // Verify the event was NOT dispatched for failed delegation
         Event::assertNotDispatched(TaskDelegated::class);
@@ -197,7 +208,10 @@ describe('TaskDelegated Event Integration', function () {
             'task_input' => 'Task input',
         ];
 
-        $result = $tool->execute($arguments, $context);
+        $mockAgent = Mockery::mock(BaseLlmAgent::class);
+        $mockAgent->shouldReceive('getName')->andReturn('test-agent');
+        $memory = new AgentMemory($mockAgent);
+        $result = $tool->execute($arguments, $context, $memory);
 
         // Verify the event was NOT dispatched when depth limit is reached
         Event::assertNotDispatched(TaskDelegated::class);
@@ -235,7 +249,10 @@ describe('TaskDelegated Event Integration', function () {
             'context_summary' => 'Context summary'
         ];
 
-        $tool->execute($arguments, $parentContext);
+        $mockAgent = Mockery::mock(BaseLlmAgent::class);
+        $mockAgent->shouldReceive('getName')->andReturn('test-agent');
+        $memory = new AgentMemory($mockAgent);
+        $tool->execute($arguments, $parentContext, $memory);
 
         Event::assertDispatched(TaskDelegated::class, function ($event) use ($parentContext) {
             // Verify parent context is preserved

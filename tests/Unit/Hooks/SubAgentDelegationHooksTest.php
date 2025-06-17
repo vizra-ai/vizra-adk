@@ -3,6 +3,8 @@
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Tools\DelegateToSubAgentTool;
+use Vizra\VizraADK\Memory\AgentMemory;
+use Mockery;
 
 describe('Sub-Agent Delegation Hooks', function () {
     beforeEach(function () {
@@ -48,6 +50,14 @@ describe('Sub-Agent Delegation Hooks', function () {
                 return "Sub-agent response to: {$input}";
             }
         };
+        
+        // Create a mock agent for AgentMemory
+        $this->mockAgent = Mockery::mock(BaseLlmAgent::class);
+        $this->mockAgent->shouldReceive('getName')->andReturn('test-agent');
+    });
+    
+    afterEach(function () {
+        Mockery::close();
     });
 
     it('calls beforeSubAgentDelegation hook with correct parameters', function () {
@@ -74,7 +84,8 @@ describe('Sub-Agent Delegation Hooks', function () {
             'context_summary' => 'context summary'
         ];
 
-        $result = $tool->execute($arguments, $context);
+        $memory = new AgentMemory($this->mockAgent);
+        $result = $tool->execute($arguments, $context, $memory);
         $decodedResult = json_decode($result, true);
 
         expect($decodedResult['success'])->toBe(true);
@@ -108,7 +119,8 @@ describe('Sub-Agent Delegation Hooks', function () {
             'task_input' => 'task input'
         ];
 
-        $result = $tool->execute($arguments, $context);
+        $memory = new AgentMemory($this->mockAgent);
+        $result = $tool->execute($arguments, $context, $memory);
         $decodedResult = json_decode($result, true);
 
         expect($decodedResult['success'])->toBe(true);
@@ -165,7 +177,8 @@ describe('Sub-Agent Delegation Hooks', function () {
             'context_summary' => 'original context'
         ];
 
-        $result = $tool->execute($arguments, $context);
+        $memory = new AgentMemory($this->mockAgent);
+        $result = $tool->execute($arguments, $context, $memory);
         $decodedResult = json_decode($result, true);
 
         expect($decodedResult['success'])->toBe(true);
@@ -224,7 +237,8 @@ describe('Sub-Agent Delegation Hooks', function () {
             'task_input' => 'test task'
         ];
 
-        $result = $tool->execute($arguments, $context);
+        $memory = new AgentMemory($this->mockAgent);
+        $result = $tool->execute($arguments, $context, $memory);
         $decodedResult = json_decode($result, true);
 
         expect($decodedResult['success'])->toBe(true);
@@ -275,7 +289,8 @@ describe('Sub-Agent Delegation Hooks', function () {
             'task_input' => 'test task'
         ];
 
-        $result = $tool->execute($arguments, $context);
+        $memory = new AgentMemory($this->mockAgent);
+        $result = $tool->execute($arguments, $context, $memory);
         $decodedResult = json_decode($result, true);
 
         expect($decodedResult['success'])->toBe(false);

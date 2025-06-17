@@ -4,6 +4,7 @@ namespace Vizra\VizraADK\Tools;
 
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\Services\MemoryManager;
 
 /**
@@ -56,7 +57,7 @@ class MemoryTool implements ToolInterface
         ];
     }
 
-    public function execute(array $arguments, AgentContext $context): string
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
         if (!isset($arguments['action'])) {
             return "Error: action parameter is required";

@@ -42,21 +42,21 @@ class ParallelWorkflowTest extends TestCase
 
     public function test_can_add_single_agent()
     {
-        $workflow = $this->workflow->agents('SingleAgent');
+        $workflow = $this->workflow->agents(SingleAgent::class);
         $this->assertInstanceOf(ParallelWorkflow::class, $workflow);
     }
 
     public function test_can_add_multiple_agents_as_array()
     {
-        $workflow = $this->workflow->agents(['FirstAgent', 'SecondAgent', 'ThirdAgent']);
+        $workflow = $this->workflow->agents([FirstAgent::class, SecondAgent::class, ThirdAgent::class]);
         $this->assertInstanceOf(ParallelWorkflow::class, $workflow);
     }
 
     public function test_can_add_agents_with_parameters()
     {
         $workflow = $this->workflow->agents([
-            'FirstAgent' => ['param1' => 'value1'],
-            'SecondAgent' => ['param2' => 'value2']
+            FirstAgent::class => ['param1' => 'value1'],
+            SecondAgent::class => ['param2' => 'value2']
         ]);
         $this->assertInstanceOf(ParallelWorkflow::class, $workflow);
     }
@@ -93,22 +93,22 @@ class ParallelWorkflowTest extends TestCase
     {
         // Mock all agents to be called in parallel
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'input', 'test-session')
+            ->with('first_agent', 'input', 'test-session')
             ->once()
             ->andReturn('first_result');
 
         Agent::shouldReceive('run')
-            ->with('SecondAgent', 'input', 'test-session')
+            ->with('second_agent', 'input', 'test-session')
             ->once()
             ->andReturn('second_result');
 
         Agent::shouldReceive('run')
-            ->with('ThirdAgent', 'input', 'test-session')
+            ->with('third_agent', 'input', 'test-session')
             ->once()
             ->andReturn('third_result');
 
         $result = $this->workflow
-            ->agents(['FirstAgent', 'SecondAgent', 'ThirdAgent'])
+            ->agents([FirstAgent::class, SecondAgent::class, ThirdAgent::class])
             ->waitForAll()
             ->execute('input', $this->context);
 
@@ -117,51 +117,51 @@ class ParallelWorkflowTest extends TestCase
         $this->assertEquals(3, $result['completed_count']);
         $this->assertEquals(3, $result['total_count']);
         $this->assertArrayHasKey('results', $result);
-        $this->assertArrayHasKey('FirstAgent', $result['results']);
-        $this->assertArrayHasKey('SecondAgent', $result['results']);
-        $this->assertArrayHasKey('ThirdAgent', $result['results']);
+        $this->assertArrayHasKey(FirstAgent::class, $result['results']);
+        $this->assertArrayHasKey(SecondAgent::class, $result['results']);
+        $this->assertArrayHasKey(ThirdAgent::class, $result['results']);
     }
 
     public function test_execute_with_different_parameters()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', ['param1' => 'value1'], 'test-session')
+            ->with('first_agent', ['param1' => 'value1'], 'test-session')
             ->once()
             ->andReturn('first_result');
 
         Agent::shouldReceive('run')
-            ->with('SecondAgent', ['param2' => 'value2'], 'test-session')
+            ->with('second_agent', ['param2' => 'value2'], 'test-session')
             ->once()
             ->andReturn('second_result');
 
         $result = $this->workflow
             ->agents([
-                'FirstAgent' => ['param1' => 'value1'],
-                'SecondAgent' => ['param2' => 'value2']
+                FirstAgent::class => ['param1' => 'value1'],
+                SecondAgent::class => ['param2' => 'value2']
             ])
             ->execute('ignored_input', $this->context);
 
-        $this->assertEquals('first_result', $result['results']['FirstAgent']);
-        $this->assertEquals('second_result', $result['results']['SecondAgent']);
+        $this->assertEquals('first_result', $result['results'][FirstAgent::class]);
+        $this->assertEquals('second_result', $result['results'][SecondAgent::class]);
     }
 
     public function test_fail_fast_true_stops_on_first_error()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'input', 'test-session')
+            ->with('first_agent', 'input', 'test-session')
             ->once()
             ->andThrow(new \Exception('First agent failed'));
 
         // Other agents should not be called due to fail fast
         Agent::shouldReceive('run')
-            ->with('SecondAgent', 'input', 'test-session')
+            ->with('second_agent', 'input', 'test-session')
             ->never();
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('First agent failed');
 
         $this->workflow
-            ->agents(['FirstAgent', 'SecondAgent'])
+            ->agents([FirstAgent::class, SecondAgent::class])
             ->failFast(true)
             ->execute('input', $this->context);
     }
@@ -169,82 +169,82 @@ class ParallelWorkflowTest extends TestCase
     public function test_fail_fast_false_continues_on_error()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'input', 'test-session')
+            ->with('first_agent', 'input', 'test-session')
             ->once()
             ->andThrow(new \Exception('First agent failed'));
 
         Agent::shouldReceive('run')
-            ->with('SecondAgent', 'input', 'test-session')
+            ->with('second_agent', 'input', 'test-session')
             ->once()
             ->andReturn('second_result');
 
         Agent::shouldReceive('run')
-            ->with('ThirdAgent', 'input', 'test-session')
+            ->with('third_agent', 'input', 'test-session')
             ->once()
             ->andReturn('third_result');
 
         $result = $this->workflow
-            ->agents(['FirstAgent', 'SecondAgent', 'ThirdAgent'])
+            ->agents([FirstAgent::class, SecondAgent::class, ThirdAgent::class])
             ->failFast(false)
             ->waitFor(2) // Only require 2 successes, so 1 failure is acceptable
             ->execute('input', $this->context);
 
         $this->assertEquals(2, $result['completed_count']);
         $this->assertArrayHasKey('errors', $result);
-        $this->assertArrayHasKey('FirstAgent', $result['errors']);
-        $this->assertArrayHasKey('SecondAgent', $result['results']);
-        $this->assertArrayHasKey('ThirdAgent', $result['results']);
+        $this->assertArrayHasKey(FirstAgent::class, $result['errors']);
+        $this->assertArrayHasKey(SecondAgent::class, $result['results']);
+        $this->assertArrayHasKey(ThirdAgent::class, $result['results']);
     }
 
     public function test_wait_for_any_returns_early()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'input', 'test-session')
+            ->with('first_agent', 'input', 'test-session')
             ->once()
             ->andReturn('first_result');
 
         // Second agent should NOT be called since waitForAny breaks after first success
         Agent::shouldReceive('run')
-            ->with('SecondAgent', 'input', 'test-session')
+            ->with('second_agent', 'input', 'test-session')
             ->never();
 
         $result = $this->workflow
-            ->agents(['FirstAgent', 'SecondAgent'])
+            ->agents([FirstAgent::class, SecondAgent::class])
             ->waitForAny()
             ->execute('input', $this->context);
 
         $this->assertEquals(1, $result['completed_count']);
         $this->assertEquals('parallel', $result['workflow_type']);
-        $this->assertArrayHasKey('FirstAgent', $result['results']);
-        $this->assertArrayNotHasKey('SecondAgent', $result['results']);
+        $this->assertArrayHasKey(FirstAgent::class, $result['results']);
+        $this->assertArrayNotHasKey(SecondAgent::class, $result['results']);
     }
 
     public function test_wait_for_specific_count()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'input', 'test-session')
+            ->with('first_agent', 'input', 'test-session')
             ->once()
             ->andReturn('first_result');
 
         Agent::shouldReceive('run')
-            ->with('SecondAgent', 'input', 'test-session')
+            ->with('second_agent', 'input', 'test-session')
             ->once()
             ->andReturn('second_result');
 
         // Third agent should NOT be called since waitFor(2) breaks after 2 successes
         Agent::shouldReceive('run')
-            ->with('ThirdAgent', 'input', 'test-session')
+            ->with('third_agent', 'input', 'test-session')
             ->never();
 
         $result = $this->workflow
-            ->agents(['FirstAgent', 'SecondAgent', 'ThirdAgent'])
+            ->agents([FirstAgent::class, SecondAgent::class, ThirdAgent::class])
             ->waitFor(2)
             ->execute('input', $this->context);
 
         $this->assertEquals(2, $result['completed_count']);
-        $this->assertArrayHasKey('FirstAgent', $result['results']);
-        $this->assertArrayHasKey('SecondAgent', $result['results']);
-        $this->assertArrayNotHasKey('ThirdAgent', $result['results']);
+        $this->assertArrayHasKey(FirstAgent::class, $result['results']);
+        $this->assertArrayHasKey(SecondAgent::class, $result['results']);
+        $this->assertArrayNotHasKey(ThirdAgent::class, $result['results']);
     }
 
     public function test_async_mode_returns_job_tracking_info()
@@ -253,7 +253,7 @@ class ParallelWorkflowTest extends TestCase
         Queue::fake();
 
         $result = $this->workflow
-            ->agents(['FirstAgent', 'SecondAgent'])
+            ->agents([FirstAgent::class, SecondAgent::class])
             ->async(true)
             ->execute('input', $this->context);
 
@@ -268,7 +268,7 @@ class ParallelWorkflowTest extends TestCase
 
     public function test_static_create_method()
     {
-        $workflow = ParallelWorkflow::create(['FirstAgent', 'SecondAgent']);
+        $workflow = ParallelWorkflow::create([FirstAgent::class, SecondAgent::class]);
         $this->assertInstanceOf(ParallelWorkflow::class, $workflow);
     }
 
@@ -278,17 +278,17 @@ class ParallelWorkflowTest extends TestCase
         $completeCallbackCalled = false;
 
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'input', 'test-session')
+            ->with('first_agent', 'input', 'test-session')
             ->once()
             ->andReturn('first_result');
 
         Agent::shouldReceive('run')
-            ->with('SecondAgent', 'input', 'test-session')
+            ->with('second_agent', 'input', 'test-session')
             ->once()
             ->andReturn('second_result');
 
         $this->workflow
-            ->agents(['FirstAgent', 'SecondAgent'])
+            ->agents([FirstAgent::class, SecondAgent::class])
             ->onSuccess(function($result) use (&$successCallbackCalled) {
                 $successCallbackCalled = true;
             })
@@ -307,14 +307,14 @@ class ParallelWorkflowTest extends TestCase
         $errorReceived = null;
 
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'input', 'test-session')
+            ->with('first_agent', 'input', 'test-session')
             ->once()
             ->andThrow(new \Exception('Agent failed'));
 
         $this->expectException(\Exception::class);
 
         $this->workflow
-            ->agents(['FirstAgent', 'SecondAgent'])
+            ->agents([FirstAgent::class, SecondAgent::class])
             ->failFast(true)
             ->onFailure(function($error) use (&$failureCallbackCalled, &$errorReceived) {
                 $failureCallbackCalled = true;
@@ -328,7 +328,7 @@ class ParallelWorkflowTest extends TestCase
 
     public function test_can_reset_workflow()
     {
-        $workflow = $this->workflow->agents(['FirstAgent', 'SecondAgent']);
+        $workflow = $this->workflow->agents([FirstAgent::class, SecondAgent::class]);
         $resetWorkflow = $workflow->reset();
 
         $this->assertInstanceOf(ParallelWorkflow::class, $resetWorkflow);
@@ -347,17 +347,17 @@ class ParallelWorkflowTest extends TestCase
     public function test_insufficient_completions_without_fail_fast_throws_error()
     {
         Agent::shouldReceive('run')
-            ->with('FirstAgent', 'input', 'test-session')
+            ->with('first_agent', 'input', 'test-session')
             ->once()
             ->andThrow(new \Exception('First failed'));
 
         Agent::shouldReceive('run')
-            ->with('SecondAgent', 'input', 'test-session')
+            ->with('second_agent', 'input', 'test-session')
             ->once()
             ->andThrow(new \Exception('Second failed'));
 
         Agent::shouldReceive('run')
-            ->with('ThirdAgent', 'input', 'test-session')
+            ->with('third_agent', 'input', 'test-session')
             ->once()
             ->andReturn('third_result');
 
@@ -365,7 +365,7 @@ class ParallelWorkflowTest extends TestCase
         $this->expectExceptionMessage('Only 1 of 2 required agents completed successfully');
 
         $this->workflow
-            ->agents(['FirstAgent', 'SecondAgent', 'ThirdAgent'])
+            ->agents([FirstAgent::class, SecondAgent::class, ThirdAgent::class])
             ->waitFor(2) // Need 2 successes but only get 1
             ->failFast(false)
             ->execute('input', $this->context);
@@ -378,14 +378,14 @@ class ParallelWorkflowTest extends TestCase
             ->with('workflow_results_test_session', [])
             ->once()
             ->andReturn([
-                'FirstAgent' => 'first_result',
-                'SecondAgent' => 'second_result'
+                FirstAgent::class => 'first_result',
+                SecondAgent::class => 'second_result'
             ]);
 
         $results = ParallelWorkflow::getAsyncResults('test_session');
 
         $this->assertIsArray($results);
-        $this->assertArrayHasKey('FirstAgent', $results);
-        $this->assertArrayHasKey('SecondAgent', $results);
+        $this->assertArrayHasKey(FirstAgent::class, $results);
+        $this->assertArrayHasKey(SecondAgent::class, $results);
     }
 }

@@ -92,6 +92,12 @@
                             {{ str_replace('_', ' ', ucwords($span['type'], '_')) }}
                         </span>
 
+                        @if($span['type'] === 'agent_run' && !empty($span['metadata']['execution_mode']))
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 border-0">
+                                {{ ucfirst($span['metadata']['execution_mode']) }} Mode
+                            </span>
+                        @endif
+
                         @if(!empty($span['start_time']))
                             <span class="text-gray-400 font-mono text-xs">{{ $span['start_time'] }}</span>
                         @endif

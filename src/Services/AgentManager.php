@@ -59,11 +59,25 @@ class AgentManager
     {
         return $this->registry->getAgent($agentName);
     }
+    
+    /**
+     * Get an instance of a registered agent by class name.
+     *
+     * @param string $agentClass The class name of the agent.
+     * @return BaseAgent The agent instance.
+     * @throws \Vizra\VizraADK\Exceptions\AgentNotFoundException
+     * @throws \Vizra\VizraADK\Exceptions\AgentConfigurationException
+     */
+    public function byClass(string $agentClass): BaseAgent
+    {
+        $agentName = $this->registry->resolveAgentName($agentClass);
+        return $this->registry->getAgent($agentName);
+    }
 
     /**
      * Run an agent with the given input and session ID.
      *
-     * @param string $agentName The name of the agent to run.
+     * @param string $agentNameOrClass The name or class of the agent to run.
      * @param mixed $input The input for the agent.
      * @param string|null $sessionId Optional session ID. If null, a new session is created/managed.
      * @return mixed The final response from the agent.
@@ -71,8 +85,10 @@ class AgentManager
      * @throws \Vizra\VizraADK\Exceptions\AgentConfigurationException
      * @throws \Throwable
      */
-    public function run(string $agentName, mixed $input, ?string $sessionId = null): mixed
+    public function run(string $agentNameOrClass, mixed $input, ?string $sessionId = null): mixed
     {
+        // Resolve to agent name first
+        $agentName = $this->registry->resolveAgentName($agentNameOrClass);
         $agent = $this->named($agentName);
 
         if (!($agent instanceof BaseLlmAgent)) { // For MVP, assume all runnable agents are LLM based
@@ -82,6 +98,11 @@ class AgentManager
         // Load or create context
         // The StateManager's loadContext now takes agentName first.
         $context = $this->stateManager->loadContext($agentName, $sessionId, $input);
+
+        // Set default execution mode if not already set (when called directly without AgentExecutor)
+        if ($context->getState('execution_mode') === null) {
+            $context->setState('execution_mode', 'ask');
+        }
 
         Event::dispatch(new AgentExecutionStarting($context, $agentName, $input));
 

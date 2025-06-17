@@ -42,21 +42,21 @@ class ConditionalWorkflowTest extends TestCase
     {
         $condition = fn($input) => $input['type'] === 'premium';
 
-        $workflow = $this->workflow->when($condition, 'PremiumAgent');
+        $workflow = $this->workflow->when($condition, PremiumAgent::class);
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
 
     public function test_can_add_condition_with_string()
     {
-        $workflow = $this->workflow->when('some_string_condition', 'TestAgent');
+        $workflow = $this->workflow->when('some_string_condition', TestAgent::class);
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
 
     public function test_can_add_otherwise_clause()
     {
         $workflow = $this->workflow
-            ->when(fn($input) => false, 'FirstAgent')
-            ->otherwise('DefaultAgent');
+            ->when(fn($input) => false, FirstAgent::class)
+            ->otherwise(DefaultAgent::class);
 
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
@@ -64,64 +64,64 @@ class ConditionalWorkflowTest extends TestCase
     public function test_can_add_else_clause()
     {
         $workflow = $this->workflow
-            ->when(fn($input) => false, 'FirstAgent')
-            ->else('DefaultAgent');
+            ->when(fn($input) => false, FirstAgent::class)
+            ->else(DefaultAgent::class);
 
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
 
     public function test_when_equals_condition()
     {
-        $workflow = $this->workflow->whenEquals('status', 'active', 'ActiveAgent');
+        $workflow = $this->workflow->whenEquals('status', 'active', ActiveAgent::class);
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
 
     public function test_when_greater_than_condition()
     {
-        $workflow = $this->workflow->whenGreaterThan('score', 90, 'HighScoreAgent');
+        $workflow = $this->workflow->whenGreaterThan('score', 90, HighScoreAgent::class);
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
 
     public function test_when_less_than_condition()
     {
-        $workflow = $this->workflow->whenLessThan('age', 18, 'MinorAgent');
+        $workflow = $this->workflow->whenLessThan('age', 18, MinorAgent::class);
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
 
     public function test_when_exists_condition()
     {
-        $workflow = $this->workflow->whenExists('email', 'EmailAgent');
+        $workflow = $this->workflow->whenExists('email', EmailAgent::class);
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
 
     public function test_when_empty_condition()
     {
-        $workflow = $this->workflow->whenEmpty('description', 'NoDescriptionAgent');
+        $workflow = $this->workflow->whenEmpty('description', NoDescriptionAgent::class);
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
 
     public function test_when_matches_condition()
     {
-        $workflow = $this->workflow->whenMatches('email', '/^.+@.+\..+$/', 'ValidEmailAgent');
+        $workflow = $this->workflow->whenMatches('email', '/^.+@.+\..+$/', ValidEmailAgent::class);
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
 
     public function test_execute_first_matching_condition()
     {
         Agent::shouldReceive('run')
-            ->with('PremiumAgent', ['type' => 'premium', 'score' => 95], 'test-session')
+            ->with('premium_agent', ['type' => 'premium', 'score' => 95], 'test-session')
             ->once()
             ->andReturn('premium_result');
 
         $result = $this->workflow
-            ->when(fn($input) => $input['type'] === 'premium', 'PremiumAgent')
-            ->when(fn($input) => $input['score'] > 90, 'HighScoreAgent')
-            ->otherwise('DefaultAgent')
+            ->when(fn($input) => $input['type'] === 'premium', PremiumAgent::class)
+            ->when(fn($input) => $input['score'] > 90, HighScoreAgent::class)
+            ->otherwise(DefaultAgent::class)
             ->execute(['type' => 'premium', 'score' => 95], $this->context);
 
         $this->assertIsArray($result);
         $this->assertEquals('premium_result', $result['result']);
-        $this->assertEquals('PremiumAgent', $result['matched_agent']);
+        $this->assertEquals(PremiumAgent::class, $result['matched_agent']);
         $this->assertEquals('conditional', $result['workflow_type']);
         $this->assertFalse($result['was_default'] ?? false);
     }
@@ -131,13 +131,13 @@ class ConditionalWorkflowTest extends TestCase
         $this->mockAgentRun('default_result');
 
         $result = $this->workflow
-            ->when(fn($input) => $input['type'] === 'premium', 'PremiumAgent')
-            ->when(fn($input) => $input['type'] === 'gold', 'GoldAgent')
-            ->otherwise('DefaultAgent')
+            ->when(fn($input) => $input['type'] === 'premium', PremiumAgent::class)
+            ->when(fn($input) => $input['type'] === 'gold', GoldAgent::class)
+            ->otherwise(DefaultAgent::class)
             ->execute(['type' => 'basic'], $this->context);
 
         $this->assertEquals('default_result', $result['result']);
-        $this->assertEquals('DefaultAgent', $result['matched_agent']);
+        $this->assertEquals(DefaultAgent::class, $result['matched_agent']);
         $this->assertTrue($result['was_default']);
     }
 
@@ -147,124 +147,124 @@ class ConditionalWorkflowTest extends TestCase
         $this->expectExceptionMessage('No conditions matched and no default agent specified');
 
         $this->workflow
-            ->when(fn($input) => $input['type'] === 'premium', 'PremiumAgent')
+            ->when(fn($input) => $input['type'] === 'premium', PremiumAgent::class)
             ->execute(['type' => 'basic'], $this->context);
     }
 
     public function test_when_equals_with_array_input()
     {
         Agent::shouldReceive('run')
-            ->with('ActiveAgent', ['status' => 'active'], 'test-session')
+            ->with('active_agent', ['status' => 'active'], 'test-session')
             ->once()
             ->andReturn('active_result');
 
         $result = $this->workflow
-            ->whenEquals('status', 'active', 'ActiveAgent')
-            ->otherwise('InactiveAgent')
+            ->whenEquals('status', 'active', ActiveAgent::class)
+            ->otherwise(InactiveAgent::class)
             ->execute(['status' => 'active'], $this->context);
 
-        $this->assertEquals('ActiveAgent', $result['matched_agent']);
+        $this->assertEquals(ActiveAgent::class, $result['matched_agent']);
     }
 
     public function test_when_greater_than_with_array_input()
     {
         Agent::shouldReceive('run')
-            ->with('HighScoreAgent', ['score' => 95], 'test-session')
+            ->with('high_score_agent', ['score' => 95], 'test-session')
             ->once()
             ->andReturn('high_score_result');
 
         $result = $this->workflow
-            ->whenGreaterThan('score', 90, 'HighScoreAgent')
-            ->otherwise('LowScoreAgent')
+            ->whenGreaterThan('score', 90, HighScoreAgent::class)
+            ->otherwise(LowScoreAgent::class)
             ->execute(['score' => 95], $this->context);
 
-        $this->assertEquals('HighScoreAgent', $result['matched_agent']);
+        $this->assertEquals(HighScoreAgent::class, $result['matched_agent']);
     }
 
     public function test_when_less_than_with_array_input()
     {
         Agent::shouldReceive('run')
-            ->with('MinorAgent', ['age' => 16], 'test-session')
+            ->with('minor_agent', ['age' => 16], 'test-session')
             ->once()
             ->andReturn('minor_result');
 
         $result = $this->workflow
-            ->whenLessThan('age', 18, 'MinorAgent')
-            ->otherwise('AdultAgent')
+            ->whenLessThan('age', 18, MinorAgent::class)
+            ->otherwise(AdultAgent::class)
             ->execute(['age' => 16], $this->context);
 
-        $this->assertEquals('MinorAgent', $result['matched_agent']);
+        $this->assertEquals(MinorAgent::class, $result['matched_agent']);
     }
 
     public function test_when_exists_with_array_input()
     {
         Agent::shouldReceive('run')
-            ->with('EmailAgent', ['email' => 'test@example.com'], 'test-session')
+            ->with('email_agent', ['email' => 'test@example.com'], 'test-session')
             ->once()
             ->andReturn('email_result');
 
         $result = $this->workflow
-            ->whenExists('email', 'EmailAgent')
-            ->otherwise('NoEmailAgent')
+            ->whenExists('email', EmailAgent::class)
+            ->otherwise(NoEmailAgent::class)
             ->execute(['email' => 'test@example.com'], $this->context);
 
-        $this->assertEquals('EmailAgent', $result['matched_agent']);
+        $this->assertEquals(EmailAgent::class, $result['matched_agent']);
     }
 
     public function test_when_empty_with_array_input()
     {
         Agent::shouldReceive('run')
-            ->with('NoDescriptionAgent', ['description' => ''], 'test-session')
+            ->with('no_description_agent', ['description' => ''], 'test-session')
             ->once()
             ->andReturn('no_description_result');
 
         $result = $this->workflow
-            ->whenEmpty('description', 'NoDescriptionAgent')
-            ->otherwise('HasDescriptionAgent')
+            ->whenEmpty('description', NoDescriptionAgent::class)
+            ->otherwise(HasDescriptionAgent::class)
             ->execute(['description' => ''], $this->context);
 
-        $this->assertEquals('NoDescriptionAgent', $result['matched_agent']);
+        $this->assertEquals(NoDescriptionAgent::class, $result['matched_agent']);
     }
 
     public function test_when_matches_with_valid_email()
     {
         Agent::shouldReceive('run')
-            ->with('ValidEmailAgent', ['email' => 'test@example.com'], 'test-session')
+            ->with('valid_email_agent', ['email' => 'test@example.com'], 'test-session')
             ->once()
             ->andReturn('valid_email_result');
 
         $result = $this->workflow
-            ->whenMatches('email', '/^.+@.+\..+$/', 'ValidEmailAgent')
-            ->otherwise('InvalidEmailAgent')
+            ->whenMatches('email', '/^.+@.+\..+$/', ValidEmailAgent::class)
+            ->otherwise(InvalidEmailAgent::class)
             ->execute(['email' => 'test@example.com'], $this->context);
 
-        $this->assertEquals('ValidEmailAgent', $result['matched_agent']);
+        $this->assertEquals(ValidEmailAgent::class, $result['matched_agent']);
     }
 
     public function test_when_matches_with_invalid_email()
     {
         Agent::shouldReceive('run')
-            ->with('InvalidEmailAgent', ['email' => 'invalid-email'], 'test-session')
+            ->with('invalid_email_agent', ['email' => 'invalid-email'], 'test-session')
             ->once()
             ->andReturn('invalid_email_result');
 
         $result = $this->workflow
-            ->whenMatches('email', '/^.+@.+\..+$/', 'ValidEmailAgent')
-            ->otherwise('InvalidEmailAgent')
+            ->whenMatches('email', '/^.+@.+\..+$/', ValidEmailAgent::class)
+            ->otherwise(InvalidEmailAgent::class)
             ->execute(['email' => 'invalid-email'], $this->context);
 
-        $this->assertEquals('InvalidEmailAgent', $result['matched_agent']);
+        $this->assertEquals(InvalidEmailAgent::class, $result['matched_agent']);
     }
 
     public function test_conditions_with_parameters()
     {
         Agent::shouldReceive('run')
-            ->with('PremiumAgent', ['custom' => 'params'], 'test-session')
+            ->with('premium_agent', ['custom' => 'params'], 'test-session')
             ->once()
             ->andReturn('premium_result');
 
         $result = $this->workflow
-            ->when(fn($input) => $input['type'] === 'premium', 'PremiumAgent', ['custom' => 'params'])
+            ->when(fn($input) => $input['type'] === 'premium', PremiumAgent::class, ['custom' => 'params'])
             ->execute(['type' => 'premium'], $this->context);
 
         $this->assertEquals('premium_result', $result['result']);
@@ -273,14 +273,14 @@ class ConditionalWorkflowTest extends TestCase
     public function test_conditions_with_closure_parameters()
     {
         Agent::shouldReceive('run')
-            ->with('PremiumAgent', 'premium', 'test-session')
+            ->with('premium_agent', 'premium', 'test-session')
             ->once()
             ->andReturn('premium_result');
 
         $result = $this->workflow
             ->when(
                 fn($input) => $input['type'] === 'premium',
-                'PremiumAgent',
+                PremiumAgent::class,
                 fn($input) => $input['type']
             )
             ->execute(['type' => 'premium'], $this->context);
@@ -291,37 +291,37 @@ class ConditionalWorkflowTest extends TestCase
     public function test_dot_notation_for_nested_arrays()
     {
         Agent::shouldReceive('run')
-            ->with('PremiumAgent', ['user' => ['membership' => ['type' => 'premium']]], 'test-session')
+            ->with('premium_agent', ['user' => ['membership' => ['type' => 'premium']]], 'test-session')
             ->once()
             ->andReturn('premium_result');
 
         $result = $this->workflow
-            ->whenEquals('user.membership.type', 'premium', 'PremiumAgent')
-            ->otherwise('DefaultAgent')
+            ->whenEquals('user.membership.type', 'premium', PremiumAgent::class)
+            ->otherwise(DefaultAgent::class)
             ->execute(['user' => ['membership' => ['type' => 'premium']]], $this->context);
 
-        $this->assertEquals('PremiumAgent', $result['matched_agent']);
+        $this->assertEquals(PremiumAgent::class, $result['matched_agent']);
     }
 
     public function test_scalar_input_with_dot_accessor()
     {
         Agent::shouldReceive('run')
-            ->with('StringAgent', 'test_string', 'test-session')
+            ->with('string_agent', 'test_string', 'test-session')
             ->once()
             ->andReturn('string_result');
 
         $result = $this->workflow
-            ->whenEquals('.', 'test_string', 'StringAgent')
-            ->otherwise('DefaultAgent')
+            ->whenEquals('.', 'test_string', StringAgent::class)
+            ->otherwise(DefaultAgent::class)
             ->execute('test_string', $this->context);
 
-        $this->assertEquals('StringAgent', $result['matched_agent']);
+        $this->assertEquals(StringAgent::class, $result['matched_agent']);
     }
 
     public function test_static_create_method()
     {
         $condition = fn($input) => $input['type'] === 'premium';
-        $workflow = ConditionalWorkflow::create($condition, 'PremiumAgent', 'DefaultAgent');
+        $workflow = ConditionalWorkflow::create($condition, PremiumAgent::class, DefaultAgent::class);
 
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
@@ -329,7 +329,7 @@ class ConditionalWorkflowTest extends TestCase
     public function test_static_create_without_else_agent()
     {
         $condition = fn($input) => $input['type'] === 'premium';
-        $workflow = ConditionalWorkflow::create($condition, 'PremiumAgent');
+        $workflow = ConditionalWorkflow::create($condition, PremiumAgent::class);
 
         $this->assertInstanceOf(ConditionalWorkflow::class, $workflow);
     }
@@ -340,12 +340,12 @@ class ConditionalWorkflowTest extends TestCase
         $completeCallbackCalled = false;
 
         Agent::shouldReceive('run')
-            ->with('PremiumAgent', ['type' => 'premium'], 'test-session')
+            ->with('premium_agent', ['type' => 'premium'], 'test-session')
             ->once()
             ->andReturn('premium_result');
 
         $this->workflow
-            ->when(fn($input) => $input['type'] === 'premium', 'PremiumAgent')
+            ->when(fn($input) => $input['type'] === 'premium', PremiumAgent::class)
             ->onSuccess(function($result) use (&$successCallbackCalled) {
                 $successCallbackCalled = true;
             })
@@ -361,8 +361,8 @@ class ConditionalWorkflowTest extends TestCase
     public function test_can_reset_workflow()
     {
         $workflow = $this->workflow
-            ->when(fn($input) => true, 'TestAgent')
-            ->otherwise('DefaultAgent');
+            ->when(fn($input) => true, TestAgent::class)
+            ->otherwise(DefaultAgent::class);
 
         $resetWorkflow = $workflow->reset();
 

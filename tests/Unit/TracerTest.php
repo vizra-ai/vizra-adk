@@ -295,3 +295,100 @@ it('can clean up old traces', function () {
 
     expect($remainingSpans)->toBe(0);
 });
+
+it('tracks execution mode in trace metadata', function () {
+    // Test default execution mode (ask)
+    $context1 = new AgentContext('session-1', 'Hello');
+    $traceId1 = $this->tracer->startTrace($context1, 'test_agent');
+    
+    $rootSpan1 = DB::table('agent_trace_spans')
+        ->where('trace_id', $traceId1)
+        ->whereNull('parent_span_id')
+        ->first();
+    
+    $metadata1 = json_decode($rootSpan1->metadata, true);
+    expect($metadata1['execution_mode'])->toBe('ask');
+    
+    $this->tracer->endTrace();
+    
+    // Test with custom execution mode
+    $context2 = new AgentContext('session-2', 'Process this');
+    $context2->setState('execution_mode', 'process');
+    $traceId2 = $this->tracer->startTrace($context2, 'test_agent');
+    
+    $rootSpan2 = DB::table('agent_trace_spans')
+        ->where('trace_id', $traceId2)
+        ->whereNull('parent_span_id')
+        ->first();
+    
+    $metadata2 = json_decode($rootSpan2->metadata, true);
+    expect($metadata2['execution_mode'])->toBe('process');
+    
+    $this->tracer->endTrace();
+    
+    // Test with different execution modes
+    $modes = ['trigger', 'analyze', 'report', 'delegate'];
+    foreach ($modes as $mode) {
+        $context = new AgentContext("session-$mode", "Test $mode");
+        $context->setState('execution_mode', $mode);
+        $traceId = $this->tracer->startTrace($context, 'test_agent');
+        
+        $rootSpan = DB::table('agent_trace_spans')
+            ->where('trace_id', $traceId)
+            ->whereNull('parent_span_id')
+            ->first();
+        
+        $metadata = json_decode($rootSpan->metadata, true);
+        expect($metadata['execution_mode'])->toBe($mode);
+        
+        $this->tracer->endTrace();
+    }
+});
+
+it('preserves execution mode when set by AgentExecutor', function () {
+    // Simulate AgentExecutor setting execution mode
+    $context = new AgentContext('executor-session', 'Execute task');
+    $context->setState('execution_mode', 'trigger');
+    $context->setState('user_id', 123);
+    $context->setState('user_email', 'test@example.com');
+    
+    $traceId = $this->tracer->startTrace($context, 'automated_agent');
+    
+    // Create some child spans to ensure mode is preserved
+    $llmSpanId = $this->tracer->startSpan('llm_call', 'gpt-4o', ['prompt' => 'automated task']);
+    $toolSpanId = $this->tracer->startSpan('tool_call', 'automation_tool', ['action' => 'execute']);
+    
+    $this->tracer->endSpan($toolSpanId, ['result' => 'success']);
+    $this->tracer->endSpan($llmSpanId, ['response' => 'Task completed']);
+    $this->tracer->endTrace(['status' => 'completed']);
+    
+    // Verify root span has the correct execution mode
+    $rootSpan = DB::table('agent_trace_spans')
+        ->where('trace_id', $traceId)
+        ->whereNull('parent_span_id')
+        ->first();
+    
+    $metadata = json_decode($rootSpan->metadata, true);
+    expect($metadata['execution_mode'])->toBe('trigger');
+    expect($metadata['session_id'])->toBe('executor-session');
+});
+
+it('handles missing execution mode gracefully', function () {
+    // Create context without setting execution mode
+    $context = new AgentContext('no-mode-session', 'Test');
+    // Explicitly set execution_mode to null to test the default fallback
+    $context->setState('execution_mode', null);
+    
+    $traceId = $this->tracer->startTrace($context, 'test_agent');
+    
+    $rootSpan = DB::table('agent_trace_spans')
+        ->where('trace_id', $traceId)
+        ->whereNull('parent_span_id')
+        ->first();
+    
+    $metadata = json_decode($rootSpan->metadata, true);
+    // Should default to 'ask' when not set
+    expect($metadata['execution_mode'])->toBe('ask');
+    
+    $this->tracer->endTrace();
+});

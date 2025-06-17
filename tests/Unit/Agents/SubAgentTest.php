@@ -3,11 +3,21 @@
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Tools\DelegateToSubAgentTool;
+use Vizra\VizraADK\Memory\AgentMemory;
 use Prism\Prism\Enums\Provider;
+use Mockery;
 
 beforeEach(function () {
     $this->parentAgent = new TestParentAgent();
     $this->context = new AgentContext('test-session');
+    
+    // Create a mock agent for AgentMemory
+    $this->mockAgent = Mockery::mock(BaseLlmAgent::class);
+    $this->mockAgent->shouldReceive('getName')->andReturn('test-agent');
+});
+
+afterEach(function () {
+    Mockery::close();
 });
 
 it('can register and load sub-agents', function () {
@@ -82,7 +92,8 @@ it('delegation tool executes successfully with valid sub-agent', function () {
         'context_summary' => 'This is a test context'
     ];
 
-    $result = $delegationTool->execute($arguments, $this->context);
+    $memory = new AgentMemory($this->mockAgent);
+    $result = $delegationTool->execute($arguments, $this->context, $memory);
     $decodedResult = json_decode($result, true);
 
     expect($decodedResult)->toBeArray()
@@ -100,7 +111,8 @@ it('delegation tool handles non-existent sub-agent gracefully', function () {
         'task_input' => 'Test task',
     ];
 
-    $result = $delegationTool->execute($arguments, $this->context);
+    $memory = new AgentMemory($this->mockAgent);
+    $result = $delegationTool->execute($arguments, $this->context, $memory);
     $decodedResult = json_decode($result, true);
 
     expect($decodedResult)->toBeArray()
@@ -113,12 +125,13 @@ it('delegation tool validates required parameters', function () {
     $delegationTool = new DelegateToSubAgentTool($this->parentAgent);
 
     // Test missing sub_agent_name
-    $result1 = $delegationTool->execute(['task_input' => 'test'], $this->context);
+    $memory = new AgentMemory($this->mockAgent);
+    $result1 = $delegationTool->execute(['task_input' => 'test'], $this->context, $memory);
     $decoded1 = json_decode($result1, true);
     expect($decoded1['error'])->toBe('sub_agent_name is required');
 
     // Test missing task_input
-    $result2 = $delegationTool->execute(['sub_agent_name' => 'sub1'], $this->context);
+    $result2 = $delegationTool->execute(['sub_agent_name' => 'sub1'], $this->context, $memory);
     $decoded2 = json_decode($result2, true);
     expect($decoded2['error'])->toBe('task_input is required');
 });

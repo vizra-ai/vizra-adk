@@ -27,6 +27,8 @@ use Vizra\VizraADK\Console\Commands\RunEvalCommand;
 use Vizra\VizraADK\Console\Commands\AgentTraceCleanupCommand;
 use Vizra\VizraADK\Console\Commands\AgentTraceCommand;
 use Vizra\VizraADK\Console\Commands\DashboardCommand;
+use Vizra\VizraADK\Console\Commands\AgentDiscoverCommand;
+use Vizra\VizraADK\Services\AgentDiscovery;
 
 class AgentServiceProvider extends ServiceProvider
 {
@@ -80,6 +82,11 @@ class AgentServiceProvider extends ServiceProvider
         });
 
         $this->app->alias(WorkflowManager::class, 'laravel-ai-adk.workflow');
+
+        // Register AgentDiscovery service
+        $this->app->singleton(AgentDiscovery::class, function (Application $app) {
+            return new AgentDiscovery();
+        });
     }
 
     public function boot(): void
@@ -102,13 +109,29 @@ class AgentServiceProvider extends ServiceProvider
                 RunEvalCommand::class,
                 AgentTraceCommand::class,
                 AgentTraceCleanupCommand::class,
-                DashboardCommand::class
+                DashboardCommand::class,
+                AgentDiscoverCommand::class
             ]);
         }
 
         $this->loadRoutes();
         $this->loadViews();
         $this->registerLivewireComponents();
+        $this->discoverAgents();
+    }
+
+    protected function discoverAgents(): void
+    {
+        /** @var AgentDiscovery $discovery */
+        $discovery = $this->app->make(AgentDiscovery::class);
+        $agents = $discovery->discover();
+
+        /** @var AgentRegistry $registry */
+        $registry = $this->app->make(AgentRegistry::class);
+
+        foreach ($agents as $className => $agentName) {
+            $registry->register($agentName, $className);
+        }
     }
 
     protected function registerLivewireComponents(): void

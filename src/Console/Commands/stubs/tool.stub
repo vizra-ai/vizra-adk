@@ -4,6 +4,7 @@ namespace {{ namespace }};
 
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
 
 class {{ class }} implements ToolInterface
 {
@@ -37,7 +38,7 @@ class {{ class }} implements ToolInterface
      * @param AgentContext $context The current agent context, providing access to session state etc.
      * @return string JSON string representation of the tool's result.
      */
-    public function execute(array $arguments, AgentContext $context): string
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
         // Access arguments: $location = $arguments['location'] ?? null;
         // Access context: $sessionId = $context->getSessionId();

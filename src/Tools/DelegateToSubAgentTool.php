@@ -4,6 +4,7 @@ namespace Vizra\VizraADK\Tools;
 
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Events\TaskDelegated;
 use Illuminate\Support\Facades\Event;
@@ -51,7 +52,9 @@ class DelegateToSubAgentTool implements ToolInterface
                 'required' => ['sub_agent_name', 'task_input'],
             ],
         ];
-    }    public function execute(array $arguments, AgentContext $context): string
+    }
+
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
         // Check delegation depth to prevent excessive recursion
         $currentDepth = $context->getState('delegation_depth', 0);
