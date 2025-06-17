@@ -23,7 +23,7 @@ Vizra ADK is a comprehensive Laravel package for building autonomous AI agents t
 - **🤖 Multi-Model AI Support** - Works with OpenAI, Anthropic Claude, and Google Gemini, thanks to prism PHP
 - **🛠️ Extensible Tool System** - Give agents abilities to interact with databases, APIs, and external services
 - **🧠 Persistent Memory** - Agents remember conversations and learn from interactions across sessions
-- **🔄 Agent Workflows** - Build complex multi-step processes with conditional logic and sub-agent orchestration
+- **🔄 Agent Workflows** - Build complex processes with sequential, parallel, conditional flows and loops
 - **⚡ Execution Modes** - Multiple trigger modes: conversational, scheduled, webhook, event-driven, and queue jobs
 - **📊 LLM-as-a-Judge Evaluation** - Automated quality testing framework for agents at scale
 - **💬 Streaming Responses** - Real-time, token-by-token streaming for responsive user experiences
