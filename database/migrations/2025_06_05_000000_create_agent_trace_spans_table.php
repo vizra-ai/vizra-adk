@@ -15,7 +15,7 @@ return new class extends Migration
     {
         $tableName = config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans');
 
-        Schema::create($tableName, function (Blueprint $table) {
+        Schema::create($tableName, function (Blueprint $table) use ($tableName){
             // Primary key using ULID for better performance and ordering
             $table->string('id', 26)->primary()->comment('ULID primary key for this span');
 
@@ -54,12 +54,14 @@ return new class extends Migration
             $table->index(['session_id', 'start_time'], 'session_chronological_idx');
             $table->index(['agent_name', 'type', 'start_time'], 'agent_type_chronological_idx');
             $table->index(['status', 'type'], 'status_type_idx');
-
-            // Foreign key constraint for parent-child relationships (skip in testing environment)
-            if (!app()->environment('testing')) {
-                $table->foreign('parent_span_id')->references('span_id')->on($tableName)->onDelete('cascade');
-            }
         });
+
+        // Add foreign key constraint after table creation (skip in testing environment)
+        if (!app()->environment('testing')) {
+            Schema::table($tableName, function (Blueprint $table) use ($tableName) {
+                $table->foreign('parent_span_id')->references('span_id')->on($tableName)->onDelete('cascade');
+            });
+        }
     }
 
     /**
