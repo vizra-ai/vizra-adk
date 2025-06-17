@@ -1,10 +1,10 @@
 <?php
 
-namespace Vizra\VizraSdk\Facades;
+namespace Vizra\VizraAdk\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Vizra\VizraSdk\Services\AgentBuilder; // For type hinting
-use Vizra\VizraSdk\Agents\BaseAgent; // For type hinting
+use Vizra\VizraAdk\Services\AgentBuilder; // For type hinting
+use Vizra\VizraAdk\Agents\BaseAgent; // For type hinting
 
 /**
  * @method static AgentBuilder build(string $agentClass)
@@ -14,7 +14,7 @@ use Vizra\VizraSdk\Agents\BaseAgent; // For type hinting
  * @method static array getAllRegisteredAgents()
  * @method static bool hasAgent(string $name)
  *
- * @see \Vizra\VizraSdk\Services\AgentManager // The underlying class facade will point to
+ * @see \Vizra\VizraAdk\Services\AgentManager // The underlying class facade will point to
  */
 class Agent extends Facade
 {

@@ -1,16 +1,16 @@
 <?php
 
-namespace Vizra\VizraSdk\Livewire;
+namespace Vizra\VizraAdk\Livewire;
 
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Layout;
-use Vizra\VizraSdk\Facades\Agent;
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Services\StateManager;
-use Vizra\VizraSdk\Models\AgentSession;
-use Vizra\VizraSdk\Models\TraceSpan;
-use Vizra\VizraSdk\Services\Tracer;
+use Vizra\VizraAdk\Facades\Agent;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Services\StateManager;
+use Vizra\VizraAdk\Models\AgentSession;
+use Vizra\VizraAdk\Models\TraceSpan;
+use Vizra\VizraAdk\Services\Tracer;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 

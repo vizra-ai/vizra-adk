@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraSdk\Services;
+namespace Vizra\VizraAdk\Services;
 
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Models\TraceSpan;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Models\TraceSpan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;

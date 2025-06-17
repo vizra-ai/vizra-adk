@@ -1,11 +1,11 @@
 <?php
 
-namespace Vizra\VizraSdk\Services;
+namespace Vizra\VizraAdk\Services;
 
-use Vizra\VizraSdk\Agents\SequentialWorkflow;
-use Vizra\VizraSdk\Agents\ParallelWorkflow;
-use Vizra\VizraSdk\Agents\ConditionalWorkflow;
-use Vizra\VizraSdk\Agents\LoopWorkflow;
+use Vizra\VizraAdk\Agents\SequentialWorkflow;
+use Vizra\VizraAdk\Agents\ParallelWorkflow;
+use Vizra\VizraAdk\Agents\ConditionalWorkflow;
+use Vizra\VizraAdk\Agents\LoopWorkflow;
 
 /**
  * Workflow Manager Service

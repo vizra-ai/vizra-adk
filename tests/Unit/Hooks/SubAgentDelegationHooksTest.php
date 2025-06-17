@@ -1,8 +1,8 @@
 <?php
 
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Tools\DelegateToSubAgentTool;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Tools\DelegateToSubAgentTool;
 
 describe('Sub-Agent Delegation Hooks', function () {
     beforeEach(function () {

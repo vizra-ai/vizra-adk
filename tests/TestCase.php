@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Tests;
+namespace Vizra\VizraAdk\Tests;
 
-use Vizra\VizraSdk\Providers\AgentServiceProvider;
+use Vizra\VizraAdk\Providers\AgentServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -19,8 +19,8 @@ class TestCase extends Orchestra
     protected function getPackageAliases($app)
     {
         return [
-            'Agent' => \Vizra\VizraSdk\Facades\Agent::class,
-            'Workflow' => \Vizra\VizraSdk\Facades\Workflow::class,
+            'Agent' => \Vizra\VizraAdk\Facades\Agent::class,
+            'Workflow' => \Vizra\VizraAdk\Facades\Workflow::class,
         ];
     }
 

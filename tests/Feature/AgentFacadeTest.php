@@ -1,6 +1,6 @@
 <?php
 
-use Vizra\VizraSdk\Facades\Agent;
+use Vizra\VizraAdk\Facades\Agent;
 
 it('can access the agent facade', function () {
     expect(Agent::class)->toBeTruthy();

@@ -1,11 +1,11 @@
 <?php
 
-namespace Vizra\VizraSdk\Services;
+namespace Vizra\VizraAdk\Services;
 
-use Vizra\VizraSdk\Contracts\EmbeddingProviderInterface;
-use Vizra\VizraSdk\Models\VectorMemory;
-use Vizra\VizraSdk\Services\DocumentChunker;
-use Vizra\VizraSdk\Services\Drivers\MeilisearchVectorDriver;
+use Vizra\VizraAdk\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraAdk\Models\VectorMemory;
+use Vizra\VizraAdk\Services\DocumentChunker;
+use Vizra\VizraAdk\Services\Drivers\MeilisearchVectorDriver;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;

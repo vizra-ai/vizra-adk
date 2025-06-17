@@ -1,9 +1,9 @@
 <?php
 
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Services\Tracer;
-use Vizra\VizraSdk\Contracts\ToolInterface;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Services\Tracer;
+use Vizra\VizraAdk\Contracts\ToolInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 

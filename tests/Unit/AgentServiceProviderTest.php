@@ -1,7 +1,7 @@
 <?php
 
-use Vizra\VizraSdk\Services\AgentRegistry;
-use Vizra\VizraSdk\Services\AgentManager;
+use Vizra\VizraAdk\Services\AgentRegistry;
+use Vizra\VizraAdk\Services\AgentManager;
 
 it('can instantiate the agent registry', function () {
     $registry = app(AgentRegistry::class);
@@ -16,7 +16,7 @@ it('can instantiate the agent manager', function () {
 });
 
 it('has the agent facade available', function () {
-    expect(class_exists('Vizra\VizraSdk\Facades\Agent'))->toBeTrue();
+    expect(class_exists('Vizra\VizraAdk\Facades\Agent'))->toBeTrue();
 });
 
 it('can resolve agent registry from container', function () {

@@ -1,7 +1,7 @@
 <?php
 
-use Vizra\VizraSdk\Contracts\ToolInterface;
-use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraAdk\Contracts\ToolInterface;
+use Vizra\VizraAdk\System\AgentContext;
 
 it('implements tool interface contract correctly', function () {
     $tool = new TestTool();

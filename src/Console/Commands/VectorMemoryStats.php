@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraSdk\Console\Commands;
+namespace Vizra\VizraAdk\Console\Commands;
 
-use Vizra\VizraSdk\Services\VectorMemoryManager;
-use Vizra\VizraSdk\Models\VectorMemory;
+use Vizra\VizraAdk\Services\VectorMemoryManager;
+use Vizra\VizraAdk\Models\VectorMemory;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 

@@ -1,16 +1,16 @@
 <?php
 
-namespace Vizra\VizraSdk\Agents;
+namespace Vizra\VizraAdk\Agents;
 
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Contracts\ToolInterface;
-use Vizra\VizraSdk\Events\LlmCallInitiating;
-use Vizra\VizraSdk\Events\LlmResponseReceived;
-use Vizra\VizraSdk\Events\ToolCallCompleted;
-use Vizra\VizraSdk\Events\ToolCallInitiating;
-use Vizra\VizraSdk\Events\AgentResponseGenerated;
-use Vizra\VizraSdk\Exceptions\ToolExecutionException;
-use Vizra\VizraSdk\Services\Tracer;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Contracts\ToolInterface;
+use Vizra\VizraAdk\Events\LlmCallInitiating;
+use Vizra\VizraAdk\Events\LlmResponseReceived;
+use Vizra\VizraAdk\Events\ToolCallCompleted;
+use Vizra\VizraAdk\Events\ToolCallInitiating;
+use Vizra\VizraAdk\Events\AgentResponseGenerated;
+use Vizra\VizraAdk\Exceptions\ToolExecutionException;
+use Vizra\VizraAdk\Services\Tracer;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Arr;
 use Prism\Prism\Prism;
@@ -263,7 +263,7 @@ abstract class BaseLlmAgent extends BaseAgent
         // Include delegation tool if sub-agents are available
         $allTools = $this->loadedTools;
         if (!empty($this->loadedSubAgents)) {
-            $allTools[] = new \Vizra\VizraSdk\Tools\DelegateToSubAgentTool($this);
+            $allTools[] = new \Vizra\VizraAdk\Tools\DelegateToSubAgentTool($this);
         }
 
         foreach ($allTools as $tool) {
@@ -424,7 +424,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 $prismRequest = $prismRequest->withMessages($messages);
 
                 // Add tools if available
-                $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \Vizra\VizraSdk\Tools\DelegateToSubAgentTool($this)] : []);
+                $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \Vizra\VizraAdk\Tools\DelegateToSubAgentTool($this)] : []);
                 if (!empty($allTools)) {
                     $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
                         ->withMaxSteps(5); // Prism will handle tool execution internally

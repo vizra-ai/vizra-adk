@@ -1,12 +1,12 @@
 <?php
 
-namespace Vizra\VizraSdk\Tests\Unit\Execution;
+namespace Vizra\VizraAdk\Tests\Unit\Execution;
 
-use Vizra\VizraSdk\Tests\TestCase;
-use Vizra\VizraSdk\Execution\AgentExecutor;
-use Vizra\VizraSdk\Services\AgentManager;
-use Vizra\VizraSdk\Services\StateManager;
-use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraAdk\Tests\TestCase;
+use Vizra\VizraAdk\Execution\AgentExecutor;
+use Vizra\VizraAdk\Services\AgentManager;
+use Vizra\VizraAdk\Services\StateManager;
+use Vizra\VizraAdk\System\AgentContext;
 use Illuminate\Database\Eloquent\Model;
 use Mockery;
 

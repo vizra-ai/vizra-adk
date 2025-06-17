@@ -1,8 +1,8 @@
 <?php
 
-use Vizra\VizraSdk\Services\Tracer;
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Models\TraceSpan;
+use Vizra\VizraAdk\Services\Tracer;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Models\TraceSpan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;

@@ -1,7 +1,7 @@
 <?php
 
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
-use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\System\AgentContext;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Text\Response;
 

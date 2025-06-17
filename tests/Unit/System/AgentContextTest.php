@@ -1,6 +1,6 @@
 <?php
 
-use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraAdk\System\AgentContext;
 use Illuminate\Support\Collection;
 
 it('can create agent context with minimal data', function () {

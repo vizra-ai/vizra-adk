@@ -1,13 +1,13 @@
 <?php
 
-use Vizra\VizraSdk\Livewire\Dashboard;
-use Vizra\VizraSdk\Services\AgentRegistry;
+use Vizra\VizraAdk\Livewire\Dashboard;
+use Vizra\VizraAdk\Services\AgentRegistry;
 use Livewire\Livewire;
 
 it('can render dashboard component', function () {
     Livewire::test(Dashboard::class)
         ->assertSuccessful()
-        ->assertSee('Vizra SDK')
+        ->assertSee('Vizra ADK')
         ->assertSee('Build, test, and deploy intelligent AI agents');
 });
 

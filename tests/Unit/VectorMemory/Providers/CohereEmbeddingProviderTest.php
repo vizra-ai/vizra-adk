@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraSdk\Tests\Unit\VectorMemory\Providers;
+namespace Vizra\VizraAdk\Tests\Unit\VectorMemory\Providers;
 
-use Vizra\VizraSdk\Tests\TestCase;
-use Vizra\VizraSdk\Providers\CohereEmbeddingProvider;
+use Vizra\VizraAdk\Tests\TestCase;
+use Vizra\VizraAdk\Providers\CohereEmbeddingProvider;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
 

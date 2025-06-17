@@ -1,8 +1,8 @@
 <?php
 
-use Vizra\VizraSdk\Exceptions\AgentNotFoundException;
-use Vizra\VizraSdk\Exceptions\AgentConfigurationException;
-use Vizra\VizraSdk\Exceptions\ToolExecutionException;
+use Vizra\VizraAdk\Exceptions\AgentNotFoundException;
+use Vizra\VizraAdk\Exceptions\AgentConfigurationException;
+use Vizra\VizraAdk\Exceptions\ToolExecutionException;
 
 it('creates agent not found exception correctly', function () {
     $exception = new AgentNotFoundException('Agent not found');

@@ -1,10 +1,10 @@
 <?php
 
-namespace Vizra\VizraSdk\Tests\Unit\VectorMemory\Drivers;
+namespace Vizra\VizraAdk\Tests\Unit\VectorMemory\Drivers;
 
-use Vizra\VizraSdk\Tests\TestCase;
-use Vizra\VizraSdk\Services\Drivers\MeilisearchVectorDriver;
-use Vizra\VizraSdk\Models\VectorMemory;
+use Vizra\VizraAdk\Tests\TestCase;
+use Vizra\VizraAdk\Services\Drivers\MeilisearchVectorDriver;
+use Vizra\VizraAdk\Models\VectorMemory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Collection;

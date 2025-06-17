@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Events;
+namespace Vizra\VizraAdk\Events;
 
-use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraAdk\System\AgentContext;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 

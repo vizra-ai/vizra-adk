@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Listeners;
+namespace Vizra\VizraAdk\Listeners;
 
-use Vizra\VizraSdk\Agents\BaseAgent;
+use Vizra\VizraAdk\Agents\BaseAgent;
 use Illuminate\Support\Facades\Log;
 
 /**

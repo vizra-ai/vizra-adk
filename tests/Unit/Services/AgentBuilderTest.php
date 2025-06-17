@@ -1,10 +1,10 @@
 <?php
 
-use Vizra\VizraSdk\Services\AgentBuilder;
-use Vizra\VizraSdk\Services\AgentRegistry;
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
-use Vizra\VizraSdk\Exceptions\AgentConfigurationException;
-use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraAdk\Services\AgentBuilder;
+use Vizra\VizraAdk\Services\AgentRegistry;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\Exceptions\AgentConfigurationException;
+use Vizra\VizraAdk\System\AgentContext;
 
 beforeEach(function () {
     $this->registry = new AgentRegistry($this->app);

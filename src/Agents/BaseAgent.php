@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraSdk\Agents;
+namespace Vizra\VizraAdk\Agents;
 
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Execution\AgentExecutor;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Execution\AgentExecutor;
 
 /**
  * Abstract Class BaseAgent

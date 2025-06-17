@@ -1,11 +1,11 @@
 <?php
 
-namespace Vizra\VizraSdk\Tests\Unit\Agents;
+namespace Vizra\VizraAdk\Tests\Unit\Agents;
 
-use Vizra\VizraSdk\Agents\ConditionalWorkflow;
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Tests\TestCase;
-use Vizra\VizraSdk\Facades\Agent;
+use Vizra\VizraAdk\Agents\ConditionalWorkflow;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Tests\TestCase;
+use Vizra\VizraAdk\Facades\Agent;
 use Mockery;
 
 class ConditionalWorkflowTest extends TestCase

@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraSdk\Models;
+namespace Vizra\VizraAdk\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

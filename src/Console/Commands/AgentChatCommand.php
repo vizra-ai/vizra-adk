@@ -1,14 +1,14 @@
 <?php
 
-namespace Vizra\VizraSdk\Console\Commands;
+namespace Vizra\VizraAdk\Console\Commands;
 
 use Illuminate\Console\Command;
-use Vizra\VizraSdk\Facades\Agent;
+use Vizra\VizraAdk\Facades\Agent;
 use Illuminate\Support\Str; // For generating session ID
 use Symfony\Component\Console\Input\InputArgument;
-use Vizra\VizraSdk\Exceptions\AgentNotFoundException;
-use Vizra\VizraSdk\Exceptions\ToolExecutionException;
-use Vizra\VizraSdk\Exceptions\AgentConfigurationException;
+use Vizra\VizraAdk\Exceptions\AgentNotFoundException;
+use Vizra\VizraAdk\Exceptions\ToolExecutionException;
+use Vizra\VizraAdk\Exceptions\AgentConfigurationException;
 
 class AgentChatCommand extends Command
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace Vizra\VizraSdk\Execution;
+namespace Vizra\VizraAdk\Execution;
 
-use Vizra\VizraSdk\Services\AgentManager;
-use Vizra\VizraSdk\Services\StateManager;
-use Vizra\VizraSdk\Jobs\AgentJob;
+use Vizra\VizraAdk\Services\AgentManager;
+use Vizra\VizraAdk\Services\StateManager;
+use Vizra\VizraAdk\Jobs\AgentJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Bus\Dispatchable;

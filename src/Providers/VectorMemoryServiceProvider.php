@@ -1,16 +1,16 @@
 <?php
 
-namespace Vizra\VizraSdk\Providers;
+namespace Vizra\VizraAdk\Providers;
 
-use Vizra\VizraSdk\Contracts\EmbeddingProviderInterface;
-use Vizra\VizraSdk\Providers\OpenAIEmbeddingProvider;
-use Vizra\VizraSdk\Providers\CohereEmbeddingProvider;
-use Vizra\VizraSdk\Providers\OllamaEmbeddingProvider;
-use Vizra\VizraSdk\Services\VectorMemoryManager;
-use Vizra\VizraSdk\Services\DocumentChunker;
-use Vizra\VizraSdk\Console\Commands\VectorMemoryStore;
-use Vizra\VizraSdk\Console\Commands\VectorMemorySearch;
-use Vizra\VizraSdk\Console\Commands\VectorMemoryStats;
+use Vizra\VizraAdk\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraAdk\Providers\OpenAIEmbeddingProvider;
+use Vizra\VizraAdk\Providers\CohereEmbeddingProvider;
+use Vizra\VizraAdk\Providers\OllamaEmbeddingProvider;
+use Vizra\VizraAdk\Services\VectorMemoryManager;
+use Vizra\VizraAdk\Services\DocumentChunker;
+use Vizra\VizraAdk\Console\Commands\VectorMemoryStore;
+use Vizra\VizraAdk\Console\Commands\VectorMemorySearch;
+use Vizra\VizraAdk\Console\Commands\VectorMemoryStats;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;

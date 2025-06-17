@@ -5,7 +5,7 @@
             <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10"></div>
             <div class="relative">
                 <div class="text-center">
-                    <h1 class="text-3xl font-bold text-white mb-3">Vizra SDK Dashboard</h1>
+                    <h1 class="text-3xl font-bold text-white mb-3">Vizra ADK Dashboard</h1>
                     <p class="text-gray-300 text-lg max-w-2xl mx-auto mb-6">
                         Build, test, and deploy intelligent AI agents with Laravel's elegant framework
                     </p>
@@ -111,7 +111,7 @@
         <!-- Quick Start Commands -->
         <div class="bg-gray-900/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-800/50">
             <h2 class="text-2xl font-bold text-white text-center mb-8">Quick Start Commands</h2>
-            <div class="grid md:grid-cols-2 gap-6">
+            <div class="grid md:grid-cols-3 gap-6">
                 <div>
                     <h3 class="text-lg font-semibold text-white mb-4">Create an Agent</h3>
                     <div class="bg-gray-800/50 rounded-lg p-4 font-mono text-sm">
@@ -131,13 +131,40 @@
                     </div>
                 </div>
                 <div>
-                    <h3 class="text-lg font-semibold text-white mb-4">Run Evaluations</h3>
+                    <h3 class="text-lg font-semibold text-white mb-4">Create Evaluation</h3>
+                    <div class="bg-gray-800/50 rounded-lg p-4 font-mono text-sm">
+                        <code class="text-green-400">php artisan vizra:make:eval MyEvaluation</code>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4">List All Agents</h3>
+                    <div class="bg-gray-800/50 rounded-lg p-4 font-mono text-sm">
+                        <code class="text-green-400">php artisan vizra:list</code>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4">Run Evaluation</h3>
                     <div class="bg-gray-800/50 rounded-lg p-4 font-mono text-sm">
                         <code class="text-green-400">php artisan vizra:run:eval MyEvaluation</code>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Your Agents -->
+        @if($agentCount > 0)
+        <div class="bg-gray-900/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-800/50">
+            <h2 class="text-2xl font-bold text-white text-center mb-8">Your Agents</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($registeredAgents as $agentName => $agentClass)
+                    <div class="bg-gray-800/50 rounded-lg p-4">
+                        <h4 class="font-semibold text-white mb-1">{{ $agentName }}</h4>
+                        <p class="text-gray-400 text-sm">{{ class_basename($agentClass) }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
 
         <!-- Recent Activity Stats -->
         @if(isset($recent_activity))

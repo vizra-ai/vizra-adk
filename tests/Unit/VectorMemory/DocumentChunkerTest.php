@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraSdk\Tests\Unit\VectorMemory;
+namespace Vizra\VizraAdk\Tests\Unit\VectorMemory;
 
-use Vizra\VizraSdk\Tests\TestCase;
-use Vizra\VizraSdk\Services\DocumentChunker;
+use Vizra\VizraAdk\Tests\TestCase;
+use Vizra\VizraAdk\Services\DocumentChunker;
 use Illuminate\Support\Facades\Config;
 
 class DocumentChunkerTest extends TestCase

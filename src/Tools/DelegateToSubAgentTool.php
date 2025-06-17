@@ -1,11 +1,11 @@
 <?php
 
-namespace Vizra\VizraSdk\Tools;
+namespace Vizra\VizraAdk\Tools;
 
-use Vizra\VizraSdk\Contracts\ToolInterface;
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
-use Vizra\VizraSdk\Events\TaskDelegated;
+use Vizra\VizraAdk\Contracts\ToolInterface;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\Events\TaskDelegated;
 use Illuminate\Support\Facades\Event;
 
 /**

@@ -1,12 +1,12 @@
 <?php
 
-namespace Vizra\VizraSdk\Tests\Unit\VectorMemory;
+namespace Vizra\VizraAdk\Tests\Unit\VectorMemory;
 
-use Vizra\VizraSdk\Tests\TestCase;
-use Vizra\VizraSdk\Services\VectorMemoryManager;
-use Vizra\VizraSdk\Services\DocumentChunker;
-use Vizra\VizraSdk\Contracts\EmbeddingProviderInterface;
-use Vizra\VizraSdk\Models\VectorMemory;
+use Vizra\VizraAdk\Tests\TestCase;
+use Vizra\VizraAdk\Services\VectorMemoryManager;
+use Vizra\VizraAdk\Services\DocumentChunker;
+use Vizra\VizraAdk\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraAdk\Models\VectorMemory;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Collection;
 use Mockery;

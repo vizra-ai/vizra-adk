@@ -1,9 +1,9 @@
 <?php
 
-use Vizra\VizraSdk\Services\StateManager;
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Models\AgentSession;
-use Vizra\VizraSdk\Models\AgentMessage;
+use Vizra\VizraAdk\Services\StateManager;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Models\AgentSession;
+use Vizra\VizraAdk\Models\AgentMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 
@@ -136,7 +136,7 @@ it('includes memory context when loading context', function () {
     $sessionId = (string) Str::uuid();
 
     // Create memory with some data
-    $memoryManager = new \Vizra\VizraSdk\Services\MemoryManager();
+    $memoryManager = new \Vizra\VizraAdk\Services\MemoryManager();
     $memoryManager->addLearning($agentName, 'Users prefer quick responses');
     $memoryManager->updateMemoryData($agentName, ['domain' => 'customer_support']);
     $memoryManager->updateSummary($agentName, 'Customer support specialist');
@@ -181,7 +181,7 @@ it('can save context with memory updates', function () {
     expect($reloadedContext->getState('modified'))->toBe('state');
 
     // Verify memory was updated
-    $memoryManager = new \Vizra\VizraSdk\Services\MemoryManager();
+    $memoryManager = new \Vizra\VizraAdk\Services\MemoryManager();
     $memoryContextArray = $memoryManager->getMemoryContextArray($agentName);
     expect($memoryContextArray['key_learnings'])->toContain('New learning from conversation');
     expect($memoryContextArray['facts']['user_satisfaction'])->toBe('high');

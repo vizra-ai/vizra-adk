@@ -1,6 +1,6 @@
 <?php
 
-use Vizra\VizraSdk\Evaluations\BaseEvaluation;
+use Vizra\VizraAdk\Evaluations\BaseEvaluation;
 
 beforeEach(function () {
     $this->evaluation = new TestEvaluation();

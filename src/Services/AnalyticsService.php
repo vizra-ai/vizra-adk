@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraSdk\Services;
+namespace Vizra\VizraAdk\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;

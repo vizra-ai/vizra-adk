@@ -200,6 +200,7 @@ Special thanks to:
 - The Laravel team for creating an amazing framework
 - [Prism PHP](https://github.com/prism-php/prism) for the powerful LLM integration library
 - [Livewire](https://livewire.laravel.com/) for making our web dashboard reactive and beautiful
+- [League CSV](https://csv.thephpleague.com/) for handling CSV in our evaluation framework
 - The AI/ML community for pushing boundaries
 
 ---

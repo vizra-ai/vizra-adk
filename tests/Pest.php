@@ -11,9 +11,9 @@
 |
 */
 
-uses(Vizra\VizraSdk\Tests\TestCase::class)->in('Feature');
-uses(Vizra\VizraSdk\Tests\TestCase::class)->in('Unit');
-uses(Vizra\VizraSdk\Tests\TestCase::class)->in('Integration');
+uses(Vizra\VizraAdk\Tests\TestCase::class)->in('Feature');
+uses(Vizra\VizraAdk\Tests\TestCase::class)->in('Unit');
+uses(Vizra\VizraAdk\Tests\TestCase::class)->in('Integration');
 
 /*
 |--------------------------------------------------------------------------

@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraSdk\Services;
+namespace Vizra\VizraAdk\Services;
 
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
-use Vizra\VizraSdk\Exceptions\AgentConfigurationException;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\Exceptions\AgentConfigurationException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Str;
 

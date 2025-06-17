@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Console\Commands;
+namespace Vizra\VizraAdk\Console\Commands;
 
-use Vizra\VizraSdk\Services\VectorMemoryManager;
+use Vizra\VizraAdk\Services\VectorMemoryManager;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 

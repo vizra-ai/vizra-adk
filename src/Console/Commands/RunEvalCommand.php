@@ -1,12 +1,12 @@
 <?php
 
-namespace Vizra\VizraSdk\Console\Commands; // Updated namespace
+namespace Vizra\VizraAdk\Console\Commands; // Updated namespace
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str; // Added for UUID
-use Vizra\VizraSdk\Evaluations\BaseEvaluation; // Updated namespace
-use Vizra\VizraSdk\Facades\Agent; // Added Agent Facade
+use Vizra\VizraAdk\Evaluations\BaseEvaluation; // Updated namespace
+use Vizra\VizraAdk\Facades\Agent; // Added Agent Facade
 use Exception;
 use InvalidArgumentException;
 use League\Csv\Writer;

@@ -1,8 +1,8 @@
 <?php
 
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Execution\AgentExecutor;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Execution\AgentExecutor;
 use Prism\Prism\ValueObjects\Messages\Support\Image;
 use Prism\Prism\ValueObjects\Messages\Support\Document;
 use Illuminate\Support\Facades\File;
@@ -231,7 +231,7 @@ it('passes prism images and documents through executor to context', function () 
     $testAgent::$capturedContext = null;
     
     // Register the test agent
-    app(\Vizra\VizraSdk\Services\AgentRegistry::class)
+    app(\Vizra\VizraAdk\Services\AgentRegistry::class)
         ->register('test_context_agent', get_class($testAgent));
     
     // Execute with attachments
@@ -299,7 +299,7 @@ it('correctly adds attachments to user messages in conversation history', functi
     };
     
     // Register the test agent
-    app(\Vizra\VizraSdk\Services\AgentRegistry::class)
+    app(\Vizra\VizraAdk\Services\AgentRegistry::class)
         ->register('test_history_agent', get_class($testAgent));
     
     $result = $testAgent::ask('Test history')

@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Contracts;
+namespace Vizra\VizraAdk\Contracts;
 
-use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraAdk\System\AgentContext;
 
 /**
  * Interface ToolInterface

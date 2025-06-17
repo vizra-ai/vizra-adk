@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraSdk\Exceptions;
+namespace Vizra\VizraAdk\Exceptions;
 
 class AgentNotFoundException extends \Exception
 {

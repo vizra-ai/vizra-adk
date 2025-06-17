@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraSdk\Jobs;
+namespace Vizra\VizraAdk\Jobs;
 
-use Vizra\VizraSdk\Services\AgentManager;
-use Vizra\VizraSdk\Services\StateManager;
+use Vizra\VizraAdk\Services\AgentManager;
+use Vizra\VizraAdk\Services\StateManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

@@ -1,8 +1,8 @@
 <?php
 
-use Vizra\VizraSdk\Agents\BaseLlmAgent;
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Execution\AgentExecutor;
+use Vizra\VizraAdk\Agents\BaseLlmAgent;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Execution\AgentExecutor;
 use Prism\Prism\ValueObjects\Messages\Support\Image;
 use Prism\Prism\ValueObjects\Messages\Support\Document;
 use Prism\Prism\ValueObjects\Messages\UserMessage;

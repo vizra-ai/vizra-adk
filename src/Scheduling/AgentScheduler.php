@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Scheduling;
+namespace Vizra\VizraAdk\Scheduling;
 
-use Vizra\VizraSdk\Agents\BaseAgent;
+use Vizra\VizraAdk\Agents\BaseAgent;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Log;
 

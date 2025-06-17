@@ -1,11 +1,11 @@
 <?php
 
-namespace Vizra\VizraSdk\Tests\Unit\Tools;
+namespace Vizra\VizraAdk\Tests\Unit\Tools;
 
-use Vizra\VizraSdk\Tests\TestCase;
-use Vizra\VizraSdk\Tools\VectorMemoryTool;
-use Vizra\VizraSdk\Services\VectorMemoryManager;
-use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraAdk\Tests\TestCase;
+use Vizra\VizraAdk\Tools\VectorMemoryTool;
+use Vizra\VizraAdk\Services\VectorMemoryManager;
+use Vizra\VizraAdk\System\AgentContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Mockery;

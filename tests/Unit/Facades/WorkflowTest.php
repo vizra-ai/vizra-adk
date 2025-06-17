@@ -1,13 +1,13 @@
 <?php
 
-namespace Vizra\VizraSdk\Tests\Unit\Facades;
+namespace Vizra\VizraAdk\Tests\Unit\Facades;
 
-use Vizra\VizraSdk\Facades\Workflow;
-use Vizra\VizraSdk\Agents\SequentialWorkflow;
-use Vizra\VizraSdk\Agents\ParallelWorkflow;
-use Vizra\VizraSdk\Agents\ConditionalWorkflow;
-use Vizra\VizraSdk\Agents\LoopWorkflow;
-use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraAdk\Facades\Workflow;
+use Vizra\VizraAdk\Agents\SequentialWorkflow;
+use Vizra\VizraAdk\Agents\ParallelWorkflow;
+use Vizra\VizraAdk\Agents\ConditionalWorkflow;
+use Vizra\VizraAdk\Agents\LoopWorkflow;
+use Vizra\VizraAdk\Tests\TestCase;
 
 class WorkflowTest extends TestCase
 {

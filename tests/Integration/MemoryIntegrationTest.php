@@ -1,9 +1,9 @@
 <?php
 
-use Vizra\VizraSdk\Models\AgentSession;
-use Vizra\VizraSdk\Models\AgentMemory;
-use Vizra\VizraSdk\Models\AgentMessage;
-use Vizra\VizraSdk\Services\MemoryManager;
+use Vizra\VizraAdk\Models\AgentSession;
+use Vizra\VizraAdk\Models\AgentMemory;
+use Vizra\VizraAdk\Models\AgentMessage;
+use Vizra\VizraAdk\Services\MemoryManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 

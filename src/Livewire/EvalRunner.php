@@ -1,12 +1,12 @@
 <?php
 
-namespace Vizra\VizraSdk\Livewire;
+namespace Vizra\VizraAdk\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Vizra\VizraSdk\Evaluations\BaseEvaluation;
-use Vizra\VizraSdk\Services\AgentRegistry;
-use Vizra\VizraSdk\Facades\Agent;
+use Vizra\VizraAdk\Evaluations\BaseEvaluation;
+use Vizra\VizraAdk\Services\AgentRegistry;
+use Vizra\VizraAdk\Facades\Agent;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use InvalidArgumentException;

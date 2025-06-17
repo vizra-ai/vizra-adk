@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Providers;
+namespace Vizra\VizraAdk\Providers;
 
-use Vizra\VizraSdk\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraAdk\Contracts\EmbeddingProviderInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;

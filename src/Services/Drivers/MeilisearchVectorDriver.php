@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Services\Drivers;
+namespace Vizra\VizraAdk\Services\Drivers;
 
-use Vizra\VizraSdk\Models\VectorMemory;
+use Vizra\VizraAdk\Models\VectorMemory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Vizra\VizraSdk\Services;
+namespace Vizra\VizraAdk\Services;
 
 class DocumentChunker
 {

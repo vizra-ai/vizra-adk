@@ -1,8 +1,8 @@
 <?php
 
-namespace Vizra\VizraSdk\Agents;
+namespace Vizra\VizraAdk\Agents;
 
-use Vizra\VizraSdk\System\AgentContext;
+use Vizra\VizraAdk\System\AgentContext;
 use Closure;
 
 /**

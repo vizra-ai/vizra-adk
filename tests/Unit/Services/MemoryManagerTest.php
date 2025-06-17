@@ -1,11 +1,11 @@
 <?php
 
-use Vizra\VizraSdk\Services\MemoryManager;
-use Vizra\VizraSdk\Models\AgentMemory;
-use Vizra\VizraSdk\Models\AgentSession;
-use Vizra\VizraSdk\Models\AgentMessage;
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Events\MemoryUpdated;
+use Vizra\VizraAdk\Services\MemoryManager;
+use Vizra\VizraAdk\Models\AgentMemory;
+use Vizra\VizraAdk\Models\AgentSession;
+use Vizra\VizraAdk\Models\AgentMessage;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Events\MemoryUpdated;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;

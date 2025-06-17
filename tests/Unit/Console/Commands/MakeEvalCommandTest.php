@@ -1,9 +1,9 @@
 <?php
 
-namespace Vizra\VizraSdk\Tests\Unit\Console\Commands;
+namespace Vizra\VizraAdk\Tests\Unit\Console\Commands;
 
-use Vizra\VizraSdk\Console\Commands\MakeEvalCommand;
-use Vizra\VizraSdk\Tests\TestCase;
+use Vizra\VizraAdk\Console\Commands\MakeEvalCommand;
+use Vizra\VizraAdk\Tests\TestCase;
 use Illuminate\Filesystem\Filesystem;
 use Mockery;
 
@@ -395,7 +395,7 @@ class MakeEvalCommandTest extends TestCase
 
 namespace {{ namespace }};
 
-use Vizra\VizraSdk\Evaluations\BaseEvaluation;
+use Vizra\VizraAdk\Evaluations\BaseEvaluation;
 use InvalidArgumentException;
 
 class {{ class }} extends BaseEvaluation

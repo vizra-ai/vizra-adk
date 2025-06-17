@@ -1,10 +1,10 @@
 <?php
 
-namespace Vizra\VizraSdk\Services;
+namespace Vizra\VizraAdk\Services;
 
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Models\AgentSession;
-use Vizra\VizraSdk\Models\AgentMessage;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Models\AgentSession;
+use Vizra\VizraAdk\Models\AgentMessage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;

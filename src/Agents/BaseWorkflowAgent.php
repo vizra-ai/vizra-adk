@@ -1,10 +1,10 @@
 <?php
 
-namespace Vizra\VizraSdk\Agents;
+namespace Vizra\VizraAdk\Agents;
 
-use Vizra\VizraSdk\System\AgentContext;
-use Vizra\VizraSdk\Exceptions\AgentNotFoundException;
-use Vizra\VizraSdk\Facades\Agent;
+use Vizra\VizraAdk\System\AgentContext;
+use Vizra\VizraAdk\Exceptions\AgentNotFoundException;
+use Vizra\VizraAdk\Facades\Agent;
 use Closure;
 use Illuminate\Support\Collection;
 
