@@ -2,7 +2,7 @@
 
 namespace {{ namespace }};
 
-use AaronLumsden\LaravelAiADK\Evaluations\BaseEvaluation; // Adjusted namespace
+use Vizra\VizraAdk\Evaluations\BaseEvaluation; // Adjusted namespace
 use InvalidArgumentException;
 
 class {{ class }} extends BaseEvaluation

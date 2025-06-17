@@ -2,8 +2,8 @@
 
 namespace {{ namespace }};
 
-use AaronLumsden\LaravelAiADK\Contracts\ToolInterface;
-use AaronLumsden\LaravelAiADK\System\AgentContext;
+use Vizra\VizraAdk\Contracts\ToolInterface;
+use Vizra\VizraAdk\System\AgentContext;
 
 class {{ class }} implements ToolInterface
 {
