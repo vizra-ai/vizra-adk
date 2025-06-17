@@ -13,7 +13,7 @@ return [
      * This can be overridden by specific agent configurations.
      * Example: 'gemini-pro', 'gpt-4-turbo', 'claude-3-opus-20240229'
      */
-    'default_model' => env('VIZRA_ADK_DEFAULT_MODEL', 'gemini-pro'),
+    'default_model' => env('VIZRA_ADK_DEFAULT_MODEL', 'gemini-1.5-flash'),
 
     /**
      * Default generation parameters for LLM requests.
