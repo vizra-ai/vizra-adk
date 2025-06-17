@@ -47,7 +47,7 @@ class MakeAgentCommandTest extends TestCase
 
     public function test_get_default_namespace_uses_config()
     {
-        Config::set('agent-adk.namespaces.agents', 'Custom\Agents');
+        Config::set('vizra-adk.namespaces.agents', 'Custom\Agents');
 
         $reflection = new \ReflectionClass($this->command);
         $method = $reflection->getMethod('getDefaultNamespace');
@@ -60,7 +60,7 @@ class MakeAgentCommandTest extends TestCase
 
     public function test_get_default_namespace_fallback()
     {
-        Config::set('agent-adk.namespaces.agents', null);
+        Config::set('vizra-adk.namespaces.agents', null);
 
         $reflection = new \ReflectionClass($this->command);
         $method = $reflection->getMethod('getDefaultNamespace');
@@ -73,7 +73,7 @@ class MakeAgentCommandTest extends TestCase
 
     public function test_qualify_class_with_full_namespace()
     {
-        Config::set('agent-adk.namespaces.agents', 'App\Agents');
+        Config::set('vizra-adk.namespaces.agents', 'App\Agents');
 
         $reflection = new \ReflectionClass($this->command);
         $method = $reflection->getMethod('qualifyClass');
@@ -86,7 +86,7 @@ class MakeAgentCommandTest extends TestCase
 
     public function test_qualify_class_with_already_qualified_name()
     {
-        Config::set('agent-adk.namespaces.agents', 'App\Agents');
+        Config::set('vizra-adk.namespaces.agents', 'App\Agents');
 
         $reflection = new \ReflectionClass($this->command);
         $method = $reflection->getMethod('qualifyClass');
@@ -99,7 +99,7 @@ class MakeAgentCommandTest extends TestCase
 
     public function test_qualify_class_with_slash_separators()
     {
-        Config::set('agent-adk.namespaces.agents', 'App\Agents');
+        Config::set('vizra-adk.namespaces.agents', 'App\Agents');
 
         $reflection = new \ReflectionClass($this->command);
         $method = $reflection->getMethod('qualifyClass');
@@ -193,7 +193,7 @@ class MakeAgentCommandTest extends TestCase
     public function test_command_with_custom_namespace()
     {
         // Use a custom namespace that doesn't start with App
-        Config::set('agent-adk.namespaces.agents', 'Custom\MyAgents');
+        Config::set('vizra-adk.namespaces.agents', 'Custom\MyAgents');
 
         // The command should create the file in app_path following the namespace structure
         // Since it's Custom\MyAgents, it should create app_path/Custom/MyAgents/TestAgent.php

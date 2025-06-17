@@ -16,7 +16,7 @@ class OpenAIEmbeddingProviderTest extends TestCase
         parent::setUp();
         
         Config::set('services.openai.key', 'test-api-key');
-        Config::set('agent-adk.vector_memory.embedding_models.openai', 'text-embedding-3-small');
+        Config::set('vizra-adk.vector_memory.embedding_models.openai', 'text-embedding-3-small');
         
         $this->provider = new OpenAIEmbeddingProvider();
     }
@@ -226,7 +226,7 @@ class OpenAIEmbeddingProviderTest extends TestCase
     public function test_estimate_cost_for_large_model()
     {
         // Arrange
-        Config::set('agent-adk.vector_memory.embedding_models.openai', 'text-embedding-3-large');
+        Config::set('vizra-adk.vector_memory.embedding_models.openai', 'text-embedding-3-large');
         $provider = new OpenAIEmbeddingProvider();
         $text = str_repeat('word ', 250);
 
@@ -244,12 +244,12 @@ class OpenAIEmbeddingProviderTest extends TestCase
     public function test_dimensions_configuration_for_different_models()
     {
         // Test text-embedding-3-large
-        Config::set('agent-adk.vector_memory.embedding_models.openai', 'text-embedding-3-large');
+        Config::set('vizra-adk.vector_memory.embedding_models.openai', 'text-embedding-3-large');
         $provider = new OpenAIEmbeddingProvider();
         $this->assertEquals(3072, $provider->getDimensions());
 
         // Test text-embedding-ada-002
-        Config::set('agent-adk.vector_memory.embedding_models.openai', 'text-embedding-ada-002');
+        Config::set('vizra-adk.vector_memory.embedding_models.openai', 'text-embedding-ada-002');
         $provider = new OpenAIEmbeddingProvider();
         $this->assertEquals(1536, $provider->getDimensions());
     }

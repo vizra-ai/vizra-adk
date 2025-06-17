@@ -10,9 +10,9 @@ class DocumentChunker
 
     public function __construct()
     {
-        $this->strategy = config('agent-adk.vector_memory.chunking.strategy', 'sentence');
-        $this->chunkSize = config('agent-adk.vector_memory.chunking.chunk_size', 1000);
-        $this->overlap = config('agent-adk.vector_memory.chunking.overlap', 200);
+        $this->strategy = config('vizra-adk.vector_memory.chunking.strategy', 'sentence');
+        $this->chunkSize = config('vizra-adk.vector_memory.chunking.chunk_size', 1000);
+        $this->overlap = config('vizra-adk.vector_memory.chunking.overlap', 200);
     }
 
     /**

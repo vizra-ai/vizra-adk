@@ -10,7 +10,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Enable tracing for tests
-    config(['agent-adk.tracing.enabled' => true]);
+    config(['vizra-adk.tracing.enabled' => true]);
 
     // Use fresh tracer instance
     app()->forgetInstance(Tracer::class);
@@ -153,7 +153,7 @@ it('can cleanup old traces', function () {
 });
 
 it('handles cleanup when tracing is disabled', function () {
-    config(['agent-adk.tracing.enabled' => false]);
+    config(['vizra-adk.tracing.enabled' => false]);
 
     $count = $this->tracer->getOldTracesCount(30);
     expect($count)->toBe(0);
@@ -233,7 +233,7 @@ it('handles cleanup command with custom days', function () {
 });
 
 it('handles cleanup command when tracing is disabled', function () {
-    config(['agent-adk.tracing.enabled' => false]);
+    config(['vizra-adk.tracing.enabled' => false]);
 
     $this->artisan('vizra:trace:cleanup')
         ->expectsOutput('Agent tracing is not enabled in configuration.')

@@ -19,7 +19,7 @@ class MakeAgentCommand extends GeneratorCommand
 
     protected function getDefaultNamespace($rootNamespace): string
     {
-        $configuredNamespace = config('agent-adk.namespaces.agents');
+        $configuredNamespace = config('vizra-adk.namespaces.agents');
         
         if ($configuredNamespace) {
             return $configuredNamespace;

@@ -14,7 +14,7 @@ use Vizra\VizraAdk\Services\Tracer;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
-#[Layout('agent-adk::layouts.app')]
+#[Layout('vizra-adk::layouts.app')]
 class ChatInterface extends Component
 {
     public string $selectedAgent = '';
@@ -357,6 +357,6 @@ class ChatInterface extends Component
 
     public function render()
     {
-        return view('agent-adk::livewire.chat-interface');
+        return view('vizra-adk::livewire.chat-interface');
     }
 }

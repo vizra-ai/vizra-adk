@@ -658,7 +658,7 @@ function testModalButton() {
                                         <div class="h-full overflow-y-auto custom-scrollbar">
                                             <div class="space-y-1">
                                                 @foreach($traceData as $rootSpan)
-                                                    @include('agent-adk::partials.trace-span', ['span' => $rootSpan, 'level' => 0])
+                                                    @include('vizra-adk::partials.trace-span', ['span' => $rootSpan, 'level' => 0])
                                                 @endforeach
                                             </div>
                                         </div>

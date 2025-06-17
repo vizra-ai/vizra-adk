@@ -24,7 +24,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
     {
         // Register the embedding provider based on configuration
         $this->app->singleton(EmbeddingProviderInterface::class, function ($app) {
-            $provider = config('agent-adk.vector_memory.embedding_provider', 'openai');
+            $provider = config('vizra-adk.vector_memory.embedding_provider', 'openai');
             
             try {
                 return match ($provider) {
@@ -72,7 +72,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Check if vector memory is enabled
-        if (!config('agent-adk.vector_memory.enabled', true)) {
+        if (!config('vizra-adk.vector_memory.enabled', true)) {
             return;
         }
 
@@ -85,13 +85,13 @@ class VectorMemoryServiceProvider extends ServiceProvider
                 $this->validateConfiguration();
                 
                 // Log the vector memory provider being used
-                $provider = config('agent-adk.vector_memory.embedding_provider');
-                $model = config("agent-adk.vector_memory.embedding_models.{$provider}");
+                $provider = config('vizra-adk.vector_memory.embedding_provider');
+                $model = config("vizra-adk.vector_memory.embedding_models.{$provider}");
                 
                 Log::info('Vector Memory initialized', [
                     'provider' => $provider,
                     'model' => $model,
-                    'driver' => config('agent-adk.vector_memory.driver'),
+                    'driver' => config('vizra-adk.vector_memory.driver'),
                 ]);
             } catch (\Exception $e) {
                 // Log the error but don't fail the application boot
@@ -107,8 +107,8 @@ class VectorMemoryServiceProvider extends ServiceProvider
      */
     protected function validateConfiguration(): void
     {
-        $provider = config('agent-adk.vector_memory.embedding_provider');
-        $driver = config('agent-adk.vector_memory.driver');
+        $provider = config('vizra-adk.vector_memory.embedding_provider');
+        $driver = config('vizra-adk.vector_memory.driver');
 
         // Validate embedding provider
         $supportedProviders = ['openai', 'cohere', 'ollama', 'gemini'];
@@ -174,7 +174,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
     {
         switch ($driver) {
             case 'meilisearch':
-                $host = config('agent-adk.vector_memory.drivers.meilisearch.host');
+                $host = config('vizra-adk.vector_memory.drivers.meilisearch.host');
                 
                 if (!$host) {
                     throw new RuntimeException('Meilisearch driver requires host configuration.');
@@ -197,7 +197,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
                 break;
                 
             case 'pgvector':
-                $connection = config('agent-adk.vector_memory.drivers.pgvector.connection', 'pgsql');
+                $connection = config('vizra-adk.vector_memory.drivers.pgvector.connection', 'pgsql');
                 $dbConfig = config("database.connections.{$connection}");
                 
                 if (!$dbConfig || $dbConfig['driver'] !== 'pgsql') {
@@ -206,8 +206,8 @@ class VectorMemoryServiceProvider extends ServiceProvider
                 break;
 
             case 'qdrant':
-                $host = config('agent-adk.vector_memory.drivers.qdrant.host');
-                $port = config('agent-adk.vector_memory.drivers.qdrant.port');
+                $host = config('vizra-adk.vector_memory.drivers.qdrant.host');
+                $port = config('vizra-adk.vector_memory.drivers.qdrant.port');
                 
                 if (!$host || !$port) {
                     throw new RuntimeException('Qdrant driver requires host and port configuration.');
@@ -215,7 +215,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
                 break;
 
             case 'in_memory':
-                $storagePath = config('agent-adk.vector_memory.drivers.in_memory.storage_path');
+                $storagePath = config('vizra-adk.vector_memory.drivers.in_memory.storage_path');
                 
                 if ($storagePath && !is_writable(dirname($storagePath))) {
                     throw new RuntimeException("In-memory driver storage path is not writable: {$storagePath}");

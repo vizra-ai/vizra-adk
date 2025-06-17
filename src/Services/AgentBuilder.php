@@ -175,7 +175,7 @@ class AgentBuilder
                 'name' => $this->name,
                 'description' => $this->description ?? '',
                 'instructions' => $this->instructions,
-                'model' => $this->model ?? config('agent-adk.default_model', 'gemini-pro'),
+                'model' => $this->model ?? config('vizra-adk.default_model', 'gemini-pro'),
                 'tools' => [], // Ad-hoc agents initially have no tools via this builder path for MVP
                 'type' => 'ad_hoc_llm',
             ];

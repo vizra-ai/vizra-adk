@@ -23,10 +23,10 @@ class OpenAIEmbeddingProvider implements EmbeddingProviderInterface
         }
         
         $this->apiKey = $apiKey;
-        $this->model = config('agent-adk.vector_memory.embedding_models.openai', 'text-embedding-3-small');
+        $this->model = config('vizra-adk.vector_memory.embedding_models.openai', 'text-embedding-3-small');
         $this->baseUrl = config('services.openai.url', 'https://api.openai.com/v1');
         
-        $this->dimensions = config('agent-adk.vector_memory.dimensions', [
+        $this->dimensions = config('vizra-adk.vector_memory.dimensions', [
             'text-embedding-3-small' => 1536,
             'text-embedding-3-large' => 3072,
             'text-embedding-ada-002' => 1536,

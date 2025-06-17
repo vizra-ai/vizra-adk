@@ -21,7 +21,7 @@ class VectorMemoryManager
     {
         $this->embeddingProvider = $embeddingProvider;
         $this->chunker = $chunker;
-        $this->driver = config('agent-adk.vector_memory.driver', 'pgvector');
+        $this->driver = config('vizra-adk.vector_memory.driver', 'pgvector');
     }
 
     /**
@@ -313,9 +313,9 @@ class VectorMemoryManager
             ];
         }
 
-        $template = config('agent-adk.vector_memory.rag.context_template');
-        $maxLength = config('agent-adk.vector_memory.rag.max_context_length', 4000);
-        $includeMetadata = config('agent-adk.vector_memory.rag.include_metadata', true);
+        $template = config('vizra-adk.vector_memory.rag.context_template');
+        $maxLength = config('vizra-adk.vector_memory.rag.max_context_length', 4000);
+        $includeMetadata = config('vizra-adk.vector_memory.rag.include_metadata', true);
 
         $contextParts = [];
         $sources = [];

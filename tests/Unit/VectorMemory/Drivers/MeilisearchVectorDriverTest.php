@@ -22,9 +22,9 @@ class MeilisearchVectorDriverTest extends TestCase
         parent::setUp();
         
         // Mock configuration
-        Config::set('agent-adk.vector_memory.drivers.meilisearch.host', $this->testHost);
-        Config::set('agent-adk.vector_memory.drivers.meilisearch.api_key', $this->testApiKey);
-        Config::set('agent-adk.vector_memory.drivers.meilisearch.index_prefix', $this->testIndexPrefix);
+        Config::set('vizra-adk.vector_memory.drivers.meilisearch.host', $this->testHost);
+        Config::set('vizra-adk.vector_memory.drivers.meilisearch.api_key', $this->testApiKey);
+        Config::set('vizra-adk.vector_memory.drivers.meilisearch.index_prefix', $this->testIndexPrefix);
         
         $this->driver = new MeilisearchVectorDriver();
     }
@@ -353,7 +353,7 @@ class MeilisearchVectorDriverTest extends TestCase
 
     public function test_make_request_without_api_key()
     {
-        Config::set('agent-adk.vector_memory.drivers.meilisearch.api_key', null);
+        Config::set('vizra-adk.vector_memory.drivers.meilisearch.api_key', null);
         $driver = new MeilisearchVectorDriver();
 
         Http::fake([

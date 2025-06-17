@@ -497,8 +497,8 @@ class EvalRunner extends Component
 
     public function render()
     {
-        return view('agent-adk::livewire.eval-runner')
-            ->layout('agent-adk::layouts.app', [
+        return view('vizra-adk::livewire.eval-runner')
+            ->layout('vizra-adk::layouts.app', [
                 'title' => 'Evaluation Runner'
             ]);
     }

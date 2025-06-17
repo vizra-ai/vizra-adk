@@ -46,7 +46,7 @@ class MakeEvalCommandTest extends TestCase
 
     public function test_get_stub_prefers_custom_stub_if_exists()
     {
-        $customPath = base_path('stubs/vendor/agent-adk/evaluation.stub');
+        $customPath = base_path('stubs/vendor/vizra-adk/evaluation.stub');
 
         // Mock that custom stub exists
         $this->app->instance('path.base', '/test/base');

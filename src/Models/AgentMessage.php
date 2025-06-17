@@ -45,6 +45,6 @@ class AgentMessage extends Model
      */
     public function getTable()
     {
-        return config('agent-adk.tables.agent_messages', parent::getTable());
+        return config('vizra-adk.tables.agent_messages', parent::getTable());
     }
 }

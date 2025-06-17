@@ -55,7 +55,7 @@ class DelegateToSubAgentTool implements ToolInterface
     {
         // Check delegation depth to prevent excessive recursion
         $currentDepth = $context->getState('delegation_depth', 0);
-        $maxDepth = config('agent-adk.max_delegation_depth', 5);
+        $maxDepth = config('vizra-adk.max_delegation_depth', 5);
 
         if ($currentDepth >= $maxDepth) {
             return json_encode([

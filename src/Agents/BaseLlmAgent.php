@@ -56,7 +56,7 @@ abstract class BaseLlmAgent extends BaseAgent
     protected function getProvider(): Provider
     {
         if ($this->provider === null) {
-            $defaultProvider = config('agent-adk.default_provider', 'openai');
+            $defaultProvider = config('vizra-adk.default_provider', 'openai');
             $this->provider = match($defaultProvider) {
                 'openai' => Provider::OpenAI,
                 'anthropic' => Provider::Anthropic,
@@ -69,7 +69,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
     public function getModel(): string
     {
-        $model = $this->model ?: config('agent-adk.default_model', 'gpt-4o');
+        $model = $this->model ?: config('vizra-adk.default_model', 'gpt-4o');
 
         // Auto-detect provider based on model name if not explicitly set
         if ($this->provider === null) {
@@ -153,7 +153,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
     public function getTemperature(): ?float
     {
-        return $this->temperature ?? config('agent-adk.default_generation_params.temperature');
+        return $this->temperature ?? config('vizra-adk.default_generation_params.temperature');
     }
 
     public function setTemperature(?float $temperature): static
@@ -164,7 +164,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
     public function getMaxTokens(): ?int
     {
-        return $this->maxTokens ?? config('agent-adk.default_generation_params.max_tokens');
+        return $this->maxTokens ?? config('vizra-adk.default_generation_params.max_tokens');
     }
 
     public function setMaxTokens(?int $maxTokens): static
@@ -175,7 +175,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
     public function getTopP(): ?float
     {
-        return $this->topP ?? config('agent-adk.default_generation_params.top_p');
+        return $this->topP ?? config('vizra-adk.default_generation_params.top_p');
     }
 
     public function setTopP(?float $topP): static

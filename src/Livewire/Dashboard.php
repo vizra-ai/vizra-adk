@@ -37,7 +37,7 @@ class Dashboard extends Component
 
     public function render()
     {
-        return view('agent-adk::livewire.dashboard')
-            ->layout('agent-adk::layouts.app');
+        return view('vizra-adk::livewire.dashboard')
+            ->layout('vizra-adk::layouts.app');
     }
 }

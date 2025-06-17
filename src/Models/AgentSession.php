@@ -133,6 +133,6 @@ class AgentSession extends Model
      */
     public function getTable()
     {
-        return config('agent-adk.tables.agent_sessions', parent::getTable());
+        return config('vizra-adk.tables.agent_sessions', parent::getTable());
     }
 }

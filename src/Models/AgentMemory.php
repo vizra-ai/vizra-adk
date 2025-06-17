@@ -150,6 +150,6 @@ class AgentMemory extends Model
      */
     public function getTable()
     {
-        return config('agent-adk.tables.agent_memories', parent::getTable());
+        return config('vizra-adk.tables.agent_memories', parent::getTable());
     }
 }

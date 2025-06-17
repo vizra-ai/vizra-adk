@@ -95,8 +95,8 @@ class Analytics extends Component
 
     public function render()
     {
-        return view('agent-adk::livewire.analytics')
-            ->layout('agent-adk::layouts.app', [
+        return view('vizra-adk::livewire.analytics')
+            ->layout('vizra-adk::layouts.app', [
                 'title' => 'Analytics Dashboard'
             ]);
     }

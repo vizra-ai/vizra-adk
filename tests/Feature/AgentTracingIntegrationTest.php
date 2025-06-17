@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 
 it('agent execution creates complete trace', function () {
     // Enable tracing for this test
-    config(['agent-adk.tracing.enabled' => true]);
+    config(['vizra-adk.tracing.enabled' => true]);
 
     // Refresh the Tracer service to pick up the new config
     app()->forgetInstance(Tracer::class);
@@ -58,7 +58,7 @@ it('agent execution creates complete trace', function () {
 
 it('trace command displays hierarchy correctly', function () {
     // Enable tracing for this test
-    config(['agent-adk.tracing.enabled' => true]);
+    config(['vizra-adk.tracing.enabled' => true]);
 
     // Refresh the Tracer service to pick up the new config
     app()->forgetInstance(Tracer::class);
@@ -87,7 +87,7 @@ it('trace command displays hierarchy correctly', function () {
 
 it('tracing handles errors in agent execution', function () {
     // Enable tracing for this test
-    config(['agent-adk.tracing.enabled' => true]);
+    config(['vizra-adk.tracing.enabled' => true]);
 
     // Refresh the Tracer service to pick up the new config
     app()->forgetInstance(Tracer::class);
@@ -125,7 +125,7 @@ it('tracing handles errors in agent execution', function () {
 
 it('tracing works with disabled configuration', function () {
     // Disable tracing
-    config(['agent-adk.tracing.enabled' => false]);
+    config(['vizra-adk.tracing.enabled' => false]);
 
     // Refresh the Tracer service to pick up the new config
     app()->forgetInstance(Tracer::class);

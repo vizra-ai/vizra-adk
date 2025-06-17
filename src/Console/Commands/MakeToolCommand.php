@@ -19,7 +19,7 @@ class MakeToolCommand extends GeneratorCommand
 
     protected function getDefaultNamespace($rootNamespace): string
     {
-        $configuredNamespace = config('agent-adk.namespaces.tools');
+        $configuredNamespace = config('vizra-adk.namespaces.tools');
         
         if ($configuredNamespace) {
             return $configuredNamespace;

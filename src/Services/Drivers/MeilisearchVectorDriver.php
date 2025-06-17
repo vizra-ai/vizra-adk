@@ -16,9 +16,9 @@ class MeilisearchVectorDriver
 
     public function __construct()
     {
-        $this->host = config('agent-adk.vector_memory.drivers.meilisearch.host', 'http://localhost:7700');
-        $this->apiKey = config('agent-adk.vector_memory.drivers.meilisearch.api_key');
-        $this->indexPrefix = config('agent-adk.vector_memory.drivers.meilisearch.index_prefix', 'agent_vectors_');
+        $this->host = config('vizra-adk.vector_memory.drivers.meilisearch.host', 'http://localhost:7700');
+        $this->apiKey = config('vizra-adk.vector_memory.drivers.meilisearch.api_key');
+        $this->indexPrefix = config('vizra-adk.vector_memory.drivers.meilisearch.index_prefix', 'agent_vectors_');
     }
 
     /**

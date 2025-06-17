@@ -41,7 +41,7 @@ class MakeToolCommandTest extends TestCase
 
     public function test_get_default_namespace_uses_config()
     {
-        Config::set('agent-adk.namespaces.tools', 'Custom\Tools');
+        Config::set('vizra-adk.namespaces.tools', 'Custom\Tools');
 
         $reflection = new \ReflectionClass($this->command);
         $method = $reflection->getMethod('getDefaultNamespace');
@@ -54,7 +54,7 @@ class MakeToolCommandTest extends TestCase
 
     public function test_get_default_namespace_fallback()
     {
-        Config::set('agent-adk.namespaces.tools', null);
+        Config::set('vizra-adk.namespaces.tools', null);
 
         $reflection = new \ReflectionClass($this->command);
         $method = $reflection->getMethod('getDefaultNamespace');
@@ -196,7 +196,7 @@ class MakeToolCommandTest extends TestCase
 
     public function test_command_with_custom_namespace()
     {
-        Config::set('agent-adk.namespaces.tools', 'Custom\MyTools');
+        Config::set('vizra-adk.namespaces.tools', 'Custom\MyTools');
 
         $reflection = new \ReflectionClass($this->command);
         $method = $reflection->getMethod('getDefaultNamespace');

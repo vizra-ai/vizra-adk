@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Enable tracing for these tests
-    config(['agent-adk.tracing.enabled' => true]);
+    config(['vizra-adk.tracing.enabled' => true]);
 
     // Use fresh tracer instance to avoid cached disabled state
     app()->forgetInstance(Tracer::class);
@@ -190,7 +190,7 @@ it('can retrieve spans by trace', function () {
 
 it('respects tracing enabled configuration', function () {
     // Disable tracing
-    config(['agent-adk.tracing.enabled' => false]);
+    config(['vizra-adk.tracing.enabled' => false]);
     $tracer = new Tracer();
 
     expect($tracer->isEnabled())->toBeFalse();
@@ -208,7 +208,7 @@ it('respects tracing enabled configuration', function () {
 
 it('handles database errors gracefully', function () {
     // Temporarily break the database table name to simulate error
-    config(['agent-adk.tracing.table' => 'non_existent_table']);
+    config(['vizra-adk.tables.agent_trace_spans' => 'non_existent_table']);
 
     // Operations should not throw exceptions
     $traceId = $this->tracer->startTrace($this->context, 'test_agent');

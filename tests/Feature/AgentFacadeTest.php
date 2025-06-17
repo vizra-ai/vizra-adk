@@ -15,7 +15,7 @@ it('has the expected facade methods available', function () {
 });
 
 it('can check if config is loaded', function () {
-    $config = config('agent-adk');
+    $config = config('vizra-adk');
 
     expect($config)->toBeArray();
 });

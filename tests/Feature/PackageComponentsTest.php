@@ -114,7 +114,7 @@ it('supports complete agent lifecycle', function () {
 
 it('loads package configuration', function () {
     // Test that package configuration is available
-    $config = config('agent-adk');
+    $config = config('vizra-adk');
 
     expect($config)->toBeArray();
     expect($config)->toHaveKey('default_provider');

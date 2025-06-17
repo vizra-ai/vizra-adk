@@ -45,7 +45,7 @@ class AgentTraceCommand extends Command
         $tracer = app(Tracer::class);
 
         if (!$tracer->isEnabled()) {
-            $this->error('Tracing is disabled. Enable it in config/agent-adk.php');
+            $this->error('Tracing is disabled. Enable it in config/vizra-adk.php');
             return self::FAILURE;
         }
 

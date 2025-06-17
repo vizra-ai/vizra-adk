@@ -20,7 +20,7 @@ class {{ class }} extends BaseLlmAgent
 
     /**
      * The LLM model to use for this agent.
-     * Leave empty to use the default from config/agent-adk.php.
+     * Leave empty to use the default from config/vizra-adk.php.
      * Example: 'gemini-pro', 'gpt-4-turbo'
      */
     protected string $model = '';

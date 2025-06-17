@@ -15,13 +15,13 @@ class InstallCommand extends Command
         $this->info('Publishing Vizra SDK configuration...');
         $this->call('vendor:publish', [
             '--provider' => "Vizra\VizraAdk\Providers\AgentServiceProvider",
-            '--tag' => "agent-adk-config"
+            '--tag' => "vizra-adk-config"
         ]);
 
         $this->info('Publishing Vizra SDK migrations...');
         $this->call('vendor:publish', [
             '--provider' => "Vizra\VizraAdk\Providers\AgentServiceProvider",
-            '--tag' => "agent-adk-migrations"
+            '--tag' => "vizra-adk-migrations"
         ]);
 
         // Check if migrations were already published and ask to overwrite if necessary,
@@ -29,14 +29,14 @@ class InstallCommand extends Command
 
         $this->info('Vizra SDK installed successfully.');
         $this->comment('Please run "php artisan migrate" to create the necessary database tables.');
-        $this->comment('Configure your LLM provider API keys in .env and in config/agent-adk.php if needed.');
+        $this->comment('Configure your LLM provider API keys in .env and in config/vizra-adk.php if needed.');
 
         $this->showDashboardInfo();
     }
 
     protected function showDashboardInfo(): void
     {
-        $prefix = config('agent-adk.routes.web.prefix', 'ai-adk');
+        $prefix = config('vizra-adk.routes.web.prefix', 'ai-adk');
         $url = url($prefix);
 
         $this->line('');

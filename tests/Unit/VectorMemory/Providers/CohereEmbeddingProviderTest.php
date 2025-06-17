@@ -16,7 +16,7 @@ class CohereEmbeddingProviderTest extends TestCase
         parent::setUp();
         
         Config::set('services.cohere.key', 'test-cohere-key');
-        Config::set('agent-adk.vector_memory.embedding_models.cohere', 'embed-english-v3.0');
+        Config::set('vizra-adk.vector_memory.embedding_models.cohere', 'embed-english-v3.0');
         
         $this->provider = new CohereEmbeddingProvider();
     }

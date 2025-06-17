@@ -33,8 +33,8 @@ class AgentServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../../config/agent-adk.php',
-            'agent-adk'
+            __DIR__.'/../../config/vizra-adk.php',
+            'vizra-adk'
         );
 
         $this->app->singleton(AgentRegistry::class, function (Application $app) {
@@ -85,12 +85,12 @@ class AgentServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/../../config/agent-adk.php' => config_path('agent-adk.php'),
-        ], 'agent-adk-config');
+            __DIR__.'/../../config/vizra-adk.php' => config_path('vizra-adk.php'),
+        ], 'vizra-adk-config');
 
         $this->publishes([
             __DIR__.'/../../database/migrations/' => database_path('migrations'),
-        ], 'agent-adk-migrations');
+        ], 'vizra-adk-migrations');
 
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -114,39 +114,39 @@ class AgentServiceProvider extends ServiceProvider
     protected function registerLivewireComponents(): void
     {
         if (class_exists(Livewire::class)) {
-            Livewire::component('agent-adk-dashboard', Dashboard::class);
-            Livewire::component('agent-adk-chat-interface', ChatInterface::class);
-            Livewire::component('agent-adk-eval-runner', EvalRunner::class);
-            Livewire::component('agent-adk-analytics', Analytics::class);
+            Livewire::component('vizra-adk-dashboard', Dashboard::class);
+            Livewire::component('vizra-adk-chat-interface', ChatInterface::class);
+            Livewire::component('vizra-adk-eval-runner', EvalRunner::class);
+            Livewire::component('vizra-adk-analytics', Analytics::class);
         }
     }
 
     protected function loadViews(): void
     {
-        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'agent-adk');
+        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'vizra-adk');
 
         $this->publishes([
-            __DIR__.'/../../resources/views' => resource_path('views/vendor/agent-adk'),
-        ], 'agent-adk-views');
+            __DIR__.'/../../resources/views' => resource_path('views/vendor/vizra-adk'),
+        ], 'vizra-adk-views');
     }
 
     protected function loadRoutes(): void
     {
         // Load API routes
-        if (config('agent-adk.routes.enabled', true)) {
+        if (config('vizra-adk.routes.enabled', true)) {
             Route::group([
                 'prefix' => "vizra",
-                'middleware' => config('agent-adk.routes.middleware', ['api']),
+                'middleware' => config('vizra-adk.routes.middleware', ['api']),
             ], function () {
                 $this->loadRoutesFrom(__DIR__.'/../../routes/api.php');
             });
         }
 
         // Load web routes
-        if (config('agent-adk.routes.web.enabled', true)) {
+        if (config('vizra-adk.routes.web.enabled', true)) {
             Route::group([
                 'prefix' => "vizra",
-                'middleware' => config('agent-adk.routes.web.middleware', ['web']),
+                'middleware' => config('vizra-adk.routes.web.middleware', ['web']),
                 'as' => 'vizra.',
             ], function () {
                 $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');

@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $memoriesTableName = config('agent-adk.tables.agent_memories', 'agent_memories');
+        $memoriesTableName = config('vizra-adk.tables.agent_memories', 'agent_memories');
 
         Schema::create($memoriesTableName, function (Blueprint $table) {
             $table->id();
@@ -39,7 +39,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $memoriesTableName = config('agent-adk.tables.agent_memories', 'agent_memories');
+        $memoriesTableName = config('vizra-adk.tables.agent_memories', 'agent_memories');
         Schema::dropIfExists($memoriesTableName);
     }
 };

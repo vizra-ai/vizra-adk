@@ -64,7 +64,7 @@ class AgentRegistry
             $instance->setName($config['name']);
             // $instance->setDescription($config['description'] ?? ''); // Description not directly settable on BaseAgent/BaseLlmAgent post-init
             $instance->setInstructions($config['instructions']);
-            $instance->setModel($config['model'] ?? config('agent-adk.default_model', 'gemini-pro'));
+            $instance->setModel($config['model'] ?? config('vizra-adk.default_model', 'gemini-pro'));
             // Tools for ad-hoc agents are not part of MVP builder, but could be loaded if defined in array
             // foreach (($config['tools'] ?? []) as $toolClass) {
             //     $instance->registerTool($toolClass); // Requires GenericLlmAgent to have such a method

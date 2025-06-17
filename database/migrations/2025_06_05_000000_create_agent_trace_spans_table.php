@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $tableName = config('agent-adk.tracing.table', 'agent_trace_spans');
+        $tableName = config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans');
 
         Schema::create($tableName, function (Blueprint $table) {
             // Primary key using ULID for better performance and ordering
@@ -69,7 +69,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $tableName = config('agent-adk.tracing.table', 'agent_trace_spans');
+        $tableName = config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans');
         Schema::dropIfExists($tableName);
     }
 };

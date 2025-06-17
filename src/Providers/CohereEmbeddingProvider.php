@@ -23,10 +23,10 @@ class CohereEmbeddingProvider implements EmbeddingProviderInterface
         }
         
         $this->apiKey = $apiKey;
-        $this->model = config('agent-adk.vector_memory.embedding_models.cohere', 'embed-english-v3.0');
+        $this->model = config('vizra-adk.vector_memory.embedding_models.cohere', 'embed-english-v3.0');
         $this->baseUrl = config('services.cohere.url', 'https://api.cohere.ai/v1');
         
-        $this->dimensions = config('agent-adk.vector_memory.dimensions', [
+        $this->dimensions = config('vizra-adk.vector_memory.dimensions', [
             'embed-english-v3.0' => 1024,
             'embed-multilingual-v3.0' => 1024,
             'embed-english-light-v3.0' => 384,

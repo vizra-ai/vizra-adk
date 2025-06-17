@@ -208,6 +208,6 @@ class TraceSpan extends Model
      */
     public function getTable()
     {
-        return config('agent-adk.tracing.table', 'agent_trace_spans');
+        return config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans');
     }
 }

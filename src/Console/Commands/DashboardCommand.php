@@ -13,7 +13,7 @@ class DashboardCommand extends Command
 
     public function handle(): void
     {
-        $prefix = config('agent-adk.routes.web.prefix', 'ai-adk');
+        $prefix = config('vizra-adk.routes.web.prefix', 'ai-adk');
         $url = url($prefix);
 
         $this->info('🤖 Vizra SDK Dashboard');

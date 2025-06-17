@@ -14,7 +14,7 @@ class DocumentChunkerTest extends TestCase
     {
         parent::setUp();
         
-        Config::set('agent-adk.vector_memory.chunking', [
+        Config::set('vizra-adk.vector_memory.chunking', [
             'strategy' => 'sentence',
             'chunk_size' => 100,
             'overlap' => 20,
@@ -26,7 +26,7 @@ class DocumentChunkerTest extends TestCase
     public function test_chunks_by_sentence()
     {
         // Arrange - set smaller chunk size to force splitting
-        Config::set('agent-adk.vector_memory.chunking.chunk_size', 30);
+        Config::set('vizra-adk.vector_memory.chunking.chunk_size', 30);
         $chunker = new DocumentChunker();
         $content = 'First sentence here. Second sentence follows. Third sentence ends it.';
 
@@ -42,8 +42,8 @@ class DocumentChunkerTest extends TestCase
     public function test_chunks_by_paragraph()
     {
         // Arrange - set smaller chunk size to force splitting
-        Config::set('agent-adk.vector_memory.chunking.strategy', 'paragraph');
-        Config::set('agent-adk.vector_memory.chunking.chunk_size', 30);
+        Config::set('vizra-adk.vector_memory.chunking.strategy', 'paragraph');
+        Config::set('vizra-adk.vector_memory.chunking.chunk_size', 30);
         $chunker = new DocumentChunker();
         
         $content = "First paragraph here.\n\nSecond paragraph follows.\n\nThird paragraph ends it.";
@@ -59,8 +59,8 @@ class DocumentChunkerTest extends TestCase
     public function test_chunks_by_fixed_size()
     {
         // Arrange
-        Config::set('agent-adk.vector_memory.chunking.strategy', 'fixed');
-        Config::set('agent-adk.vector_memory.chunking.chunk_size', 50);
+        Config::set('vizra-adk.vector_memory.chunking.strategy', 'fixed');
+        Config::set('vizra-adk.vector_memory.chunking.chunk_size', 50);
         $chunker = new DocumentChunker();
         
         $content = str_repeat('This is a test sentence. ', 10);

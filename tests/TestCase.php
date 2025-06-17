@@ -38,13 +38,13 @@ class TestCase extends Orchestra
         $app['config']->set('app.key', 'base64:843sTC/OSjCKW+ZnImGjVdbrib089tC87dXdVlI+vc8=');
 
         // Load your package config if needed
-        $config = require __DIR__ . '/../config/agent-adk.php';
-        $app['config']->set('agent-adk', $config);
+        $config = require __DIR__ . '/../config/vizra-adk.php';
+        $app['config']->set('vizra-adk', $config);
         
         // Override problematic settings for tests
-        $app['config']->set('agent-adk.vector_memory.driver', 'sqlite');
-        $app['config']->set('agent-adk.default_provider', 'mock');
-        $app['config']->set('agent-adk.default_model', 'mock-model');
+        $app['config']->set('vizra-adk.vector_memory.driver', 'sqlite');
+        $app['config']->set('vizra-adk.default_provider', 'mock');
+        $app['config']->set('vizra-adk.default_model', 'mock-model');
         
         // Set dummy API keys to prevent missing key errors
         $app['config']->set('services.openai.key', 'test-key');
@@ -52,7 +52,7 @@ class TestCase extends Orchestra
         $app['config']->set('services.google.key', 'test-key');
         
         // Disable tracing in tests by default (individual tests can override)
-        $app['config']->set('agent-adk.tracing.enabled', false);
+        $app['config']->set('vizra-adk.tracing.enabled', false);
     }
 
     protected function setUp(): void

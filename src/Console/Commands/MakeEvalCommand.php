@@ -15,7 +15,7 @@ class MakeEvalCommand extends GeneratorCommand
     protected function getStub()
     {
         // Check if a custom stub exists in the app's stubs directory first
-        $customPath = $this->laravel->basePath('stubs/vendor/agent-adk/evaluation.stub');
+        $customPath = $this->laravel->basePath('stubs/vendor/vizra-adk/evaluation.stub');
         if (file_exists($customPath)) {
             return $customPath;
         }
@@ -24,7 +24,7 @@ class MakeEvalCommand extends GeneratorCommand
 
     protected function getDefaultNamespace($rootNamespace)
     {
-        $configuredNamespace = config('agent-adk.namespaces.evaluations');
+        $configuredNamespace = config('vizra-adk.namespaces.evaluations');
         
         if ($configuredNamespace) {
             return $configuredNamespace;

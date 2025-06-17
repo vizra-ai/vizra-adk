@@ -12,8 +12,8 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        $sessionsTableName = config('agent-adk.tables.agent_sessions', 'agent_sessions');
-        $messagesTableName = config('agent-adk.tables.agent_messages', 'agent_messages');
+        $sessionsTableName = config('vizra-adk.tables.agent_sessions', 'agent_sessions');
+        $messagesTableName = config('vizra-adk.tables.agent_messages', 'agent_messages');
 
         Schema::create($messagesTableName, function (Blueprint $table) use ($sessionsTableName) {
             $table->id();
@@ -33,7 +33,7 @@ return new class () extends Migration {
      */
     public function down(): void
     {
-        $messagesTableName = config('agent-adk.tables.agent_messages', 'agent_messages');
+        $messagesTableName = config('vizra-adk.tables.agent_messages', 'agent_messages');
         Schema::dropIfExists($messagesTableName);
     }
 };

@@ -24,12 +24,12 @@ class AgentTraceCleanupCommand extends Command
 
     public function handle(): int
     {
-        if (!config('agent-adk.tracing.enabled', false)) {
+        if (!config('vizra-adk.tracing.enabled', false)) {
             $this->error('Agent tracing is not enabled in configuration.');
             return self::FAILURE;
         }
 
-        $days = (int) $this->option('days') ?: config('agent-adk.tracing.cleanup_days', 30);
+        $days = (int) $this->option('days') ?: config('vizra-adk.tracing.cleanup_days', 30);
         $isDryRun = $this->option('dry-run');
         $force = $this->option('force');
 

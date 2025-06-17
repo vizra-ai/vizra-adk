@@ -192,7 +192,7 @@
     @if(!empty($span['children']))
         <div class="space-y-0">
             @foreach($span['children'] as $child)
-                @include('agent-adk::partials.trace-span', ['span' => $child, 'level' => $level + 1])
+                @include('vizra-adk::partials.trace-span', ['span' => $child, 'level' => $level + 1])
             @endforeach
         </div>
     @endif

@@ -12,6 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $tableName = config('vizra-adk.tables.agent_vector_memories', 'agent_vector_memories');
+
         // First, check if we're using PostgreSQL and if pgvector extension is available
         if (DB::connection()->getDriverName() === 'pgsql') {
             try {
@@ -24,7 +26,7 @@ return new class extends Migration
             }
         }
 
-        Schema::create('agent_vector_memories', function (Blueprint $table) {
+        Schema::create($tableName, function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->string('agent_name')->index();
             $table->string('namespace')->default('default')->index(); // For organizing different memory types
@@ -62,10 +64,10 @@ return new class extends Migration
         if (DB::connection()->getDriverName() === 'pgsql' && !app()->environment('testing')) {
             try {
                 // Create IVFFlat index for fast approximate similarity search
-                DB::statement('CREATE INDEX agent_vector_memories_embedding_idx ON agent_vector_memories USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)');
+                DB::statement('CREATE INDEX agent_vector_memories_embedding_idx ON ' . $tableName . ' USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)');
                 
                 // You can also create HNSW index (requires pgvector 0.5.0+)
-                // DB::statement('CREATE INDEX agent_vector_memories_embedding_hnsw_idx ON agent_vector_memories USING hnsw (embedding vector_cosine_ops)');
+                // DB::statement('CREATE INDEX agent_vector_memories_embedding_hnsw_idx ON ' . $tableName . ' USING hnsw (embedding vector_cosine_ops)');
             } catch (\Exception $e) {
                 // In case pgvector is not properly installed, skip vector indexes
                 // This will still allow the table to be created
@@ -78,6 +80,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('agent_vector_memories');
+        $tableName = config('vizra-adk.tables.agent_vector_memories', 'agent_vector_memories');
+        Schema::dropIfExists($tableName);
     }
 };

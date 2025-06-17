@@ -34,7 +34,7 @@ class Tracer
 
     public function __construct()
     {
-        $this->enabled = config('agent-adk.tracing.enabled', true);
+        $this->enabled = config('vizra-adk.tracing.enabled', true);
     }
 
     /**
@@ -110,7 +110,7 @@ class Tracer
 
         try {
             // Create the database record
-            DB::table(config('agent-adk.tracing.table', 'agent_trace_spans'))->insert([
+            DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))->insert([
                 'id' => Str::ulid()->toString(),
                 'trace_id' => $this->currentTraceId,
                 'parent_span_id' => $parentSpanId,
@@ -177,7 +177,7 @@ class Tracer
         $durationMs = round(($endTime - $startTime) * 1000);
 
         // Log tool call span completion
-        $spanDetails = DB::table(config('agent-adk.tracing.table', 'agent_trace_spans'))
+        $spanDetails = DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
             ->where('span_id', $spanId)
             ->first();
 
@@ -197,7 +197,7 @@ class Tracer
 
         try {
             // Update the database record
-            DB::table(config('agent-adk.tracing.table', 'agent_trace_spans'))
+            DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
                 ->where('span_id', $spanId)
                 ->update([
                     'output' => $this->safeJsonEncode($output),
@@ -235,7 +235,7 @@ class Tracer
 
         try {
             // Update the database record with error information
-            DB::table(config('agent-adk.tracing.table', 'agent_trace_spans'))
+            DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
                 ->where('span_id', $spanId)
                 ->update([
                     'status' => 'error',
@@ -266,7 +266,7 @@ class Tracer
 
         // Find and end the root span (first span in the trace)
         try {
-            $rootSpan = DB::table(config('agent-adk.tracing.table', 'agent_trace_spans'))
+            $rootSpan = DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
                 ->where('trace_id', $this->currentTraceId)
                 ->whereNull('parent_span_id')
                 ->first();
@@ -337,7 +337,7 @@ class Tracer
         }
 
         try {
-            return DB::table(config('agent-adk.tracing.table', 'agent_trace_spans'))
+            return DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
                 ->where('session_id', $sessionId)
                 ->orderBy('start_time')
                 ->get()
@@ -362,7 +362,7 @@ class Tracer
         }
 
         try {
-            return DB::table(config('agent-adk.tracing.table', 'agent_trace_spans'))
+            return DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
                 ->where('trace_id', $traceId)
                 ->orderBy('start_time')
                 ->get()
@@ -392,7 +392,7 @@ class Tracer
         try {
             $cutoffDate = now()->subDays($days);
             $cutoffTimestamp = $cutoffDate->getTimestamp() + ($cutoffDate->micro / 1000000);
-            $tableName = config('agent-adk.tracing.table', 'agent_trace_spans');
+            $tableName = config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans');
 
             // Get distinct trace IDs to delete
             $traceIds = DB::table($tableName)
@@ -457,7 +457,7 @@ class Tracer
         // Try to get from the most recent span if available
         if (!empty($this->currentTraceId)) {
             try {
-                $recentSpan = DB::table(config('agent-adk.tracing.table', 'agent_trace_spans'))
+                $recentSpan = DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
                     ->where('trace_id', $this->currentTraceId)
                     ->orderBy('start_time', 'desc')
                     ->first();
@@ -486,7 +486,7 @@ class Tracer
         // Try to get from the root span
         if (!empty($this->currentTraceId)) {
             try {
-                $rootSpan = DB::table(config('agent-adk.tracing.table', 'agent_trace_spans'))
+                $rootSpan = DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
                     ->where('trace_id', $this->currentTraceId)
                     ->whereNull('parent_span_id')
                     ->first();
@@ -515,7 +515,7 @@ class Tracer
             $cutoffDate = now()->subDays($days);
             $cutoffTimestamp = $cutoffDate->getTimestamp() + ($cutoffDate->micro / 1000000);
 
-            return DB::table(config('agent-adk.tracing.table', 'agent_trace_spans'))
+            return DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
                 ->where('start_time', '<', $cutoffTimestamp)
                 ->distinct('trace_id')
                 ->count('trace_id');

@@ -16,9 +16,9 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
     public function __construct()
     {
         $this->baseUrl = config('services.ollama.url', env('OLLAMA_URL', 'http://localhost:11434'));
-        $this->model = config('agent-adk.vector_memory.embedding_models.ollama', 'nomic-embed-text');
+        $this->model = config('vizra-adk.vector_memory.embedding_models.ollama', 'nomic-embed-text');
         
-        $this->dimensions = config('agent-adk.vector_memory.dimensions', [
+        $this->dimensions = config('vizra-adk.vector_memory.dimensions', [
             'nomic-embed-text' => 768,
             'mxbai-embed-large' => 1024,
             'all-minilm' => 384,
