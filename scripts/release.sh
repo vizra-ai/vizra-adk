@@ -51,32 +51,55 @@ fi
 # Get current version from composer.json (default to 0.0.0 if not set)
 CURRENT_VERSION=$(grep -o '"version":[[:space:]]*"[^"]*"' "composer.json" 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' || echo "0.0.0")
 
+# Parse command line arguments
+RELEASE_TYPE="${1:-patch}"  # Default to patch if not specified
+
 echo -e "${BLUE}=== Vizra ADK Release Tool ===${NC}"
 echo ""
 
 # Show current version
 echo -e "${YELLOW}Current version: $CURRENT_VERSION${NC}"
+
+# Calculate next version based on release type
+IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+MAJOR=${VERSION_PARTS[0]}
+MINOR=${VERSION_PARTS[1]}
+PATCH=${VERSION_PARTS[2]}
+
+case "$RELEASE_TYPE" in
+    "major")
+        MAJOR=$((MAJOR + 1))
+        MINOR=0
+        PATCH=0
+        ;;
+    "minor")
+        MINOR=$((MINOR + 1))
+        PATCH=0
+        ;;
+    "patch")
+        PATCH=$((PATCH + 1))
+        ;;
+    *)
+        echo -e "${RED}Error: Invalid release type '$RELEASE_TYPE'${NC}"
+        echo "Usage: $0 [patch|minor|major]"
+        echo "  patch - Bug fixes and minor changes (0.0.X)"
+        echo "  minor - New features, backwards compatible (0.X.0)"
+        echo "  major - Breaking changes (X.0.0)"
+        exit 1
+        ;;
+esac
+
+NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+echo -e "${GREEN}Release type: $RELEASE_TYPE${NC}"
+echo -e "${GREEN}New version: $NEW_VERSION${NC}"
 echo ""
 
-# Prompt for new version
-read -p "Enter new version (e.g., 0.1.0): " NEW_VERSION
-
-# Validate version format
-if ! [[ $NEW_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo -e "${RED}Error: Invalid version format${NC}"
-    echo "Please use semantic versioning (e.g., 0.1.0)"
-    exit 1
-fi
-
-# Compare versions
-IFS='.' read -ra CURR <<< "$CURRENT_VERSION"
-IFS='.' read -ra NEW <<< "$NEW_VERSION"
-
-if [[ ${NEW[0]} -lt ${CURR[0]} ]] || \
-   [[ ${NEW[0]} -eq ${CURR[0]} && ${NEW[1]} -lt ${CURR[1]} ]] || \
-   [[ ${NEW[0]} -eq ${CURR[0]} && ${NEW[1]} -eq ${CURR[1]} && ${NEW[2]} -le ${CURR[2]} ]]; then
-    echo -e "${RED}Error: New version must be greater than current version${NC}"
-    exit 1
+# Confirm the version
+read -p "Proceed with v$NEW_VERSION? (y/n): " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "${YELLOW}Release cancelled${NC}"
+    exit 0
 fi
 
 # Prompt for release notes
@@ -171,11 +194,37 @@ echo -e "${BLUE}Pushing to GitHub...${NC}"
 git push origin main
 git push origin "v$NEW_VERSION"
 
+# Create GitHub release if gh CLI is available
+if command -v gh &> /dev/null; then
+    echo ""
+    echo -e "${BLUE}Creating GitHub release...${NC}"
+    
+    # Create release using gh CLI
+    gh release create "v$NEW_VERSION" \
+        --title "v$NEW_VERSION" \
+        --notes "$RELEASE_NOTES" \
+        --verify-tag
+    
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ GitHub release created successfully!${NC}"
+    else
+        echo -e "${YELLOW}⚠ Failed to create GitHub release. You can create it manually at:${NC}"
+        echo "  https://github.com/vizra-ai/vizra-adk/releases/new?tag=v$NEW_VERSION"
+    fi
+else
+    echo ""
+    echo -e "${YELLOW}GitHub CLI (gh) not found. To create releases automatically, install it:${NC}"
+    echo "  brew install gh  # macOS"
+    echo "  # or see: https://cli.github.com/manual/installation"
+fi
+
 echo ""
 echo -e "${GREEN}✅ Release v$NEW_VERSION completed successfully!${NC}"
 echo ""
 echo -e "${BLUE}Next steps:${NC}"
-echo "1. Create GitHub release: https://github.com/vizra-ai/vizra-adk/releases/new?tag=v$NEW_VERSION"
+if ! command -v gh &> /dev/null || [ $? -ne 0 ]; then
+    echo "1. Create GitHub release: https://github.com/vizra-ai/vizra-adk/releases/new?tag=v$NEW_VERSION"
+fi
 echo "2. Submit to Packagist (if not auto-synced): https://packagist.org/packages/vizra/vizra-adk"
 echo "3. Update documentation if needed"
 echo "4. Announce the release"
