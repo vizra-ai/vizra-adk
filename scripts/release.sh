@@ -191,7 +191,7 @@ $RELEASE_NOTES"
 
 # Push changes
 echo -e "${BLUE}Pushing to GitHub...${NC}"
-git push origin main
+git push origin master
 git push origin "v$NEW_VERSION"
 
 # Create GitHub release if gh CLI is available
