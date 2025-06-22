@@ -1,18 +1,22 @@
 <?php
 
-use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Execution\AgentExecutor;
-use Prism\Prism\ValueObjects\Messages\Support\Image;
 use Prism\Prism\ValueObjects\Messages\Support\Document;
+use Prism\Prism\ValueObjects\Messages\Support\Image;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Execution\AgentExecutor;
+use Vizra\VizraADK\System\AgentContext;
 
 it('executor stores prism image and document objects', function () {
     // Create a simple test agent
-    $testAgent = new class extends BaseLlmAgent {
+    $testAgent = new class extends BaseLlmAgent
+    {
         protected string $name = 'test_agent';
+
         protected string $description = 'Test agent';
+
         protected string $instructions = 'Test instructions';
+
         protected string $model = 'gpt-4o';
     };
 
@@ -43,10 +47,14 @@ it('executor stores prism image and document objects', function () {
 });
 
 it('base llm agent processes images and documents from context', function () {
-    $testAgent = new class extends BaseLlmAgent {
+    $testAgent = new class extends BaseLlmAgent
+    {
         protected string $name = 'test_agent';
+
         protected string $description = 'Test agent';
+
         protected string $instructions = 'Test instructions';
+
         protected string $model = 'gpt-4o';
 
         public function prepareMessagesForPrism(AgentContext $context): array
@@ -67,7 +75,7 @@ it('base llm agent processes images and documents from context', function () {
         'role' => 'user',
         'content' => 'Test message',
         'images' => [$image],
-        'documents' => [$document]
+        'documents' => [$document],
     ]);
 
     // Call prepareMessagesForPrism
@@ -82,10 +90,14 @@ it('base llm agent processes images and documents from context', function () {
 });
 
 it('base llm agent retrieves attachments from context state', function () {
-    $testAgent = new class extends BaseLlmAgent {
+    $testAgent = new class extends BaseLlmAgent
+    {
         protected string $name = 'test_agent';
+
         protected string $description = 'Test agent';
+
         protected string $instructions = 'Test instructions';
+
         protected string $model = 'gpt-4o';
 
         public function run(mixed $input, AgentContext $context): mixed
@@ -95,10 +107,10 @@ it('base llm agent retrieves attachments from context state', function () {
             $documents = $context->getState('prism_documents', []);
 
             $userMessage = ['role' => 'user', 'content' => $input ?: ''];
-            if (!empty($images)) {
+            if (! empty($images)) {
                 $userMessage['images'] = $images;
             }
-            if (!empty($documents)) {
+            if (! empty($documents)) {
                 $userMessage['documents'] = $documents;
             }
 
@@ -132,7 +144,7 @@ it('executor sets prism attachments in agent context state', function () {
 
     // Add attachments
     $executor->withImageFromBase64('fake-base64', 'image/png')
-             ->withDocumentFromBase64('fake-base64', 'application/pdf');
+        ->withDocumentFromBase64('fake-base64', 'application/pdf');
 
     // Use reflection to check the internal state
     $reflection = new \ReflectionClass($executor);

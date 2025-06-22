@@ -2,6 +2,4 @@
 
 namespace Vizra\VizraADK\Exceptions;
 
-class AgentNotFoundException extends \Exception
-{
-}
+class AgentNotFoundException extends \Exception {}

@@ -1,12 +1,11 @@
 <?php
 
+use Illuminate\Support\Facades\Event;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Events\TaskDelegated;
+use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Tools\DelegateToSubAgentTool;
-use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\Memory\AgentMemory;
-use Illuminate\Support\Facades\Event;
-use Mockery;
 
 describe('TaskDelegated Event', function () {
     it('creates task delegated event correctly', function () {
@@ -93,7 +92,7 @@ describe('TaskDelegated Event Integration', function () {
         $arguments = [
             'sub_agent_name' => 'sub-agent',
             'task_input' => 'Process this data',
-            'context_summary' => 'User is asking about data processing'
+            'context_summary' => 'User is asking about data processing',
         ];
 
         // Execute the tool
@@ -246,7 +245,7 @@ describe('TaskDelegated Event Integration', function () {
         $arguments = [
             'sub_agent_name' => 'sub-agent',
             'task_input' => 'Task input',
-            'context_summary' => 'Context summary'
+            'context_summary' => 'Context summary',
         ];
 
         $mockAgent = Mockery::mock(BaseLlmAgent::class);

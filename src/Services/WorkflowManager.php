@@ -2,10 +2,10 @@
 
 namespace Vizra\VizraADK\Services;
 
-use Vizra\VizraADK\Agents\SequentialWorkflow;
-use Vizra\VizraADK\Agents\ParallelWorkflow;
 use Vizra\VizraADK\Agents\ConditionalWorkflow;
 use Vizra\VizraADK\Agents\LoopWorkflow;
+use Vizra\VizraADK\Agents\ParallelWorkflow;
+use Vizra\VizraADK\Agents\SequentialWorkflow;
 
 /**
  * Workflow Manager Service
@@ -18,13 +18,12 @@ class WorkflowManager
     /**
      * Create a sequential workflow
      *
-     * @param string ...$agentClasses Optional agent class names for quick setup
-     * @return SequentialWorkflow
+     * @param  string  ...$agentClasses  Optional agent class names for quick setup
      */
     public function sequential(string ...$agentClasses): SequentialWorkflow
     {
         if (empty($agentClasses)) {
-            return new SequentialWorkflow();
+            return new SequentialWorkflow;
         }
 
         return SequentialWorkflow::create(...$agentClasses);
@@ -33,39 +32,36 @@ class WorkflowManager
     /**
      * Create a parallel workflow
      *
-     * @param array $agents Optional agent array for quick setup
-     * @return ParallelWorkflow
+     * @param  array  $agents  Optional agent array for quick setup
      */
     public function parallel(array $agents = []): ParallelWorkflow
     {
         if (empty($agents)) {
-            return new ParallelWorkflow();
+            return new ParallelWorkflow;
         }
 
-        $workflow = new ParallelWorkflow();
+        $workflow = new ParallelWorkflow;
         $workflow->agents($agents);
+
         return $workflow;
     }
 
     /**
      * Create a conditional workflow
-     *
-     * @return ConditionalWorkflow
      */
     public function conditional(): ConditionalWorkflow
     {
-        return new ConditionalWorkflow();
+        return new ConditionalWorkflow;
     }
 
     /**
      * Create a loop workflow
      *
-     * @param string|null $agentClass Optional agent class name for quick setup
-     * @return LoopWorkflow
+     * @param  string|null  $agentClass  Optional agent class name for quick setup
      */
     public function loop(?string $agentClass = null): LoopWorkflow
     {
-        $workflow = new LoopWorkflow();
+        $workflow = new LoopWorkflow;
 
         if ($agentClass) {
             $workflow->agent($agentClass);
@@ -76,11 +72,6 @@ class WorkflowManager
 
     /**
      * Create a while loop workflow
-     *
-     * @param string $agentClass
-     * @param string|\Closure $condition
-     * @param int $maxIterations
-     * @return LoopWorkflow
      */
     public function while(string $agentClass, string|\Closure $condition, int $maxIterations = 100): LoopWorkflow
     {
@@ -89,15 +80,10 @@ class WorkflowManager
 
     /**
      * Create an until loop workflow
-     *
-     * @param string $agentClass
-     * @param string|\Closure $condition
-     * @param int $maxIterations
-     * @return LoopWorkflow
      */
     public function until(string $agentClass, string|\Closure $condition, int $maxIterations = 100): LoopWorkflow
     {
-        return (new LoopWorkflow())
+        return (new LoopWorkflow)
             ->agent($agentClass)
             ->until($condition)
             ->maxIterations($maxIterations);
@@ -105,10 +91,6 @@ class WorkflowManager
 
     /**
      * Create a times loop workflow
-     *
-     * @param string $agentClass
-     * @param int $times
-     * @return LoopWorkflow
      */
     public function times(string $agentClass, int $times): LoopWorkflow
     {
@@ -117,10 +99,6 @@ class WorkflowManager
 
     /**
      * Create a forEach loop workflow
-     *
-     * @param string $agentClass
-     * @param array|\Traversable $collection
-     * @return LoopWorkflow
      */
     public function forEach(string $agentClass, array|\Traversable $collection): LoopWorkflow
     {
@@ -130,7 +108,6 @@ class WorkflowManager
     /**
      * Create a workflow from a definition array
      *
-     * @param array $definition
      * @return SequentialWorkflow|ParallelWorkflow|ConditionalWorkflow|LoopWorkflow
      */
     public function fromArray(array $definition)
@@ -157,13 +134,10 @@ class WorkflowManager
 
     /**
      * Create sequential workflow from array definition
-     *
-     * @param array $definition
-     * @return SequentialWorkflow
      */
     private function createSequentialFromArray(array $definition): SequentialWorkflow
     {
-        $workflow = new SequentialWorkflow();
+        $workflow = new SequentialWorkflow;
 
         foreach ($definition['steps'] ?? [] as $step) {
             $workflow->then(
@@ -178,13 +152,10 @@ class WorkflowManager
 
     /**
      * Create parallel workflow from array definition
-     *
-     * @param array $definition
-     * @return ParallelWorkflow
      */
     private function createParallelFromArray(array $definition): ParallelWorkflow
     {
-        $workflow = new ParallelWorkflow();
+        $workflow = new ParallelWorkflow;
 
         $agents = [];
         foreach ($definition['agents'] ?? [] as $agent) {
@@ -208,13 +179,10 @@ class WorkflowManager
 
     /**
      * Create conditional workflow from array definition
-     *
-     * @param array $definition
-     * @return ConditionalWorkflow
      */
     private function createConditionalFromArray(array $definition): ConditionalWorkflow
     {
-        $workflow = new ConditionalWorkflow();
+        $workflow = new ConditionalWorkflow;
 
         foreach ($definition['conditions'] ?? [] as $condition) {
             $workflow->when(
@@ -238,13 +206,10 @@ class WorkflowManager
 
     /**
      * Create loop workflow from array definition
-     *
-     * @param array $definition
-     * @return LoopWorkflow
      */
     private function createLoopFromArray(array $definition): LoopWorkflow
     {
-        $workflow = new LoopWorkflow();
+        $workflow = new LoopWorkflow;
 
         $workflow->agent($definition['agent']);
 

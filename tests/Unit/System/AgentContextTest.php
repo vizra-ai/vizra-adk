@@ -1,7 +1,7 @@
 <?php
 
-use Vizra\VizraADK\System\AgentContext;
 use Illuminate\Support\Collection;
+use Vizra\VizraADK\System\AgentContext;
 
 it('can create agent context with minimal data', function () {
     $context = new AgentContext('test-session-id');
@@ -19,7 +19,7 @@ it('can create agent context with full data', function () {
     $initialState = ['key' => 'value', 'counter' => 0];
     $history = new Collection([
         ['role' => 'user', 'content' => 'Previous message'],
-        ['role' => 'assistant', 'content' => 'Previous response']
+        ['role' => 'assistant', 'content' => 'Previous response'],
     ]);
 
     $context = new AgentContext($sessionId, $userInput, $initialState, $history);
@@ -87,7 +87,7 @@ it('can clear history by setting empty collection', function () {
 
     expect($context->getConversationHistory())->toHaveCount(2);
 
-    $context->setConversationHistory(new Collection());
+    $context->setConversationHistory(new Collection);
     expect($context->getConversationHistory()->isEmpty())->toBeTrue();
 });
 
@@ -133,7 +133,7 @@ it('can get latest user message from history', function () {
     $context->addMessage(['role' => 'user', 'content' => 'Second message']);
 
     $history = $context->getConversationHistory();
-    $userMessages = $history->filter(fn($message) => $message['role'] === 'user');
+    $userMessages = $history->filter(fn ($message) => $message['role'] === 'user');
     $latestUserMessage = $userMessages->last();
 
     expect($latestUserMessage['content'])->toBe('Second message');
@@ -146,7 +146,7 @@ it('returns null when no user messages exist in history', function () {
     $context->addMessage(['role' => 'assistant', 'content' => 'Only assistant message']);
 
     $history = $context->getConversationHistory();
-    $userMessages = $history->filter(fn($message) => $message['role'] === 'user');
+    $userMessages = $history->filter(fn ($message) => $message['role'] === 'user');
 
     expect($userMessages->isEmpty())->toBeTrue();
 });

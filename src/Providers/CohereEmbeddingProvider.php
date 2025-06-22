@@ -2,16 +2,19 @@
 
 namespace Vizra\VizraADK\Providers;
 
-use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
+use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 
 class CohereEmbeddingProvider implements EmbeddingProviderInterface
 {
     protected string $apiKey;
+
     protected string $model;
+
     protected string $baseUrl;
+
     protected array $dimensions;
 
     public function __construct()
@@ -33,7 +36,7 @@ class CohereEmbeddingProvider implements EmbeddingProviderInterface
             'embed-multilingual-light-v3.0' => 384,
         ]);
 
-        if (!$this->apiKey) {
+        if (! $this->apiKey) {
             throw new RuntimeException('Cohere API key is required for embedding generation');
         }
     }
@@ -51,26 +54,26 @@ class CohereEmbeddingProvider implements EmbeddingProviderInterface
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
-            ])->timeout(60)->post($this->baseUrl . '/embed', [
+            ])->timeout(60)->post($this->baseUrl.'/embed', [
                 'model' => $this->model,
                 'texts' => $inputs,
                 'input_type' => 'search_document', // For retrieval/search use case
                 'embedding_types' => ['float'],
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::error('Cohere embedding API error', [
                     'status' => $response->status(),
                     'response' => $response->body(),
                 ]);
-                throw new RuntimeException('Cohere embedding API request failed: ' . $response->body());
+                throw new RuntimeException('Cohere embedding API request failed: '.$response->body());
             }
 
             $data = $response->json();
 
-            if (!isset($data['embeddings']['float']) || !is_array($data['embeddings']['float'])) {
+            if (! isset($data['embeddings']['float']) || ! is_array($data['embeddings']['float'])) {
                 throw new RuntimeException('Invalid response format from Cohere embedding API');
             }
 
@@ -92,7 +95,7 @@ class CohereEmbeddingProvider implements EmbeddingProviderInterface
                 'model' => $this->model,
                 'input_count' => count($inputs),
             ]);
-            throw new RuntimeException('Failed to generate Cohere embeddings: ' . $e->getMessage());
+            throw new RuntimeException('Failed to generate Cohere embeddings: '.$e->getMessage());
         }
     }
 

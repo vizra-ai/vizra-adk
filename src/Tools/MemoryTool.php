@@ -3,9 +3,9 @@
 namespace Vizra\VizraADK\Tools;
 
 use Vizra\VizraADK\Contracts\ToolInterface;
-use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\Services\MemoryManager;
+use Vizra\VizraADK\System\AgentContext;
 
 /**
  * Memory Management Tool
@@ -31,36 +31,36 @@ class MemoryTool implements ToolInterface
                     'action' => [
                         'type' => 'string',
                         'enum' => ['add_learning', 'add_fact', 'get_context', 'get_history'],
-                        'description' => 'The memory action to perform'
+                        'description' => 'The memory action to perform',
                     ],
                     'content' => [
                         'type' => 'string',
-                        'description' => 'The learning content (required for add_learning)'
+                        'description' => 'The learning content (required for add_learning)',
                     ],
                     'key' => [
                         'type' => 'string',
-                        'description' => 'Key for storing facts (required for add_fact action)'
+                        'description' => 'Key for storing facts (required for add_fact action)',
                     ],
                     'value' => [
                         'type' => 'string',
-                        'description' => 'Value for storing facts (required for add_fact action)'
+                        'description' => 'Value for storing facts (required for add_fact action)',
                     ],
                     'limit' => [
                         'type' => 'integer',
                         'description' => 'Number of recent messages to retrieve (for get_history, default: 10)',
                         'minimum' => 1,
-                        'maximum' => 50
-                    ]
+                        'maximum' => 50,
+                    ],
                 ],
-                'required' => ['action']
-            ]
+                'required' => ['action'],
+            ],
         ];
     }
 
     public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
-        if (!isset($arguments['action'])) {
-            return "Error: action parameter is required";
+        if (! isset($arguments['action'])) {
+            return 'Error: action parameter is required';
         }
 
         $action = $arguments['action'];
@@ -71,18 +71,20 @@ class MemoryTool implements ToolInterface
             switch ($action) {
                 case 'add_learning':
                     if (empty($arguments['content'])) {
-                        return "Error: learning parameter is required";
+                        return 'Error: learning parameter is required';
                     }
 
                     $this->memoryManager->addLearning($agentName, $arguments['content'], $userId);
-                    return "Added learning to memory: " . $arguments['content'];
+
+                    return 'Added learning to memory: '.$arguments['content'];
 
                 case 'add_fact':
                     if (empty($arguments['key']) || empty($arguments['value'])) {
-                        return "Error: key and value parameters are required";
+                        return 'Error: key and value parameters are required';
                     }
 
                     $this->memoryManager->addFact($agentName, $arguments['key'], $arguments['value'], $userId);
+
                     return "Added fact to memory: {$arguments['key']} = {$arguments['value']}";
 
                 case 'get_context':
@@ -91,7 +93,7 @@ class MemoryTool implements ToolInterface
                     $summary = $memoryContext['summary'] ?? 'None';
                     $learnings = empty($memoryContext['key_learnings']) ? 'None' : implode('; ', $memoryContext['key_learnings']);
                     $facts = empty($memoryContext['facts']) ? 'None' : implode('; ', array_map(
-                        fn($k, $v) => "$k: $v",
+                        fn ($k, $v) => "$k: $v",
                         array_keys($memoryContext['facts']),
                         array_values($memoryContext['facts'])
                     ));
@@ -104,11 +106,11 @@ class MemoryTool implements ToolInterface
                     $history = $context->getConversationHistory();
 
                     if ($history->isEmpty()) {
-                        return "No conversation history found for this session.";
+                        return 'No conversation history found for this session.';
                     }
 
                     $limitedHistory = $history->slice(-$limit);
-                    $historyText = "Recent conversation history";
+                    $historyText = 'Recent conversation history';
                     if ($limit < $history->count()) {
                         $historyText .= " (last {$limit} messages)";
                     }
@@ -128,7 +130,7 @@ class MemoryTool implements ToolInterface
         } catch (\Exception $e) {
             return json_encode([
                 'success' => false,
-                'message' => 'Memory operation failed: ' . $e->getMessage()
+                'message' => 'Memory operation failed: '.$e->getMessage(),
             ]);
         }
     }

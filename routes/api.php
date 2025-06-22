@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Vizra\VizraADK\Http\Controllers\AgentApiController;
+use Vizra\VizraADK\Http\Controllers\OpenAICompatibleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,14 +17,6 @@ use Vizra\VizraADK\Http\Controllers\AgentApiController;
 Route::post('/interact', [AgentApiController::class, 'handleAgentInteraction'])
     ->name('vizra.api.interact');
 
-// Example of a route for a specific, predefined agent if desired
-// Route::post('/weather', function (Request $request) {
-//     $input = $request->input('message');
-//     $sessionId = $request->input('session_id', session()->getId());
-//     try {
-//         $response = \Vizra\VizraADK\Facades\Agent::run('weather_reporter', $input, $sessionId);
-//         return response()->json(['response' => $response, 'session_id' => $sessionId]);
-//     } catch (\Throwable $e) {
-//         return response()->json(['error' => $e->getMessage()], 500);
-//     }
-// })->name('vizra.api.weather');
+// OpenAI-compatible Chat Completions API
+Route::post('/chat/completions', [OpenAICompatibleController::class, 'chatCompletions'])
+    ->name('vizra.api.openai.chat.completions');

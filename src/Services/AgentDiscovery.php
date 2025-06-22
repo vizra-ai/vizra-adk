@@ -11,6 +11,7 @@ use Vizra\VizraADK\Agents\BaseWorkflowAgent;
 class AgentDiscovery
 {
     protected const CACHE_KEY = 'vizra_adk_discovered_agents';
+
     protected const CACHE_TTL = 86400; // 24 hours
 
     /**
@@ -33,7 +34,7 @@ class AgentDiscovery
                 return $this->scanForAgents();
             });
         }
-        
+
         // Fallback for non-Laravel environments (like testing)
         return $this->scanForAgents();
     }
@@ -58,10 +59,10 @@ class AgentDiscovery
         if (function_exists('config')) {
             $namespace = config('vizra-adk.namespaces.agents', 'App\\Agents');
         }
-        
+
         $directory = $this->namespaceToPath($namespace);
-        
-        if (!File::exists($directory)) {
+
+        if (! File::exists($directory)) {
             return [];
         }
 
@@ -74,21 +75,21 @@ class AgentDiscovery
             }
 
             $className = $this->fileToClassName($file, $namespace, $directory);
-            
-            if (!$className) {
+
+            if (! $className) {
                 continue;
             }
-            
+
             // Try to load the class if it doesn't exist
-            if (!class_exists($className)) {
+            if (! class_exists($className)) {
                 try {
                     require_once $file->getPathname();
                 } catch (\Exception $e) {
                     continue;
                 }
-                
+
                 // Check again after loading
-                if (!class_exists($className)) {
+                if (! class_exists($className)) {
                     continue;
                 }
             }
@@ -111,7 +112,7 @@ class AgentDiscovery
     {
         // Convert namespace to path
         $relativePath = str_replace('\\', '/', $namespace);
-        
+
         // Check common locations
         if (str_starts_with($namespace, 'App\\')) {
             if (function_exists('app_path')) {
@@ -119,16 +120,17 @@ class AgentDiscovery
             }
             // Fallback for non-Laravel environments
             $basePath = dirname(dirname(dirname(dirname(dirname(__DIR__)))));
-            return $basePath . '/app/' . str_replace('App/', '', $relativePath);
+
+            return $basePath.'/app/'.str_replace('App/', '', $relativePath);
         }
 
         // Default to base path
         if (function_exists('base_path')) {
             return base_path($relativePath);
         }
-        
+
         // Fallback
-        return dirname(dirname(dirname(dirname(dirname(__DIR__))))) . '/' . $relativePath;
+        return dirname(dirname(dirname(dirname(dirname(__DIR__))))).'/'.$relativePath;
     }
 
     /**
@@ -136,11 +138,11 @@ class AgentDiscovery
      */
     protected function fileToClassName(\SplFileInfo $file, string $namespace, string $directory): ?string
     {
-        $relativePath = str_replace($directory . '/', '', $file->getPathname());
+        $relativePath = str_replace($directory.'/', '', $file->getPathname());
         $relativePath = str_replace('.php', '', $relativePath);
         $relativePath = str_replace('/', '\\', $relativePath);
 
-        return $namespace . '\\' . $relativePath;
+        return $namespace.'\\'.$relativePath;
     }
 
     /**
@@ -150,7 +152,7 @@ class AgentDiscovery
     {
         try {
             $reflection = new \ReflectionClass($className);
-            
+
             // Check if it extends one of the base agent classes
             return $reflection->isSubclassOf(BaseAgent::class) ||
                    $reflection->isSubclassOf(BaseLlmAgent::class) ||
@@ -167,7 +169,7 @@ class AgentDiscovery
     {
         try {
             $reflection = new \ReflectionClass($className);
-            
+
             // Don't instantiate abstract classes
             if ($reflection->isAbstract()) {
                 return null;
@@ -176,12 +178,12 @@ class AgentDiscovery
             // Get the name property value
             $nameProperty = $reflection->getProperty('name');
             $nameProperty->setAccessible(true);
-            
+
             // Create a temporary instance to read the property
             $instance = $reflection->newInstanceWithoutConstructor();
             $name = $nameProperty->getValue($instance);
-            
-            return !empty($name) ? $name : null;
+
+            return ! empty($name) ? $name : null;
         } catch (\Exception $e) {
             return null;
         }

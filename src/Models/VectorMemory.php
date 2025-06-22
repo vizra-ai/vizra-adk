@@ -2,8 +2,8 @@
 
 namespace Vizra\VizraADK\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Model;
 
 class VectorMemory extends Model
 {
@@ -99,7 +99,7 @@ class VectorMemory extends Model
      */
     public static function generateContentHash(string $content, string $agentName): string
     {
-        return hash('sha256', $agentName . ':' . trim($content));
+        return hash('sha256', $agentName.':'.trim($content));
     }
 
     /**
@@ -111,6 +111,7 @@ class VectorMemory extends Model
         foreach ($vector as $component) {
             $sum += $component * $component;
         }
+
         return sqrt($sum);
     }
 

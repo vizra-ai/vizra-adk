@@ -2,42 +2,52 @@
 
 namespace Vizra\VizraADK\Livewire;
 
-use Livewire\Component;
-use Livewire\Attributes\On;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
+use Livewire\Component;
 use Vizra\VizraADK\Facades\Agent;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Services\StateManager;
 use Vizra\VizraADK\Models\AgentSession;
 use Vizra\VizraADK\Models\TraceSpan;
-use Vizra\VizraADK\Services\Tracer;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
+use Vizra\VizraADK\Services\StateManager;
 
 #[Layout('vizra-adk::layouts.app')]
 class ChatInterface extends Component
 {
     public string $selectedAgent = '';
+
     public array $registeredAgents = [];
+
     public string $message = '';
+
     public array $chatHistory = [];
+
     public string $sessionId = '';
+
     public bool $isLoading = false;
+
     public bool $showDetails = true; // Always show details by default
+
     public string $activeTab = 'agent-info';
+
     public array $sessionData = [];
+
     public array $contextData = [];
+
     public array $memoryData = [];
+
     public array $agentInfo = [];
+
     public array $traceData = [];
 
     // Modal properties
     public bool $showLoadSessionModal = false;
+
     public string $loadSessionId = '';
 
     public function mount()
     {
-        $this->sessionId = 'chat-' . Str::random(8);
+        $this->sessionId = 'chat-'.Str::random(8);
         $this->loadRegisteredAgents();
     }
 
@@ -50,7 +60,7 @@ class ChatInterface extends Component
     {
         $this->selectedAgent = $agentName;
         $this->chatHistory = [];
-        $this->sessionId = 'chat-' . Str::random(8);
+        $this->sessionId = 'chat-'.Str::random(8);
         $this->loadAgentInfo();
         $this->loadContextData();
         $this->loadTraceData();
@@ -60,6 +70,7 @@ class ChatInterface extends Component
     {
         if (empty($this->selectedAgent)) {
             $this->agentInfo = [];
+
             return;
         }
 
@@ -67,7 +78,7 @@ class ChatInterface extends Component
             // Get agent class information from registry
             $agentClass = $this->registeredAgents[$this->selectedAgent] ?? null;
             if ($agentClass && class_exists($agentClass)) {
-                $agent = new $agentClass();
+                $agent = new $agentClass;
                 // Load tools first to ensure they're available
                 $agent->loadTools();
                 $this->agentInfo = [
@@ -97,6 +108,7 @@ class ChatInterface extends Component
         if (empty($this->selectedAgent) || empty($this->sessionId)) {
             $this->contextData = [];
             $this->memoryData = [];
+
             return;
         }
 
@@ -111,7 +123,7 @@ class ChatInterface extends Component
                         'role' => $message['role'] ?? 'unknown',
                         'content' => $message['content'] ?? '',
                         'timestamp' => isset($message['timestamp']) ? $message['timestamp'] : now()->format('H:i:s'),
-                        'tool_name' => $message['tool_name'] ?? null
+                        'tool_name' => $message['tool_name'] ?? null,
                     ];
                 })->toArray();
             }
@@ -120,7 +132,7 @@ class ChatInterface extends Component
             $this->contextData = [
                 'session_id' => $context->getSessionId(),
                 'state' => $context->getAllState(),
-                'user_input' => $context->getUserInput()
+                'user_input' => $context->getUserInput(),
             ];
 
             // Get session data
@@ -134,7 +146,7 @@ class ChatInterface extends Component
                     'created_at' => $session->created_at,
                     'updated_at' => $session->updated_at,
                     'user_id' => $session->user_id,
-                    'state_data' => $session->state_data
+                    'state_data' => $session->state_data,
                 ];
 
                 // Get memory data
@@ -146,7 +158,7 @@ class ChatInterface extends Component
                         'key_learnings' => $memory->key_learnings,
                         'memory_data' => $memory->memory_data,
                         'total_sessions' => $memory->total_sessions,
-                        'last_session_at' => $memory->last_session_at
+                        'last_session_at' => $memory->last_session_at,
                     ];
                 }
             }
@@ -191,13 +203,13 @@ class ChatInterface extends Component
         } catch (\Exception $e) {
             $this->chatHistory[] = [
                 'role' => 'error',
-                'content' => 'Error: ' . $e->getMessage(),
+                'content' => 'Error: '.$e->getMessage(),
                 'timestamp' => now()->format('H:i:s'),
             ];
         }
 
         $this->isLoading = false;
-        
+
         // Dispatch event to clear input (belt and suspenders approach)
         $this->dispatch('messageSent');
     }
@@ -205,17 +217,17 @@ class ChatInterface extends Component
     public function clearChat()
     {
         $this->chatHistory = [];
-        $this->sessionId = 'chat-' . Str::random(8);
+        $this->sessionId = 'chat-'.Str::random(8);
         $this->loadContextData();
         $this->loadTraceData();
     }
 
     public function openLoadSessionModal()
     {
-        \Log::info('openLoadSessionModal called at ' . now());
+        \Log::info('openLoadSessionModal called at '.now());
         $this->showLoadSessionModal = true;
         $this->loadSessionId = '';
-        \Log::info('showLoadSessionModal set to: ' . ($this->showLoadSessionModal ? 'true' : 'false'));
+        \Log::info('showLoadSessionModal set to: '.($this->showLoadSessionModal ? 'true' : 'false'));
     }
 
     public function closeLoadSessionModal()
@@ -228,6 +240,7 @@ class ChatInterface extends Component
     {
         if (empty($this->loadSessionId)) {
             $this->closeLoadSessionModal();
+
             return;
         }
 
@@ -251,6 +264,7 @@ class ChatInterface extends Component
     {
         if (empty($this->sessionId)) {
             $this->traceData = [];
+
             return;
         }
 
@@ -262,6 +276,7 @@ class ChatInterface extends Component
 
             if ($spans->isEmpty()) {
                 $this->traceData = [];
+
                 return;
             }
 
@@ -304,16 +319,113 @@ class ChatInterface extends Component
 
         // Helper function to safely handle data that could be strings, arrays, or null
         $processData = function ($data) {
-            if (is_null($data)) return null;
-            if (is_array($data)) return $data;
+            if (is_null($data)) {
+                return null;
+            }
+            if (is_array($data)) {
+                return $data;
+            }
             if (is_string($data)) {
                 // Try to decode if it's a JSON string
                 $decoded = json_decode($data, true);
+
                 return (json_last_error() === JSON_ERROR_NONE) ? $decoded : $data;
             }
+
             // For any other type, convert to string for safe display
-            return (string)$data;
+            return (string) $data;
         };
+
+        // Initialize context variables
+        $contextState = null;
+        $contextChanges = null;
+        $extractedJson = null;
+
+        // Get actual context data from AgentSession and AgentMemory - this is the primary source
+        try {
+            // Get the actual session data
+            $session = AgentSession::where('session_id', $span->session_id)->first();
+
+            if ($session) {
+                // Show the actual state_data from the session
+                $stateData = $session->state_data;
+                if ($stateData) {
+                    // Ensure it's an array
+                    if (is_string($stateData)) {
+                        $stateData = json_decode($stateData, true);
+                    }
+                    if (is_array($stateData)) {
+                        $contextState = $stateData;
+                    }
+                }
+
+                // Show context_data if it exists
+                $contextData = $session->context_data;
+                if ($contextData) {
+                    // Ensure it's an array
+                    if (is_string($contextData)) {
+                        $contextData = json_decode($contextData, true);
+                    }
+                    if (is_array($contextData)) {
+                        $contextChanges = ['session_context' => $contextData];
+                    }
+                }
+            } else {
+                // Debug: Show that no session was found
+                $contextState = [
+                    '_debug' => [
+                        'session_id' => $span->session_id,
+                        'session_found' => 'no',
+                        'error' => 'No session found with this ID',
+                    ],
+                ];
+            }
+
+            // Get memory data for this session
+            $memories = \Vizra\VizraADK\Models\AgentMemory::where('session_id', $span->session_id)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            if ($memories->isNotEmpty()) {
+                $memoryData = [];
+                foreach ($memories as $memory) {
+                    $memoryData[] = [
+                        'type' => $memory->type,
+                        'key' => $memory->key,
+                        'content' => $memory->content,
+                        'scope' => $memory->scope,
+                        'created_at' => $memory->created_at->format('Y-m-d H:i:s'),
+                    ];
+                }
+
+                // Show memories in context changes
+                if (! empty($memoryData)) {
+                    if (! $contextChanges) {
+                        $contextChanges = [];
+                    }
+                    $contextChanges['memories'] = $memoryData;
+                    $contextChanges['memory_count'] = count($memoryData);
+                }
+            }
+
+            // Also extract any JSON from agent output for debugging purposes
+            $outputData = $processData($span->output);
+            if (is_array($outputData) && isset($outputData['response']) && is_string($outputData['response'])) {
+                // Look for JSON code blocks in the response
+                if (preg_match('/```json\s*(\{.*?\})\s*```/s', $outputData['response'], $matches)) {
+                    try {
+                        $jsonData = json_decode($matches[1], true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($jsonData)) {
+                            $extractedJson = $jsonData;
+                        }
+                    } catch (\Exception $e) {
+                        // Ignore JSON parsing errors
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore errors when fetching context data
+        }
 
         return [
             'span_id' => $span->span_id,
@@ -327,10 +439,13 @@ class ChatInterface extends Component
             'input_data' => $processData($span->input),
             'output_data' => $processData($span->output),
             'error_data' => $span->error_message ? ['message' => $span->error_message] : null,
-            'metadata' => $processData($span->metadata),
+            'metadata' => $metadata,
+            'context_state' => $contextState,
+            'context_changes' => $contextChanges,
+            'extracted_json' => $extractedJson,
             'children' => $children->map(function ($child) use ($spansByParent) {
                 return $this->buildSpanNode($child, $spansByParent);
-            })->toArray()
+            })->toArray(),
         ];
     }
 

@@ -9,12 +9,14 @@ class GenericLlmAgent extends BaseLlmAgent
     public function setName(string $name): static
     {
         $this->name = $name;
+
         return $this;
     }
 
     public function setDescription(string $description): static
     {
         $this->description = $description;
+
         return $this;
     }
 }

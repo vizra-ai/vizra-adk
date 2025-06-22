@@ -2,11 +2,11 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Console\Commands;
 
-use Vizra\VizraADK\Console\Commands\MakeToolCommand;
-use Vizra\VizraADK\Tests\TestCase;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
-use Illuminate\Filesystem\Filesystem;
+use Vizra\VizraADK\Console\Commands\MakeToolCommand;
+use Vizra\VizraADK\Tests\TestCase;
 
 class MakeToolCommandTest extends TestCase
 {
@@ -16,7 +16,7 @@ class MakeToolCommandTest extends TestCase
     {
         parent::setUp();
 
-        $filesystem = new Filesystem();
+        $filesystem = new Filesystem;
         $this->command = new MakeToolCommand($filesystem);
         $this->command->setLaravel($this->app);
     }
@@ -84,7 +84,7 @@ class MakeToolCommandTest extends TestCase
             'WeatherTool' => 'weather',
             'EmailSenderTool' => 'email_sender',
             'Calculator' => 'calculator',
-            'GetUserDataTool' => 'get_user_data'
+            'GetUserDataTool' => 'get_user_data',
         ];
 
         foreach ($testCases as $className => $expectedName) {
@@ -171,7 +171,7 @@ class MakeToolCommandTest extends TestCase
         $testCases = [
             'EmailSenderTool' => 'email_sender',
             'GetUserDataTool' => 'get_user_data',
-            'Calculator' => 'calculator'
+            'Calculator' => 'calculator',
         ];
 
         foreach ($testCases as $className => $expectedToolName) {

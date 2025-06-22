@@ -2,10 +2,10 @@
 
 namespace Vizra\VizraADK\Console\Commands;
 
-use Vizra\VizraADK\Services\VectorMemoryManager;
-use Vizra\VizraADK\Models\VectorMemory;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Vizra\VizraADK\Models\VectorMemory;
+use Vizra\VizraADK\Services\VectorMemoryManager;
 
 class VectorMemoryStats extends Command
 {
@@ -36,7 +36,8 @@ class VectorMemoryStats extends Command
             return 0;
 
         } catch (\Exception $e) {
-            $this->error("Failed to retrieve statistics: " . $e->getMessage());
+            $this->error('Failed to retrieve statistics: '.$e->getMessage());
+
             return 1;
         }
     }
@@ -52,6 +53,7 @@ class VectorMemoryStats extends Command
 
         if ($outputJson) {
             $this->line(json_encode($stats, JSON_PRETTY_PRINT));
+
             return;
         }
 
@@ -67,9 +69,9 @@ class VectorMemoryStats extends Command
             ]
         );
 
-        if (!empty($stats['providers'])) {
+        if (! empty($stats['providers'])) {
             $this->newLine();
-            $this->info("🤖 Embedding Providers:");
+            $this->info('🤖 Embedding Providers:');
             $providerData = [];
             foreach ($stats['providers'] as $provider => $count) {
                 $providerData[] = [$provider, number_format($count)];
@@ -77,9 +79,9 @@ class VectorMemoryStats extends Command
             $this->table(['Provider', 'Count'], $providerData);
         }
 
-        if (!empty($stats['sources'])) {
+        if (! empty($stats['sources'])) {
             $this->newLine();
-            $this->info("📁 Sources:");
+            $this->info('📁 Sources:');
             $sourceData = [];
             $topSources = array_slice($stats['sources'], 0, 10, true);
             foreach ($topSources as $source => $count) {
@@ -88,7 +90,7 @@ class VectorMemoryStats extends Command
             $this->table(['Source', 'Count'], $sourceData);
 
             if (count($stats['sources']) > 10) {
-                $this->info("... and " . (count($stats['sources']) - 10) . " more sources");
+                $this->info('... and '.(count($stats['sources']) - 10).' more sources');
             }
         }
 
@@ -128,10 +130,11 @@ class VectorMemoryStats extends Command
 
         if ($outputJson) {
             $this->line(json_encode($globalStats, JSON_PRETTY_PRINT));
+
             return;
         }
 
-        $this->info("📊 Global Vector Memory Statistics");
+        $this->info('📊 Global Vector Memory Statistics');
         $this->newLine();
 
         $this->table(
@@ -144,9 +147,9 @@ class VectorMemoryStats extends Command
             ]
         );
 
-        if (!empty($topAgents)) {
+        if (! empty($topAgents)) {
             $this->newLine();
-            $this->info("🤖 Top Agents by Memory Count:");
+            $this->info('🤖 Top Agents by Memory Count:');
             $agentData = [];
             foreach ($topAgents as $agent => $count) {
                 $agentData[] = [$agent, number_format($count)];
@@ -154,9 +157,9 @@ class VectorMemoryStats extends Command
             $this->table(['Agent', 'Memories'], $agentData);
         }
 
-        if (!empty($providers)) {
+        if (! empty($providers)) {
             $this->newLine();
-            $this->info("🔧 Embedding Providers:");
+            $this->info('🔧 Embedding Providers:');
             $providerData = [];
             foreach ($providers as $provider => $count) {
                 $providerData[] = [$provider, number_format($count)];
@@ -172,7 +175,7 @@ class VectorMemoryStats extends Command
     protected function showDetailedAgentStats(string $agentName, string $namespace): void
     {
         $this->newLine();
-        $this->info("🔍 Detailed Statistics:");
+        $this->info('🔍 Detailed Statistics:');
 
         // Memory age distribution
         $ageStats = VectorMemory::forAgent($agentName)
@@ -187,7 +190,7 @@ class VectorMemoryStats extends Command
             ->get();
 
         if ($ageStats->isNotEmpty()) {
-            $this->info("📅 Recent Activity (Last 7 Days):");
+            $this->info('📅 Recent Activity (Last 7 Days):');
             $ageData = [];
             foreach ($ageStats as $stat) {
                 $ageData[] = [$stat->date, number_format($stat->count)];
@@ -208,7 +211,7 @@ class VectorMemoryStats extends Command
 
         if ($avgStats) {
             $this->newLine();
-            $this->info("📏 Content Size Statistics:");
+            $this->info('📏 Content Size Statistics:');
             $this->table(
                 ['Metric', 'Value'],
                 [
@@ -224,7 +227,7 @@ class VectorMemoryStats extends Command
     protected function showDetailedGlobalStats(): void
     {
         $this->newLine();
-        $this->info("🔍 Detailed Global Statistics:");
+        $this->info('🔍 Detailed Global Statistics:');
 
         // Namespace distribution
         $namespaces = VectorMemory::select('namespace', DB::raw('count(*) as count'))
@@ -234,7 +237,7 @@ class VectorMemoryStats extends Command
             ->get();
 
         if ($namespaces->isNotEmpty()) {
-            $this->info("📂 Namespaces:");
+            $this->info('📂 Namespaces:');
             $namespaceData = [];
             foreach ($namespaces as $ns) {
                 $namespaceData[] = [$ns->namespace, number_format($ns->count)];
@@ -250,7 +253,7 @@ class VectorMemoryStats extends Command
 
         if ($models->isNotEmpty()) {
             $this->newLine();
-            $this->info("🎯 Embedding Models:");
+            $this->info('🎯 Embedding Models:');
             $modelData = [];
             foreach ($models as $model) {
                 $modelData[] = [$model->embedding_model, number_format($model->count)];

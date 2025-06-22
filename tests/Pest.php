@@ -16,7 +16,7 @@ uses(Vizra\VizraADK\Tests\TestCase::class)->in('Unit');
 uses(Vizra\VizraADK\Tests\TestCase::class)->in('Integration');
 
 // Include mock agent classes for workflow tests
-require_once __DIR__ . '/Unit/Agents/MockAgents.php';
+require_once __DIR__.'/Unit/Agents/MockAgents.php';
 
 /*
 |--------------------------------------------------------------------------

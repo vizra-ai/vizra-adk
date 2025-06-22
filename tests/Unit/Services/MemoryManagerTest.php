@@ -1,22 +1,18 @@
 <?php
 
-use Vizra\VizraADK\Services\MemoryManager;
-use Vizra\VizraADK\Models\AgentMemory;
-use Vizra\VizraADK\Models\AgentSession;
-use Vizra\VizraADK\Models\AgentMessage;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Events\MemoryUpdated;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Str;
+use Vizra\VizraADK\Events\MemoryUpdated;
+use Vizra\VizraADK\Models\AgentMemory;
+use Vizra\VizraADK\Services\MemoryManager;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Run migrations for testing
-    $this->loadMigrationsFrom(__DIR__ . '/../../../database/migrations');
+    $this->loadMigrationsFrom(__DIR__.'/../../../database/migrations');
 
-    $this->memoryManager = new MemoryManager();
+    $this->memoryManager = new MemoryManager;
 
     // Fake events for testing
     Event::fake();

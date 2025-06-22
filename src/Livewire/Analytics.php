@@ -4,20 +4,26 @@ namespace Vizra\VizraADK\Livewire;
 
 use Livewire\Component;
 use Vizra\VizraADK\Services\AnalyticsService;
-use Illuminate\Support\Facades\Cache;
 
 class Analytics extends Component
 {
     public $refreshInterval = 30; // seconds
+
     public $selectedTimeframe = '24h';
+
     public $autoRefresh = true;
 
     // Data properties
     public $agentMetrics = [];
+
     public $conversationAnalytics = [];
+
     public $toolUsageStats = [];
+
     public $vectorMemoryAnalytics = [];
+
     public $systemHealth = [];
+
     public $lastUpdated;
 
     protected $analyticsService;
@@ -28,13 +34,34 @@ class Analytics extends Component
             $this->analyticsService = app(AnalyticsService::class);
         } catch (\Exception $e) {
             // Create a mock service if the real one fails
-            $this->analyticsService = new class {
-                public function getAgentPerformanceMetrics() { return []; }
-                public function getConversationAnalytics() { return []; }
-                public function getToolUsageStats() { return []; }
-                public function getVectorMemoryAnalytics() { return []; }
-                public function getSystemHealthMetrics() { return []; }
-                public function clearCache() { }
+            $this->analyticsService = new class
+            {
+                public function getAgentPerformanceMetrics()
+                {
+                    return [];
+                }
+
+                public function getConversationAnalytics()
+                {
+                    return [];
+                }
+
+                public function getToolUsageStats()
+                {
+                    return [];
+                }
+
+                public function getVectorMemoryAnalytics()
+                {
+                    return [];
+                }
+
+                public function getSystemHealthMetrics()
+                {
+                    return [];
+                }
+
+                public function clearCache() {}
             };
         }
     }
@@ -54,7 +81,7 @@ class Analytics extends Component
             $this->systemHealth = $this->analyticsService->getSystemHealthMetrics();
             $this->lastUpdated = now()->format('H:i:s');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to load analytics data: ' . $e->getMessage());
+            session()->flash('error', 'Failed to load analytics data: '.$e->getMessage());
         }
     }
 
@@ -67,7 +94,7 @@ class Analytics extends Component
 
     public function toggleAutoRefresh()
     {
-        $this->autoRefresh = !$this->autoRefresh;
+        $this->autoRefresh = ! $this->autoRefresh;
     }
 
     public function setTimeframe($timeframe)
@@ -97,7 +124,7 @@ class Analytics extends Component
     {
         return view('vizra-adk::livewire.analytics')
             ->layout('vizra-adk::layouts.app', [
-                'title' => 'Analytics Dashboard'
+                'title' => 'Analytics Dashboard',
             ]);
     }
 }

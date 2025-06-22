@@ -5,7 +5,9 @@ namespace Vizra\VizraADK\Services;
 class DocumentChunker
 {
     protected string $strategy;
+
     protected int $chunkSize;
+
     protected int $overlap;
 
     public function __construct()
@@ -53,22 +55,22 @@ class DocumentChunker
             $sentence = trim($sentence);
 
             // If adding this sentence would exceed chunk size, save current chunk
-            if (!empty($currentChunk) && strlen($currentChunk . ' ' . $sentence) > $this->chunkSize) {
+            if (! empty($currentChunk) && strlen($currentChunk.' '.$sentence) > $this->chunkSize) {
                 $chunks[] = trim($currentChunk);
 
                 // Start new chunk with overlap if configured
-                $currentChunk = $this->getOverlapContent($currentChunk) . $sentence;
+                $currentChunk = $this->getOverlapContent($currentChunk).$sentence;
             } else {
-                $currentChunk = empty($currentChunk) ? $sentence : $currentChunk . ' ' . $sentence;
+                $currentChunk = empty($currentChunk) ? $sentence : $currentChunk.' '.$sentence;
             }
         }
 
         // Add the final chunk if it has content
-        if (!empty(trim($currentChunk))) {
+        if (! empty(trim($currentChunk))) {
             $chunks[] = trim($currentChunk);
         }
 
-        return array_filter($chunks, fn($chunk) => !empty(trim($chunk)));
+        return array_filter($chunks, fn ($chunk) => ! empty(trim($chunk)));
     }
 
     /**
@@ -92,7 +94,7 @@ class DocumentChunker
             // If this single paragraph is too large, chunk it by sentences
             if (strlen($paragraph) > $this->chunkSize) {
                 // Save current chunk if it has content
-                if (!empty($currentChunk)) {
+                if (! empty($currentChunk)) {
                     $chunks[] = trim($currentChunk);
                     $currentChunk = '';
                 }
@@ -100,24 +102,25 @@ class DocumentChunker
                 // Chunk the large paragraph by sentences
                 $sentenceChunks = $this->chunkBySentence($paragraph);
                 $chunks = array_merge($chunks, $sentenceChunks);
+
                 continue;
             }
 
             // If adding this paragraph would exceed chunk size, save current chunk
-            if (!empty($currentChunk) && strlen($currentChunk . "\n\n" . $paragraph) > $this->chunkSize) {
+            if (! empty($currentChunk) && strlen($currentChunk."\n\n".$paragraph) > $this->chunkSize) {
                 $chunks[] = trim($currentChunk);
                 $currentChunk = $paragraph;
             } else {
-                $currentChunk = empty($currentChunk) ? $paragraph : $currentChunk . "\n\n" . $paragraph;
+                $currentChunk = empty($currentChunk) ? $paragraph : $currentChunk."\n\n".$paragraph;
             }
         }
 
         // Add the final chunk if it has content
-        if (!empty(trim($currentChunk))) {
+        if (! empty(trim($currentChunk))) {
             $chunks[] = trim($currentChunk);
         }
 
-        return array_filter($chunks, fn($chunk) => !empty(trim($chunk)));
+        return array_filter($chunks, fn ($chunk) => ! empty(trim($chunk)));
     }
 
     /**
@@ -154,7 +157,7 @@ class DocumentChunker
             $position = max($position + 1, $chunkEnd - $this->overlap);
         }
 
-        return array_filter($chunks, fn($chunk) => !empty(trim($chunk)));
+        return array_filter($chunks, fn ($chunk) => ! empty(trim($chunk)));
     }
 
     /**
@@ -174,7 +177,7 @@ class DocumentChunker
             $overlapText = substr($overlapText, $firstSpace + 1);
         }
 
-        return empty(trim($overlapText)) ? '' : trim($overlapText) . ' ';
+        return empty(trim($overlapText)) ? '' : trim($overlapText).' ';
     }
 
     /**

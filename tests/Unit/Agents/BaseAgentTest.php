@@ -9,16 +9,17 @@ use Vizra\VizraADK\System\AgentContext;
 class TestAgent extends BaseAgent
 {
     protected string $name = 'test-agent';
+
     protected string $description = 'A test agent for unit testing';
 
     public function run(mixed $input, AgentContext $context): mixed
     {
-        return 'Processed: ' . ($input ?? '');
+        return 'Processed: '.($input ?? '');
     }
 }
 
 beforeEach(function () {
-    $this->agent = new TestAgent();
+    $this->agent = new TestAgent;
 });
 
 it('can get agent name', function () {

@@ -9,7 +9,9 @@ use Symfony\Component\Console\Input\InputArgument;
 class MakeAgentCommand extends GeneratorCommand
 {
     protected $name = 'vizra:make:agent';
+
     protected $description = 'Create a new Agent class';
+
     protected $type = 'Agent';
 
     protected function getStub(): string
@@ -27,7 +29,8 @@ class MakeAgentCommand extends GeneratorCommand
 
         // Fallback to rootNamespace + \Agents, or just App\Agents if no root namespace
         $baseNamespace = $rootNamespace ?: 'App';
-        return $baseNamespace . '\Agents';
+
+        return $baseNamespace.'\Agents';
     }
 
     protected function rootNamespace()
@@ -57,6 +60,7 @@ class MakeAgentCommand extends GeneratorCommand
     {
         $stub = parent::buildClass($name);
         $stub = str_replace('{{ agentName }}', Str::snake(class_basename($name)), $stub);
+
         return $stub;
     }
 

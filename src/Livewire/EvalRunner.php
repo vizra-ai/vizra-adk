@@ -2,17 +2,15 @@
 
 namespace Vizra\VizraADK\Livewire;
 
+use Exception;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use League\Csv\Writer;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Vizra\VizraADK\Evaluations\BaseEvaluation;
-use Vizra\VizraADK\Services\AgentRegistry;
 use Vizra\VizraADK\Facades\Agent;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
-use InvalidArgumentException;
-use Exception;
-use League\Csv\Writer;
-use League\Csv\Reader;
+use Vizra\VizraADK\Services\AgentRegistry;
 
 class EvalRunner extends Component
 {
@@ -20,6 +18,7 @@ class EvalRunner extends Component
 
     // Evaluation discovery and selection
     public array $availableEvaluations = [];
+
     public ?string $selectedEvaluation = null;
 
     // Private property that won't be serialized by Livewire
@@ -27,21 +26,31 @@ class EvalRunner extends Component
 
     // UI state
     public bool $isRunning = false;
+
     public string $currentStatus = '';
+
     public int $progress = 0;
+
     public int $totalRows = 0;
+
     public array $results = [];
+
     public bool $showResults = false;
 
     // Real-time processing state
     public array $csvData = [];
+
     public int $currentRowIndex = 0;
+
     public int $passCount = 0;
+
     public int $failCount = 0;
 
     // Results display
     public array $resultSummary = [];
+
     public array $detailedResults = [];
+
     public string $outputPath = '';
 
     // Expandable row details
@@ -49,6 +58,7 @@ class EvalRunner extends Component
 
     // CSV upload for custom evaluations
     public $csvFile;
+
     public bool $showCsvUpload = false;
 
     public function mount()
@@ -56,13 +66,13 @@ class EvalRunner extends Component
         $this->discoverEvaluations();
 
         // Debug: Log the number of discovered evaluations
-        \Log::info('EvalRunner: Discovered ' . count($this->availableEvaluations) . ' evaluations');
+        \Log::info('EvalRunner: Discovered '.count($this->availableEvaluations).' evaluations');
     }
 
     public function refreshEvaluations()
     {
         $this->discoverEvaluations();
-        session()->flash('message', 'Refreshed evaluations. Found: ' . count($this->availableEvaluations));
+        session()->flash('message', 'Refreshed evaluations. Found: '.count($this->availableEvaluations));
     }
 
     /**
@@ -85,16 +95,16 @@ class EvalRunner extends Component
                     if (class_exists($fullClassName) && is_subclass_of($fullClassName, BaseEvaluation::class)) {
                         try {
                             // Create temporary instance to get properties, then discard it
-                            $tempInstance = new $fullClassName();
+                            $tempInstance = new $fullClassName;
 
                             // Use simple array structure with string keys and values
                             $this->availableEvaluations[] = [
-                                'key' => (string)$counter,
-                                'class' => (string)$fullClassName,
-                                'name' => (string)($tempInstance->name ?? $className),
-                                'description' => (string)($tempInstance->description ?? 'No description available'),
-                                'agent_name' => (string)($tempInstance->agentName ?? 'Unknown'),
-                                'csv_path' => (string)($tempInstance->csvPath ?? ''),
+                                'key' => (string) $counter,
+                                'class' => (string) $fullClassName,
+                                'name' => (string) ($tempInstance->name ?? $className),
+                                'description' => (string) ($tempInstance->description ?? 'No description available'),
+                                'agent_name' => (string) ($tempInstance->agentName ?? 'Unknown'),
+                                'csv_path' => (string) ($tempInstance->csvPath ?? ''),
                             ];
 
                             $counter++;
@@ -109,7 +119,7 @@ class EvalRunner extends Component
         }
 
         // Search in package namespace
-        $packageEvaluationPath = __DIR__ . '/../Evaluations';
+        $packageEvaluationPath = __DIR__.'/../Evaluations';
         if (File::exists($packageEvaluationPath)) {
             $files = File::allFiles($packageEvaluationPath);
             foreach ($files as $file) {
@@ -120,16 +130,16 @@ class EvalRunner extends Component
                     if (class_exists($fullClassName) && is_subclass_of($fullClassName, BaseEvaluation::class)) {
                         try {
                             // Create temporary instance to get properties, then discard it
-                            $tempInstance = new $fullClassName();
+                            $tempInstance = new $fullClassName;
 
                             // Use simple array structure with string keys and values
                             $this->availableEvaluations[] = [
-                                'key' => (string)$counter,
-                                'class' => (string)$fullClassName,
-                                'name' => (string)($tempInstance->name ?? $className),
-                                'description' => (string)($tempInstance->description ?? 'No description available'),
-                                'agent_name' => (string)($tempInstance->agentName ?? 'Unknown'),
-                                'csv_path' => (string)($tempInstance->csvPath ?? ''),
+                                'key' => (string) $counter,
+                                'class' => (string) $fullClassName,
+                                'name' => (string) ($tempInstance->name ?? $className),
+                                'description' => (string) ($tempInstance->description ?? 'No description available'),
+                                'agent_name' => (string) ($tempInstance->agentName ?? 'Unknown'),
+                                'csv_path' => (string) ($tempInstance->csvPath ?? ''),
                             ];
 
                             $counter++;
@@ -152,14 +162,15 @@ class EvalRunner extends Component
         // Find evaluation by key since we're using sequential array
         $evaluation = null;
         foreach ($this->availableEvaluations as $eval) {
-            if ($eval['key'] === (string)$evaluationKey) {
+            if ($eval['key'] === (string) $evaluationKey) {
                 $evaluation = $eval;
                 break;
             }
         }
 
-        if (!$evaluation) {
-            $this->currentStatus = "Evaluation not found - Key: " . $evaluationKey;
+        if (! $evaluation) {
+            $this->currentStatus = 'Evaluation not found - Key: '.$evaluationKey;
+
             return;
         }
 
@@ -168,9 +179,9 @@ class EvalRunner extends Component
         try {
             $this->evaluationInstance = app($evaluation['class']);
             $this->resetResults();
-            $this->currentStatus = "Evaluation selected: " . $evaluation['name'] . " (Class: " . $evaluation['class'] . ")";
+            $this->currentStatus = 'Evaluation selected: '.$evaluation['name'].' (Class: '.$evaluation['class'].')';
         } catch (Exception $e) {
-            $this->currentStatus = "Error loading evaluation: " . $e->getMessage();
+            $this->currentStatus = 'Error loading evaluation: '.$e->getMessage();
             $this->selectedEvaluation = null;
             $this->evaluationInstance = null;
         }
@@ -181,15 +192,16 @@ class EvalRunner extends Component
      */
     public function runEvaluation()
     {
-        if (!$this->hasValidEvaluation()) {
+        if (! $this->hasValidEvaluation()) {
             $instanceStatus = $this->evaluationInstance ? 'OK' : 'NULL';
             $selectedStatus = $this->selectedEvaluation ? $this->selectedEvaluation : 'NULL';
             $this->currentStatus = "No evaluation selected. Instance: {$instanceStatus}, Selected: {$selectedStatus}";
+
             return;
         }
 
         $this->isRunning = true;
-        $this->currentStatus = "Loading CSV data...";
+        $this->currentStatus = 'Loading CSV data...';
         $this->progress = 0;
         $this->results = [];
         $this->currentRowIndex = 0;
@@ -200,14 +212,14 @@ class EvalRunner extends Component
             // Get CSV data
             $csvPath = base_path($this->evaluationInstance->csvPath);
 
-            if (!File::exists($csvPath)) {
+            if (! File::exists($csvPath)) {
                 throw new Exception("CSV file not found at: {$csvPath}");
             }
 
             $this->csvData = $this->readCsv($csvPath);
 
             if (empty($this->csvData)) {
-                throw new Exception("No data found in CSV file");
+                throw new Exception('No data found in CSV file');
             }
 
             $this->totalRows = count($this->csvData);
@@ -217,7 +229,7 @@ class EvalRunner extends Component
             $this->processNextRow();
 
         } catch (Exception $e) {
-            $this->currentStatus = "Error: " . $e->getMessage();
+            $this->currentStatus = 'Error: '.$e->getMessage();
             $this->isRunning = false;
         }
     }
@@ -227,23 +239,26 @@ class EvalRunner extends Component
         if ($this->currentRowIndex >= count($this->csvData)) {
             // All rows processed, finalize
             $this->finalizeEvaluation();
+
             return;
         }
 
         // Ensure evaluation instance exists (recreate if needed due to Livewire serialization)
-        if (!$this->evaluationInstance && $this->selectedEvaluation) {
+        if (! $this->evaluationInstance && $this->selectedEvaluation) {
             try {
                 $this->evaluationInstance = app($this->selectedEvaluation);
             } catch (Exception $e) {
-                $this->currentStatus = "Error recreating evaluation instance: " . $e->getMessage();
+                $this->currentStatus = 'Error recreating evaluation instance: '.$e->getMessage();
                 $this->isRunning = false;
+
                 return;
             }
         }
 
-        if (!$this->evaluationInstance) {
-            $this->currentStatus = "Error: No evaluation instance available";
+        if (! $this->evaluationInstance) {
+            $this->currentStatus = 'Error: No evaluation instance available';
             $this->isRunning = false;
+
             return;
         }
 
@@ -251,7 +266,7 @@ class EvalRunner extends Component
         $rowNumber = $this->currentRowIndex + 1;
 
         $this->currentStatus = "Processing row {$rowNumber} of {$this->totalRows}...";
-        $this->progress = (int)(($this->currentRowIndex / $this->totalRows) * 100);
+        $this->progress = (int) (($this->currentRowIndex / $this->totalRows) * 100);
 
         $sessionId = Str::uuid()->toString();
 
@@ -297,7 +312,7 @@ class EvalRunner extends Component
             'current_row' => $rowNumber,
             'total_rows' => $this->totalRows,
             'passed' => $this->passCount,
-            'failed' => $this->failCount
+            'failed' => $this->failCount,
         ]);
 
         // Continue with next row after a small delay for UI updates
@@ -323,7 +338,7 @@ class EvalRunner extends Component
         $this->isRunning = false;
 
         $this->dispatch('evaluation-completed', [
-            'summary' => $this->resultSummary
+            'summary' => $this->resultSummary,
         ]);
     }
 
@@ -364,11 +379,11 @@ class EvalRunner extends Component
         $filename = "evaluation_results_{$evaluationName}_{$timestamp}.csv";
 
         $outputDir = storage_path('app/evaluations');
-        if (!File::isDirectory($outputDir)) {
+        if (! File::isDirectory($outputDir)) {
             File::makeDirectory($outputDir, 0755, true);
         }
 
-        $this->outputPath = $outputDir . '/' . $filename;
+        $this->outputPath = $outputDir.'/'.$filename;
 
         $csv = Writer::createFromPath($this->outputPath, 'w+');
 
@@ -382,7 +397,7 @@ class EvalRunner extends Component
         ];
 
         // Add CSV row data headers
-        if (!empty($this->results[0]['row_data'])) {
+        if (! empty($this->results[0]['row_data'])) {
             foreach (array_keys($this->results[0]['row_data']) as $key) {
                 $headers[] = "CSV: {$key}";
             }
@@ -398,9 +413,9 @@ class EvalRunner extends Component
             $row = [
                 $result['row_index'],
                 $result['passed'] ? 'PASS' : 'FAIL',
-                substr($result['llm_response'], 0, 100) . (strlen($result['llm_response']) > 100 ? '...' : ''),
+                substr($result['llm_response'], 0, 100).(strlen($result['llm_response']) > 100 ? '...' : ''),
                 $result['evaluation_result']['error'] ?? '',
-                $this->resultSummary['pass_rate'] . '%',
+                $this->resultSummary['pass_rate'].'%',
             ];
 
             // Add CSV row data
@@ -412,7 +427,7 @@ class EvalRunner extends Component
             $assertions = $result['evaluation_result']['details'] ?? $result['evaluation_result']['assertions'] ?? [];
             $assertionSummary = '';
             if (is_array($assertions)) {
-                $assertionSummary = count($assertions) . ' assertions';
+                $assertionSummary = count($assertions).' assertions';
             }
             $row[] = $assertionSummary;
 
@@ -463,6 +478,7 @@ class EvalRunner extends Component
     public function getRegisteredAgents(): array
     {
         $registry = app(AgentRegistry::class);
+
         return $registry->getAllRegisteredAgents();
     }
 
@@ -499,7 +515,7 @@ class EvalRunner extends Component
     {
         return view('vizra-adk::livewire.eval-runner')
             ->layout('vizra-adk::layouts.app', [
-                'title' => 'Evaluation Runner'
+                'title' => 'Evaluation Runner',
             ]);
     }
 }

@@ -1,16 +1,15 @@
 <?php
 
-use Vizra\VizraADK\Models\AgentSession;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vizra\VizraADK\Models\AgentMemory;
 use Vizra\VizraADK\Models\AgentMessage;
+use Vizra\VizraADK\Models\AgentSession;
 use Vizra\VizraADK\Services\MemoryManager;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->memoryManager = new MemoryManager();
+    $this->memoryManager = new MemoryManager;
 });
 
 it('can create session with memory relationship', function () {
@@ -22,7 +21,7 @@ it('can create session with memory relationship', function () {
     $session = AgentSession::create([
         'agent_name' => $agentName,
         'agent_memory_id' => $memory->id,
-        'state_data' => ['topic' => 'test_conversation']
+        'state_data' => ['topic' => 'test_conversation'],
     ]);
 
     expect($session->memory)->toBeInstanceOf(AgentMemory::class);
@@ -35,7 +34,7 @@ it('can use getOrCreateMemory from session', function () {
 
     $session = AgentSession::create([
         'agent_name' => $agentName,
-        'state_data' => ['test' => 'data']
+        'state_data' => ['test' => 'data'],
     ]);
 
     // Session should not have memory initially
@@ -60,7 +59,7 @@ it('can update memory from session', function () {
     $agentName = 'session-update-test';
 
     $session = AgentSession::create([
-        'agent_name' => $agentName
+        'agent_name' => $agentName,
     ]);
 
     $memory = $session->getOrCreateMemory();
@@ -69,7 +68,7 @@ it('can update memory from session', function () {
     $session->updateMemory([
         'learnings' => ['User prefers detailed responses'],
         'facts' => ['user_type' => 'premium_customer'],
-        'summary' => 'Handles premium customer support'
+        'summary' => 'Handles premium customer support',
     ]);
 
     $memory->refresh();
@@ -84,18 +83,18 @@ it('memory persists across multiple sessions', function () {
 
     // First session
     $session1 = AgentSession::create([
-        'agent_name' => $agentName
+        'agent_name' => $agentName,
     ]);
 
     $memory = $session1->getOrCreateMemory();
     $session1->updateMemory([
         'learnings' => ['First session learning'],
-        'facts' => ['session_count' => '1']
+        'facts' => ['session_count' => '1'],
     ]);
 
     // Second session should use same memory
     $session2 = AgentSession::create([
-        'agent_name' => $agentName
+        'agent_name' => $agentName,
     ]);
 
     $session2Memory = $session2->getOrCreateMemory();
@@ -104,7 +103,7 @@ it('memory persists across multiple sessions', function () {
     // Add more data from second session
     $session2->updateMemory([
         'learnings' => ['First session learning', 'Second session learning'],
-        'facts' => ['session_count' => '2', 'last_topic' => 'billing']
+        'facts' => ['session_count' => '2', 'last_topic' => 'billing'],
     ]);
 
     // Verify accumulated memory
@@ -127,38 +126,38 @@ it('can track conversation history across sessions', function () {
 
     $session1 = AgentSession::create([
         'agent_name' => $agentName,
-        'agent_memory_id' => $memory->id
+        'agent_memory_id' => $memory->id,
     ]);
 
     $session2 = AgentSession::create([
         'agent_name' => $agentName,
-        'agent_memory_id' => $memory->id
+        'agent_memory_id' => $memory->id,
     ]);
 
     // Add messages to first session
     AgentMessage::create([
         'agent_session_id' => $session1->id,
         'role' => 'user',
-        'content' => 'Hello from session 1'
+        'content' => 'Hello from session 1',
     ]);
 
     AgentMessage::create([
         'agent_session_id' => $session1->id,
         'role' => 'assistant',
-        'content' => 'Hi there! How can I help?'
+        'content' => 'Hi there! How can I help?',
     ]);
 
     // Add messages to second session
     AgentMessage::create([
         'agent_session_id' => $session2->id,
         'role' => 'user',
-        'content' => 'I have a billing question'
+        'content' => 'I have a billing question',
     ]);
 
     AgentMessage::create([
         'agent_session_id' => $session2->id,
         'role' => 'assistant',
-        'content' => 'I can help with billing questions'
+        'content' => 'I can help with billing questions',
     ]);
 
     // Get conversation history through memory
@@ -176,7 +175,7 @@ it('automatically creates memory when needed', function () {
 
     // Create session without explicitly creating memory
     $session = AgentSession::create([
-        'agent_name' => $agentName
+        'agent_name' => $agentName,
     ]);
 
     expect($session->agent_memory_id)->toBeNull();
@@ -201,19 +200,19 @@ it('can handle session cleanup while preserving memory', function () {
 
     $oldSession = AgentSession::create([
         'agent_name' => $agentName,
-        'agent_memory_id' => $memory->id
+        'agent_memory_id' => $memory->id,
     ]);
 
     $recentSession = AgentSession::create([
         'agent_name' => $agentName,
-        'agent_memory_id' => $memory->id
+        'agent_memory_id' => $memory->id,
     ]);
 
     // Add some memory data
     $memory->update([
         'key_learnings' => ['Important learning to preserve'],
         'memory_data' => ['critical_info' => 'must_keep'],
-        'total_sessions' => 2
+        'total_sessions' => 2,
     ]);
 
     // Simulate old session
@@ -226,13 +225,13 @@ it('can handle session cleanup while preserving memory', function () {
     AgentMessage::create([
         'agent_session_id' => $oldSession->id,
         'role' => 'user',
-        'content' => 'Old message'
+        'content' => 'Old message',
     ]);
 
     AgentMessage::create([
         'agent_session_id' => $recentSession->id,
         'role' => 'user',
-        'content' => 'Recent message'
+        'content' => 'Recent message',
     ]);
 
     expect(AgentSession::count())->toBe(2);
@@ -272,12 +271,12 @@ it('supports multiple agents with separate memories', function () {
     // Update memories with different data
     $session1->updateMemory([
         'learnings' => ['Customer service specific learning'],
-        'facts' => ['domain' => 'customer_service']
+        'facts' => ['domain' => 'customer_service'],
     ]);
 
     $session2->updateMemory([
         'learnings' => ['Technical support specific learning'],
-        'facts' => ['domain' => 'technical_support']
+        'facts' => ['domain' => 'technical_support'],
     ]);
 
     // Verify separation
@@ -298,7 +297,7 @@ it('handles memory updates correctly during session lifecycle', function () {
 
     $session = AgentSession::create([
         'agent_name' => $agentName,
-        'state_data' => ['initial' => 'state']
+        'state_data' => ['initial' => 'state'],
     ]);
 
     // Start with no memory
@@ -311,7 +310,7 @@ it('handles memory updates correctly during session lifecycle', function () {
     // Update memory during conversation
     $session->updateMemory([
         'learnings' => ['Mid-conversation learning'],
-        'facts' => ['conversation_stage' => 'middle']
+        'facts' => ['conversation_stage' => 'middle'],
     ]);
 
     // Simulate end of session - increment session count
@@ -324,7 +323,7 @@ it('handles memory updates correctly during session lifecycle', function () {
 
     // Create new session - should use existing memory
     $newSession = AgentSession::create([
-        'agent_name' => $agentName
+        'agent_name' => $agentName,
     ]);
 
     $existingMemory = $newSession->getOrCreateMemory();

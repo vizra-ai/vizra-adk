@@ -2,10 +2,10 @@
 
 namespace Vizra\VizraADK\Tests\Unit\VectorMemory\Providers;
 
-use Vizra\VizraADK\Tests\TestCase;
-use Vizra\VizraADK\Providers\OpenAIEmbeddingProvider;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use Vizra\VizraADK\Providers\OpenAIEmbeddingProvider;
+use Vizra\VizraADK\Tests\TestCase;
 
 class OpenAIEmbeddingProviderTest extends TestCase
 {
@@ -18,7 +18,7 @@ class OpenAIEmbeddingProviderTest extends TestCase
         Config::set('services.openai.key', 'test-api-key');
         Config::set('vizra-adk.vector_memory.embedding_models.openai', 'text-embedding-3-small');
 
-        $this->provider = new OpenAIEmbeddingProvider();
+        $this->provider = new OpenAIEmbeddingProvider;
     }
 
     public function test_can_embed_single_text()
@@ -30,13 +30,13 @@ class OpenAIEmbeddingProviderTest extends TestCase
         Http::fake([
             'api.openai.com/v1/embeddings' => Http::response([
                 'data' => [
-                    ['embedding' => $mockEmbedding]
+                    ['embedding' => $mockEmbedding],
                 ],
                 'usage' => [
                     'prompt_tokens' => 4,
-                    'total_tokens' => 4
-                ]
-            ], 200)
+                    'total_tokens' => 4,
+                ],
+            ], 200),
         ]);
 
         // Act
@@ -62,20 +62,20 @@ class OpenAIEmbeddingProviderTest extends TestCase
         $texts = ['First text', 'Second text'];
         $mockEmbeddings = [
             array_fill(0, 1536, 0.1),
-            array_fill(0, 1536, 0.2)
+            array_fill(0, 1536, 0.2),
         ];
 
         Http::fake([
             'api.openai.com/v1/embeddings' => Http::response([
                 'data' => [
                     ['embedding' => $mockEmbeddings[0]],
-                    ['embedding' => $mockEmbeddings[1]]
+                    ['embedding' => $mockEmbeddings[1]],
                 ],
                 'usage' => [
                     'prompt_tokens' => 6,
-                    'total_tokens' => 6
-                ]
-            ], 200)
+                    'total_tokens' => 6,
+                ],
+            ], 200),
         ]);
 
         // Act
@@ -101,7 +101,7 @@ class OpenAIEmbeddingProviderTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('OpenAI API key is required');
 
-        new OpenAIEmbeddingProvider();
+        new OpenAIEmbeddingProvider;
     }
 
     public function test_throws_exception_for_input_too_long()
@@ -123,9 +123,9 @@ class OpenAIEmbeddingProviderTest extends TestCase
             'api.openai.com/v1/embeddings' => Http::response([
                 'error' => [
                     'message' => 'Invalid API key',
-                    'type' => 'invalid_request_error'
-                ]
-            ], 401)
+                    'type' => 'invalid_request_error',
+                ],
+            ], 401),
         ]);
 
         // Act & Assert
@@ -140,8 +140,8 @@ class OpenAIEmbeddingProviderTest extends TestCase
         // Arrange
         Http::fake([
             'api.openai.com/v1/embeddings' => Http::response([
-                'invalid' => 'response'
-            ], 200)
+                'invalid' => 'response',
+            ], 200),
         ]);
 
         // Act & Assert
@@ -157,9 +157,9 @@ class OpenAIEmbeddingProviderTest extends TestCase
         Http::fake([
             'api.openai.com/v1/embeddings' => Http::response([
                 'data' => [
-                    ['no_embedding' => 'field']
-                ]
-            ], 200)
+                    ['no_embedding' => 'field'],
+                ],
+            ], 200),
         ]);
 
         // Act & Assert
@@ -212,7 +212,7 @@ class OpenAIEmbeddingProviderTest extends TestCase
         // Arrange
         $texts = [
             str_repeat('word ', 100),
-            str_repeat('word ', 150)
+            str_repeat('word ', 150),
         ];
 
         // Act
@@ -227,7 +227,7 @@ class OpenAIEmbeddingProviderTest extends TestCase
     {
         // Arrange
         Config::set('vizra-adk.vector_memory.embedding_models.openai', 'text-embedding-3-large');
-        $provider = new OpenAIEmbeddingProvider();
+        $provider = new OpenAIEmbeddingProvider;
         $text = str_repeat('word ', 250);
 
         // Act
@@ -245,12 +245,12 @@ class OpenAIEmbeddingProviderTest extends TestCase
     {
         // Test text-embedding-3-large
         Config::set('vizra-adk.vector_memory.embedding_models.openai', 'text-embedding-3-large');
-        $provider = new OpenAIEmbeddingProvider();
+        $provider = new OpenAIEmbeddingProvider;
         $this->assertEquals(3072, $provider->getDimensions());
 
         // Test text-embedding-ada-002
         Config::set('vizra-adk.vector_memory.embedding_models.openai', 'text-embedding-ada-002');
-        $provider = new OpenAIEmbeddingProvider();
+        $provider = new OpenAIEmbeddingProvider;
         $this->assertEquals(1536, $provider->getDimensions());
     }
 
@@ -272,12 +272,12 @@ class OpenAIEmbeddingProviderTest extends TestCase
     {
         // Arrange
         Config::set('services.openai.url', 'https://custom.openai.com/v1');
-        $provider = new OpenAIEmbeddingProvider();
+        $provider = new OpenAIEmbeddingProvider;
 
         Http::fake([
             'custom.openai.com/v1/embeddings' => Http::response([
-                'data' => [['embedding' => array_fill(0, 1536, 0.1)]]
-            ], 200)
+                'data' => [['embedding' => array_fill(0, 1536, 0.1)]],
+            ], 200),
         ]);
 
         // Act

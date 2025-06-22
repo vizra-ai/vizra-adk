@@ -1,12 +1,11 @@
 <?php
 
+use Prism\Prism\Text\Response;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\System\AgentContext;
-use Prism\Prism\Enums\Provider;
-use Prism\Prism\Text\Response;
 
 beforeEach(function () {
-    $this->agent = new StreamingTestAgent();
+    $this->agent = new StreamingTestAgent;
     $this->context = new AgentContext('streaming-test-session');
 });
 
@@ -27,7 +26,7 @@ describe('Streaming Property Configuration', function () {
     });
 
     it('can enable streaming via constructor property', function () {
-        $agent = new StreamingEnabledTestAgent();
+        $agent = new StreamingEnabledTestAgent;
         expect($agent->getStreaming())->toBeTrue();
     });
 
@@ -130,7 +129,7 @@ describe('Streaming Context Management', function () {
         $this->agent->run('Stream response', $this->context);
 
         $messages = $this->context->getConversationHistory();
-        $assistantMessages = $messages->filter(fn($msg) => $msg['role'] === 'assistant');
+        $assistantMessages = $messages->filter(fn ($msg) => $msg['role'] === 'assistant');
 
         // Should not have assistant message since streaming bypasses normal response processing
         expect($assistantMessages->count())->toBe(0);
@@ -148,7 +147,7 @@ describe('Streaming Context Management', function () {
 
 describe('Streaming Hook Behavior', function () {
     it('calls beforeLlmCall hook when streaming', function () {
-        $agent = new StreamingHookTestAgent();
+        $agent = new StreamingHookTestAgent;
         $agent->setStreaming(true);
 
         $agent->run('Test input', $this->context);
@@ -157,7 +156,7 @@ describe('Streaming Hook Behavior', function () {
     });
 
     it('calls afterLlmResponse hook with stream when streaming', function () {
-        $agent = new StreamingHookTestAgent();
+        $agent = new StreamingHookTestAgent;
         $agent->setStreaming(true);
 
         $agent->run('Test input', $this->context);
@@ -167,7 +166,7 @@ describe('Streaming Hook Behavior', function () {
     });
 
     it('does not call tool-related hooks when streaming', function () {
-        $agent = new StreamingHookTestAgent();
+        $agent = new StreamingHookTestAgent;
         $agent->setStreaming(true);
 
         $agent->run('Test input', $this->context);
@@ -180,15 +179,15 @@ describe('Streaming Hook Behavior', function () {
 
 describe('Streaming Error Handling', function () {
     it('handles streaming API errors gracefully', function () {
-        $agent = new StreamingErrorTestAgent();
+        $agent = new StreamingErrorTestAgent;
         $agent->setStreaming(true);
 
-        expect(fn() => $agent->run('Trigger error', $this->context))
+        expect(fn () => $agent->run('Trigger error', $this->context))
             ->toThrow(\RuntimeException::class, 'LLM API call failed');
     });
 
     it('maintains error context when streaming fails', function () {
-        $agent = new StreamingErrorTestAgent();
+        $agent = new StreamingErrorTestAgent;
         $agent->setStreaming(true);
 
         try {
@@ -202,7 +201,7 @@ describe('Streaming Error Handling', function () {
 
 describe('Streaming Performance Characteristics', function () {
     it('streaming mode bypasses normal response processing', function () {
-        $agent = new StreamingPerformanceTestAgent();
+        $agent = new StreamingPerformanceTestAgent;
 
         // Non-streaming mode
         $agent->setStreaming(false);
@@ -306,7 +305,7 @@ describe('Streaming Integration Scenarios', function () {
             'Hello, how are you?',
             'Tell me about Laravel',
             'What are the benefits of streaming?',
-            'Thank you for the information'
+            'Thank you for the information',
         ];
 
         $responses = [];
@@ -331,8 +330,8 @@ describe('Streaming Integration Scenarios', function () {
     });
 
     it('can handle concurrent streaming requests', function () {
-        $agent1 = new StreamingTestAgent();
-        $agent2 = new StreamingTestAgent();
+        $agent1 = new StreamingTestAgent;
+        $agent2 = new StreamingTestAgent;
 
         $agent1->setStreaming(true);
         $agent2->setStreaming(true);
@@ -406,7 +405,7 @@ describe('Streaming Edge Cases', function () {
         for ($i = 0; $i < 20; $i++) {
             $this->context->addMessage([
                 'role' => $i % 2 === 0 ? 'user' : 'assistant',
-                'content' => "Message {$i}"
+                'content' => "Message {$i}",
             ]);
         }
 
@@ -423,7 +422,7 @@ describe('Streaming Edge Cases', function () {
         $this->context->setState('user_data', [
             'preferences' => ['theme' => 'dark', 'language' => 'en'],
             'history' => ['action1', 'action2', 'action3'],
-            'metadata' => ['last_login' => time(), 'session_count' => 5]
+            'metadata' => ['last_login' => time(), 'session_count' => 5],
         ]);
 
         $result = $this->agent->run('Process with complex state', $this->context);
@@ -443,8 +442,11 @@ describe('Streaming Edge Cases', function () {
 class StreamingTestAgent extends BaseLlmAgent
 {
     protected string $name = 'streaming-test-agent';
+
     protected string $description = 'Test agent for streaming functionality';
+
     protected string $instructions = 'Test streaming agent';
+
     protected string $model = 'gpt-4o';
 
     protected array $tools = [];
@@ -459,7 +461,7 @@ class StreamingTestAgent extends BaseLlmAgent
             return new MockStream(['chunk1', 'chunk2', 'chunk3']);
         } else {
             // Mock regular response
-            return "Mock response for: " . $input;
+            return 'Mock response for: '.$input;
         }
     }
 }
@@ -472,14 +474,19 @@ class StreamingEnabledTestAgent extends StreamingTestAgent
 class StreamingHookTestAgent extends StreamingTestAgent
 {
     public bool $beforeLlmCallCalled = false;
+
     public bool $afterLlmResponseCalled = false;
+
     public bool $beforeToolCallCalled = false;
+
     public bool $afterToolResultCalled = false;
+
     public bool $receivedStreamObject = false;
 
     public function beforeLlmCall(array $inputMessages, AgentContext $context): array
     {
         $this->beforeLlmCallCalled = true;
+
         return $inputMessages;
     }
 
@@ -487,18 +494,21 @@ class StreamingHookTestAgent extends StreamingTestAgent
     {
         $this->afterLlmResponseCalled = true;
         $this->receivedStreamObject = $response instanceof MockStream;
+
         return $response;
     }
 
     public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array
     {
         $this->beforeToolCallCalled = true;
+
         return $arguments;
     }
 
     public function afterToolResult(string $toolName, string $result, AgentContext $context): string
     {
         $this->afterToolResultCalled = true;
+
         return $result;
     }
 
@@ -513,10 +523,12 @@ class StreamingHookTestAgent extends StreamingTestAgent
         if ($this->getStreaming()) {
             $stream = new MockStream(['test', 'stream']);
             $this->afterLlmResponse($stream, $context);
+
             return $stream;
         } else {
-            $response = new MockResponse("Mock response");
+            $response = new MockResponse('Mock response');
             $this->afterLlmResponse($response, $context);
+
             return $response->text;
         }
     }
@@ -548,7 +560,8 @@ class StreamingPerformanceTestAgent extends StreamingTestAgent
             // Simulate additional processing for non-streaming
             usleep(1000); // 1ms delay to simulate processing
             $context->addMessage(['role' => 'assistant', 'content' => 'processed response']);
-            return "Processed response for: " . $input;
+
+            return 'Processed response for: '.$input;
         }
     }
 }
@@ -559,6 +572,7 @@ class StreamingPerformanceTestAgent extends StreamingTestAgent
 class MockStream implements \Iterator
 {
     private array $chunks;
+
     private int $position = 0;
 
     public function __construct(array $chunks)

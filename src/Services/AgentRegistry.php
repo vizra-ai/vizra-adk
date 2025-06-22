@@ -2,19 +2,21 @@
 
 namespace Vizra\VizraADK\Services;
 
-use Vizra\VizraADK\Agents\BaseAgent;
-use Vizra\VizraADK\Agents\BaseLlmAgent; // Added
-use Vizra\VizraADK\Agents\GenericLlmAgent; // Will be created
-use Vizra\VizraADK\Exceptions\AgentNotFoundException;
-use Vizra\VizraADK\Exceptions\AgentConfigurationException; // Added
 use Illuminate\Contracts\Foundation\Application;
-use Vizra\VizraADK\Services\AgentDiscovery;
+use Vizra\VizraADK\Agents\BaseAgent; // Added
+use Vizra\VizraADK\Agents\BaseLlmAgent; // Will be created
+use Vizra\VizraADK\Agents\GenericLlmAgent;
+use Vizra\VizraADK\Exceptions\AgentConfigurationException; // Added
+use Vizra\VizraADK\Exceptions\AgentNotFoundException;
 
 class AgentRegistry
 {
     protected Application $app;
+
     protected array $registeredAgents = [];
+
     protected array $agentInstances = [];
+
     protected array $classToNameMap = [];
 
     public function __construct(Application $app)
@@ -26,7 +28,7 @@ class AgentRegistry
     {
         $this->registeredAgents[$name] = $configuration;
         unset($this->agentInstances[$name]);
-        
+
         // If configuration is a class name, register the mapping
         if (is_string($configuration) && class_exists($configuration)) {
             $this->classToNameMap[$configuration] = $name;
@@ -36,8 +38,8 @@ class AgentRegistry
     /**
      * Get an instance of a registered agent.
      *
-     * @param string $name The name of the agent.
-     * @return BaseAgent
+     * @param  string  $name  The name of the agent.
+     *
      * @throws AgentNotFoundException If the agent is not registered or cannot be instantiated.
      * @throws AgentConfigurationException If configuration is invalid.
      */
@@ -47,27 +49,28 @@ class AgentRegistry
             return $this->agentInstances[$name];
         }
 
-        if (!isset($this->registeredAgents[$name])) {
+        if (! isset($this->registeredAgents[$name])) {
             // Try lazy discovery
             if ($this->discoverAgent($name)) {
                 return $this->getAgent($name);
             }
-            
+
             throw new AgentNotFoundException("Agent '{$name}' is not registered.");
         }
 
         $config = $this->registeredAgents[$name];
 
         if (is_string($config)) { // Class-based agent
-            if (!class_exists($config)) {
+            if (! class_exists($config)) {
                 throw new AgentConfigurationException("Agent class '{$config}' for agent '{$name}' not found.");
             }
-            if (!is_subclass_of($config, BaseAgent::class)) {
-                throw new AgentConfigurationException("Class '{$config}' for agent '{$name}' must extend " . BaseAgent::class);
+            if (! is_subclass_of($config, BaseAgent::class)) {
+                throw new AgentConfigurationException("Class '{$config}' for agent '{$name}' must extend ".BaseAgent::class);
             }
             /** @var BaseAgent $instance */
             $instance = $this->app->make($config);
             $this->agentInstances[$name] = $instance; // Cache it
+
             return $instance;
         } elseif (is_array($config) && isset($config['type']) && $config['type'] === 'ad_hoc_llm') {
             // Ad-hoc LLM agent definition
@@ -82,6 +85,7 @@ class AgentRegistry
             //     $instance->registerTool($toolClass); // Requires GenericLlmAgent to have such a method
             // }
             $this->agentInstances[$name] = $instance; // Cache it
+
             return $instance;
         }
 
@@ -105,25 +109,22 @@ class AgentRegistry
     {
         /** @var AgentDiscovery $discovery */
         $discovery = $this->app->make(AgentDiscovery::class);
-        
+
         // Clear cache and re-discover
         $discovery->clearCache();
         $agents = $discovery->discover();
-        
+
         // Register all discovered agents
         foreach ($agents as $className => $agentName) {
             $this->register($agentName, $className);
         }
-        
+
         // Check if the requested agent is now registered
         return isset($this->registeredAgents[$name]);
     }
-    
+
     /**
      * Get agent name by class name
-     *
-     * @param string $className
-     * @return string|null
      */
     public function getAgentNameByClass(string $className): ?string
     {
@@ -131,39 +132,37 @@ class AgentRegistry
         if (isset($this->classToNameMap[$className])) {
             return $this->classToNameMap[$className];
         }
-        
+
         // Try to discover agents if not found
         $this->discoverAgent('_trigger_discovery_');
-        
+
         // Check again after discovery
         if (isset($this->classToNameMap[$className])) {
             return $this->classToNameMap[$className];
         }
-        
+
         // As a last resort, try to instantiate and get the name
         if (class_exists($className) && is_subclass_of($className, BaseAgent::class)) {
             try {
                 /** @var BaseAgent $instance */
                 $instance = $this->app->make($className);
                 $name = $instance->getName();
-                
+
                 // Register it for future use
                 $this->register($name, $className);
-                
+
                 return $name;
             } catch (\Throwable $e) {
                 // Failed to instantiate
             }
         }
-        
+
         return null;
     }
-    
+
     /**
      * Resolve agent name from either a string name or class name
      *
-     * @param string $agentNameOrClass
-     * @return string
      * @throws AgentNotFoundException
      */
     public function resolveAgentName(string $agentNameOrClass): string
@@ -172,13 +171,13 @@ class AgentRegistry
         if ($this->hasAgent($agentNameOrClass)) {
             return $agentNameOrClass;
         }
-        
+
         // Try to resolve as a class name
         $agentName = $this->getAgentNameByClass($agentNameOrClass);
         if ($agentName !== null) {
             return $agentName;
         }
-        
+
         throw new AgentNotFoundException("Cannot resolve agent '{$agentNameOrClass}' as either a name or class.");
     }
 }

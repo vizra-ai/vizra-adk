@@ -1,20 +1,20 @@
 <?php
 
-use Vizra\VizraADK\Services\AgentRegistry;
-use Vizra\VizraADK\Services\AgentManager;
-use Vizra\VizraADK\Services\AgentBuilder;
-use Vizra\VizraADK\Services\StateManager;
-use Vizra\VizraADK\Agents\BaseAgent;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Models\AgentSession;
-use Vizra\VizraADK\Models\AgentMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vizra\VizraADK\Agents\BaseAgent;
+use Vizra\VizraADK\Models\AgentMessage;
+use Vizra\VizraADK\Models\AgentSession;
+use Vizra\VizraADK\Services\AgentBuilder;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\System\AgentContext;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Run migrations for testing
-    $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+    $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
 });
 
 it('can resolve all core services from container', function () {
@@ -34,25 +34,25 @@ it('can create and persist models', function () {
     // Test AgentSession model
     $session = AgentSession::create([
         'agent_name' => 'test-agent',
-        'state_data' => ['test' => 'data']
+        'state_data' => ['test' => 'data'],
     ]);
 
     expect($session)->toBeInstanceOf(AgentSession::class);
     $this->assertDatabaseHas('agent_sessions', [
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     // Test AgentMessage model
     $message = AgentMessage::create([
         'agent_session_id' => $session->id,
         'role' => 'user',
-        'content' => 'Test message'
+        'content' => 'Test message',
     ]);
 
     expect($message)->toBeInstanceOf(AgentMessage::class);
     $this->assertDatabaseHas('agent_messages', [
         'role' => 'user',
-        'content' => json_encode('Test message')
+        'content' => json_encode('Test message'),
     ]);
 
     // Test relationships
@@ -164,21 +164,23 @@ it('supports multiple agents coexisting', function () {
 class TestCoexistenceAgent1 extends BaseAgent
 {
     protected string $name = 'test-coexistence-agent-1';
+
     protected string $description = 'First test agent for coexistence testing';
 
     public function run($input, AgentContext $context): mixed
     {
-        return 'Agent 1 response: ' . $input;
+        return 'Agent 1 response: '.$input;
     }
 }
 
 class TestCoexistenceAgent2 extends BaseAgent
 {
     protected string $name = 'test-coexistence-agent-2';
+
     protected string $description = 'Second test agent for coexistence testing';
 
     public function run($input, AgentContext $context): mixed
     {
-        return 'Agent 2 response: ' . $input;
+        return 'Agent 2 response: '.$input;
     }
 }

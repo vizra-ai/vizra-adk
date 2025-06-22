@@ -2,7 +2,6 @@
 
 namespace Vizra\VizraADK\Listeners;
 
-use Vizra\VizraADK\Agents\BaseAgent;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -49,7 +48,7 @@ abstract class AgentEventListener
             }
 
             // Execute the agent
-            $result = $executor->execute();
+            $result = $executor->go();
 
             // Handle the result
             $this->handleResult($result, $event);
@@ -73,7 +72,7 @@ abstract class AgentEventListener
     protected function prepareAgentExecution($event)
     {
         // Use the appropriate static method based on mode
-        $executor = match($this->mode) {
+        $executor = match ($this->mode) {
             'trigger' => $this->agentClass::trigger($event),
             'analyze' => $this->agentClass::analyze($event),
             'process' => $this->agentClass::process($event),
@@ -84,7 +83,7 @@ abstract class AgentEventListener
 
         // Add context from the event
         $context = $this->buildContext($event);
-        if (!empty($context)) {
+        if (! empty($context)) {
             $executor->withContext($context);
         }
 

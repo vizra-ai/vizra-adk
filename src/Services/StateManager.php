@@ -2,12 +2,11 @@
 
 namespace Vizra\VizraADK\Services;
 
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Models\AgentSession;
-use Vizra\VizraADK\Models\AgentMessage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
+use Vizra\VizraADK\Models\AgentMessage;
+use Vizra\VizraADK\Models\AgentSession;
+use Vizra\VizraADK\System\AgentContext;
 
 /**
  * Class StateManager
@@ -17,7 +16,7 @@ class StateManager
 {
     protected MemoryManager $memoryManager;
 
-    public function __construct(MemoryManager $memoryManager = null)
+    public function __construct(?MemoryManager $memoryManager = null)
     {
         $this->memoryManager = $memoryManager ?? app(MemoryManager::class);
     }
@@ -26,11 +25,10 @@ class StateManager
      * Load or create an AgentContext for a given session ID and agent name.
      * Now also includes memory context from previous sessions.
      *
-     * @param string $agentName The name of the agent.
-     * @param string|null $sessionId Optional session ID. If null, a new session is created.
-     * @param mixed|null $userInput Optional initial user input for a new context.
-     * @param int|null $userId Optional user ID for user-specific memory.
-     * @return AgentContext
+     * @param  string  $agentName  The name of the agent.
+     * @param  string|null  $sessionId  Optional session ID. If null, a new session is created.
+     * @param  mixed|null  $userInput  Optional initial user input for a new context.
+     * @param  int|null  $userId  Optional user ID for user-specific memory.
      */
     public function loadContext(string $agentName, ?string $sessionId = null, mixed $userInput = null, ?int $userId = null): AgentContext
     {
@@ -46,7 +44,7 @@ class StateManager
             ->map(fn ($msg) => [
                 'role' => $msg->role,
                 'content' => $msg->content, // Laravel's JSON cast already handles the conversion
-                'tool_name' => $msg->tool_name
+                'tool_name' => $msg->tool_name,
             ]);
 
         $context = new AgentContext(
@@ -58,7 +56,7 @@ class StateManager
 
         // Add memory context to the context state
         $memoryContext = $this->memoryManager->getMemoryContextArray($agentName, $userId);
-        if (!empty($memoryContext['summary']) || !empty($memoryContext['key_learnings']) || !empty($memoryContext['facts'])) {
+        if (! empty($memoryContext['summary']) || ! empty($memoryContext['key_learnings']) || ! empty($memoryContext['facts'])) {
             $context->setState('memory_context', $memoryContext);
         }
 
@@ -68,9 +66,8 @@ class StateManager
     /**
      * Save the state and conversation history from an AgentContext.
      *
-     * @param AgentContext $context
-     * @param string $agentName The name of the agent (for creating session if it doesn't exist)
-     * @param bool $updateMemory Whether to update long-term memory after saving
+     * @param  string  $agentName  The name of the agent (for creating session if it doesn't exist)
+     * @param  bool  $updateMemory  Whether to update long-term memory after saving
      */
     public function saveContext(AgentContext $context, string $agentName, bool $updateMemory = true): void
     {
@@ -95,7 +92,7 @@ class StateManager
                     'agent_session_id' => $agentSession->id,
                     'role' => $message['role'],
                     'content' => $content, // Let the model cast handle JSON encoding
-                    'tool_name' => $message['tool_name'] ?? null
+                    'tool_name' => $message['tool_name'] ?? null,
                 ];
             })->all();
 

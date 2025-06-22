@@ -1,19 +1,19 @@
 <?php
 
-use Vizra\VizraADK\Services\StateManager;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Models\AgentSession;
-use Vizra\VizraADK\Models\AgentMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Vizra\VizraADK\Models\AgentMessage;
+use Vizra\VizraADK\Models\AgentSession;
+use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\System\AgentContext;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Run migrations for testing
-    $this->loadMigrationsFrom(__DIR__ . '/../../../database/migrations');
+    $this->loadMigrationsFrom(__DIR__.'/../../../database/migrations');
 
-    $this->stateManager = new StateManager();
+    $this->stateManager = new StateManager;
 });
 
 it('can load context with new session', function () {
@@ -36,7 +36,7 @@ it('can load context with existing session', function () {
     $session = AgentSession::create([
         'session_id' => $sessionId,
         'agent_name' => $agentName,
-        'state_data' => ['existing' => 'data']
+        'state_data' => ['existing' => 'data'],
     ]);
 
     $context = $this->stateManager->loadContext($agentName, $sessionId);
@@ -113,14 +113,14 @@ it('context includes conversation history', function () {
     $session = AgentSession::create([
         'session_id' => $sessionId,
         'agent_name' => $agentName,
-        'state_data' => []
+        'state_data' => [],
     ]);
 
     AgentMessage::create([
         'agent_session_id' => $session->id,
         'role' => 'user',
         'content' => 'Previous message',
-        'tool_name' => null
+        'tool_name' => null,
     ]);
 
     $context = $this->stateManager->loadContext($agentName, $sessionId);
@@ -136,7 +136,7 @@ it('includes memory context when loading context', function () {
     $sessionId = (string) Str::uuid();
 
     // Create memory with some data
-    $memoryManager = new \Vizra\VizraADK\Services\MemoryManager();
+    $memoryManager = new \Vizra\VizraADK\Services\MemoryManager;
     $memoryManager->addLearning($agentName, 'Users prefer quick responses');
     $memoryManager->updateMemoryData($agentName, ['domain' => 'customer_support']);
     $memoryManager->updateSummary($agentName, 'Customer support specialist');
@@ -171,7 +171,7 @@ it('can save context with memory updates', function () {
     $context->setState('modified', 'state');
     $context->setState('memory_updates', [
         'learnings' => ['New learning from conversation'],
-        'facts' => ['user_satisfaction' => 'high']
+        'facts' => ['user_satisfaction' => 'high'],
     ]);
 
     $this->stateManager->saveContext($context, $agentName);
@@ -181,7 +181,7 @@ it('can save context with memory updates', function () {
     expect($reloadedContext->getState('modified'))->toBe('state');
 
     // Verify memory was updated
-    $memoryManager = new \Vizra\VizraADK\Services\MemoryManager();
+    $memoryManager = new \Vizra\VizraADK\Services\MemoryManager;
     $memoryContextArray = $memoryManager->getMemoryContextArray($agentName);
     expect($memoryContextArray['key_learnings'])->toContain('New learning from conversation');
     expect($memoryContextArray['facts']['user_satisfaction'])->toBe('high');

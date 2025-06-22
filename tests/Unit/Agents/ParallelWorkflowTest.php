@@ -2,23 +2,23 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Agents;
 
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Queue;
 use Vizra\VizraADK\Agents\ParallelWorkflow;
+use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Tests\TestCase;
-use Vizra\VizraADK\Facades\Agent;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Cache;
-use Mockery;
 
 class ParallelWorkflowTest extends TestCase
 {
     protected ParallelWorkflow $workflow;
+
     protected AgentContext $context;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->workflow = new ParallelWorkflow();
+        $this->workflow = new ParallelWorkflow;
         $this->context = new AgentContext('test-session');
     }
 
@@ -56,7 +56,7 @@ class ParallelWorkflowTest extends TestCase
     {
         $workflow = $this->workflow->agents([
             FirstAgent::class => ['param1' => 'value1'],
-            SecondAgent::class => ['param2' => 'value2']
+            SecondAgent::class => ['param2' => 'value2'],
         ]);
         $this->assertInstanceOf(ParallelWorkflow::class, $workflow);
     }
@@ -137,7 +137,7 @@ class ParallelWorkflowTest extends TestCase
         $result = $this->workflow
             ->agents([
                 FirstAgent::class => ['param1' => 'value1'],
-                SecondAgent::class => ['param2' => 'value2']
+                SecondAgent::class => ['param2' => 'value2'],
             ])
             ->execute('ignored_input', $this->context);
 
@@ -289,10 +289,10 @@ class ParallelWorkflowTest extends TestCase
 
         $this->workflow
             ->agents([FirstAgent::class, SecondAgent::class])
-            ->onSuccess(function($result) use (&$successCallbackCalled) {
+            ->onSuccess(function ($result) use (&$successCallbackCalled) {
                 $successCallbackCalled = true;
             })
-            ->onComplete(function($result, $success) use (&$completeCallbackCalled) {
+            ->onComplete(function ($result, $success) use (&$completeCallbackCalled) {
                 $completeCallbackCalled = true;
             })
             ->execute('input', $this->context);
@@ -316,7 +316,7 @@ class ParallelWorkflowTest extends TestCase
         $this->workflow
             ->agents([FirstAgent::class, SecondAgent::class])
             ->failFast(true)
-            ->onFailure(function($error) use (&$failureCallbackCalled, &$errorReceived) {
+            ->onFailure(function ($error) use (&$failureCallbackCalled, &$errorReceived) {
                 $failureCallbackCalled = true;
                 $errorReceived = $error;
             })
@@ -379,7 +379,7 @@ class ParallelWorkflowTest extends TestCase
             ->once()
             ->andReturn([
                 FirstAgent::class => 'first_result',
-                SecondAgent::class => 'second_result'
+                SecondAgent::class => 'second_result',
             ]);
 
         $results = ParallelWorkflow::getAsyncResults('test_session');

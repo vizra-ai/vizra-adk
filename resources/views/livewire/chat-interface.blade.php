@@ -561,9 +561,22 @@ function testModalButton() {
                                                                             {{ is_array($value) ? 'Array' : 'String' }}
                                                                         </span>
                                                                     </div>
-                                                                    <div class="text-xs text-gray-400 font-mono bg-gray-900/50 rounded px-2 py-1 border border-gray-700/50 max-h-12 overflow-y-auto">
-                                                                        {{ is_array($value) ? json_encode($value, JSON_PRETTY_PRINT) : Str::limit($value, 100) }}
-                                                                    </div>
+                                                                    @if(is_array($value))
+                                                                        @include('vizra-adk::components.json-viewer', [
+                                                                            'data' => $value,
+                                                                            'bgColor' => 'bg-gray-900/50',
+                                                                            'borderColor' => 'border-gray-700/50',
+                                                                            'textColor' => 'text-gray-400',
+                                                                            'maxHeight' => 'max-h-12',
+                                                                            'expandable' => false,
+                                                                            'copyable' => false,
+                                                                            'collapsible' => false
+                                                                        ])
+                                                                    @else
+                                                                        <div class="text-xs text-gray-400 font-mono bg-gray-900/50 rounded px-2 py-1 border border-gray-700/50 max-h-12 overflow-y-auto">
+                                                                            {{ Str::limit($value, 100) }}
+                                                                        </div>
+                                                                    @endif
                                                                 </div>
                                                             </div>
                                                         </div>

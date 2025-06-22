@@ -3,13 +3,15 @@
 namespace Vizra\VizraADK\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
-use Symfony\Component\Console\Input\InputArgument;
 use Illuminate\Support\Str;
+use Symfony\Component\Console\Input\InputArgument;
 
 class MakeEvalCommand extends GeneratorCommand
 {
     protected $name = 'vizra:make:eval';
+
     protected $description = 'Create a new LLM evaluation class';
+
     protected $type = 'Evaluation';
 
     protected function getStub()
@@ -19,6 +21,7 @@ class MakeEvalCommand extends GeneratorCommand
         if (file_exists($customPath)) {
             return $customPath;
         }
+
         return __DIR__.'/stubs/evaluation.stub';
     }
 
@@ -32,7 +35,8 @@ class MakeEvalCommand extends GeneratorCommand
 
         // Fallback to rootNamespace + \Evaluations, or just App\Evaluations if no root namespace
         $baseNamespace = $rootNamespace ?: 'App';
-        return $baseNamespace . '\\Evaluations';
+
+        return $baseNamespace.'\\Evaluations';
     }
 
     protected function rootNamespace()
@@ -77,9 +81,10 @@ class MakeEvalCommand extends GeneratorCommand
     protected function getNameInput()
     {
         $name = Str::studly(trim($this->argument('name')));
-        if (!Str::endsWith($name, 'Evaluation')) {
+        if (! Str::endsWith($name, 'Evaluation')) {
             $name .= 'Evaluation';
         }
+
         return $name;
     }
 }

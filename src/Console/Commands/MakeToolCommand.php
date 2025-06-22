@@ -9,7 +9,9 @@ use Symfony\Component\Console\Input\InputArgument;
 class MakeToolCommand extends GeneratorCommand
 {
     protected $name = 'vizra:make:tool';
+
     protected $description = 'Create a new Tool class for an Agent';
+
     protected $type = 'Tool';
 
     protected function getStub(): string
@@ -27,7 +29,8 @@ class MakeToolCommand extends GeneratorCommand
 
         // Fallback to rootNamespace + \Tools, or just App\Tools if no root namespace
         $baseNamespace = $rootNamespace ?: 'App';
-        return $baseNamespace . '\Tools';
+
+        return $baseNamespace.'\Tools';
     }
 
     protected function rootNamespace()
@@ -63,6 +66,7 @@ class MakeToolCommand extends GeneratorCommand
         }
         $stub = str_replace('{{ toolName }}', $toolName, $stub);
         $stub = str_replace('{{ toolDescription }}', Str::headline($toolName), $stub);
+
         return $stub;
     }
 

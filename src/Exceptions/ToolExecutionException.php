@@ -2,6 +2,4 @@
 
 namespace Vizra\VizraADK\Exceptions;
 
-class ToolExecutionException extends \Exception
-{
-}
+class ToolExecutionException extends \Exception {}

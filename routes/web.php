@@ -1,9 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Vizra\VizraADK\Livewire\Dashboard;
-use Vizra\VizraADK\Livewire\ChatInterface;
-use Vizra\VizraADK\Livewire\EvalRunner;
+use Vizra\VizraADK\Http\Controllers\WebController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,6 +13,6 @@ use Vizra\VizraADK\Livewire\EvalRunner;
 |
 */
 
-Route::get('/', Dashboard::class)->name('dashboard');
-Route::get('/chat', ChatInterface::class)->name('chat');
-Route::get('/eval', EvalRunner::class)->name('eval-runner');
+Route::get('/', [WebController::class, 'dashboard'])->name('dashboard');
+Route::get('/chat', [WebController::class, 'chat'])->name('chat');
+Route::get('/eval', [WebController::class, 'eval'])->name('eval-runner');

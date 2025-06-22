@@ -2,24 +2,22 @@
 
 namespace Vizra\VizraADK\Events;
 
-use Vizra\VizraADK\System\AgentContext;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Vizra\VizraADK\System\AgentContext;
 
 class AgentExecutionStarting
 {
     use Dispatchable, SerializesModels;
 
     public AgentContext $context;
+
     public string $agentName;
+
     public mixed $input;
 
     /**
      * Create a new event instance.
-     *
-     * @param AgentContext $context
-     * @param string $agentName
-     * @param mixed $input
      */
     public function __construct(AgentContext $context, string $agentName, mixed $input)
     {

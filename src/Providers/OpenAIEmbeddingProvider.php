@@ -2,16 +2,19 @@
 
 namespace Vizra\VizraADK\Providers;
 
-use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
+use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 
 class OpenAIEmbeddingProvider implements EmbeddingProviderInterface
 {
     protected string $apiKey;
+
     protected string $model;
+
     protected string $baseUrl;
+
     protected array $dimensions;
 
     public function __construct()
@@ -32,7 +35,7 @@ class OpenAIEmbeddingProvider implements EmbeddingProviderInterface
             'text-embedding-ada-002' => 1536,
         ]);
 
-        if (!$this->apiKey) {
+        if (! $this->apiKey) {
             throw new RuntimeException('OpenAI API key is required for embedding generation');
         }
     }
@@ -50,32 +53,32 @@ class OpenAIEmbeddingProvider implements EmbeddingProviderInterface
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
-            ])->timeout(60)->post($this->baseUrl . '/embeddings', [
+            ])->timeout(60)->post($this->baseUrl.'/embeddings', [
                 'model' => $this->model,
                 'input' => $inputs,
                 'encoding_format' => 'float',
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::error('OpenAI embedding API error', [
                     'status' => $response->status(),
                     'response' => $response->body(),
                 ]);
-                throw new RuntimeException('OpenAI embedding API request failed: ' . $response->body());
+                throw new RuntimeException('OpenAI embedding API request failed: '.$response->body());
             }
 
             $data = $response->json();
 
-            if (!isset($data['data']) || !is_array($data['data'])) {
+            if (! isset($data['data']) || ! is_array($data['data'])) {
                 throw new RuntimeException('Invalid response format from OpenAI embedding API');
             }
 
             // Extract embeddings from response
             $embeddings = [];
             foreach ($data['data'] as $item) {
-                if (!isset($item['embedding'])) {
+                if (! isset($item['embedding'])) {
                     throw new RuntimeException('Missing embedding in API response');
                 }
                 $embeddings[] = $item['embedding'];
@@ -98,7 +101,7 @@ class OpenAIEmbeddingProvider implements EmbeddingProviderInterface
                 'model' => $this->model,
                 'input_count' => count($inputs),
             ]);
-            throw new RuntimeException('Failed to generate OpenAI embeddings: ' . $e->getMessage());
+            throw new RuntimeException('Failed to generate OpenAI embeddings: '.$e->getMessage());
         }
     }
 
@@ -158,7 +161,7 @@ class OpenAIEmbeddingProvider implements EmbeddingProviderInterface
             'text-embedding-ada-002',
         ];
 
-        if (!in_array($this->model, $supportedModels)) {
+        if (! in_array($this->model, $supportedModels)) {
             throw new RuntimeException("Unsupported OpenAI embedding model: {$this->model}");
         }
     }

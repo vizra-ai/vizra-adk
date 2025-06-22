@@ -1,27 +1,33 @@
 <div>
     <div class="space-y-8">
-        <!-- Hero Section -->
-        <div class="relative overflow-hidden bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-cyan-600/20 rounded-2xl p-8 border border-gray-800/50">
-            <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10"></div>
-            <div class="relative">
-                <div class="text-center">
-                    <h1 class="text-3xl font-bold text-white mb-3">Vizra ADK Dashboard</h1>
-                    <p class="text-gray-300 text-lg max-w-2xl mx-auto mb-6">
-                        Build, test, and deploy intelligent AI agents with Laravel's elegant framework
-                    </p>
-                    <div class="flex justify-center items-center space-x-6 text-sm text-gray-400">
-                        <span class="flex items-center">
-                            <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                            v{{ $packageVersion }}
-                        </span>
-                        <span class="flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                            {{ $agentCount }} agents
-                        </span>
-                    </div>
-                </div>
+        <!-- Hero Section with Docs-style Header -->
+        <div class="text-center mb-12">
+            <!-- Robot Icon -->
+            <div class="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30">
+                <svg class="w-10 h-10 text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7H14A7,7 0 0,1 21,14H22A1,1 0 0,1 23,15V18A1,1 0 0,1 22,19H21V20A2,2 0 0,1 19,22H5A2,2 0 0,1 3,20V19H2A1,1 0 0,1 1,18V15A1,1 0 0,1 2,14H3A7,7 0 0,1 10,7H11V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2M7.5,13A2.5,2.5 0 0,0 5,15.5A2.5,2.5 0 0,0 7.5,18A2.5,2.5 0 0,0 10,15.5A2.5,2.5 0 0,0 7.5,13M16.5,13A2.5,2.5 0 0,0 14,15.5A2.5,2.5 0 0,0 16.5,18A2.5,2.5 0 0,0 19,15.5A2.5,2.5 0 0,0 16.5,13Z"/>
+                </svg>
+            </div>
+            
+            <h1 class="text-4xl sm:text-5xl font-bold text-white mb-4">
+                Vizra ADK
+            </h1>
+            <p class="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+                Build, test, and deploy intelligent AI agents with Laravel's elegant framework
+            </p>
+            
+            <!-- Stats -->
+            <div class="flex justify-center items-center space-x-8 text-sm">
+                <span class="flex items-center text-gray-400">
+                    <div class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                    <span class="text-white font-medium">v{{ $packageVersion }}</span>
+                </span>
+                <span class="flex items-center text-gray-400">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span class="text-white font-medium">{{ $agentCount }}</span> agents registered
+                </span>
             </div>
         </div>
 

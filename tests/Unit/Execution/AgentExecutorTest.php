@@ -2,13 +2,13 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Execution;
 
-use Vizra\VizraADK\Tests\TestCase;
+use Illuminate\Database\Eloquent\Model;
+use Mockery;
 use Vizra\VizraADK\Execution\AgentExecutor;
 use Vizra\VizraADK\Services\AgentManager;
 use Vizra\VizraADK\Services\StateManager;
 use Vizra\VizraADK\System\AgentContext;
-use Illuminate\Database\Eloquent\Model;
-use Mockery;
+use Vizra\VizraADK\Tests\TestCase;
 
 class AgentExecutorTest extends TestCase
 {
@@ -162,7 +162,8 @@ class AgentExecutorTest extends TestCase
     public function test_get_agent_name_with_mock_agent()
     {
         // Create a real test agent class with getName method
-        $mockAgent = new class {
+        $mockAgent = new class
+        {
             public function getName(): string
             {
                 return 'test_agent_name';
@@ -184,7 +185,7 @@ class AgentExecutorTest extends TestCase
         $this->assertEquals('test_agent_name', $agentName);
     }
 
-    public function test_execute_calls_agent_manager()
+    public function test_go_calls_agent_manager()
     {
         // Mock the AgentManager
         $mockAgentManager = Mockery::mock(AgentManager::class);
@@ -211,19 +212,37 @@ class AgentExecutorTest extends TestCase
         $this->app->instance('TestAgent', $mockAgent);
 
         $executor = new AgentExecutor('TestAgent', 'test input');
-        $response = $executor->execute();
+        $response = $executor->go();
 
         $this->assertEquals('Test response', $response);
     }
 
-    public function test_execute_with_user_context()
+    public function test_go_with_user_context()
     {
-        $user = new class extends Model {
-            public function getKey() { return 123; }
-            public function toArray() { return ['id' => 123, 'name' => 'John Doe']; }
-            public function email() { return 'john@example.com'; }
-            public function name() { return 'John Doe'; }
+        $user = new class extends Model
+        {
+            public function getKey()
+            {
+                return 123;
+            }
+
+            public function toArray()
+            {
+                return ['id' => 123, 'name' => 'John Doe'];
+            }
+
+            public function email()
+            {
+                return 'john@example.com';
+            }
+
+            public function name()
+            {
+                return 'John Doe';
+            }
+
             public $email = 'john@example.com';
+
             public $name = 'John Doe';
         };
 
@@ -259,7 +278,7 @@ class AgentExecutorTest extends TestCase
         $this->app->instance('TestAgent', $mockAgent);
 
         $executor = new AgentExecutor('TestAgent', 'test input');
-        $response = $executor->forUser($user)->execute();
+        $response = $executor->forUser($user)->go();
 
         $this->assertEquals('Test response with user context', $response);
     }
@@ -326,5 +345,13 @@ class AgentExecutorTest extends TestCase
         $result = (string) $executor;
 
         $this->assertStringContainsString('Error executing agent:', $result);
+    }
+
+    public function test_with_prompt_version_sets_prompt_version()
+    {
+        $executor = new AgentExecutor('TestAgent', 'test input');
+        $result = $executor->withPromptVersion('professional');
+
+        $this->assertSame($executor, $result); // Should return self for chaining
     }
 }

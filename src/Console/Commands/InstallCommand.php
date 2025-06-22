@@ -3,11 +3,11 @@
 namespace Vizra\VizraADK\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
 
 class InstallCommand extends Command
 {
     protected $signature = 'vizra:install';
+
     protected $description = 'Install Vizra SDK assets (config and migrations).';
 
     public function handle(): void
@@ -15,13 +15,13 @@ class InstallCommand extends Command
         $this->info('Publishing Vizra SDK configuration...');
         $this->call('vendor:publish', [
             '--provider' => "Vizra\VizraADK\Providers\AgentServiceProvider",
-            '--tag' => "vizra-adk-config"
+            '--tag' => 'vizra-adk-config',
         ]);
 
         $this->info('Publishing Vizra SDK migrations...');
         $this->call('vendor:publish', [
             '--provider' => "Vizra\VizraADK\Providers\AgentServiceProvider",
-            '--tag' => "vizra-adk-migrations"
+            '--tag' => 'vizra-adk-migrations',
         ]);
 
         // Check if migrations were already published and ask to overwrite if necessary,

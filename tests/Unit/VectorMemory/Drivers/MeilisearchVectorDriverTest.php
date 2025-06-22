@@ -2,19 +2,22 @@
 
 namespace Vizra\VizraADK\Tests\Unit\VectorMemory\Drivers;
 
-use Vizra\VizraADK\Tests\TestCase;
-use Vizra\VizraADK\Services\Drivers\MeilisearchVectorDriver;
-use Vizra\VizraADK\Models\VectorMemory;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 use RuntimeException;
+use Vizra\VizraADK\Models\VectorMemory;
+use Vizra\VizraADK\Services\Drivers\MeilisearchVectorDriver;
+use Vizra\VizraADK\Tests\TestCase;
 
 class MeilisearchVectorDriverTest extends TestCase
 {
     protected MeilisearchVectorDriver $driver;
+
     protected string $testHost = 'http://test-meilisearch:7700';
+
     protected string $testApiKey = 'test-api-key';
+
     protected string $testIndexPrefix = 'test_vectors_';
 
     protected function setUp(): void
@@ -26,7 +29,7 @@ class MeilisearchVectorDriverTest extends TestCase
         Config::set('vizra-adk.vector_memory.drivers.meilisearch.api_key', $this->testApiKey);
         Config::set('vizra-adk.vector_memory.drivers.meilisearch.index_prefix', $this->testIndexPrefix);
 
-        $this->driver = new MeilisearchVectorDriver();
+        $this->driver = new MeilisearchVectorDriver;
     }
 
     public function test_constructor_sets_configuration_correctly()
@@ -39,23 +42,23 @@ class MeilisearchVectorDriverTest extends TestCase
         // Mock Meilisearch responses
         Http::fake([
             // Index doesn't exist initially
-            $this->testHost . '/indexes/test_vectors_testagent_default' => Http::sequence()
+            $this->testHost.'/indexes/test_vectors_testagent_default' => Http::sequence()
                 ->push(['error' => 'Index not found'], 404)
                 ->push(['uid' => 'test_vectors_testagent_default', 'primaryKey' => 'id'], 200),
 
             // Create index
-            $this->testHost . '/indexes' => Http::response([
+            $this->testHost.'/indexes' => Http::response([
                 'taskUid' => 123,
                 'indexUid' => 'test_vectors_testagent_default',
             ], 201),
 
             // Update settings
-            $this->testHost . '/indexes/test_vectors_testagent_default/settings' => Http::response([
-                'taskUid' => 124
+            $this->testHost.'/indexes/test_vectors_testagent_default/settings' => Http::response([
+                'taskUid' => 124,
             ], 202),
 
             // Store document
-            $this->testHost . '/indexes/test_vectors_testagent_default/documents' => Http::response([
+            $this->testHost.'/indexes/test_vectors_testagent_default/documents' => Http::response([
                 'taskUid' => 125,
                 'indexUid' => 'test_vectors_testagent_default',
             ], 202),
@@ -87,16 +90,16 @@ class MeilisearchVectorDriverTest extends TestCase
 
         // Verify the HTTP requests were made
         Http::assertSent(function ($request) {
-            return $request->url() === $this->testHost . '/indexes/test_vectors_testagent_default/documents' &&
+            return $request->url() === $this->testHost.'/indexes/test_vectors_testagent_default/documents' &&
                    $request->method() === 'POST' &&
-                   $request->hasHeader('Authorization', 'Bearer ' . $this->testApiKey);
+                   $request->hasHeader('Authorization', 'Bearer '.$this->testApiKey);
         });
     }
 
     public function test_store_throws_exception_on_api_error()
     {
         Http::fake([
-            $this->testHost . '/indexes/*' => Http::response(['error' => 'Server error'], 500),
+            $this->testHost.'/indexes/*' => Http::response(['error' => 'Server error'], 500),
         ]);
 
         $memory = new VectorMemory([
@@ -146,7 +149,7 @@ class MeilisearchVectorDriverTest extends TestCase
         ];
 
         Http::fake([
-            $this->testHost . '/indexes/test_vectors_testagent_default/search' => Http::response([
+            $this->testHost.'/indexes/test_vectors_testagent_default/search' => Http::response([
                 'hits' => $mockHits,
                 'processingTimeMs' => 5,
                 'query' => 'test query',
@@ -166,7 +169,8 @@ class MeilisearchVectorDriverTest extends TestCase
 
         Http::assertSent(function ($request) {
             $body = $request->data();
-            return $request->url() === $this->testHost . '/indexes/test_vectors_testagent_default/search' &&
+
+            return $request->url() === $this->testHost.'/indexes/test_vectors_testagent_default/search' &&
                    $request->method() === 'POST' &&
                    isset($body['vector']) &&
                    $body['limit'] === 5 &&
@@ -177,7 +181,7 @@ class MeilisearchVectorDriverTest extends TestCase
     public function test_search_throws_exception_on_api_error()
     {
         Http::fake([
-            $this->testHost . '/indexes/*/search' => Http::response(['error' => 'Search failed'], 500),
+            $this->testHost.'/indexes/*/search' => Http::response(['error' => 'Search failed'], 500),
         ]);
 
         $this->expectException(RuntimeException::class);
@@ -189,12 +193,12 @@ class MeilisearchVectorDriverTest extends TestCase
     public function test_delete_with_source_filter()
     {
         Http::fake([
-            $this->testHost . '/indexes/test_vectors_testagent_default/documents/delete' => Http::response([
+            $this->testHost.'/indexes/test_vectors_testagent_default/documents/delete' => Http::response([
                 'taskUid' => 456,
                 'indexUid' => 'test_vectors_testagent_default',
             ], 202),
 
-            $this->testHost . '/tasks/456' => Http::response([
+            $this->testHost.'/tasks/456' => Http::response([
                 'uid' => 456,
                 'status' => 'succeeded',
                 'details' => ['deletedDocuments' => 3],
@@ -207,7 +211,8 @@ class MeilisearchVectorDriverTest extends TestCase
 
         Http::assertSent(function ($request) {
             $body = $request->data();
-            return $request->url() === $this->testHost . '/indexes/test_vectors_testagent_default/documents/delete' &&
+
+            return $request->url() === $this->testHost.'/indexes/test_vectors_testagent_default/documents/delete' &&
                    $request->method() === 'POST' &&
                    str_contains($body['filter'], "source = 'test-document.txt'");
         });
@@ -216,12 +221,12 @@ class MeilisearchVectorDriverTest extends TestCase
     public function test_delete_all_in_namespace()
     {
         Http::fake([
-            $this->testHost . '/indexes/test_vectors_testagent_default/documents/delete' => Http::response([
+            $this->testHost.'/indexes/test_vectors_testagent_default/documents/delete' => Http::response([
                 'taskUid' => 789,
                 'indexUid' => 'test_vectors_testagent_default',
             ], 202),
 
-            $this->testHost . '/tasks/789' => Http::response([
+            $this->testHost.'/tasks/789' => Http::response([
                 'uid' => 789,
                 'status' => 'succeeded',
                 'details' => ['deletedDocuments' => 10],
@@ -234,8 +239,9 @@ class MeilisearchVectorDriverTest extends TestCase
 
         Http::assertSent(function ($request) {
             $body = $request->data();
-            return $request->url() === $this->testHost . '/indexes/test_vectors_testagent_default/documents/delete' &&
-                   !str_contains($body['filter'], 'source =');
+
+            return $request->url() === $this->testHost.'/indexes/test_vectors_testagent_default/documents/delete' &&
+                   ! str_contains($body['filter'], 'source =');
         });
     }
 
@@ -268,8 +274,8 @@ class MeilisearchVectorDriverTest extends TestCase
         ];
 
         Http::fake([
-            $this->testHost . '/indexes/test_vectors_testagent_default/stats' => Http::response($mockIndexStats, 200),
-            $this->testHost . '/indexes/test_vectors_testagent_default/search' => Http::response($mockSearchResults, 200),
+            $this->testHost.'/indexes/test_vectors_testagent_default/stats' => Http::response($mockIndexStats, 200),
+            $this->testHost.'/indexes/test_vectors_testagent_default/search' => Http::response($mockSearchResults, 200),
         ]);
 
         $stats = $this->driver->getStatistics('TestAgent', 'default');
@@ -285,7 +291,7 @@ class MeilisearchVectorDriverTest extends TestCase
     public function test_get_statistics_handles_errors_gracefully()
     {
         Http::fake([
-            $this->testHost . '/indexes/*/stats' => Http::response(['error' => 'Index not found'], 404),
+            $this->testHost.'/indexes/*/stats' => Http::response(['error' => 'Index not found'], 404),
         ]);
 
         $stats = $this->driver->getStatistics('TestAgent', 'default');
@@ -301,7 +307,7 @@ class MeilisearchVectorDriverTest extends TestCase
     public function test_is_available_returns_true_when_healthy()
     {
         Http::fake([
-            $this->testHost . '/health' => Http::response(['status' => 'available'], 200),
+            $this->testHost.'/health' => Http::response(['status' => 'available'], 200),
         ]);
 
         $this->assertTrue($this->driver->isAvailable());
@@ -310,7 +316,7 @@ class MeilisearchVectorDriverTest extends TestCase
     public function test_is_available_returns_false_when_unhealthy()
     {
         Http::fake([
-            $this->testHost . '/health' => Http::response(['error' => 'Service unavailable'], 503),
+            $this->testHost.'/health' => Http::response(['error' => 'Service unavailable'], 503),
         ]);
 
         $this->assertFalse($this->driver->isAvailable());
@@ -319,7 +325,7 @@ class MeilisearchVectorDriverTest extends TestCase
     public function test_wait_for_task_handles_timeout()
     {
         Http::fake([
-            $this->testHost . '/tasks/123' => Http::response([
+            $this->testHost.'/tasks/123' => Http::response([
                 'uid' => 123,
                 'status' => 'enqueued',
             ], 200),
@@ -340,13 +346,13 @@ class MeilisearchVectorDriverTest extends TestCase
     public function test_make_request_includes_authorization_header()
     {
         Http::fake([
-            $this->testHost . '/test-endpoint' => Http::response(['success' => true], 200),
+            $this->testHost.'/test-endpoint' => Http::response(['success' => true], 200),
         ]);
 
         $this->invokeMethod($this->driver, 'makeRequest', ['GET', '/test-endpoint']);
 
         Http::assertSent(function ($request) {
-            return $request->hasHeader('Authorization', 'Bearer ' . $this->testApiKey) &&
+            return $request->hasHeader('Authorization', 'Bearer '.$this->testApiKey) &&
                    $request->hasHeader('Content-Type', 'application/json');
         });
     }
@@ -354,16 +360,16 @@ class MeilisearchVectorDriverTest extends TestCase
     public function test_make_request_without_api_key()
     {
         Config::set('vizra-adk.vector_memory.drivers.meilisearch.api_key', null);
-        $driver = new MeilisearchVectorDriver();
+        $driver = new MeilisearchVectorDriver;
 
         Http::fake([
-            $this->testHost . '/test-endpoint' => Http::response(['success' => true], 200),
+            $this->testHost.'/test-endpoint' => Http::response(['success' => true], 200),
         ]);
 
         $this->invokeMethod($driver, 'makeRequest', ['GET', '/test-endpoint']);
 
         Http::assertSent(function ($request) {
-            return !$request->hasHeader('Authorization') &&
+            return ! $request->hasHeader('Authorization') &&
                    $request->hasHeader('Content-Type', 'application/json');
         });
     }

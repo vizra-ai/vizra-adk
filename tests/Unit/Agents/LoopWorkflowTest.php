@@ -2,15 +2,16 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Agents;
 
+use Mockery;
 use Vizra\VizraADK\Agents\LoopWorkflow;
+use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Tests\TestCase;
-use Vizra\VizraADK\Facades\Agent;
-use Mockery;
 
 class LoopWorkflowTest extends TestCase
 {
     protected LoopWorkflow $workflow;
+
     protected AgentContext $context;
 
     protected function setUp(): void
@@ -20,7 +21,7 @@ class LoopWorkflowTest extends TestCase
         // Ensure fresh Mockery state for each test
         Mockery::close();
 
-        $this->workflow = new LoopWorkflow();
+        $this->workflow = new LoopWorkflow;
         $this->context = new AgentContext('test-session');
     }
 
@@ -52,7 +53,7 @@ class LoopWorkflowTest extends TestCase
 
     public function test_can_set_while_condition()
     {
-        $condition = fn($input) => $input['counter'] < 5;
+        $condition = fn ($input) => $input['counter'] < 5;
         $workflow = $this->workflow->while($condition);
 
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
@@ -60,7 +61,7 @@ class LoopWorkflowTest extends TestCase
 
     public function test_can_set_until_condition()
     {
-        $condition = fn($input) => $input['counter'] >= 5;
+        $condition = fn ($input) => $input['counter'] >= 5;
         $workflow = $this->workflow->until($condition);
 
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
@@ -109,7 +110,7 @@ class LoopWorkflowTest extends TestCase
         Agent::shouldReceive('run')
             ->times(3)
             ->with('counter_agent', Mockery::any(), 'test-session')
-            ->andReturnUsing(function() use (&$counter) {
+            ->andReturnUsing(function () use (&$counter) {
                 return ['counter' => ++$counter];
             });
 
@@ -144,7 +145,7 @@ class LoopWorkflowTest extends TestCase
 
         $result = $this->workflow
             ->agent(CounterAgent::class)
-            ->while(fn($input) => $input['counter'] < 3)
+            ->while(fn ($input) => $input['counter'] < 3)
             ->execute(['counter' => 0], $this->context);
 
         $this->assertEquals(3, $result['iterations']);
@@ -171,7 +172,7 @@ class LoopWorkflowTest extends TestCase
 
         $result = $this->workflow
             ->agent(CounterAgent::class)
-            ->until(fn($input) => $input['counter'] >= 3)
+            ->until(fn ($input) => $input['counter'] >= 3)
             ->execute(['counter' => 0], $this->context);
 
         $this->assertEquals(3, $result['iterations']);
@@ -186,7 +187,7 @@ class LoopWorkflowTest extends TestCase
         Agent::shouldReceive('run')
             ->times(3)
             ->with('process_item_agent', Mockery::type('array'), 'test-session')
-            ->andReturnUsing(function($agent, $params) {
+            ->andReturnUsing(function ($agent, $params) {
                 return ['processed' => $params['item']];
             });
 
@@ -214,7 +215,7 @@ class LoopWorkflowTest extends TestCase
 
         $result = $this->workflow
             ->agent(InfiniteAgent::class)
-            ->while(fn($input) => true) // Would loop forever
+            ->while(fn ($input) => true) // Would loop forever
             ->maxIterations(5)
             ->execute(['continue' => true], $this->context);
 
@@ -244,12 +245,13 @@ class LoopWorkflowTest extends TestCase
         Agent::shouldReceive('run')
             ->with('sometimes_failing_agent', Mockery::any(), 'test-session')
             ->times(3)
-            ->andReturnUsing(function($agent, $params, $session) {
+            ->andReturnUsing(function ($agent, $params, $session) {
                 static $call = 0;
                 $call++;
                 if ($call === 2) {
                     throw new \Exception('Failed on second call');
                 }
+
                 return ['call' => $call];
             });
 
@@ -303,12 +305,13 @@ class LoopWorkflowTest extends TestCase
         Agent::shouldReceive('run')
             ->with('sometimes_failing_agent', Mockery::any(), 'test-session')
             ->times(3)
-            ->andReturnUsing(function($agent, $params, $session) {
+            ->andReturnUsing(function ($agent, $params, $session) {
                 static $call = 0;
                 $call++;
                 if ($call === 2) {
                     throw new \Exception('Failed on second call');
                 }
+
                 return ['call' => $call];
             });
 
@@ -329,7 +332,7 @@ class LoopWorkflowTest extends TestCase
     {
         $workflow = LoopWorkflow::createWhile(
             TestAgent::class,
-            fn($input) => $input['counter'] < 3,
+            fn ($input) => $input['counter'] < 3,
             10
         );
 
@@ -363,10 +366,10 @@ class LoopWorkflowTest extends TestCase
         $this->workflow
             ->agent(TestAgent::class)
             ->times(2)
-            ->onSuccess(function($result) use (&$successCallbackCalled) {
+            ->onSuccess(function ($result) use (&$successCallbackCalled) {
                 $successCallbackCalled = true;
             })
-            ->onComplete(function($result, $success) use (&$completeCallbackCalled) {
+            ->onComplete(function ($result, $success) use (&$completeCallbackCalled) {
                 $completeCallbackCalled = true;
             })
             ->execute('input', $this->context);
@@ -394,7 +397,7 @@ class LoopWorkflowTest extends TestCase
         Agent::shouldReceive('run')
             ->times(2)
             ->with('process_item_agent', Mockery::type('array'), 'test-session')
-            ->andReturnUsing(function($agent, $params) {
+            ->andReturnUsing(function ($agent, $params) {
                 return ['processed' => $params['item'], 'key' => $params['key']];
             });
 
@@ -415,14 +418,14 @@ class LoopWorkflowTest extends TestCase
         Agent::shouldReceive('run')
             ->times(2)
             ->with('test_agent', Mockery::type('array'), 'test-session')
-            ->andReturnUsing(function($agent, $params) {
+            ->andReturnUsing(function ($agent, $params) {
                 return ['iteration' => $params['iteration']];
             });
 
         $result = $this->workflow
-            ->agent(TestAgent::class, fn($input, $results, $context) => [
+            ->agent(TestAgent::class, fn ($input, $results, $context) => [
                 'iteration' => count($results) + 1,
-                'original_input' => $input
+                'original_input' => $input,
             ])
             ->times(2)
             ->execute('original_input', $this->context);

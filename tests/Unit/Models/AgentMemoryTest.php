@@ -1,16 +1,15 @@
 <?php
 
-use Vizra\VizraADK\Models\AgentMemory;
-use Vizra\VizraADK\Models\AgentSession;
-use Vizra\VizraADK\Models\AgentMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
+use Vizra\VizraADK\Models\AgentMemory;
+use Vizra\VizraADK\Models\AgentMessage;
+use Vizra\VizraADK\Models\AgentSession;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Run migrations for testing
-    $this->loadMigrationsFrom(__DIR__ . '/../../../database/migrations');
+    $this->loadMigrationsFrom(__DIR__.'/../../../database/migrations');
 });
 
 it('can create agent memory', function () {
@@ -19,7 +18,7 @@ it('can create agent memory', function () {
         'memory_summary' => 'This agent helps with customer support',
         'memory_data' => ['domain' => 'customer_service', 'expertise' => 'billing'],
         'key_learnings' => ['Users often ask about refunds', 'Payment issues are common'],
-        'total_sessions' => 0
+        'total_sessions' => 0,
     ]);
 
     expect($memory)->toBeInstanceOf(AgentMemory::class);
@@ -33,7 +32,7 @@ it('can create agent memory', function () {
 it('casts memory data to array', function () {
     $memory = AgentMemory::create([
         'agent_name' => 'test-agent',
-        'memory_data' => ['nested' => ['data' => 'value']]
+        'memory_data' => ['nested' => ['data' => 'value']],
     ]);
 
     expect($memory->memory_data)->toBeArray();
@@ -43,7 +42,7 @@ it('casts memory data to array', function () {
 it('casts key learnings to array', function () {
     $memory = AgentMemory::create([
         'agent_name' => 'test-agent',
-        'key_learnings' => ['learning 1', 'learning 2', 'learning 3']
+        'key_learnings' => ['learning 1', 'learning 2', 'learning 3'],
     ]);
 
     expect($memory->key_learnings)->toBeArray();
@@ -53,18 +52,18 @@ it('casts key learnings to array', function () {
 
 it('has many sessions relationship', function () {
     $memory = AgentMemory::create([
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     // Create sessions linked to this memory
     $session1 = AgentSession::create([
         'agent_name' => 'test-agent',
-        'agent_memory_id' => $memory->id
+        'agent_memory_id' => $memory->id,
     ]);
 
     $session2 = AgentSession::create([
         'agent_name' => 'test-agent',
-        'agent_memory_id' => $memory->id
+        'agent_memory_id' => $memory->id,
     ]);
 
     expect($memory->sessions)->toBeInstanceOf(\Illuminate\Database\Eloquent\Collection::class);
@@ -74,7 +73,7 @@ it('has many sessions relationship', function () {
 
 it('can find memory by agent name', function () {
     $memory = AgentMemory::create([
-        'agent_name' => 'unique-agent'
+        'agent_name' => 'unique-agent',
     ]);
 
     $found = AgentMemory::where('agent_name', 'unique-agent')->first();
@@ -86,11 +85,11 @@ it('can find memory by agent name', function () {
 it('can update memory data', function () {
     $memory = AgentMemory::create([
         'agent_name' => 'test-agent',
-        'memory_data' => ['initial' => 'data']
+        'memory_data' => ['initial' => 'data'],
     ]);
 
     $memory->update([
-        'memory_data' => ['updated' => 'data', 'new_key' => 'new_value']
+        'memory_data' => ['updated' => 'data', 'new_key' => 'new_value'],
     ]);
 
     expect($memory->fresh()->memory_data)->toBe(['updated' => 'data', 'new_key' => 'new_value']);
@@ -99,11 +98,11 @@ it('can update memory data', function () {
 it('can update key learnings', function () {
     $memory = AgentMemory::create([
         'agent_name' => 'test-agent',
-        'key_learnings' => ['initial learning']
+        'key_learnings' => ['initial learning'],
     ]);
 
     $memory->update([
-        'key_learnings' => ['initial learning', 'new learning', 'another insight']
+        'key_learnings' => ['initial learning', 'new learning', 'another insight'],
     ]);
 
     $fresh = $memory->fresh();
@@ -115,7 +114,7 @@ it('can update key learnings', function () {
 it('can increment total sessions', function () {
     $memory = AgentMemory::create([
         'agent_name' => 'test-agent',
-        'total_sessions' => 5
+        'total_sessions' => 5,
     ]);
 
     $memory->increment('total_sessions');
@@ -129,7 +128,7 @@ it('can increment total sessions', function () {
 
 it('manages timestamps', function () {
     $memory = AgentMemory::create([
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     expect($memory->created_at)->not->toBeNull();
@@ -147,7 +146,7 @@ it('manages timestamps', function () {
 it('can have null memory summary', function () {
     $memory = AgentMemory::create([
         'agent_name' => 'test-agent',
-        'memory_summary' => null
+        'memory_summary' => null,
     ]);
 
     expect($memory->memory_summary)->toBeNull();
@@ -156,7 +155,7 @@ it('can have null memory summary', function () {
 it('can have empty memory data', function () {
     $memory = AgentMemory::create([
         'agent_name' => 'test-agent',
-        'memory_data' => []
+        'memory_data' => [],
     ]);
 
     expect($memory->memory_data)->toBe([]);
@@ -165,7 +164,7 @@ it('can have empty memory data', function () {
 it('can have empty key learnings', function () {
     $memory = AgentMemory::create([
         'agent_name' => 'test-agent',
-        'key_learnings' => []
+        'key_learnings' => [],
     ]);
 
     expect($memory->key_learnings)->toBe([]);
@@ -173,7 +172,7 @@ it('can have empty key learnings', function () {
 
 it('defaults total sessions to 0', function () {
     $memory = AgentMemory::create([
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     expect($memory->total_sessions)->toBe(0);
@@ -181,18 +180,18 @@ it('defaults total sessions to 0', function () {
 
 it('can have associated sessions with messages', function () {
     $memory = AgentMemory::create([
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     $session = AgentSession::create([
         'agent_name' => 'test-agent',
-        'agent_memory_id' => $memory->id
+        'agent_memory_id' => $memory->id,
     ]);
 
     $message = AgentMessage::create([
         'agent_session_id' => $session->id,
         'role' => 'user',
-        'content' => 'Hello memory!'
+        'content' => 'Hello memory!',
     ]);
 
     expect($memory->sessions->first()->messages->first()->content)->toBe('Hello memory!');

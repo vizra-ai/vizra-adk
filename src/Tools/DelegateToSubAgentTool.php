@@ -2,12 +2,12 @@
 
 namespace Vizra\VizraADK\Tools;
 
-use Vizra\VizraADK\Contracts\ToolInterface;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Memory\AgentMemory;
-use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\Events\TaskDelegated;
 use Illuminate\Support\Facades\Event;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\Events\TaskDelegated;
+use Vizra\VizraADK\Memory\AgentMemory;
+use Vizra\VizraADK\System\AgentContext;
 
 /**
  * Internal tool for delegating tasks to sub-agents.
@@ -27,8 +27,8 @@ class DelegateToSubAgentTool implements ToolInterface
         // Get available sub-agent names for the description
         $availableSubAgents = array_keys($this->parentAgent->getLoadedSubAgents());
         $subAgentsList = empty($availableSubAgents)
-            ? "No sub-agents available"
-            : "Available sub-agents: " . implode(', ', $availableSubAgents);
+            ? 'No sub-agents available'
+            : 'Available sub-agents: '.implode(', ', $availableSubAgents);
 
         return [
             'name' => 'delegate_to_sub_agent',
@@ -65,7 +65,7 @@ class DelegateToSubAgentTool implements ToolInterface
                 'error' => "Maximum delegation depth ({$maxDepth}) reached. Cannot delegate further to prevent recursion.",
                 'current_depth' => $currentDepth,
                 'max_depth' => $maxDepth,
-                'success' => false
+                'success' => false,
             ]);
         }
 
@@ -81,14 +81,14 @@ class DelegateToSubAgentTool implements ToolInterface
             return json_encode([
                 'error' => 'sub_agent_name is required',
                 'available_sub_agents' => array_keys($this->parentAgent->getLoadedSubAgents()),
-                'success' => false
+                'success' => false,
             ]);
         }
 
         if (empty($taskInput)) {
             return json_encode([
                 'error' => 'task_input is required',
-                'success' => false
+                'success' => false,
             ]);
         }
 
@@ -108,25 +108,25 @@ class DelegateToSubAgentTool implements ToolInterface
 
             // Get the sub-agent instance (after hook may have modified the name)
             $subAgent = $this->parentAgent->getSubAgent($subAgentName);
-            if (!$subAgent) {
+            if (! $subAgent) {
                 return json_encode([
                     'error' => "Sub-agent '{$subAgentName}' not found",
                     'available_sub_agents' => array_keys($this->parentAgent->getLoadedSubAgents()),
-                    'success' => false
+                    'success' => false,
                 ]);
             }
 
             // Create a new context for the sub-agent
-            $subAgentContext = new AgentContext($context->getSessionId() . '_sub_' . $subAgentName);
+            $subAgentContext = new AgentContext($context->getSessionId().'_sub_'.$subAgentName);
 
             // Increment delegation depth for the sub-agent context
             $subAgentContext->setState('delegation_depth', $currentDepth + 1);
 
             // If context summary is provided, add it as an initial system message
-            if (!empty($contextSummary)) {
+            if (! empty($contextSummary)) {
                 $subAgentContext->addMessage([
                     'role' => 'system',
-                    'content' => "Context from parent agent: {$contextSummary}"
+                    'content' => "Context from parent agent: {$contextSummary}",
                 ]);
             }
 
@@ -158,15 +158,15 @@ class DelegateToSubAgentTool implements ToolInterface
                 'sub_agent' => $subAgentName,
                 'task_input' => $taskInput,
                 'result' => $processedResult,
-                'success' => true
+                'success' => true,
             ]);
 
         } catch (\Throwable $e) {
             return json_encode([
-                'error' => "Sub-agent execution failed: " . $e->getMessage(),
+                'error' => 'Sub-agent execution failed: '.$e->getMessage(),
                 'sub_agent' => $subAgentName,
                 'task_input' => $taskInput,
-                'success' => false
+                'success' => false,
             ]);
         }
     }

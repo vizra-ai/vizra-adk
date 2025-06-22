@@ -11,17 +11,20 @@ use Illuminate\Support\Collection;
 class AgentContext
 {
     protected ?string $sessionId;
+
     protected mixed $userInput;
+
     protected array $state = [];
+
     protected Collection $conversationHistory; // Collection of AgentMessage arrays or objects
 
     /**
      * AgentContext constructor.
      *
-     * @param string|null $sessionId Unique identifier for the session.
-     * @param mixed|null $userInput Initial user input.
-     * @param array $initialState Optional initial state data.
-     * @param Collection|null $conversationHistory Optional initial conversation history.
+     * @param  string|null  $sessionId  Unique identifier for the session.
+     * @param  mixed|null  $userInput  Initial user input.
+     * @param  array  $initialState  Optional initial state data.
+     * @param  Collection|null  $conversationHistory  Optional initial conversation history.
      */
     public function __construct(
         ?string $sessionId,
@@ -32,12 +35,11 @@ class AgentContext
         $this->sessionId = $sessionId;
         $this->userInput = $userInput;
         $this->state = $initialState;
-        $this->conversationHistory = $conversationHistory ?? new Collection();
+        $this->conversationHistory = $conversationHistory ?? new Collection;
     }
 
     /**
      * Get the session identifier.
-     * @return string|null
      */
     public function getSessionId(): ?string
     {
@@ -46,7 +48,6 @@ class AgentContext
 
     /**
      * Get the initial user input for this interaction.
-     * @return mixed
      */
     public function getUserInput(): mixed
     {
@@ -55,7 +56,6 @@ class AgentContext
 
     /**
      * Set the user input.
-     * @param mixed $input
      */
     public function setUserInput(mixed $input): void
     {
@@ -65,9 +65,8 @@ class AgentContext
     /**
      * Get a value from the session-scoped state.
      *
-     * @param string $key The key of the state variable.
-     * @param mixed|null $default The default value if the key is not found.
-     * @return mixed
+     * @param  string  $key  The key of the state variable.
+     * @param  mixed|null  $default  The default value if the key is not found.
      */
     public function getState(string $key, mixed $default = null): mixed
     {
@@ -77,8 +76,8 @@ class AgentContext
     /**
      * Set a value in the session-scoped state.
      *
-     * @param string $key The key of the state variable.
-     * @param mixed $value The value to set.
+     * @param  string  $key  The key of the state variable.
+     * @param  mixed  $value  The value to set.
      */
     public function setState(string $key, mixed $value): void
     {
@@ -88,7 +87,6 @@ class AgentContext
 
     /**
      * Get all state data.
-     * @return array
      */
     public function getAllState(): array
     {
@@ -97,7 +95,6 @@ class AgentContext
 
     /**
      * Load an array of state data, merging with existing state.
-     * @param array $stateData
      */
     public function loadState(array $stateData): void
     {
@@ -106,7 +103,6 @@ class AgentContext
 
     /**
      * Get the conversation history.
-     * @return Collection
      */
     public function getConversationHistory(): Collection
     {
@@ -116,7 +112,7 @@ class AgentContext
     /**
      * Add a message to the conversation history.
      *
-     * @param array $message Message structure: ['role' => 'user', 'content' => 'Hello', 'timestamp' => now()]
+     * @param  array  $message  Message structure: ['role' => 'user', 'content' => 'Hello', 'timestamp' => now()]
      */
     public function addMessage(array $message): void
     {
@@ -125,7 +121,6 @@ class AgentContext
 
     /**
      * Set the entire conversation history.
-     * @param Collection $history
      */
     public function setConversationHistory(Collection $history): void
     {

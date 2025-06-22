@@ -2,21 +2,23 @@
 
 namespace Vizra\VizraADK\Services;
 
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Facades\Event;
 use Vizra\VizraADK\Agents\BaseAgent;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Events\AgentExecutionFinished; // For AgentResponseGenerated
+use Vizra\VizraADK\Events\AgentExecutionStarting; // For AgentResponseGenerated
+use Vizra\VizraADK\Events\AgentResponseGenerated;
 use Vizra\VizraADK\Exceptions\AgentConfigurationException;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Support\Facades\Event; // For AgentResponseGenerated
-use Vizra\VizraADK\Events\AgentResponseGenerated; // For AgentResponseGenerated
-use Vizra\VizraADK\Events\AgentExecutionStarting;
-use Vizra\VizraADK\Events\AgentExecutionFinished;
-
 
 class AgentManager
 {
     protected Application $app;
+
     protected AgentRegistry $registry;
+
     protected AgentBuilder $builder;
+
     protected StateManager $stateManager;
 
     public function __construct(
@@ -50,8 +52,9 @@ class AgentManager
     /**
      * Get an instance of a registered agent.
      *
-     * @param string $agentName The name of the agent.
+     * @param  string  $agentName  The name of the agent.
      * @return BaseAgent The agent instance.
+     *
      * @throws \Vizra\VizraADK\Exceptions\AgentNotFoundException
      * @throws \Vizra\VizraADK\Exceptions\AgentConfigurationException
      */
@@ -59,28 +62,31 @@ class AgentManager
     {
         return $this->registry->getAgent($agentName);
     }
-    
+
     /**
      * Get an instance of a registered agent by class name.
      *
-     * @param string $agentClass The class name of the agent.
+     * @param  string  $agentClass  The class name of the agent.
      * @return BaseAgent The agent instance.
+     *
      * @throws \Vizra\VizraADK\Exceptions\AgentNotFoundException
      * @throws \Vizra\VizraADK\Exceptions\AgentConfigurationException
      */
     public function byClass(string $agentClass): BaseAgent
     {
         $agentName = $this->registry->resolveAgentName($agentClass);
+
         return $this->registry->getAgent($agentName);
     }
 
     /**
      * Run an agent with the given input and session ID.
      *
-     * @param string $agentNameOrClass The name or class of the agent to run.
-     * @param mixed $input The input for the agent.
-     * @param string|null $sessionId Optional session ID. If null, a new session is created/managed.
+     * @param  string  $agentNameOrClass  The name or class of the agent to run.
+     * @param  mixed  $input  The input for the agent.
+     * @param  string|null  $sessionId  Optional session ID. If null, a new session is created/managed.
      * @return mixed The final response from the agent.
+     *
      * @throws \Vizra\VizraADK\Exceptions\AgentNotFoundException
      * @throws \Vizra\VizraADK\Exceptions\AgentConfigurationException
      * @throws \Throwable
@@ -91,7 +97,7 @@ class AgentManager
         $agentName = $this->registry->resolveAgentName($agentNameOrClass);
         $agent = $this->named($agentName);
 
-        if (!($agent instanceof BaseLlmAgent)) { // For MVP, assume all runnable agents are LLM based
+        if (! ($agent instanceof BaseLlmAgent)) { // For MVP, assume all runnable agents are LLM based
             throw new AgentConfigurationException("Agent '{$agentName}' is not an LLM agent and cannot be run directly via this method in MVP.");
         }
 
@@ -121,11 +127,12 @@ class AgentManager
             Event::dispatch(new AgentExecutionFinished($context, $agentName)); // Dispatch finished even on error
             throw $e;
         } finally {
-             // Save context (state and full conversation history)
+            // Save context (state and full conversation history)
             $this->stateManager->saveContext($context, $agentName);
         }
 
         Event::dispatch(new AgentExecutionFinished($context, $agentName));
+
         return $finalResponse;
     }
 

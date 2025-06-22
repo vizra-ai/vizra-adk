@@ -2,33 +2,36 @@
 
 namespace Vizra\VizraADK\Providers;
 
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Contracts\Foundation\Application;
 use Livewire\Livewire;
-use Vizra\VizraADK\Services\AgentBuilder;
-use Vizra\VizraADK\Services\AgentRegistry;
-use Vizra\VizraADK\Services\StateManager;
-use Vizra\VizraADK\Services\MemoryManager;
-use Vizra\VizraADK\Services\AgentManager;
-use Vizra\VizraADK\Services\WorkflowManager;
-use Vizra\VizraADK\Services\Tracer;
-use Vizra\VizraADK\Services\AnalyticsService;
-use Vizra\VizraADK\Livewire\Dashboard;
-use Vizra\VizraADK\Livewire\ChatInterface;
-use Vizra\VizraADK\Livewire\EvalRunner;
-use Vizra\VizraADK\Livewire\Analytics;
-use Vizra\VizraADK\Console\Commands\InstallCommand;
-use Vizra\VizraADK\Console\Commands\MakeAgentCommand;
-use Vizra\VizraADK\Console\Commands\MakeToolCommand;
 use Vizra\VizraADK\Console\Commands\AgentChatCommand;
-use Vizra\VizraADK\Console\Commands\MakeEvalCommand;
-use Vizra\VizraADK\Console\Commands\RunEvalCommand;
+use Vizra\VizraADK\Console\Commands\AgentDiscoverCommand;
 use Vizra\VizraADK\Console\Commands\AgentTraceCleanupCommand;
 use Vizra\VizraADK\Console\Commands\AgentTraceCommand;
 use Vizra\VizraADK\Console\Commands\DashboardCommand;
-use Vizra\VizraADK\Console\Commands\AgentDiscoverCommand;
+use Vizra\VizraADK\Console\Commands\InstallCommand;
+use Vizra\VizraADK\Console\Commands\MakeAgentCommand;
+use Vizra\VizraADK\Console\Commands\MakeEvalCommand;
+use Vizra\VizraADK\Console\Commands\MakeToolCommand;
+use Vizra\VizraADK\Console\Commands\ManagePromptsCommand;
+use Vizra\VizraADK\Console\Commands\MCPListServersCommand;
+use Vizra\VizraADK\Console\Commands\MCPMakeAgentCommand;
+use Vizra\VizraADK\Console\Commands\RunEvalCommand;
+use Vizra\VizraADK\Livewire\Analytics;
+use Vizra\VizraADK\Livewire\ChatInterface;
+use Vizra\VizraADK\Livewire\Dashboard;
+use Vizra\VizraADK\Livewire\EvalRunner;
+use Vizra\VizraADK\Services\AgentBuilder;
 use Vizra\VizraADK\Services\AgentDiscovery;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Services\AnalyticsService;
+use Vizra\VizraADK\Services\MemoryManager;
+use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\Services\Tracer;
+use Vizra\VizraADK\Services\WorkflowManager;
 
 class AgentServiceProvider extends ServiceProvider
 {
@@ -48,7 +51,7 @@ class AgentServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(MemoryManager::class, function (Application $app) {
-            return new MemoryManager();
+            return new MemoryManager;
         });
 
         $this->app->singleton(StateManager::class, function (Application $app) {
@@ -56,11 +59,11 @@ class AgentServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(Tracer::class, function (Application $app) {
-            return new Tracer();
+            return new Tracer;
         });
 
         $this->app->singleton(AnalyticsService::class, function (Application $app) {
-            return new AnalyticsService();
+            return new AnalyticsService;
         });
 
         // Bind the AgentManager for the Facade and general use
@@ -74,18 +77,29 @@ class AgentServiceProvider extends ServiceProvider
         });
 
         // Ensure the facade accessor points to the AgentManager binding
-        $this->app->alias(AgentManager::class, 'laravel-ai-adk.manager');
+        $this->app->alias(AgentManager::class, 'vizra-adk.manager');
 
         // Register WorkflowManager for the Workflow facade
         $this->app->singleton(WorkflowManager::class, function (Application $app) {
-            return new WorkflowManager();
+            return new WorkflowManager;
         });
 
-        $this->app->alias(WorkflowManager::class, 'laravel-ai-adk.workflow');
+        $this->app->alias(WorkflowManager::class, 'vizra-adk.workflow');
 
         // Register AgentDiscovery service
         $this->app->singleton(AgentDiscovery::class, function (Application $app) {
-            return new AgentDiscovery();
+            return new AgentDiscovery;
+        });
+
+        // Register MCP services
+        $this->app->singleton(\Vizra\VizraADK\Services\MCP\MCPClientManager::class, function (Application $app) {
+            return new \Vizra\VizraADK\Services\MCP\MCPClientManager;
+        });
+
+        $this->app->singleton(\Vizra\VizraADK\Services\MCP\MCPToolDiscovery::class, function (Application $app) {
+            return new \Vizra\VizraADK\Services\MCP\MCPToolDiscovery(
+                $app->make(\Vizra\VizraADK\Services\MCP\MCPClientManager::class)
+            );
         });
     }
 
@@ -110,7 +124,10 @@ class AgentServiceProvider extends ServiceProvider
                 AgentTraceCommand::class,
                 AgentTraceCleanupCommand::class,
                 DashboardCommand::class,
-                AgentDiscoverCommand::class
+                AgentDiscoverCommand::class,
+                MCPListServersCommand::class,
+                MCPMakeAgentCommand::class,
+                ManagePromptsCommand::class,
             ]);
         }
 
@@ -148,9 +165,6 @@ class AgentServiceProvider extends ServiceProvider
     {
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'vizra-adk');
 
-        $this->publishes([
-            __DIR__.'/../../resources/views' => resource_path('views/vendor/vizra-adk'),
-        ], 'vizra-adk-views');
     }
 
     protected function loadRoutes(): void
@@ -158,7 +172,7 @@ class AgentServiceProvider extends ServiceProvider
         // Load API routes
         if (config('vizra-adk.routes.enabled', true)) {
             Route::group([
-                'prefix' => "vizra",
+                'prefix' => config('vizra-adk.routes.prefix', 'api/vizra-adk'),
                 'middleware' => config('vizra-adk.routes.middleware', ['api']),
             ], function () {
                 $this->loadRoutesFrom(__DIR__.'/../../routes/api.php');
@@ -168,7 +182,7 @@ class AgentServiceProvider extends ServiceProvider
         // Load web routes
         if (config('vizra-adk.routes.web.enabled', true)) {
             Route::group([
-                'prefix' => "vizra",
+                'prefix' => 'vizra',
                 'middleware' => config('vizra-adk.routes.web.middleware', ['web']),
                 'as' => 'vizra.',
             ], function () {

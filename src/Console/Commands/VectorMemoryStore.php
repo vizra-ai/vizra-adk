@@ -2,9 +2,9 @@
 
 namespace Vizra\VizraADK\Console\Commands;
 
-use Vizra\VizraADK\Services\VectorMemoryManager;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Vizra\VizraADK\Services\VectorMemoryManager;
 
 class VectorMemoryStore extends Command
 {
@@ -30,8 +30,9 @@ class VectorMemoryStore extends Command
         // Get content from file or direct input
         $content = null;
         if ($filePath = $this->option('file')) {
-            if (!File::exists($filePath)) {
+            if (! File::exists($filePath)) {
                 $this->error("File not found: {$filePath}");
+
                 return 1;
             }
             $content = File::get($filePath);
@@ -40,11 +41,13 @@ class VectorMemoryStore extends Command
             $content = $directContent;
         } else {
             $this->error('Either --file or --content must be provided');
+
             return 1;
         }
 
         if (empty(trim($content))) {
             $this->error('Content is empty');
+
             return 1;
         }
 
@@ -53,15 +56,16 @@ class VectorMemoryStore extends Command
         if ($metadataJson) {
             $metadata = json_decode($metadataJson, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                $this->error('Invalid JSON in metadata: ' . json_last_error_msg());
+                $this->error('Invalid JSON in metadata: '.json_last_error_msg());
+
                 return 1;
             }
         }
 
-        $this->info("Storing content in vector memory...");
+        $this->info('Storing content in vector memory...');
         $this->info("Agent: {$agentName}");
         $this->info("Namespace: {$namespace}");
-        $this->info("Content length: " . strlen($content) . " characters");
+        $this->info('Content length: '.strlen($content).' characters');
 
         try {
             $memories = $vectorMemory->addDocument(
@@ -76,13 +80,13 @@ class VectorMemoryStore extends Command
             $this->info("✅ Successfully stored {$memories->count()} chunks in vector memory");
 
             if ($memories->count() > 1) {
-                $this->info("Document was automatically chunked for optimal embedding");
+                $this->info('Document was automatically chunked for optimal embedding');
             }
 
             // Show some statistics
             $stats = $vectorMemory->getStatistics($agentName, $namespace);
             $this->newLine();
-            $this->info("📊 Agent Statistics:");
+            $this->info('📊 Agent Statistics:');
             $this->table(
                 ['Metric', 'Value'],
                 [
@@ -95,7 +99,8 @@ class VectorMemoryStore extends Command
             return 0;
 
         } catch (\Exception $e) {
-            $this->error("Failed to store content: " . $e->getMessage());
+            $this->error('Failed to store content: '.$e->getMessage());
+
             return 1;
         }
     }

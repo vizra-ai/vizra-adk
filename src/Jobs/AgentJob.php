@@ -2,8 +2,6 @@
 
 namespace Vizra\VizraADK\Jobs;
 
-use Vizra\VizraADK\Services\AgentManager;
-use Vizra\VizraADK\Services\StateManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -11,16 +9,23 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\StateManager;
 
 class AgentJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected string $agentClass;
+
     protected mixed $input;
+
     protected string $mode;
+
     protected string $sessionId;
+
     protected array $context;
+
     protected string $jobId;
 
     /**
@@ -116,6 +121,7 @@ class AgentJob implements ShouldQueue
 
         // Fallback to class name transformation
         $className = class_basename($this->agentClass);
+
         return Str::snake(str_replace('Agent', '', $className));
     }
 
@@ -152,7 +158,7 @@ class AgentJob implements ShouldQueue
         }
 
         // Restore parameters
-        if (isset($this->context['parameters']) && !empty($this->context['parameters'])) {
+        if (isset($this->context['parameters']) && ! empty($this->context['parameters'])) {
             $agentContext->setState('agent_parameters', $this->context['parameters']);
         }
 
@@ -254,9 +260,9 @@ class AgentJob implements ShouldQueue
     public function tags(): array
     {
         return [
-            'vizra:' . $this->getAgentName(),
-            'mode:' . $this->mode,
-            'session:' . $this->sessionId,
+            'vizra:'.$this->getAgentName(),
+            'mode:'.$this->mode,
+            'session:'.$this->sessionId,
         ];
     }
 }

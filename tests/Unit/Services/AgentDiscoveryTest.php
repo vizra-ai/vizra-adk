@@ -2,13 +2,13 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Services;
 
-use Vizra\VizraADK\Tests\TestCase;
-use Vizra\VizraADK\Services\AgentDiscovery;
-use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\Agents\BaseAgent;
-use Vizra\VizraADK\Agents\BaseWorkflowAgent;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
+use Vizra\VizraADK\Agents\BaseAgent;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Agents\BaseWorkflowAgent;
+use Vizra\VizraADK\Services\AgentDiscovery;
+use Vizra\VizraADK\Tests\TestCase;
 
 class AgentDiscoveryTest extends TestCase
 {
@@ -17,8 +17,8 @@ class AgentDiscoveryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->discovery = new AgentDiscovery();
-        
+        $this->discovery = new AgentDiscovery;
+
         // Clear cache before each test
         Cache::forget('vizra_adk_discovered_agents');
     }
@@ -52,7 +52,7 @@ class AgentDiscoveryTest extends TestCase
         File::makeDirectory($testDir, 0755, true, true);
 
         // Create a non-agent class
-        File::put($testDir . '/NotAnAgent.php', '<?php
+        File::put($testDir.'/NotAnAgent.php', '<?php
 namespace App\Agents;
 
 class NotAnAgent
@@ -80,7 +80,7 @@ class NotAnAgent
         File::makeDirectory($testDir, 0755, true, true);
 
         // Create an abstract agent class
-        File::put($testDir . '/AbstractTestAgent.php', '<?php
+        File::put($testDir.'/AbstractTestAgent.php', '<?php
 namespace App\Agents;
 
 use Vizra\VizraADK\Agents\BaseLlmAgent;
@@ -136,7 +136,7 @@ abstract class AbstractTestAgent extends BaseLlmAgent
         File::makeDirectory($testDir, 0755, true, true);
 
         // Create agent without name property
-        File::put($testDir . '/NoNameAgent.php', '<?php
+        File::put($testDir.'/NoNameAgent.php', '<?php
 namespace App\Agents;
 
 use Vizra\VizraADK\Agents\BaseLlmAgent;
@@ -215,11 +215,11 @@ class NoNameAgent extends BaseLlmAgent
     public function test_discovers_agents_in_subdirectories()
     {
         $testDir = app_path('Agents');
-        $subDir = $testDir . '/SubFolder';
+        $subDir = $testDir.'/SubFolder';
         File::makeDirectory($subDir, 0755, true, true);
 
         // Create agent in subdirectory
-        File::put($subDir . '/SubAgent.php', '<?php
+        File::put($subDir.'/SubAgent.php', '<?php
 namespace App\Agents\SubFolder;
 
 use Vizra\VizraADK\Agents\BaseLlmAgent;
@@ -248,44 +248,44 @@ class SubAgent extends BaseLlmAgent
     protected function createTestAgent(string $dir, string $className, string $baseClass, string $agentName): void
     {
         $baseClassName = class_basename($baseClass);
-        
+
         // BaseWorkflowAgent has a final run method and abstract executeWorkflow method
         if ($baseClassName === 'BaseWorkflowAgent') {
             $content = '<?php
 namespace App\Agents;
 
-use ' . $baseClass . ';
+use '.$baseClass.';
 use Vizra\VizraADK\System\AgentContext;
 
-class ' . $className . ' extends ' . $baseClassName . '
+class '.$className.' extends '.$baseClassName.'
 {
-    protected string $name = "' . $agentName . '";
+    protected string $name = "'.$agentName.'";
     protected string $description = "Test workflow agent for discovery";
     
     protected function executeWorkflow(mixed $input, AgentContext $context): mixed
     {
-        return "Response from workflow ' . $agentName . '";
+        return "Response from workflow '.$agentName.'";
     }
 }';
         } else {
             $content = '<?php
 namespace App\Agents;
 
-use ' . $baseClass . ';
+use '.$baseClass.';
 use Vizra\VizraADK\System\AgentContext;
 
-class ' . $className . ' extends ' . $baseClassName . '
+class '.$className.' extends '.$baseClassName.'
 {
-    protected string $name = "' . $agentName . '";
+    protected string $name = "'.$agentName.'";
     protected string $description = "Test agent for discovery";
     
     public function run(mixed $input, AgentContext $context): mixed
     {
-        return "Response from ' . $agentName . '";
+        return "Response from '.$agentName.'";
     }
 }';
         }
 
-        File::put($dir . '/' . $className . '.php', $content);
+        File::put($dir.'/'.$className.'.php', $content);
     }
 }

@@ -1,21 +1,21 @@
 <?php
 
-use Vizra\VizraADK\Models\AgentSession;
-use Vizra\VizraADK\Models\AgentMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Vizra\VizraADK\Models\AgentMessage;
+use Vizra\VizraADK\Models\AgentSession;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Run migrations for testing
-    $this->loadMigrationsFrom(__DIR__ . '/../../../database/migrations');
+    $this->loadMigrationsFrom(__DIR__.'/../../../database/migrations');
 });
 
 it('can create agent session', function () {
     $session = AgentSession::create([
         'agent_name' => 'test-agent',
-        'state_data' => ['key' => 'value']
+        'state_data' => ['key' => 'value'],
     ]);
 
     expect($session)->toBeInstanceOf(AgentSession::class);
@@ -26,7 +26,7 @@ it('can create agent session', function () {
 
 it('auto generates session id', function () {
     $session = AgentSession::create([
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     expect($session->session_id)->not->toBeNull();
@@ -38,7 +38,7 @@ it('can set custom session id', function () {
 
     $session = AgentSession::create([
         'session_id' => $customId,
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     expect($session->session_id)->toBe($customId);
@@ -47,7 +47,7 @@ it('can set custom session id', function () {
 it('casts state data to array', function () {
     $session = AgentSession::create([
         'agent_name' => 'test-agent',
-        'state_data' => ['nested' => ['data' => 'value']]
+        'state_data' => ['nested' => ['data' => 'value']],
     ]);
 
     expect($session->state_data)->toBeArray();
@@ -57,7 +57,7 @@ it('casts state data to array', function () {
 it('can associate user id', function () {
     $session = AgentSession::create([
         'user_id' => 123,
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     expect($session->user_id)->toBe(123);
@@ -65,13 +65,13 @@ it('can associate user id', function () {
 
 it('has many messages relationship', function () {
     $session = AgentSession::create([
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     $message = AgentMessage::create([
         'agent_session_id' => $session->id,
         'role' => 'user',
-        'content' => 'Hello'
+        'content' => 'Hello',
     ]);
 
     expect($session->messages)->toBeInstanceOf(\Illuminate\Database\Eloquent\Collection::class);
@@ -84,7 +84,7 @@ it('can find session by session id and agent', function () {
 
     $session = AgentSession::create([
         'session_id' => $sessionId,
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     $found = AgentSession::where('session_id', $sessionId)
@@ -98,11 +98,11 @@ it('can find session by session id and agent', function () {
 it('can update state data', function () {
     $session = AgentSession::create([
         'agent_name' => 'test-agent',
-        'state_data' => ['initial' => 'data']
+        'state_data' => ['initial' => 'data'],
     ]);
 
     $session->update([
-        'state_data' => ['updated' => 'data', 'new_key' => 'new_value']
+        'state_data' => ['updated' => 'data', 'new_key' => 'new_value'],
     ]);
 
     expect($session->fresh()->state_data)->toBe(['updated' => 'data', 'new_key' => 'new_value']);
@@ -110,7 +110,7 @@ it('can update state data', function () {
 
 it('manages timestamps', function () {
     $session = AgentSession::create([
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     expect($session->created_at)->not->toBeNull();
@@ -127,12 +127,12 @@ it('manages timestamps', function () {
 
 it('can have memory relationship', function () {
     $memory = \Vizra\VizraADK\Models\AgentMemory::create([
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     $session = AgentSession::create([
         'agent_name' => 'test-agent',
-        'agent_memory_id' => $memory->id
+        'agent_memory_id' => $memory->id,
     ]);
 
     expect($session->memory)->toBeInstanceOf(\Vizra\VizraADK\Models\AgentMemory::class);
@@ -142,7 +142,7 @@ it('can have memory relationship', function () {
 
 it('can have null memory relationship', function () {
     $session = AgentSession::create([
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     expect($session->agent_memory_id)->toBeNull();
@@ -151,7 +151,7 @@ it('can have null memory relationship', function () {
 
 it('can get or create memory', function () {
     $session = AgentSession::create([
-        'agent_name' => 'memory-test-agent'
+        'agent_name' => 'memory-test-agent',
     ]);
 
     // Initially no memory
@@ -174,7 +174,7 @@ it('can get or create memory', function () {
 
 it('can update memory through session', function () {
     $session = AgentSession::create([
-        'agent_name' => 'update-test-agent'
+        'agent_name' => 'update-test-agent',
     ]);
 
     $memory = $session->getOrCreateMemory();
@@ -182,7 +182,7 @@ it('can update memory through session', function () {
     $session->updateMemory([
         'learnings' => ['User prefers concise answers'],
         'facts' => ['user_type' => 'power_user'],
-        'summary' => 'Handles power user queries'
+        'summary' => 'Handles power user queries',
     ]);
 
     $memory->refresh();
@@ -194,13 +194,13 @@ it('can update memory through session', function () {
 
 it('can update memory with only learnings', function () {
     $session = AgentSession::create([
-        'agent_name' => 'learnings-test-agent'
+        'agent_name' => 'learnings-test-agent',
     ]);
 
     $memory = $session->getOrCreateMemory();
 
     $session->updateMemory([
-        'learnings' => ['First learning', 'Second learning']
+        'learnings' => ['First learning', 'Second learning'],
     ]);
 
     $memory->refresh();
@@ -212,13 +212,13 @@ it('can update memory with only learnings', function () {
 
 it('can update memory with only facts', function () {
     $session = AgentSession::create([
-        'agent_name' => 'facts-test-agent'
+        'agent_name' => 'facts-test-agent',
     ]);
 
     $memory = $session->getOrCreateMemory();
 
     $session->updateMemory([
-        'facts' => ['preference' => 'email', 'timezone' => 'UTC']
+        'facts' => ['preference' => 'email', 'timezone' => 'UTC'],
     ]);
 
     $memory->refresh();
@@ -229,13 +229,13 @@ it('can update memory with only facts', function () {
 
 it('can update memory with only summary', function () {
     $session = AgentSession::create([
-        'agent_name' => 'summary-test-agent'
+        'agent_name' => 'summary-test-agent',
     ]);
 
     $memory = $session->getOrCreateMemory();
 
     $session->updateMemory([
-        'summary' => 'Specialized in technical support'
+        'summary' => 'Specialized in technical support',
     ]);
 
     $memory->refresh();

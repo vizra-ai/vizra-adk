@@ -1,16 +1,14 @@
 <?php
 
 use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Tools\DelegateToSubAgentTool;
-use Vizra\VizraADK\Memory\AgentMemory;
-use Prism\Prism\Enums\Provider;
-use Mockery;
 
 beforeEach(function () {
-    $this->parentAgent = new TestParentAgent();
+    $this->parentAgent = new TestParentAgent;
     $this->context = new AgentContext('test-session');
-    
+
     // Create a mock agent for AgentMemory
     $this->mockAgent = Mockery::mock(BaseLlmAgent::class);
     $this->mockAgent->shouldReceive('getName')->andReturn('test-agent');
@@ -25,14 +23,14 @@ it('can register and load sub-agents', function () {
 
     expect($subAgents)->toBeArray()
         ->and($subAgents)->toHaveCount(2)
-        ->and($subAgents)->toHaveKeys(['sub1', 'sub2'])
-        ->and($subAgents['sub1'])->toBeInstanceOf(TestSubAgent1::class)
-        ->and($subAgents['sub2'])->toBeInstanceOf(TestSubAgent2::class);
+        ->and($subAgents)->toHaveKeys(['test_sub1', 'test_sub2'])
+        ->and($subAgents['test_sub1'])->toBeInstanceOf(TestSubAgent1::class)
+        ->and($subAgents['test_sub2'])->toBeInstanceOf(TestSubAgent2::class);
 });
 
 it('can retrieve specific sub-agent by name', function () {
-    $subAgent1 = $this->parentAgent->getSubAgent('sub1');
-    $subAgent2 = $this->parentAgent->getSubAgent('sub2');
+    $subAgent1 = $this->parentAgent->getSubAgent('test_sub1');
+    $subAgent2 = $this->parentAgent->getSubAgent('test_sub2');
     $nonExistent = $this->parentAgent->getSubAgent('non-existent');
 
     expect($subAgent1)->toBeInstanceOf(TestSubAgent1::class)
@@ -68,7 +66,7 @@ it('includes delegation information in instructions when sub-agents are availabl
     $instructions = $this->parentAgent->getInstructions();
 
     expect($instructions)->toContain('DELEGATION CAPABILITIES')
-        ->and($instructions)->toContain('sub1, sub2')
+        ->and($instructions)->toContain('test_sub1, test_sub2')
         ->and($instructions)->toContain('delegate_to_sub_agent');
 });
 
@@ -77,7 +75,7 @@ it('delegation tool has correct definition', function () {
     $definition = $delegationTool->definition();
 
     expect($definition['name'])->toBe('delegate_to_sub_agent')
-        ->and($definition['description'])->toContain('sub1, sub2')
+        ->and($definition['description'])->toContain('test_sub1, test_sub2')
         ->and($definition['parameters']['properties'])->toHaveKeys(['sub_agent_name', 'task_input', 'context_summary'])
         ->and($definition['parameters']['required'])->toContain('sub_agent_name')
         ->and($definition['parameters']['required'])->toContain('task_input');
@@ -87,9 +85,9 @@ it('delegation tool executes successfully with valid sub-agent', function () {
     $delegationTool = new DelegateToSubAgentTool($this->parentAgent);
 
     $arguments = [
-        'sub_agent_name' => 'sub1',
+        'sub_agent_name' => 'test_sub1',
         'task_input' => 'Test task for sub-agent',
-        'context_summary' => 'This is a test context'
+        'context_summary' => 'This is a test context',
     ];
 
     $memory = new AgentMemory($this->mockAgent);
@@ -98,7 +96,7 @@ it('delegation tool executes successfully with valid sub-agent', function () {
 
     expect($decodedResult)->toBeArray()
         ->and($decodedResult['success'])->toBeTrue()
-        ->and($decodedResult['sub_agent'])->toBe('sub1')
+        ->and($decodedResult['sub_agent'])->toBe('test_sub1')
         ->and($decodedResult['task_input'])->toBe('Test task for sub-agent')
         ->and($decodedResult['result'])->toContain('Test response from sub1');
 });
@@ -117,8 +115,8 @@ it('delegation tool handles non-existent sub-agent gracefully', function () {
 
     expect($decodedResult)->toBeArray()
         ->and($decodedResult['error'])->toContain("Sub-agent 'non-existent' not found")
-        ->and($decodedResult['available_sub_agents'])->toContain('sub1')
-        ->and($decodedResult['available_sub_agents'])->toContain('sub2');
+        ->and($decodedResult['available_sub_agents'])->toContain('test_sub1')
+        ->and($decodedResult['available_sub_agents'])->toContain('test_sub2');
 });
 
 it('delegation tool validates required parameters', function () {
@@ -131,25 +129,37 @@ it('delegation tool validates required parameters', function () {
     expect($decoded1['error'])->toBe('sub_agent_name is required');
 
     // Test missing task_input
-    $result2 = $delegationTool->execute(['sub_agent_name' => 'sub1'], $this->context, $memory);
+    $result2 = $delegationTool->execute(['sub_agent_name' => 'test_sub1'], $this->context, $memory);
     $decoded2 = json_decode($result2, true);
     expect($decoded2['error'])->toBe('task_input is required');
 });
 
 it('agent with no sub-agents does not include delegation capabilities', function () {
-    $simpleAgent = new TestSimpleAgent();
+    $simpleAgent = new TestSimpleAgent;
 
     expect($simpleAgent->getLoadedSubAgents())->toBeEmpty()
         ->and($simpleAgent->getInstructions())->not->toContain('DELEGATION CAPABILITIES');
 });
 
 it('supports nested sub-agents (sub-agents with their own sub-agents)', function () {
-    $nestedParent = new TestNestedParentAgent();
-    $subAgent = $nestedParent->getSubAgent('nested_sub');
+    $nestedParent = new TestNestedParentAgent;
+    $subAgent = $nestedParent->getSubAgent('test_nested_sub');
 
     expect($subAgent)->toBeInstanceOf(TestNestedSubAgent::class)
         ->and($subAgent->getLoadedSubAgents())->toHaveCount(1)
-        ->and($subAgent->getSubAgent('deep_sub'))->toBeInstanceOf(TestDeepSubAgent::class);
+        ->and($subAgent->getSubAgent('test_deep_sub'))->toBeInstanceOf(TestDeepSubAgent::class);
+});
+
+it('supports property-based sub-agent registration', function () {
+    $propertyAgent = new TestPropertyBasedAgent;
+    $subAgents = $propertyAgent->getLoadedSubAgents();
+
+    expect($subAgents)->toBeArray()
+        ->and($subAgents)->toHaveCount(3)
+        ->and($subAgents)->toHaveKeys(['test_sub1', 'test_sub2', 'test_simple'])
+        ->and($subAgents['test_sub1'])->toBeInstanceOf(TestSubAgent1::class)
+        ->and($subAgents['test_sub2'])->toBeInstanceOf(TestSubAgent2::class)
+        ->and($subAgents['test_simple'])->toBeInstanceOf(TestSimpleAgent::class);
 });
 
 /**
@@ -158,146 +168,171 @@ it('supports nested sub-agents (sub-agents with their own sub-agents)', function
 class TestParentAgent extends BaseLlmAgent
 {
     protected string $name = 'test-parent';
+
     protected string $description = 'Test parent agent with sub-agents';
+
     protected string $instructions = 'Test parent agent instructions';
+
     protected string $model = 'gpt-4o';
 
     protected array $tools = [];
 
-    protected function registerSubAgents(): array
-    {
-        return [
-            'sub1' => TestSubAgent1::class,
-            'sub2' => TestSubAgent2::class,
-        ];
-    }
+    protected array $subAgents = [
+        TestSubAgent1::class,
+        TestSubAgent2::class,
+    ];
 
     public function run(mixed $input, AgentContext $context): mixed
     {
-        return "Parent response: " . $input;
+        return 'Parent response: '.$input;
     }
 }
 
 class TestSubAgent1 extends BaseLlmAgent
 {
     protected string $name = 'test-sub1';
+
     protected string $description = 'Test sub-agent 1';
+
     protected string $instructions = 'Test sub-agent 1 instructions';
+
     protected string $model = 'gpt-4o';
 
     protected array $tools = [];
 
-    protected function registerSubAgents(): array
-    {
-        return [];
-    }
+    protected array $subAgents = [];
 
     public function run(mixed $input, AgentContext $context): mixed
     {
-        return "Test response from sub1: " . $input;
+        return 'Test response from sub1: '.$input;
     }
 }
 
 class TestSubAgent2 extends BaseLlmAgent
 {
     protected string $name = 'test-sub2';
+
     protected string $description = 'Test sub-agent 2';
+
     protected string $instructions = 'Test sub-agent 2 instructions';
+
     protected string $model = 'gpt-4o';
 
     protected array $tools = [];
 
-    protected function registerSubAgents(): array
-    {
-        return [];
-    }
+    protected array $subAgents = [];
 
     public function run(mixed $input, AgentContext $context): mixed
     {
-        return "Test response from sub2: " . $input;
+        return 'Test response from sub2: '.$input;
     }
 }
 
 class TestSimpleAgent extends BaseLlmAgent
 {
     protected string $name = 'test-simple';
+
     protected string $description = 'Simple agent with no sub-agents';
+
     protected string $instructions = 'Simple agent instructions';
+
     protected string $model = 'gpt-4o';
 
     protected array $tools = [];
 
-    protected function registerSubAgents(): array
-    {
-        return [];
-    }
+    protected array $subAgents = [];
 
     public function run(mixed $input, AgentContext $context): mixed
     {
-        return "Simple response: " . $input;
+        return 'Simple response: '.$input;
     }
 }
 
 class TestNestedParentAgent extends BaseLlmAgent
 {
     protected string $name = 'test-nested-parent';
+
     protected string $description = 'Agent with nested sub-agents';
+
     protected string $instructions = 'Nested parent instructions';
+
     protected string $model = 'gpt-4o';
 
     protected array $tools = [];
 
-    protected function registerSubAgents(): array
-    {
-        return [
-            'nested_sub' => TestNestedSubAgent::class,
-        ];
-    }
+    protected array $subAgents = [
+        TestNestedSubAgent::class,
+    ];
 
     public function run(mixed $input, AgentContext $context): mixed
     {
-        return "Nested parent response: " . $input;
+        return 'Nested parent response: '.$input;
     }
 }
 
 class TestNestedSubAgent extends BaseLlmAgent
 {
     protected string $name = 'test-nested-sub';
+
     protected string $description = 'Sub-agent with its own sub-agents';
+
     protected string $instructions = 'Nested sub-agent instructions';
+
     protected string $model = 'gpt-4o';
 
     protected array $tools = [];
 
-    protected function registerSubAgents(): array
-    {
-        return [
-            'deep_sub' => TestDeepSubAgent::class,
-        ];
-    }
+    protected array $subAgents = [
+        TestDeepSubAgent::class,
+    ];
 
     public function run(mixed $input, AgentContext $context): mixed
     {
-        return "Nested sub response: " . $input;
+        return 'Nested sub response: '.$input;
     }
 }
 
 class TestDeepSubAgent extends BaseLlmAgent
 {
     protected string $name = 'test-deep-sub';
+
     protected string $description = 'Deep nested sub-agent';
+
     protected string $instructions = 'Deep sub-agent instructions';
+
     protected string $model = 'gpt-4o';
 
     protected array $tools = [];
 
-    protected function registerSubAgents(): array
-    {
-        return [];
-    }
+    protected array $subAgents = [];
 
     public function run(mixed $input, AgentContext $context): mixed
     {
-        return "Deep sub response: " . $input;
+        return 'Deep sub response: '.$input;
+    }
+}
+
+class TestPropertyBasedAgent extends BaseLlmAgent
+{
+    protected string $name = 'test-property-based';
+
+    protected string $description = 'Test agent using property-based sub-agent registration';
+
+    protected string $instructions = 'Test property-based agent instructions';
+
+    protected string $model = 'gpt-4o';
+
+    protected array $tools = [];
+
+    // Using the new property-based approach
+    protected array $subAgents = [
+        TestSubAgent1::class,
+        TestSubAgent2::class,
+        TestSimpleAgent::class,
+    ];
+
+    public function run(mixed $input, AgentContext $context): mixed
+    {
+        return 'Property-based response: '.$input;
     }
 }

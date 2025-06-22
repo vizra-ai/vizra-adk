@@ -1,11 +1,10 @@
 <?php
 
-use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Services\Tracer;
-use Vizra\VizraADK\Contracts\ToolInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Services\Tracer;
+use Vizra\VizraADK\System\AgentContext;
 
 uses(RefreshDatabase::class);
 
@@ -130,7 +129,8 @@ it('tracing works with disabled configuration', function () {
     // Refresh the Tracer service to pick up the new config
     app()->forgetInstance(Tracer::class);
 
-    $agent = new class extends BaseLlmAgent {
+    $agent = new class extends BaseLlmAgent
+    {
         public function getName(): string
         {
             return 'disabled_tracing_agent';
@@ -166,60 +166,60 @@ it('traces capture execution mode from different entry points', function () {
     // Enable tracing for this test
     config(['vizra-adk.tracing.enabled' => true]);
     app()->forgetInstance(Tracer::class);
-    
+
     $tracer = app(Tracer::class);
-    
+
     // Test 1: Direct execution with default mode
     $context1 = new AgentContext('direct-session');
     $context1->setUserInput('Direct execution');
-    
+
     $traceId1 = $tracer->startTrace($context1, 'direct_agent');
     $tracer->endTrace();
-    
+
     $span1 = DB::table('agent_trace_spans')
         ->where('trace_id', $traceId1)
         ->whereNull('parent_span_id')
         ->first();
-    
+
     $metadata1 = json_decode($span1->metadata, true);
     expect($metadata1['execution_mode'])->toBe('ask'); // Default
-    
+
     // Test 2: Execution with process mode
     $context2 = new AgentContext('process-session');
     $context2->setUserInput('Process data');
     $context2->setState('execution_mode', 'process');
-    
+
     $traceId2 = $tracer->startTrace($context2, 'process_agent');
     $tracer->endTrace();
-    
+
     $span2 = DB::table('agent_trace_spans')
         ->where('trace_id', $traceId2)
         ->whereNull('parent_span_id')
         ->first();
-    
+
     $metadata2 = json_decode($span2->metadata, true);
     expect($metadata2['execution_mode'])->toBe('process');
-    
+
     // Test 3: Execution with trigger mode (like from AgentExecutor)
     $context3 = new AgentContext('trigger-session');
     $context3->setUserInput('Automated trigger');
     $context3->setState('execution_mode', 'trigger');
     $context3->setState('user_id', 456);
     $context3->setState('trigger_source', 'webhook');
-    
+
     $traceId3 = $tracer->startTrace($context3, 'webhook_agent');
-    
+
     // Simulate some work
     $llmSpanId = $tracer->startSpan('llm_call', 'gpt-4o', ['mode' => 'automated']);
     $tracer->endSpan($llmSpanId, ['action' => 'completed']);
-    
+
     $tracer->endTrace(['triggered_action' => 'success']);
-    
+
     $span3 = DB::table('agent_trace_spans')
         ->where('trace_id', $traceId3)
         ->whereNull('parent_span_id')
         ->first();
-    
+
     $metadata3 = json_decode($span3->metadata, true);
     expect($metadata3['execution_mode'])->toBe('trigger');
     expect($metadata3['session_id'])->toBe('trigger-session');

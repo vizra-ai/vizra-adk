@@ -3,12 +3,12 @@
 namespace Vizra\VizraADK\Console\Commands;
 
 use Illuminate\Console\Command;
-use Vizra\VizraADK\Facades\Agent;
-use Illuminate\Support\Str; // For generating session ID
-use Symfony\Component\Console\Input\InputArgument;
+use Illuminate\Support\Str;
+use Symfony\Component\Console\Input\InputArgument; // For generating session ID
+use Vizra\VizraADK\Exceptions\AgentConfigurationException;
 use Vizra\VizraADK\Exceptions\AgentNotFoundException;
 use Vizra\VizraADK\Exceptions\ToolExecutionException;
-use Vizra\VizraADK\Exceptions\AgentConfigurationException;
+use Vizra\VizraADK\Facades\Agent;
 
 class AgentChatCommand extends Command
 {
@@ -36,9 +36,10 @@ class AgentChatCommand extends Command
         $agentName = $this->argument('agent_name');
         $this->info("Attempting to start chat with agent: <comment>{$agentName}</comment>");
 
-        if (!Agent::hasAgent($agentName)) {
+        if (! Agent::hasAgent($agentName)) {
             $this->error("Agent '{$agentName}' is not registered or found.");
-            $this->line("Please ensure the agent is registered, typically in a ServiceProvider using Agent::build() or Agent::define().");
+            $this->line('Please ensure the agent is registered, typically in a ServiceProvider using Agent::build() or Agent::define().');
+
             return Command::FAILURE;
         }
 
@@ -48,7 +49,7 @@ class AgentChatCommand extends Command
         $this->newLine();
 
         while (true) {
-            $input = $this->ask("You");
+            $input = $this->ask('You');
 
             if (strtolower($input) === 'exit' || strtolower($input) === 'quit') {
                 $this->info("Exiting chat with agent: {$agentName}.");
@@ -75,19 +76,21 @@ class AgentChatCommand extends Command
 
             } catch (AgentNotFoundException $e) {
                 $this->error("Agent '{$agentName}' could not be found or loaded during the chat.");
-                $this->line("Detail: " . $e->getMessage());
+                $this->line('Detail: '.$e->getMessage());
+
                 return Command::FAILURE;
             } catch (ToolExecutionException $e) {
                 $this->error("A tool required by the agent '{$agentName}' failed to execute.");
-                $this->line("Detail: " . $e->getMessage());
+                $this->line('Detail: '.$e->getMessage());
                 // Optionally, you might want to allow the chat to continue or terminate
             } catch (AgentConfigurationException $e) {
                 $this->error("Agent configuration error for '{$agentName}'.");
-                $this->line("Detail: " . $e->getMessage());
+                $this->line('Detail: '.$e->getMessage());
+
                 return Command::FAILURE;
             } catch (\Throwable $e) {
                 $this->error("An unexpected error occurred while interacting with agent '{$agentName}'.");
-                $this->line("Detail: " . $e->getMessage());
+                $this->line('Detail: '.$e->getMessage());
                 // Depending on the severity, you might want to terminate or allow continuation
             }
             $this->newLine(); // Add a new line for spacing after agent's response
@@ -98,8 +101,6 @@ class AgentChatCommand extends Command
 
     /**
      * Get the console command arguments.
-     *
-     * @return array
      */
     protected function getArguments(): array
     {

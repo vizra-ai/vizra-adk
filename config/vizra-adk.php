@@ -4,7 +4,17 @@ return [
     /**
      * Default LLM provider to use with Prism-PHP.
      * This can be overridden by specific agent configurations.
-     * Options: 'openai', 'anthropic', 'gemini'
+     *
+     * Supported providers:
+     * - 'openai' - OpenAI (GPT-4, GPT-3.5, etc.)
+     * - 'anthropic' - Anthropic (Claude models)
+     * - 'gemini' or 'google' - Google Gemini
+     * - 'deepseek' - DeepSeek AI
+     * - 'ollama' - Ollama (local models like Llama, CodeLlama, Phi)
+     * - 'mistral' - Mistral AI (Mistral, Mixtral models)
+     * - 'groq' - Groq (Fast inference)
+     * - 'xai' or 'grok' - xAI (Grok models)
+     * - 'voyageai' or 'voyage' - Voyage AI (Embeddings)
      */
     'default_provider' => env('VIZRA_ADK_DEFAULT_PROVIDER', 'openai'),
 
@@ -58,7 +68,7 @@ return [
      */
     'namespaces' => [
         'agents' => 'App\Agents',           // Default namespace for generated Agent classes
-        'tools'  => 'App\Tools',            // Default namespace for generated Tool classes
+        'tools' => 'App\Tools',            // Default namespace for generated Tool classes
         'evaluations' => 'App\Evaluations', // Default namespace for generated Evaluation classes
     ],
 
@@ -71,5 +81,133 @@ return [
             'prefix' => 'vizra', // Prefix for web routes
             'middleware' => ['web'], // Middleware for web routes
         ],
+    ],
+
+    /**
+     * OpenAI API Compatibility Configuration
+     * Maps OpenAI model names to your agent names for the /chat/completions endpoint.
+     */
+    'openai_model_mapping' => [
+        'gpt-4' => env('VIZRA_ADK_OPENAI_GPT4_AGENT', 'chat_agent'),
+        'gpt-4-turbo' => env('VIZRA_ADK_OPENAI_GPT4_TURBO_AGENT', 'chat_agent'),
+        'gpt-3.5-turbo' => env('VIZRA_ADK_OPENAI_GPT35_AGENT', 'chat_agent'),
+        'gpt-4o' => env('VIZRA_ADK_OPENAI_GPT4O_AGENT', 'chat_agent'),
+        'gpt-4o-mini' => env('VIZRA_ADK_OPENAI_GPT4O_MINI_AGENT', 'chat_agent'),
+        // Add more mappings as needed
+    ],
+
+    /**
+     * Default agent to use when no specific mapping is found
+     */
+    'default_chat_agent' => env('VIZRA_ADK_DEFAULT_CHAT_AGENT', 'chat_agent'),
+
+    /**
+     * Model Context Protocol (MCP) Configuration
+     * Define MCP servers that agents can connect to for enhanced capabilities.
+     *
+     * Each server configuration includes:
+     * - command: The command to start the MCP server
+     * - args: Arguments to pass to the server command
+     * - enabled: Whether this server is enabled (default: true)
+     * - timeout: Connection timeout in seconds (default: 30)
+     */
+    'mcp_servers' => [
+        'filesystem' => [
+            'command' => 'npx',
+            'args' => [
+                '@modelcontextprotocol/server-filesystem',
+                env('MCP_FILESYSTEM_PATH', storage_path('app')),
+            ],
+            'enabled' => env('MCP_FILESYSTEM_ENABLED', false),
+            'timeout' => 30,
+        ],
+
+        'github' => [
+            'command' => 'npx',
+            'args' => [
+                '@modelcontextprotocol/server-github',
+                '--token',
+                env('GITHUB_TOKEN', ''),
+            ],
+            'enabled' => env('MCP_GITHUB_ENABLED', false) && ! empty(env('GITHUB_TOKEN')),
+            'timeout' => 45,
+        ],
+
+        'postgres' => [
+            'command' => 'npx',
+            'args' => [
+                '@modelcontextprotocol/server-postgres',
+                '--connection-string',
+                env('MCP_POSTGRES_URL', env('DATABASE_URL', '')),
+            ],
+            'enabled' => env('MCP_POSTGRES_ENABLED', false) && ! empty(env('DATABASE_URL')),
+            'timeout' => 30,
+        ],
+
+        'brave_search' => [
+            'command' => 'npx',
+            'args' => [
+                '@modelcontextprotocol/server-brave-search',
+                '--api-key',
+                env('BRAVE_API_KEY', ''),
+            ],
+            'enabled' => env('MCP_BRAVE_SEARCH_ENABLED', false) && ! empty(env('BRAVE_API_KEY')),
+            'timeout' => 30,
+        ],
+
+        'slack' => [
+            'command' => 'npx',
+            'args' => [
+                '@modelcontextprotocol/server-slack',
+                '--bot-token',
+                env('SLACK_BOT_TOKEN', ''),
+            ],
+            'enabled' => env('MCP_SLACK_ENABLED', false) && ! empty(env('SLACK_BOT_TOKEN')),
+            'timeout' => 30,
+        ],
+
+        // Example custom MCP server
+        // 'custom_api' => [
+        //     'command' => 'python',
+        //     'args' => ['/path/to/your/mcp-server.py'],
+        //     'enabled' => true,
+        //     'timeout' => 60,
+        // ],
+    ],
+
+    /**
+     * Prompt versioning configuration.
+     * Controls how agent prompts are stored and versioned.
+     */
+    'prompts' => [
+        /**
+         * Enable database storage for prompts.
+         * When true, prompts can be stored in the database for dynamic updates.
+         */
+        'use_database' => env('VIZRA_ADK_PROMPTS_USE_DATABASE', false),
+
+        /**
+         * Path where file-based prompts are stored.
+         * Default: resources/prompts
+         */
+        'storage_path' => env('VIZRA_ADK_PROMPTS_PATH', resource_path('prompts')),
+
+        /**
+         * Enable prompt usage tracking.
+         * When true, tracks which prompt versions are used in each session.
+         */
+        'track_usage' => env('VIZRA_ADK_PROMPTS_TRACK_USAGE', false),
+
+        /**
+         * Cache TTL for database prompts (in seconds).
+         * Set to 0 to disable caching.
+         */
+        'cache_ttl' => env('VIZRA_ADK_PROMPTS_CACHE_TTL', 300),
+
+        /**
+         * Default prompt version to use when none is specified.
+         * Can be 'latest', 'default', or a specific version string.
+         */
+        'default_version' => env('VIZRA_ADK_PROMPTS_DEFAULT_VERSION', 'default'),
     ],
 ];

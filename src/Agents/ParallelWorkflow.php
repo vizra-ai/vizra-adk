@@ -2,9 +2,8 @@
 
 namespace Vizra\VizraADK\Agents;
 
-use Vizra\VizraADK\System\AgentContext;
 use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Collection;
+use Vizra\VizraADK\System\AgentContext;
 
 /**
  * Parallel Workflow Agent
@@ -15,19 +14,21 @@ use Illuminate\Support\Collection;
 class ParallelWorkflow extends BaseWorkflowAgent
 {
     protected string $name = 'ParallelWorkflow';
+
     protected string $description = 'Executes agents in parallel and collects results';
 
     protected bool $waitForAll = true;
+
     protected int $waitForCount = 0;
+
     protected bool $failFast = true;
+
     protected bool $useAsync = false;
 
     /**
      * Add multiple agents to run in parallel
      *
-     * @param array $agents Can be array of names or name => params pairs
-     * @param array $options
-     * @return static
+     * @param  array  $agents  Can be array of names or name => params pairs
      */
     public function agents(array|string $agents, mixed $params = null, array $options = []): static
     {
@@ -52,71 +53,59 @@ class ParallelWorkflow extends BaseWorkflowAgent
 
     /**
      * Wait for all agents to complete (default behavior)
-     *
-     * @return static
      */
     public function waitForAll(): static
     {
         $this->waitForAll = true;
         $this->waitForCount = 0;
+
         return $this;
     }
 
     /**
      * Return as soon as any agent completes
-     *
-     * @return static
      */
     public function waitForAny(): static
     {
         $this->waitForAll = false;
         $this->waitForCount = 1;
+
         return $this;
     }
 
     /**
      * Wait for a specific number of agents to complete
-     *
-     * @param int $count
-     * @return static
      */
     public function waitFor(int $count): static
     {
         $this->waitForAll = false;
         $this->waitForCount = $count;
+
         return $this;
     }
 
     /**
      * Fail immediately if any agent fails (default: true)
-     *
-     * @param bool $failFast
-     * @return static
      */
     public function failFast(bool $failFast = true): static
     {
         $this->failFast = $failFast;
+
         return $this;
     }
 
     /**
      * Use Laravel's queue system for true async execution
-     *
-     * @param bool $async
-     * @return static
      */
     public function async(bool $async = true): static
     {
         $this->useAsync = $async;
+
         return $this;
     }
 
     /**
      * Execute agents in parallel
-     *
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return mixed
      */
     protected function executeWorkflow(mixed $input, AgentContext $context): mixed
     {
@@ -129,10 +118,6 @@ class ParallelWorkflow extends BaseWorkflowAgent
 
     /**
      * Execute agents synchronously (using threading/forking simulation)
-     *
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return mixed
      */
     private function executeSync(mixed $input, AgentContext $context): mixed
     {
@@ -145,7 +130,7 @@ class ParallelWorkflow extends BaseWorkflowAgent
         $promises = [];
 
         foreach ($this->steps as $index => $step) {
-            $promises[$index] = function() use ($step, $input, $context) {
+            $promises[$index] = function () use ($step, $input, $context) {
                 return $this->executeStep($step, $input, $context);
             };
         }
@@ -158,7 +143,7 @@ class ParallelWorkflow extends BaseWorkflowAgent
                 $completed++;
 
                 // Check if we've completed enough agents
-                if (!$this->waitForAll && $completed >= $targetCount) {
+                if (! $this->waitForAll && $completed >= $targetCount) {
                     break;
                 }
             } catch (\Throwable $e) {
@@ -173,8 +158,8 @@ class ParallelWorkflow extends BaseWorkflowAgent
         // Check if we have enough successful completions
         if ($completed < $targetCount) {
             throw new \RuntimeException(
-                "Only {$completed} of {$targetCount} required agents completed successfully. Errors: " .
-                implode(', ', array_map(fn($e) => $e->getMessage(), $errors))
+                "Only {$completed} of {$targetCount} required agents completed successfully. Errors: ".
+                implode(', ', array_map(fn ($e) => $e->getMessage(), $errors))
             );
         }
 
@@ -183,16 +168,12 @@ class ParallelWorkflow extends BaseWorkflowAgent
             'errors' => $errors,
             'completed_count' => $completed,
             'total_count' => count($this->steps),
-            'workflow_type' => 'parallel'
+            'workflow_type' => 'parallel',
         ];
     }
 
     /**
      * Execute agents asynchronously using Laravel queues
-     *
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return mixed
      */
     private function executeAsync(mixed $input, AgentContext $context): mixed
     {
@@ -219,41 +200,33 @@ class ParallelWorkflow extends BaseWorkflowAgent
             'job_ids' => $jobIds,
             'session_id' => $sessionId,
             'workflow_type' => 'parallel_async',
-            'status' => 'queued'
+            'status' => 'queued',
         ];
     }
 
     /**
      * Create a parallel workflow from multiple agents
-     *
-     * @param array $agents
-     * @return static
      */
     public static function create(array $agents): static
     {
-        $workflow = new static();
+        $workflow = new static;
         $workflow->agents($agents);
+
         return $workflow;
     }
 
     /**
      * Execute the workflow with simplified syntax
-     *
-     * @param mixed $input
-     * @param AgentContext|null $context
-     * @return mixed
      */
     public function execute(mixed $input, ?AgentContext $context = null): mixed
     {
-        $context = $context ?: new AgentContext('workflow-' . uniqid());
+        $context = $context ?: new AgentContext('workflow-'.uniqid());
+
         return $this->run($input, $context);
     }
 
     /**
      * Get results from completed agents (useful for async workflows)
-     *
-     * @param string $sessionId
-     * @return array
      */
     public static function getAsyncResults(string $sessionId): array
     {

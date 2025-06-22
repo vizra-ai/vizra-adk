@@ -2,6 +2,4 @@
 
 namespace Vizra\VizraADK\Exceptions;
 
-class AgentConfigurationException extends \Exception
-{
-}
+class AgentConfigurationException extends \Exception {}

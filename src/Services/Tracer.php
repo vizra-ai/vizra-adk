@@ -2,11 +2,10 @@
 
 namespace Vizra\VizraADK\Services;
 
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Models\TraceSpan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
+use Vizra\VizraADK\System\AgentContext;
 
 /**
  * Tracer Service
@@ -51,7 +50,7 @@ class Tracer
      */
     public function startTrace(AgentContext $context, string $agentName): string
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return '';
         }
 
@@ -68,7 +67,7 @@ class Tracer
             metadata: [
                 'session_id' => $context->getSessionId(),
                 'initial_state_keys' => array_keys($context->getAllState()),
-                'execution_mode' => $context->getState('execution_mode', 'ask') // Default to 'ask' if not set
+                'execution_mode' => $context->getState('execution_mode', 'ask'), // Default to 'ask' if not set
             ]
         );
 
@@ -85,7 +84,7 @@ class Tracer
         ?array $input = null,
         ?array $metadata = null
     ): string {
-        if (!$this->isEnabled() || !$this->currentTraceId) {
+        if (! $this->isEnabled() || ! $this->currentTraceId) {
             return '';
         }
 
@@ -99,7 +98,7 @@ class Tracer
                 'tool_name' => $name,
                 'span_id' => $spanId,
                 'input' => $input,
-                'trace_id' => $this->currentTraceId
+                'trace_id' => $this->currentTraceId,
             ]);
         }
 
@@ -144,7 +143,7 @@ class Tracer
             logger()->warning('Tracer failed to create span', [
                 'span_id' => $spanId,
                 'error' => $e->getMessage(),
-                'trace_id' => $this->currentTraceId
+                'trace_id' => $this->currentTraceId,
             ]);
 
             return '';
@@ -162,14 +161,15 @@ class Tracer
         ?array $output = null,
         string $status = 'success'
     ): void {
-        if (!$this->isEnabled() || empty($spanId) || !isset($this->spanStartTimes[$spanId])) {
+        if (! $this->isEnabled() || empty($spanId) || ! isset($this->spanStartTimes[$spanId])) {
             // Add debugging information when failing to end a span
             logger()->warning('Attempted to end span but failed condition check', [
                 'span_id' => $spanId,
                 'is_enabled' => $this->isEnabled(),
                 'is_span_in_times' => isset($this->spanStartTimes[$spanId]),
-                'trace_id' => $this->currentTraceId ?? 'no_trace'
+                'trace_id' => $this->currentTraceId ?? 'no_trace',
             ]);
+
             return;
         }
 
@@ -188,7 +188,7 @@ class Tracer
                 'span_id' => $spanId,
                 'output' => $output,
                 'duration_ms' => $durationMs,
-                'trace_id' => $this->currentTraceId
+                'trace_id' => $this->currentTraceId,
             ]);
         }
 
@@ -211,7 +211,7 @@ class Tracer
             logger()->warning('Tracer failed to end span', [
                 'span_id' => $spanId,
                 'error' => $e->getMessage(),
-                'trace_id' => $this->currentTraceId
+                'trace_id' => $this->currentTraceId,
             ]);
         }
     }
@@ -222,7 +222,7 @@ class Tracer
      */
     public function failSpan(string $spanId, Throwable $exception): void
     {
-        if (!$this->isEnabled() || empty($spanId)) {
+        if (! $this->isEnabled() || empty($spanId)) {
             return;
         }
 
@@ -250,7 +250,7 @@ class Tracer
                 'span_id' => $spanId,
                 'error' => $e->getMessage(),
                 'original_exception' => $exception->getMessage(),
-                'trace_id' => $this->currentTraceId
+                'trace_id' => $this->currentTraceId,
             ]);
         }
     }
@@ -261,7 +261,7 @@ class Tracer
      */
     public function endTrace(?array $output = null, string $status = 'success'): void
     {
-        if (!$this->isEnabled() || !$this->currentTraceId) {
+        if (! $this->isEnabled() || ! $this->currentTraceId) {
             return;
         }
 
@@ -278,7 +278,7 @@ class Tracer
         } catch (Throwable $e) {
             logger()->warning('Tracer failed to end trace', [
                 'trace_id' => $this->currentTraceId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
 
@@ -295,12 +295,12 @@ class Tracer
      */
     public function failTrace(Throwable $exception): void
     {
-        if (!$this->isEnabled() || !$this->currentTraceId) {
+        if (! $this->isEnabled() || ! $this->currentTraceId) {
             return;
         }
 
         // End any remaining spans in the stack with error status
-        while (!empty($this->spanStack)) {
+        while (! empty($this->spanStack)) {
             $spanId = array_pop($this->spanStack);
             $this->failSpan($spanId, $exception);
         }
@@ -333,7 +333,7 @@ class Tracer
      */
     public function getSpansForSession(string $sessionId): array
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return [];
         }
 
@@ -346,8 +346,9 @@ class Tracer
         } catch (Throwable $e) {
             logger()->warning('Tracer failed to retrieve spans for session', [
                 'session_id' => $sessionId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -358,7 +359,7 @@ class Tracer
      */
     public function getSpansForTrace(string $traceId): array
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return [];
         }
 
@@ -371,8 +372,9 @@ class Tracer
         } catch (Throwable $e) {
             logger()->warning('Tracer failed to retrieve spans for trace', [
                 'trace_id' => $traceId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -386,7 +388,7 @@ class Tracer
      */
     public function cleanupOldTraces(int $days = 30, ?callable $progressCallback = null): int
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return 0;
         }
 
@@ -426,8 +428,9 @@ class Tracer
         } catch (Throwable $e) {
             logger()->warning('Tracer failed to cleanup old traces', [
                 'days' => $days,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return 0;
         }
     }
@@ -456,7 +459,7 @@ class Tracer
         }
 
         // Try to get from the most recent span if available
-        if (!empty($this->currentTraceId)) {
+        if (! empty($this->currentTraceId)) {
             try {
                 $recentSpan = DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
                     ->where('trace_id', $this->currentTraceId)
@@ -485,7 +488,7 @@ class Tracer
         }
 
         // Try to get from the root span
-        if (!empty($this->currentTraceId)) {
+        if (! empty($this->currentTraceId)) {
             try {
                 $rootSpan = DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
                     ->where('trace_id', $this->currentTraceId)
@@ -508,7 +511,7 @@ class Tracer
      */
     public function getOldTracesCount(int $days): int
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return 0;
         }
 
@@ -542,7 +545,7 @@ class Tracer
             }
 
             // If it's already a string and not JSON, wrap it in an object
-            if (is_string($data) && !$this->isJsonString($data)) {
+            if (is_string($data) && ! $this->isJsonString($data)) {
                 return json_encode(['value' => $data, 'type' => 'string']);
             }
 
@@ -557,7 +560,7 @@ class Tracer
 
                 // Ensure the result is an object (for DB compatibility)
                 if (is_array($preparedData) && empty($preparedData)) {
-                    return json_encode((object)$preparedData);
+                    return json_encode((object) $preparedData);
                 }
 
                 $data = $preparedData;
@@ -572,14 +575,14 @@ class Tracer
                 logger()->warning('JSON encoding failed in trace span', [
                     'error' => json_last_error_msg(),
                     'data_type' => gettype($data),
-                    'data_value' => is_scalar($data) ? $data : '[complex_data]'
+                    'data_value' => is_scalar($data) ? $data : '[complex_data]',
                 ]);
 
                 // Provide a fallback that's guaranteed to be valid JSON
                 return json_encode([
                     'error' => 'Could not encode data',
                     'dataType' => gettype($data),
-                    'errorCode' => json_last_error()
+                    'errorCode' => json_last_error(),
                 ]);
             }
 
@@ -588,17 +591,17 @@ class Tracer
         } catch (\Throwable $e) {
             logger()->warning('Exception during JSON encoding in trace span', [
                 'error' => $e->getMessage(),
-                'data_type' => gettype($data)
+                'data_type' => gettype($data),
             ]);
 
-            return json_encode(['error' => 'Exception encoding data: ' . $e->getMessage()]);
+            return json_encode(['error' => 'Exception encoding data: '.$e->getMessage()]);
         }
     }
 
     /**
      * Recursively prepare data for JSON encoding by handling enums and other problematic types
      *
-     * @param mixed $data The data to prepare for JSON encoding
+     * @param  mixed  $data  The data to prepare for JSON encoding
      * @return mixed The prepared data, safe for JSON encoding
      */
     protected function prepareDataForJson($data)
@@ -626,7 +629,7 @@ class Tracer
         if (is_object($data)) {
             // Special handling for stringable objects
             if (method_exists($data, '__toString')) {
-                return (string)$data;
+                return (string) $data;
             }
 
             // Handle DateTime objects
@@ -639,7 +642,8 @@ class Tracer
             foreach (get_object_vars($data) as $key => $value) {
                 $result[$key] = $this->prepareDataForJson($value);
             }
-            return (object)$result; // Return as object to maintain JSON object format
+
+            return (object) $result; // Return as object to maintain JSON object format
         }
 
         // Handle arrays recursively
@@ -648,6 +652,7 @@ class Tracer
             foreach ($data as $key => $value) {
                 $result[$key] = $this->prepareDataForJson($value);
             }
+
             return $result;
         }
 
@@ -673,6 +678,7 @@ class Tracer
 
             // Verify it's actually valid JSON
             json_decode($str);
+
             return json_last_error() === JSON_ERROR_NONE;
         }
 

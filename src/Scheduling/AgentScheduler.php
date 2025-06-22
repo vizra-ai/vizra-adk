@@ -2,7 +2,6 @@
 
 namespace Vizra\VizraADK\Scheduling;
 
-use Vizra\VizraADK\Agents\BaseAgent;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Log;
 
@@ -81,16 +80,27 @@ class AgentScheduler
 class AgentScheduleBuilder
 {
     protected Schedule $schedule;
+
     protected string $agentClass;
+
     protected mixed $input;
+
     protected string $mode;
+
     protected string $frequency;
+
     protected mixed $frequencyParam;
+
     protected array $context = [];
+
     protected ?string $queue = null;
+
     protected bool $async = false;
+
     protected ?string $name = null;
+
     protected ?string $description = null;
+
     protected array $environments = [];
 
     public function __construct(
@@ -115,6 +125,7 @@ class AgentScheduleBuilder
     public function withContext(array $context): self
     {
         $this->context = array_merge($this->context, $context);
+
         return $this;
     }
 
@@ -124,6 +135,7 @@ class AgentScheduleBuilder
     public function async(bool $enabled = true): self
     {
         $this->async = $enabled;
+
         return $this;
     }
 
@@ -134,6 +146,7 @@ class AgentScheduleBuilder
     {
         $this->queue = $queue;
         $this->async = true; // Auto-enable async
+
         return $this;
     }
 
@@ -143,6 +156,7 @@ class AgentScheduleBuilder
     public function name(string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -152,6 +166,7 @@ class AgentScheduleBuilder
     public function description(string $description): self
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -161,6 +176,7 @@ class AgentScheduleBuilder
     public function environments(array $environments): self
     {
         $this->environments = $environments;
+
         return $this;
     }
 
@@ -169,7 +185,7 @@ class AgentScheduleBuilder
      */
     public function register(): void
     {
-        $callback = function() {
+        $callback = function () {
             try {
                 Log::info('Executing scheduled agent', [
                     'agent_class' => $this->agentClass,
@@ -178,7 +194,7 @@ class AgentScheduleBuilder
                 ]);
 
                 // Prepare agent execution
-                $executor = match($this->mode) {
+                $executor = match ($this->mode) {
                     'trigger' => $this->agentClass::trigger($this->input),
                     'analyze' => $this->agentClass::analyze($this->input),
                     'process' => $this->agentClass::process($this->input),
@@ -188,7 +204,7 @@ class AgentScheduleBuilder
                 };
 
                 // Add context
-                if (!empty($this->context)) {
+                if (! empty($this->context)) {
                     $executor->withContext($this->context);
                 }
 
@@ -202,7 +218,7 @@ class AgentScheduleBuilder
                 }
 
                 // Execute
-                $result = $executor->execute();
+                $result = $executor->go();
 
                 Log::info('Scheduled agent completed', [
                     'agent_class' => $this->agentClass,
@@ -227,7 +243,7 @@ class AgentScheduleBuilder
         $event = $this->schedule->call($callback);
 
         // Apply frequency
-        match($this->frequency) {
+        match ($this->frequency) {
             'daily' => $event->daily(),
             'hourly' => $event->hourly(),
             'weekly' => $event->weekly(),
@@ -246,7 +262,7 @@ class AgentScheduleBuilder
             $event->description($this->description);
         }
 
-        if (!empty($this->environments)) {
+        if (! empty($this->environments)) {
             $event->environments($this->environments);
         }
 

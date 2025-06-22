@@ -1,11 +1,11 @@
 <?php
 
-use Vizra\VizraADK\Events\AgentResponseGenerated;
-use Vizra\VizraADK\Events\AgentExecutionStarting;
+use Illuminate\Support\Facades\Event;
 use Vizra\VizraADK\Events\AgentExecutionFinished;
+use Vizra\VizraADK\Events\AgentExecutionStarting;
+use Vizra\VizraADK\Events\AgentResponseGenerated;
 use Vizra\VizraADK\Events\TaskDelegated;
 use Vizra\VizraADK\System\AgentContext;
-use Illuminate\Support\Facades\Event;
 
 it('creates agent response generated event correctly', function () {
     $context = new AgentContext('test-session', 'test input');
@@ -107,7 +107,7 @@ it('handles complex response data', function () {
     $complexResponse = [
         'text' => 'Response text',
         'metadata' => ['tokens' => 150, 'model' => 'gpt-4'],
-        'tools_used' => ['weather_tool', 'calculator']
+        'tools_used' => ['weather_tool', 'calculator'],
     ];
 
     $event = new AgentResponseGenerated($context, 'complex-agent', $complexResponse);

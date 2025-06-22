@@ -16,22 +16,23 @@ class AgentDiscoverCommand extends Command
     {
         /** @var AgentDiscovery $discovery */
         $discovery = app(AgentDiscovery::class);
-        
+
         if ($this->option('clear-cache')) {
             $discovery->clearCache();
             $this->info('Discovery cache cleared.');
         }
 
         $this->info('Discovering agents...');
-        
+
         $agents = $discovery->discover();
-        
+
         if (empty($agents)) {
-            $this->warn('No agents found in ' . config('vizra-adk.namespaces.agents', 'App\\Agents'));
+            $this->warn('No agents found in '.config('vizra-adk.namespaces.agents', 'App\\Agents'));
+
             return;
         }
 
-        $this->info('Found ' . count($agents) . ' agent(s):');
+        $this->info('Found '.count($agents).' agent(s):');
         $this->newLine();
 
         $headers = ['Agent Name', 'Class', 'Status'];
@@ -46,7 +47,7 @@ class AgentDiscoverCommand extends Command
         }
 
         $this->table($headers, $rows);
-        
+
         $this->newLine();
         $this->info('All agents are automatically available for use!');
     }

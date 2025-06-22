@@ -2,8 +2,8 @@
 
 namespace Vizra\VizraADK\Agents;
 
-use Vizra\VizraADK\System\AgentContext;
 use Closure;
+use Vizra\VizraADK\System\AgentContext;
 
 /**
  * Loop Workflow Agent
@@ -17,99 +17,94 @@ use Closure;
 class LoopWorkflow extends BaseWorkflowAgent
 {
     protected string $name = 'LoopWorkflow';
+
     protected string $description = 'Repeats agent execution based on conditions';
 
     protected string $loopType = 'while';
+
     protected mixed $condition = null;
+
     protected int $maxIterations = 100;
+
     protected int $currentIteration = 0;
+
     protected array $iterationResults = [];
+
     protected bool $breakOnError = true;
+
     protected mixed $collection = null;
+
     protected ?string $currentKey = null;
+
     protected mixed $currentValue = null;
 
     /**
      * Continue while condition is true
-     *
-     * @param string|Closure $condition
-     * @return static
      */
     public function while(string|Closure $condition): static
     {
         $this->loopType = 'while';
         $this->condition = $condition;
+
         return $this;
     }
 
     /**
      * Continue until condition is true (opposite of while)
-     *
-     * @param string|Closure $condition
-     * @return static
      */
     public function until(string|Closure $condition): static
     {
         $this->loopType = 'until';
         $this->condition = $condition;
+
         return $this;
     }
 
     /**
      * Repeat a specific number of times
-     *
-     * @param int $times
-     * @return static
      */
     public function times(int $times): static
     {
         $this->loopType = 'times';
         $this->maxIterations = $times;
+
         return $this;
     }
 
     /**
      * Iterate over a collection
-     *
-     * @param array|\Traversable $collection
-     * @return static
      */
     public function forEach(array|\Traversable $collection): static
     {
         $this->loopType = 'forEach';
         $this->collection = $collection;
         $this->maxIterations = is_countable($collection) ? count($collection) : 1000;
+
         return $this;
     }
 
     /**
      * Set maximum number of iterations (safety limit)
-     *
-     * @param int $max
-     * @return static
      */
     public function maxIterations(int $max): static
     {
         $this->maxIterations = $max;
+
         return $this;
     }
 
     /**
      * Whether to break the loop on agent execution error
-     *
-     * @param bool $break
-     * @return static
      */
     public function breakOnError(bool $break = true): static
     {
         $this->breakOnError = $break;
+
         return $this;
     }
 
     /**
      * Continue loop even if agent fails
-     *
-     * @return static
      */
     public function continueOnError(): static
     {
@@ -118,10 +113,6 @@ class LoopWorkflow extends BaseWorkflowAgent
 
     /**
      * Execute the loop workflow
-     *
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return mixed
      */
     protected function executeWorkflow(mixed $input, AgentContext $context): mixed
     {
@@ -176,16 +167,12 @@ class LoopWorkflow extends BaseWorkflowAgent
             'results' => $this->iterationResults,
             'loop_type' => $this->loopType,
             'completed_normally' => $this->didCompleteNormally(),
-            'final_input' => $currentInput
+            'final_input' => $currentInput,
         ];
     }
 
     /**
      * Determine if the loop should continue
-     *
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return bool
      */
     private function shouldContinue(mixed $input, AgentContext $context): bool
     {
@@ -199,7 +186,7 @@ class LoopWorkflow extends BaseWorkflowAgent
                 return $this->evaluateCondition($this->condition, $input, $context);
 
             case 'until':
-                return !$this->evaluateCondition($this->condition, $input, $context);
+                return ! $this->evaluateCondition($this->condition, $input, $context);
 
             case 'times':
                 return $this->currentIteration < $this->maxIterations;
@@ -214,8 +201,6 @@ class LoopWorkflow extends BaseWorkflowAgent
 
     /**
      * Setup the next iteration for forEach loop
-     *
-     * @return bool
      */
     private function setupNextForEachIteration(): bool
     {
@@ -241,11 +226,6 @@ class LoopWorkflow extends BaseWorkflowAgent
 
     /**
      * Add an agent to the loop
-     *
-     * @param string $agentName
-     * @param mixed $params
-     * @param array $options
-     * @return static
      */
     public function agent(string $agentName, mixed $params = null, array $options = []): static
     {
@@ -254,9 +234,6 @@ class LoopWorkflow extends BaseWorkflowAgent
 
     /**
      * Get the step configuration for current iteration
-     *
-     * @param mixed $input
-     * @return array
      */
     private function getStepForIteration(mixed $input): array
     {
@@ -271,7 +248,7 @@ class LoopWorkflow extends BaseWorkflowAgent
             $originalParams = $step['params'];
 
             if ($originalParams instanceof Closure) {
-                $step['params'] = fn($input, $results, $context) => $originalParams($this->currentValue, $this->currentKey, $input, $results, $context);
+                $step['params'] = fn ($input, $results, $context) => $originalParams($this->currentValue, $this->currentKey, $input, $results, $context);
             } else {
                 $step['params'] = [
                     'item' => $this->currentValue,
@@ -288,10 +265,6 @@ class LoopWorkflow extends BaseWorkflowAgent
 
     /**
      * Prepare input for the next iteration
-     *
-     * @param mixed $result
-     * @param mixed $currentInput
-     * @return mixed
      */
     private function prepareNextInput(mixed $result, mixed $currentInput): mixed
     {
@@ -302,9 +275,6 @@ class LoopWorkflow extends BaseWorkflowAgent
 
     /**
      * Get results from a specific iteration
-     *
-     * @param int $iteration
-     * @return mixed
      */
     public function getIterationResult(int $iteration): mixed
     {
@@ -313,35 +283,26 @@ class LoopWorkflow extends BaseWorkflowAgent
 
     /**
      * Get all successful iteration results
-     *
-     * @return array
      */
     public function getSuccessfulResults(): array
     {
-        return array_filter($this->iterationResults, fn($result) => $result['success']);
+        return array_filter($this->iterationResults, fn ($result) => $result['success']);
     }
 
     /**
      * Get all failed iteration results
-     *
-     * @return array
      */
     public function getFailedResults(): array
     {
-        return array_filter($this->iterationResults, fn($result) => !$result['success']);
+        return array_filter($this->iterationResults, fn ($result) => ! $result['success']);
     }
 
     /**
      * Create a simple while loop
-     *
-     * @param string $agentName
-     * @param string|Closure $condition
-     * @param int $maxIterations
-     * @return static
      */
     public static function createWhile(string $agentName, string|Closure $condition, int $maxIterations = 100): static
     {
-        return (new static())
+        return (new static)
             ->agent($agentName)
             ->while($condition)
             ->maxIterations($maxIterations);
@@ -349,49 +310,36 @@ class LoopWorkflow extends BaseWorkflowAgent
 
     /**
      * Create a simple times loop
-     *
-     * @param string $agentName
-     * @param int $times
-     * @return static
      */
     public static function createTimes(string $agentName, int $times): static
     {
-        return (new static())
+        return (new static)
             ->agent($agentName)
             ->times($times);
     }
 
     /**
      * Create a forEach loop
-     *
-     * @param string $agentName
-     * @param array|\Traversable $collection
-     * @return static
      */
     public static function createForEach(string $agentName, array|\Traversable $collection): static
     {
-        return (new static())
+        return (new static)
             ->agent($agentName)
             ->forEach($collection);
     }
 
     /**
      * Execute the workflow with simplified syntax
-     *
-     * @param mixed $input
-     * @param AgentContext|null $context
-     * @return mixed
      */
     public function execute(mixed $input, ?AgentContext $context = null): mixed
     {
-        $context = $context ?: new AgentContext('workflow-' . uniqid());
+        $context = $context ?: new AgentContext('workflow-'.uniqid());
+
         return $this->run($input, $context);
     }
 
     /**
      * Determine if the loop completed normally (not due to hitting max iterations safety limit)
-     *
-     * @return bool
      */
     private function didCompleteNormally(): bool
     {
@@ -406,6 +354,7 @@ class LoopWorkflow extends BaseWorkflowAgent
                     return false;
                 }
                 $array = is_array($this->collection) ? $this->collection : iterator_to_array($this->collection);
+
                 return $this->currentIteration === count($array);
 
             case 'while':

@@ -3,8 +3,8 @@
 namespace Vizra\VizraADK\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
@@ -84,7 +84,7 @@ class AgentSession extends Model
         ]);
 
         // Link session to memory if not already linked
-        if (!$this->agent_memory_id) {
+        if (! $this->agent_memory_id) {
             $this->agent_memory_id = $memory->id;
             $this->save();
         }
@@ -100,13 +100,13 @@ class AgentSession extends Model
         $memory = $this->getOrCreateMemory();
 
         // Link session to memory if not already linked
-        if (!$this->agent_memory_id) {
+        if (! $this->agent_memory_id) {
             $this->agent_memory_id = $memory->id;
             $this->save();
         }
 
         // Apply updates if provided
-        if (!empty($updates)) {
+        if (! empty($updates)) {
             if (isset($updates['learnings'])) {
                 $memory->key_learnings = $updates['learnings'];
             }

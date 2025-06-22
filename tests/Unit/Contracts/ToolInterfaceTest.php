@@ -1,17 +1,16 @@
 <?php
 
-use Vizra\VizraADK\Contracts\ToolInterface;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Mockery;
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\Memory\AgentMemory;
+use Vizra\VizraADK\System\AgentContext;
 
 afterEach(function () {
     Mockery::close();
 });
 
 it('implements tool interface contract correctly', function () {
-    $tool = new TestTool();
+    $tool = new TestTool;
 
     // Test that the tool implements the interface correctly
     expect($tool)->toBeInstanceOf(ToolInterface::class);
@@ -35,7 +34,7 @@ it('implements tool interface contract correctly', function () {
 });
 
 it('has proper tool definition structure', function () {
-    $tool = new TestTool();
+    $tool = new TestTool;
     $definition = $tool->definition();
 
     // Verify the definition follows the expected schema
@@ -50,7 +49,7 @@ it('has proper tool definition structure', function () {
 });
 
 it('executes with context correctly', function () {
-    $tool = new TestTool();
+    $tool = new TestTool;
     $context = new AgentContext('test-session');
     $context->setState('test_state', 'state_value');
     $mockAgent = Mockery::mock(BaseLlmAgent::class);
@@ -67,7 +66,7 @@ it('executes with context correctly', function () {
 });
 
 it('handles empty arguments', function () {
-    $tool = new TestTool();
+    $tool = new TestTool;
     $context = new AgentContext('test-session');
     $mockAgent = Mockery::mock(BaseLlmAgent::class);
     $mockAgent->shouldReceive('getName')->andReturn('test-agent');
@@ -82,7 +81,7 @@ it('handles empty arguments', function () {
 });
 
 it('handles invalid arguments', function () {
-    $tool = new TestTool();
+    $tool = new TestTool;
     $context = new AgentContext('test-session');
     $mockAgent = Mockery::mock(BaseLlmAgent::class);
     $mockAgent->shouldReceive('getName')->andReturn('test-agent');
@@ -97,20 +96,20 @@ it('handles invalid arguments', function () {
 });
 
 it('can access memory in tool execution', function () {
-    $tool = new MemoryAwareTestTool();
+    $tool = new MemoryAwareTestTool;
     $context = new AgentContext('test-session');
     $mockAgent = Mockery::mock(BaseLlmAgent::class);
     $mockAgent->shouldReceive('getName')->andReturn('test-agent');
     $memory = new AgentMemory($mockAgent);
-    
+
     // Add some memory data
     $memory->addFact('Test fact about the user');
     $memory->addLearning('test_insight');
-    
+
     $arguments = ['action' => 'read_memory'];
     $result = $tool->execute($arguments, $context, $memory);
     $decoded = json_decode($result, true);
-    
+
     expect($decoded)->toBeArray()
         ->toHaveKey('facts')
         ->toHaveKey('learnings');
@@ -133,21 +132,21 @@ class TestTool implements ToolInterface
                 'properties' => [
                     'input' => [
                         'type' => 'string',
-                        'description' => 'Input text to process'
-                    ]
+                        'description' => 'Input text to process',
+                    ],
                 ],
-                'required' => ['input']
-            ]
+                'required' => ['input'],
+            ],
         ];
     }
 
     public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
-        if (!isset($arguments['input']) && !empty(array_diff_key($arguments, ['input' => '']))) {
+        if (! isset($arguments['input']) && ! empty(array_diff_key($arguments, ['input' => '']))) {
             return json_encode([
                 'error' => 'Invalid arguments provided',
                 'expected' => ['input'],
-                'received' => array_keys($arguments)
+                'received' => array_keys($arguments),
             ]);
         }
 
@@ -157,7 +156,7 @@ class TestTool implements ToolInterface
             'processed_input' => $input,
             'session_id' => $context->getSessionId(),
             'tool_name' => 'test_tool',
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ]);
     }
 }
@@ -177,38 +176,39 @@ class MemoryAwareTestTool implements ToolInterface
                 'properties' => [
                     'action' => [
                         'type' => 'string',
-                        'description' => 'Action to perform with memory'
-                    ]
+                        'description' => 'Action to perform with memory',
+                    ],
                 ],
-                'required' => ['action']
-            ]
+                'required' => ['action'],
+            ],
         ];
     }
 
     public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
         $action = $arguments['action'] ?? 'default';
-        
+
         if ($action === 'read_memory') {
             return json_encode([
                 'facts' => $memory->getFacts()->toArray(),
                 'learnings' => $memory->getLearnings()->toArray(),
                 'summary' => $memory->getSummary(),
-                'preferences' => $memory->getPreferences()->toArray()
+                'preferences' => $memory->getPreferences()->toArray(),
             ]);
         }
-        
+
         if ($action === 'write_memory') {
             $memory->addFact('Tool fact: Written by tool');
             $memory->addLearning('Tool learned something new');
+
             return json_encode([
                 'success' => true,
-                'message' => 'Memory updated by tool'
+                'message' => 'Memory updated by tool',
             ]);
         }
-        
+
         return json_encode([
-            'error' => 'Unknown action: ' . $action
+            'error' => 'Unknown action: '.$action,
         ]);
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Vizra\VizraADK\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 /**
  * Class AgentMemory
@@ -116,14 +116,14 @@ class AgentMemory extends Model
         $summary = '';
 
         if ($this->memory_summary) {
-            $summary .= "Previous Knowledge: " . $this->memory_summary . "\n\n";
+            $summary .= 'Previous Knowledge: '.$this->memory_summary."\n\n";
         }
 
         if ($this->key_learnings && count($this->key_learnings) > 0) {
             $summary .= "Key Learnings:\n";
             $recentLearnings = array_slice($this->key_learnings, -5); // Last 5 learnings
             foreach ($recentLearnings as $learning) {
-                $summary .= "- " . $learning['learning'] . "\n";
+                $summary .= '- '.$learning['learning']."\n";
             }
             $summary .= "\n";
         }
@@ -139,7 +139,7 @@ class AgentMemory extends Model
 
         // Truncate if too long
         if (strlen($summary) > $maxLength) {
-            $summary = substr($summary, 0, $maxLength - 3) . '...';
+            $summary = substr($summary, 0, $maxLength - 3).'...';
         }
 
         return trim($summary);

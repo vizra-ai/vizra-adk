@@ -1,11 +1,13 @@
 {
   "name": "vizra/vizra-adk",
+  "version": "0.0.5",
   "description": "Vizra Agent Development Kit - A comprehensive Laravel package for building intelligent AI agents.",
   "type": "laravel-package",
   "license": "MIT",
   "authors": [
     {
       "name": "Aaron Lumsden",
+  "version": "0.0.5",
       "email": "aaronlumsden@me.com"
     }
   ],
@@ -23,7 +25,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Vizra\\VizraADK\\": "src/"
+      "Vizra\\VizraADK\\": "src/",
+      "Vizra\\VizraADK\\Examples\\": "examples/"
     }
   },
   "autoload-dev": {

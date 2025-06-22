@@ -1,18 +1,17 @@
 <?php
 
-use Vizra\VizraADK\Services\AgentRegistry;
-use Vizra\VizraADK\Services\AgentManager;
-use Vizra\VizraADK\Services\StateManager;
-use Vizra\VizraADK\Agents\BaseAgent;
-use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\System\AgentContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\System\AgentContext;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Run migrations for testing
-    $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+    $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
 });
 
 it('completes agent workflow', function () {
@@ -39,7 +38,7 @@ it('completes agent workflow', function () {
 
     // Since the manager created a session, we need to get the session ID from the agent
     // Let's test by creating a new execution with the same agent and verify persistence works
-    $sessionId = 'test-session-' . uniqid();
+    $sessionId = 'test-session-'.uniqid();
     $context = $stateManager->loadContext('integration-test-agent', $sessionId, 'Hello from integration test');
 
     // Execute the agent directly to add messages
@@ -137,7 +136,9 @@ it('integrates with facade', function () {
 class IntegrationTestAgent extends BaseLlmAgent
 {
     protected string $name = 'integration-test-agent';
+
     protected string $description = 'An agent for integration testing';
+
     protected string $instructions = 'You are a test agent for integration testing.';
 
     public function run($input, AgentContext $context): mixed
@@ -146,11 +147,11 @@ class IntegrationTestAgent extends BaseLlmAgent
         $context->setUserInput($input);
         $context->addMessage(['role' => 'user', 'content' => $input ?: '']);
 
-        $response = 'Integration response for: ' . $input . ' (Session: ' . $context->getSessionId() . ')';
+        $response = 'Integration response for: '.$input.' (Session: '.$context->getSessionId().')';
 
         $context->addMessage([
             'role' => 'assistant',
-            'content' => $response
+            'content' => $response,
         ]);
 
         return $response;
@@ -163,7 +164,9 @@ class IntegrationTestAgent extends BaseLlmAgent
 class StatefulTestAgent extends BaseLlmAgent
 {
     protected string $name = 'stateful-test-agent';
+
     protected string $description = 'A stateful agent for testing state management';
+
     protected string $instructions = 'You are a stateful test agent.';
 
     public function run($input, AgentContext $context): mixed
@@ -190,7 +193,7 @@ class StatefulTestAgent extends BaseLlmAgent
         // Add assistant response to conversation history
         $context->addMessage([
             'role' => 'assistant',
-            'content' => $response
+            'content' => $response,
         ]);
 
         return $response;

@@ -1,7 +1,7 @@
 <?php
 
-use Vizra\VizraADK\Exceptions\AgentNotFoundException;
 use Vizra\VizraADK\Exceptions\AgentConfigurationException;
+use Vizra\VizraADK\Exceptions\AgentNotFoundException;
 use Vizra\VizraADK\Exceptions\ToolExecutionException;
 
 it('creates agent not found exception correctly', function () {
@@ -29,7 +29,7 @@ it('can catch exceptions as base exception', function () {
     $exceptions = [
         new AgentNotFoundException('Test message'),
         new AgentConfigurationException('Test message'),
-        new ToolExecutionException('Test message')
+        new ToolExecutionException('Test message'),
     ];
 
     foreach ($exceptions as $exception) {

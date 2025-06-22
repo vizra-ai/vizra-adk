@@ -2,9 +2,9 @@
 
 namespace Vizra\VizraADK\Tests\Unit\VectorMemory;
 
-use Vizra\VizraADK\Tests\TestCase;
-use Vizra\VizraADK\Services\DocumentChunker;
 use Illuminate\Support\Facades\Config;
+use Vizra\VizraADK\Services\DocumentChunker;
+use Vizra\VizraADK\Tests\TestCase;
 
 class DocumentChunkerTest extends TestCase
 {
@@ -20,14 +20,14 @@ class DocumentChunkerTest extends TestCase
             'overlap' => 20,
         ]);
 
-        $this->chunker = new DocumentChunker();
+        $this->chunker = new DocumentChunker;
     }
 
     public function test_chunks_by_sentence()
     {
         // Arrange - set smaller chunk size to force splitting
         Config::set('vizra-adk.vector_memory.chunking.chunk_size', 30);
-        $chunker = new DocumentChunker();
+        $chunker = new DocumentChunker;
         $content = 'First sentence here. Second sentence follows. Third sentence ends it.';
 
         // Act
@@ -44,7 +44,7 @@ class DocumentChunkerTest extends TestCase
         // Arrange - set smaller chunk size to force splitting
         Config::set('vizra-adk.vector_memory.chunking.strategy', 'paragraph');
         Config::set('vizra-adk.vector_memory.chunking.chunk_size', 30);
-        $chunker = new DocumentChunker();
+        $chunker = new DocumentChunker;
 
         $content = "First paragraph here.\n\nSecond paragraph follows.\n\nThird paragraph ends it.";
 
@@ -61,7 +61,7 @@ class DocumentChunkerTest extends TestCase
         // Arrange
         Config::set('vizra-adk.vector_memory.chunking.strategy', 'fixed');
         Config::set('vizra-adk.vector_memory.chunking.chunk_size', 50);
-        $chunker = new DocumentChunker();
+        $chunker = new DocumentChunker;
 
         $content = str_repeat('This is a test sentence. ', 10);
 
@@ -105,7 +105,7 @@ class DocumentChunkerTest extends TestCase
             '   ',        // Whitespace only
             'ab',         // Too short
             '!!!@#$',     // No alphanumeric content
-            'Valid chunk content here'  // Valid
+            'Valid chunk content here',  // Valid
         ];
 
         // Act

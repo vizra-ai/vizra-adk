@@ -2,9 +2,9 @@
 
 namespace Vizra\VizraADK\Services;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class AnalyticsService
 {
@@ -164,7 +164,7 @@ class AnalyticsService
                 $count = DB::table('agent_messages')
                     ->whereBetween('created_at', [
                         $hour->copy()->startOfHour(),
-                        $hour->copy()->endOfHour()
+                        $hour->copy()->endOfHour(),
                     ])
                     ->count();
 
@@ -254,6 +254,7 @@ class AnalyticsService
                 ->get(['tool_calls'])
                 ->flatMap(function ($message) {
                     $tools = json_decode($message->tool_calls, true);
+
                     return collect($tools)->pluck('name');
                 })
                 ->countBy()
@@ -348,6 +349,7 @@ class AnalyticsService
     {
         try {
             DB::connection()->getPdo();
+
             return ['status' => 'healthy', 'response_time' => 12];
         } catch (\Exception $e) {
             return ['status' => 'error', 'message' => $e->getMessage()];
@@ -359,6 +361,7 @@ class AnalyticsService
         try {
             Cache::put('health_check', 'ok', 1);
             $result = Cache::get('health_check');
+
             return ['status' => $result === 'ok' ? 'healthy' : 'error'];
         } catch (\Exception $e) {
             return ['status' => 'error', 'message' => $e->getMessage()];

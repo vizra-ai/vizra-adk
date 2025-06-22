@@ -1,7 +1,7 @@
 <?php
 
-use Vizra\VizraADK\Livewire\ChatInterface;
 use Livewire\Livewire;
+use Vizra\VizraADK\Livewire\ChatInterface;
 
 test('chat interface loads correctly', function () {
     Livewire::test(ChatInterface::class)
@@ -46,7 +46,7 @@ test('load session modal validates empty session id', function () {
 test('can clear chat and generate new session id', function () {
     Livewire::test(ChatInterface::class)
         ->set('chatHistory', [
-            ['role' => 'user', 'content' => 'test message', 'timestamp' => '12:00:00']
+            ['role' => 'user', 'content' => 'test message', 'timestamp' => '12:00:00'],
         ])
         ->call('clearChat')
         ->assertSet('chatHistory', [])

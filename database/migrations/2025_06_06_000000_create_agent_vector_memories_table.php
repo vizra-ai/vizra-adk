@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -20,7 +20,7 @@ return new class extends Migration
                 DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
             } catch (\Exception $e) {
                 // In test environments, pgvector might not be available, that's ok
-                if (!app()->environment('testing')) {
+                if (! app()->environment('testing')) {
                     throw $e;
                 }
             }
@@ -38,7 +38,7 @@ return new class extends Migration
             $table->string('embedding_provider'); // Which provider generated the embedding
             $table->string('embedding_model'); // Which model generated the embedding
             $table->integer('embedding_dimensions'); // Vector dimensions
-            
+
             // This will be the vector column for pgvector, or JSON for other databases
             if (DB::connection()->getDriverName() === 'pgsql') {
                 // For PostgreSQL with pgvector extension
@@ -47,7 +47,7 @@ return new class extends Migration
                 // For other databases, store as JSON (less efficient but compatible)
                 $table->json('embedding_vector');
             }
-            
+
             $table->float('embedding_norm')->nullable(); // Vector magnitude for optimization
             $table->string('content_hash', 64)->index(); // SHA-256 hash for deduplication
             $table->integer('token_count')->nullable(); // Estimated token count
@@ -61,11 +61,11 @@ return new class extends Migration
         });
 
         // Create vector index for PostgreSQL
-        if (DB::connection()->getDriverName() === 'pgsql' && !app()->environment('testing')) {
+        if (DB::connection()->getDriverName() === 'pgsql' && ! app()->environment('testing')) {
             try {
                 // Create IVFFlat index for fast approximate similarity search
-                DB::statement('CREATE INDEX agent_vector_memories_embedding_idx ON ' . $tableName . ' USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)');
-                
+                DB::statement('CREATE INDEX agent_vector_memories_embedding_idx ON '.$tableName.' USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)');
+
                 // You can also create HNSW index (requires pgvector 0.5.0+)
                 // DB::statement('CREATE INDEX agent_vector_memories_embedding_hnsw_idx ON ' . $tableName . ' USING hnsw (embedding vector_cosine_ops)');
             } catch (\Exception $e) {

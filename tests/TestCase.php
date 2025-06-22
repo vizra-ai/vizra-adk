@@ -2,9 +2,9 @@
 
 namespace Vizra\VizraADK\Tests;
 
-use Vizra\VizraADK\Providers\AgentServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
+use Vizra\VizraADK\Providers\AgentServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -29,16 +29,16 @@ class TestCase extends Orchestra
         // Setup default database to use sqlite :memory:
         $app['config']->set('database.default', 'testbench');
         $app['config']->set('database.connections.testbench', [
-            'driver'   => 'sqlite',
+            'driver' => 'sqlite',
             'database' => ':memory:',
-            'prefix'   => '',
+            'prefix' => '',
         ]);
 
         // Set encryption key for tests
         $app['config']->set('app.key', 'base64:843sTC/OSjCKW+ZnImGjVdbrib089tC87dXdVlI+vc8=');
 
         // Load your package config if needed
-        $config = require __DIR__ . '/../config/vizra-adk.php';
+        $config = require __DIR__.'/../config/vizra-adk.php';
         $app['config']->set('vizra-adk', $config);
 
         // Override problematic settings for tests
@@ -65,7 +65,7 @@ class TestCase extends Orchestra
         }
 
         // Run migrations for testing
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
     protected function tearDown(): void

@@ -2,11 +2,11 @@
 
 namespace Vizra\VizraADK\Tools;
 
+use Illuminate\Support\Facades\Log;
 use Vizra\VizraADK\Contracts\ToolInterface;
-use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\Services\VectorMemoryManager;
-use Illuminate\Support\Facades\Log;
+use Vizra\VizraADK\System\AgentContext;
 
 class VectorMemoryTool implements ToolInterface
 {
@@ -106,7 +106,7 @@ class VectorMemoryTool implements ToolInterface
 
             return json_encode([
                 'success' => false,
-                'error' => 'Vector memory operation failed: ' . $e->getMessage(),
+                'error' => 'Vector memory operation failed: '.$e->getMessage(),
             ]);
         }
     }
@@ -162,7 +162,6 @@ class VectorMemoryTool implements ToolInterface
                 'error' => 'Query is required for search action',
             ]);
         }
-
 
         $query = $arguments['query'];
         $namespace = $arguments['namespace'] ?? 'default';

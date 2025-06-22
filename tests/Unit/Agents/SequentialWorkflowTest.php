@@ -2,27 +2,27 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Agents;
 
-use Vizra\VizraADK\Agents\SequentialWorkflow;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Services\AgentRegistry;
-use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Agents\SequentialWorkflow;
 use Vizra\VizraADK\Facades\Agent;
-use Mockery;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Tests\TestCase;
 
-class ConditionalAgent extends BaseLlmAgent {
+class ConditionalAgent extends BaseLlmAgent
+{
     protected string $name = 'conditional_agent';
 }
 
 class SequentialWorkflowTest extends TestCase
 {
     protected SequentialWorkflow $workflow;
+
     protected AgentContext $context;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->workflow = new SequentialWorkflow();
+        $this->workflow = new SequentialWorkflow;
         $this->context = new AgentContext('test-session');
     }
 
@@ -67,7 +67,7 @@ class SequentialWorkflowTest extends TestCase
 
     public function test_can_add_conditional_step()
     {
-        $condition = fn($input) => $input['proceed'] === true;
+        $condition = fn ($input) => $input['proceed'] === true;
 
         $workflow = $this->workflow
             ->start(FirstAgent::class)
@@ -78,9 +78,9 @@ class SequentialWorkflowTest extends TestCase
 
     public function test_can_set_callbacks()
     {
-        $successCallback = fn($result) => $result;
-        $failureCallback = fn($error) => $error;
-        $completeCallback = fn($result, $success) => $success;
+        $successCallback = fn ($result) => $result;
+        $failureCallback = fn ($error) => $error;
+        $completeCallback = fn ($result, $success) => $success;
 
         $workflow = $this->workflow
             ->onSuccess($successCallback)
@@ -163,7 +163,7 @@ class SequentialWorkflowTest extends TestCase
 
         $result = $this->workflow
             ->start(FirstAgent::class)
-            ->then(SecondAgent::class, fn($input, $results) => $results[FirstAgent::class]['data'])
+            ->then(SecondAgent::class, fn ($input, $results) => $results[FirstAgent::class]['data'])
             ->execute('initial_input', $this->context);
 
         $this->assertEquals('final_result', $result['final_result']);
@@ -224,7 +224,7 @@ class SequentialWorkflowTest extends TestCase
 
         $result = $this->workflow
             ->start(FirstAgent::class)
-            ->when(ConditionalAgent::class, fn($input) => $input['proceed'] === true)
+            ->when(ConditionalAgent::class, fn ($input) => $input['proceed'] === true)
             ->execute(['proceed' => true], $this->context);
 
         $this->assertEquals('conditional_result', $result['final_result']);
@@ -241,7 +241,7 @@ class SequentialWorkflowTest extends TestCase
 
         $result = $this->workflow
             ->start(FirstAgent::class)
-            ->when(ConditionalAgent::class, fn($input) => $input['proceed'] === true)
+            ->when(ConditionalAgent::class, fn ($input) => $input['proceed'] === true)
             ->execute(['proceed' => false], $this->context);
 
         $this->assertEquals(['proceed' => false], $result['final_result']);
@@ -278,7 +278,7 @@ class SequentialWorkflowTest extends TestCase
 
         $this->workflow
             ->start(TestAgent::class)
-            ->onSuccess(function($result) use (&$callbackCalled, &$callbackResult) {
+            ->onSuccess(function ($result) use (&$callbackCalled, &$callbackResult) {
                 $callbackCalled = true;
                 $callbackResult = $result;
             })
@@ -302,7 +302,7 @@ class SequentialWorkflowTest extends TestCase
 
         $this->workflow
             ->start(TestAgent::class)
-            ->onFailure(function($error) use (&$callbackCalled, &$callbackError) {
+            ->onFailure(function ($error) use (&$callbackCalled, &$callbackError) {
                 $callbackCalled = true;
                 $callbackError = $error;
             })
@@ -324,7 +324,7 @@ class SequentialWorkflowTest extends TestCase
 
         $this->workflow
             ->start(TestAgent::class)
-            ->onComplete(function($result, $success) use (&$callbackCalled, &$callbackSuccess) {
+            ->onComplete(function ($result, $success) use (&$callbackCalled, &$callbackSuccess) {
                 $callbackCalled = true;
                 $callbackSuccess = $success;
             })
@@ -348,7 +348,7 @@ class SequentialWorkflowTest extends TestCase
 
         $this->workflow
             ->start(TestAgent::class)
-            ->onComplete(function($result, $success) use (&$callbackCalled, &$callbackSuccess) {
+            ->onComplete(function ($result, $success) use (&$callbackCalled, &$callbackSuccess) {
                 $callbackCalled = true;
                 $callbackSuccess = $success;
             })

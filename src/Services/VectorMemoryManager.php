@@ -2,19 +2,20 @@
 
 namespace Vizra\VizraADK\Services;
 
-use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
-use Vizra\VizraADK\Models\VectorMemory;
-use Vizra\VizraADK\Services\DocumentChunker;
-use Vizra\VizraADK\Services\Drivers\MeilisearchVectorDriver;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Collection;
 use RuntimeException;
+use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Models\VectorMemory;
+use Vizra\VizraADK\Services\Drivers\MeilisearchVectorDriver;
 
 class VectorMemoryManager
 {
     protected EmbeddingProviderInterface $embeddingProvider;
+
     protected DocumentChunker $chunker;
+
     protected string $driver;
 
     public function __construct(EmbeddingProviderInterface $embeddingProvider, DocumentChunker $chunker)
@@ -102,6 +103,7 @@ class VectorMemoryManager
                 'agent_name' => $agentName,
                 'content_hash' => $contentHash,
             ]);
+
             return $existing;
         }
 
@@ -136,10 +138,10 @@ class VectorMemoryManager
                 // For PostgreSQL with pgvector, update the vector column separately
                 DB::table('agent_vector_memories')
                     ->where('id', $memory->id)
-                    ->update(['embedding' => '[' . implode(',', $embedding) . ']']);
+                    ->update(['embedding' => '['.implode(',', $embedding).']']);
             } elseif ($this->driver === 'meilisearch') {
                 // For Meilisearch, store in the vector database
-                $meilisearchDriver = new MeilisearchVectorDriver();
+                $meilisearchDriver = new MeilisearchVectorDriver;
                 $meilisearchDriver->store($memory);
             }
 
@@ -158,7 +160,7 @@ class VectorMemoryManager
                 'error' => $e->getMessage(),
                 'content_length' => strlen($content),
             ]);
-            throw new RuntimeException('Failed to add content to vector memory: ' . $e->getMessage());
+            throw new RuntimeException('Failed to add content to vector memory: '.$e->getMessage());
         }
     }
 
@@ -199,7 +201,7 @@ class VectorMemoryManager
                 'error' => $e->getMessage(),
                 'query_length' => strlen($query),
             ]);
-            throw new RuntimeException('Vector memory search failed: ' . $e->getMessage());
+            throw new RuntimeException('Vector memory search failed: '.$e->getMessage());
         }
     }
 
@@ -213,9 +215,9 @@ class VectorMemoryManager
         int $limit,
         float $threshold
     ): Collection {
-        $embeddingStr = '[' . implode(',', $queryEmbedding) . ']';
+        $embeddingStr = '['.implode(',', $queryEmbedding).']';
 
-        $results = DB::select("
+        $results = DB::select('
             SELECT
                 id, agent_name, namespace, content, metadata, source, source_id,
                 embedding_provider, embedding_model, created_at,
@@ -226,10 +228,11 @@ class VectorMemoryManager
                 AND 1 - (embedding <=> ?) >= ?
             ORDER BY embedding <=> ?
             LIMIT ?
-        ", [$embeddingStr, $agentName, $namespace, $embeddingStr, $threshold, $embeddingStr, $limit]);
+        ', [$embeddingStr, $agentName, $namespace, $embeddingStr, $threshold, $embeddingStr, $limit]);
 
         return collect($results)->map(function ($result) {
             $result->metadata = json_decode($result->metadata, true);
+
             return $result;
         });
     }
@@ -250,6 +253,7 @@ class VectorMemoryManager
 
         $results = $memories->map(function (VectorMemory $memory) use ($queryEmbedding) {
             $similarity = $memory->cosineSimilarity($queryEmbedding);
+
             return (object) [
                 'id' => $memory->id,
                 'agent_name' => $memory->agent_name,
@@ -264,10 +268,10 @@ class VectorMemoryManager
                 'similarity' => $similarity,
             ];
         })
-        ->filter(fn($result) => $result->similarity >= $threshold)
-        ->sortByDesc('similarity')
-        ->take($limit)
-        ->values();
+            ->filter(fn ($result) => $result->similarity >= $threshold)
+            ->sortByDesc('similarity')
+            ->take($limit)
+            ->values();
 
         return $results;
     }
@@ -282,7 +286,7 @@ class VectorMemoryManager
         int $limit,
         float $threshold
     ): Collection {
-        $meilisearchDriver = new MeilisearchVectorDriver();
+        $meilisearchDriver = new MeilisearchVectorDriver;
 
         return $meilisearchDriver->search(
             agentName: $agentName,
@@ -324,10 +328,10 @@ class VectorMemoryManager
         foreach ($results as $result) {
             $content = $result->content;
 
-            if ($includeMetadata && !empty($result->metadata)) {
+            if ($includeMetadata && ! empty($result->metadata)) {
                 $metadata = is_array($result->metadata) ? $result->metadata : json_decode($result->metadata, true);
-                if (!empty($metadata)) {
-                    $content .= "\n[Metadata: " . json_encode($metadata) . "]";
+                if (! empty($metadata)) {
+                    $content .= "\n[Metadata: ".json_encode($metadata).']';
                 }
             }
 

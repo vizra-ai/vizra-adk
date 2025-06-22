@@ -1,8 +1,8 @@
 <?php
 
-use Vizra\VizraADK\Services\AgentRegistry;
-use Vizra\VizraADK\Services\AgentManager;
 use Vizra\VizraADK\Services\AgentDiscovery;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\AgentRegistry;
 
 it('can instantiate the agent registry', function () {
     $registry = app(AgentRegistry::class);
@@ -37,20 +37,20 @@ it('runs auto-discovery on boot', function () {
     // Create mock services
     $mockDiscovery = Mockery::mock(AgentDiscovery::class);
     $mockDiscovery->shouldReceive('discover')->once()->andReturn([
-        'App\Agents\TestAgent' => 'test_agent'
+        'App\Agents\TestAgent' => 'test_agent',
     ]);
-    
+
     $mockRegistry = Mockery::mock(AgentRegistry::class);
     $mockRegistry->shouldReceive('register')->with('test_agent', 'App\Agents\TestAgent')->once();
-    
+
     // Bind mocks to container
     $this->app->instance(AgentDiscovery::class, $mockDiscovery);
     $this->app->instance(AgentRegistry::class, $mockRegistry);
-    
+
     // Create and boot the service provider
     $provider = new \Vizra\VizraADK\Providers\AgentServiceProvider($this->app);
     $provider->boot();
-    
+
     // Assertions are in the mock expectations
 });
 

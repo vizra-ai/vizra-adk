@@ -2,8 +2,8 @@
 
 namespace Vizra\VizraADK\Console\Commands;
 
-use Vizra\VizraADK\Services\VectorMemoryManager;
 use Illuminate\Console\Command;
+use Vizra\VizraADK\Services\VectorMemoryManager;
 
 class VectorMemorySearch extends Command
 {
@@ -28,7 +28,7 @@ class VectorMemorySearch extends Command
         $generateRag = $this->option('rag');
         $outputJson = $this->option('json');
 
-        $this->info("Searching vector memory...");
+        $this->info('Searching vector memory...');
         $this->info("Agent: {$agentName}");
         $this->info("Query: {$query}");
         $this->info("Namespace: {$namespace}");
@@ -53,16 +53,16 @@ class VectorMemorySearch extends Command
                     $this->info("🔍 Found {$ragContext['total_results']} relevant results");
                     $this->newLine();
 
-                    if (!empty($ragContext['context'])) {
-                        $this->info("📄 Generated RAG Context:");
-                        $this->line("=" * 80);
+                    if (! empty($ragContext['context'])) {
+                        $this->info('📄 Generated RAG Context:');
+                        $this->line('=' * 80);
                         $this->line($ragContext['context']);
-                        $this->line("=" * 80);
+                        $this->line('=' * 80);
                         $this->newLine();
                     }
 
-                    if (!empty($ragContext['sources'])) {
-                        $this->info("📚 Sources:");
+                    if (! empty($ragContext['sources'])) {
+                        $this->info('📚 Sources:');
                         $sourceData = [];
                         foreach ($ragContext['sources'] as $index => $source) {
                             $sourceData[] = [
@@ -100,14 +100,14 @@ class VectorMemorySearch extends Command
                     } else {
                         foreach ($results as $index => $result) {
                             $similarity = isset($result->similarity) ? number_format($result->similarity, 3) : 'N/A';
-                            $this->info("Result #" . ($index + 1) . " (Similarity: {$similarity})");
-                            $this->line("Source: " . ($result->source ?? 'N/A'));
-                            $this->line("Created: " . ($result->created_at ?? 'N/A'));
-                            $this->line("Content: " . substr($result->content, 0, 200) . "...");
+                            $this->info('Result #'.($index + 1)." (Similarity: {$similarity})");
+                            $this->line('Source: '.($result->source ?? 'N/A'));
+                            $this->line('Created: '.($result->created_at ?? 'N/A'));
+                            $this->line('Content: '.substr($result->content, 0, 200).'...');
 
-                            if (!empty($result->metadata)) {
+                            if (! empty($result->metadata)) {
                                 $metadata = is_array($result->metadata) ? $result->metadata : json_decode($result->metadata, true);
-                                $this->line("Metadata: " . json_encode($metadata));
+                                $this->line('Metadata: '.json_encode($metadata));
                             }
 
                             $this->newLine();
@@ -119,7 +119,8 @@ class VectorMemorySearch extends Command
             return 0;
 
         } catch (\Exception $e) {
-            $this->error("Search failed: " . $e->getMessage());
+            $this->error('Search failed: '.$e->getMessage());
+
             return 1;
         }
     }

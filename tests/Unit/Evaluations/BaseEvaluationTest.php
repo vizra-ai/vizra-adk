@@ -3,7 +3,7 @@
 use Vizra\VizraADK\Evaluations\BaseEvaluation;
 
 beforeEach(function () {
-    $this->evaluation = new TestEvaluation();
+    $this->evaluation = new TestEvaluation;
 });
 
 it('can set basic properties', function () {
@@ -24,7 +24,7 @@ it('can prepare prompt from csv data', function () {
     $csvRowData = [
         'prompt' => 'What is the weather?',
         'location' => 'London',
-        'expected' => 'Weather information'
+        'expected' => 'Weather information',
     ];
 
     $prompt = $this->evaluation->preparePrompt($csvRowData);
@@ -36,7 +36,7 @@ it('can prepare prompt from csv data', function () {
 it('can evaluate row', function () {
     $csvRowData = [
         'prompt' => 'Hello, world!',
-        'expected_sentiment' => 'positive'
+        'expected_sentiment' => 'positive',
     ];
 
     $agentResponse = 'Hello there! How can I help you today?';
@@ -121,7 +121,7 @@ it('can get prompt csv column', function () {
 });
 
 it('has default prompt csv column', function () {
-    $evaluation = new TestEvaluation();
+    $evaluation = new TestEvaluation;
     expect($evaluation->getPromptCsvColumn())->toBe('prompt');
 });
 
@@ -463,13 +463,16 @@ it('can test assertLlmJudgeComparison method handles errors gracefully', functio
 class TestEvaluation extends BaseEvaluation
 {
     public string $agentName = 'test-agent';
+
     public string $name = 'Test Evaluation';
+
     public string $description = 'A test evaluation for unit testing';
 
     public function preparePrompt(array $csvRowData): string
     {
         $mainInput = $csvRowData[$this->getPromptCsvColumn()] ?? '';
-        return "Test prompt: " . $mainInput;
+
+        return 'Test prompt: '.$mainInput;
     }
 
     public function evaluateRow(array $csvRowData, string $agentResponse): array
@@ -484,7 +487,7 @@ class TestEvaluation extends BaseEvaluation
         return [
             'passed' => $this->calculateScore() >= 0.5,
             'score' => $this->calculateScore(),
-            'details' => $this->getAssertionResults()
+            'details' => $this->getAssertionResults(),
         ];
     }
 
@@ -510,7 +513,8 @@ class TestEvaluation extends BaseEvaluation
             return 0.0;
         }
 
-        $passed = array_filter($this->assertionResults, fn($result) => $result['status'] === 'pass');
+        $passed = array_filter($this->assertionResults, fn ($result) => $result['status'] === 'pass');
+
         return count($passed) / count($this->assertionResults);
     }
 

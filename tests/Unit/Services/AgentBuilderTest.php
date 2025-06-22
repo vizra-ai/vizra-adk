@@ -1,9 +1,9 @@
 <?php
 
-use Vizra\VizraADK\Services\AgentBuilder;
-use Vizra\VizraADK\Services\AgentRegistry;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Exceptions\AgentConfigurationException;
+use Vizra\VizraADK\Services\AgentBuilder;
+use Vizra\VizraADK\Services\AgentRegistry;
 use Vizra\VizraADK\System\AgentContext;
 
 beforeEach(function () {
@@ -22,7 +22,7 @@ it('throws exception for non existent class', function () {
 })->throws(AgentConfigurationException::class, "Agent class 'NonExistentClass' not found.");
 
 it('throws exception for invalid class', function () {
-    expect(fn() => $this->builder->build(\stdClass::class))
+    expect(fn () => $this->builder->build(\stdClass::class))
         ->toThrow(AgentConfigurationException::class, 'must extend');
 });
 
@@ -116,8 +116,11 @@ it('can override model for class based agent', function () {
 class TestBuilderAgent extends BaseLlmAgent
 {
     protected string $name = 'test-builder-agent';
+
     protected string $description = 'A test agent for builder testing';
+
     protected string $instructions = 'Default test instructions';
+
     protected string $model = 'gpt-3.5-turbo';
 
     public function loadTools(): void
@@ -127,6 +130,6 @@ class TestBuilderAgent extends BaseLlmAgent
 
     public function execute($input, AgentContext $context)
     {
-        return 'Builder test response: ' . $input;
+        return 'Builder test response: '.$input;
     }
 }

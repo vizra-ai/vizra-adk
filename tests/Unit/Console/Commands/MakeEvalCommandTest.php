@@ -2,14 +2,15 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Console\Commands;
 
-use Vizra\VizraADK\Console\Commands\MakeEvalCommand;
-use Vizra\VizraADK\Tests\TestCase;
 use Illuminate\Filesystem\Filesystem;
 use Mockery;
+use Vizra\VizraADK\Console\Commands\MakeEvalCommand;
+use Vizra\VizraADK\Tests\TestCase;
 
 class MakeEvalCommandTest extends TestCase
 {
     protected $filesystem;
+
     protected $command;
 
     protected function setUp(): void
@@ -73,12 +74,14 @@ class MakeEvalCommandTest extends TestCase
 
     public function test_get_name_input_adds_evaluation_suffix()
     {
-        $command = new class($this->filesystem) extends MakeEvalCommand {
+        $command = new class($this->filesystem) extends MakeEvalCommand
+        {
             public function argument($key = null)
             {
                 if ($key === 'name') {
                     return 'ProductReview';
                 }
+
                 return parent::argument($key);
             }
         };
@@ -95,12 +98,14 @@ class MakeEvalCommandTest extends TestCase
 
     public function test_get_name_input_preserves_existing_evaluation_suffix()
     {
-        $command = new class($this->filesystem) extends MakeEvalCommand {
+        $command = new class($this->filesystem) extends MakeEvalCommand
+        {
             public function argument($key = null)
             {
                 if ($key === 'name') {
                     return 'ProductReviewEvaluation';
                 }
+
                 return parent::argument($key);
             }
         };
@@ -122,12 +127,14 @@ class MakeEvalCommandTest extends TestCase
             ->andReturn('class {{ class }} { name = "{{ evaluation_name }}"; csvPath = "{{ csv_file_name }}"; }');
 
         // Create a test command class that provides the argument
-        $command = new class($this->filesystem) extends MakeEvalCommand {
+        $command = new class($this->filesystem) extends MakeEvalCommand
+        {
             public function argument($key = null)
             {
                 if ($key === 'name') {
                     return 'ProductReview';
                 }
+
                 return parent::argument($key);
             }
         };
@@ -149,12 +156,14 @@ class MakeEvalCommandTest extends TestCase
             ->once()
             ->andReturn('name = "{{ evaluation_name }}"; csvPath = "{{ csv_file_name }}";');
 
-        $command = new class($this->filesystem) extends MakeEvalCommand {
+        $command = new class($this->filesystem) extends MakeEvalCommand
+        {
             public function argument($key = null)
             {
                 if ($key === 'name') {
                     return 'ProductReviewEvaluation';
                 }
+
                 return parent::argument($key);
             }
         };
@@ -181,12 +190,14 @@ class MakeEvalCommandTest extends TestCase
             ->once()
             ->andReturn('name = "{{ evaluation_name }}"; csvPath = "{{ csv_file_name }}";');
 
-        $command = new class($this->filesystem) extends MakeEvalCommand {
+        $command = new class($this->filesystem) extends MakeEvalCommand
+        {
             public function argument($key = null)
             {
                 if ($key === 'name') {
                     return 'ContentQualityAnalysis';
                 }
+
                 return parent::argument($key);
             }
         };
@@ -216,7 +227,7 @@ class MakeEvalCommandTest extends TestCase
     {
         // Create the Evaluations directory
         $evaluationsDir = app_path('Evaluations');
-        if (!is_dir($evaluationsDir)) {
+        if (! is_dir($evaluationsDir)) {
             mkdir($evaluationsDir, 0755, true);
         }
 
@@ -251,11 +262,11 @@ class MakeEvalCommandTest extends TestCase
     {
         // Create the Evaluations directory and file
         $evaluationsDir = app_path('Evaluations');
-        if (!is_dir($evaluationsDir)) {
+        if (! is_dir($evaluationsDir)) {
             mkdir($evaluationsDir, 0755, true);
         }
 
-        $existingFile = $evaluationsDir . '/ProductReviewEvaluation.php';
+        $existingFile = $evaluationsDir.'/ProductReviewEvaluation.php';
         file_put_contents($existingFile, '<?php // existing evaluation');
 
         $this->artisan('vizra:make:eval', ['name' => 'ProductReview'])
@@ -286,10 +297,12 @@ class MakeEvalCommandTest extends TestCase
                 ->once()
                 ->andReturn('name = "{{ evaluation_name }}"; csvPath = "{{ csv_file_name }}";');
 
-            $command = new class($this->filesystem, $inputName) extends MakeEvalCommand {
+            $command = new class($this->filesystem, $inputName) extends MakeEvalCommand
+            {
                 private $inputName;
 
-                public function __construct($filesystem, $inputName) {
+                public function __construct($filesystem, $inputName)
+                {
                     parent::__construct($filesystem);
                     $this->inputName = $inputName;
                 }
@@ -299,6 +312,7 @@ class MakeEvalCommandTest extends TestCase
                     if ($key === 'name') {
                         return $this->inputName;
                     }
+
                     return parent::argument($key);
                 }
             };
@@ -319,7 +333,7 @@ class MakeEvalCommandTest extends TestCase
     {
         // Create the Evaluations directory
         $evaluationsDir = app_path('Evaluations');
-        if (!is_dir($evaluationsDir)) {
+        if (! is_dir($evaluationsDir)) {
             mkdir($evaluationsDir, 0755, true);
         }
 
@@ -361,10 +375,12 @@ class MakeEvalCommandTest extends TestCase
         ];
 
         foreach ($testCases as [$inputName, $expectedCsvName]) {
-            $command = new class($this->filesystem, $inputName) extends MakeEvalCommand {
+            $command = new class($this->filesystem, $inputName) extends MakeEvalCommand
+            {
                 private $inputName;
 
-                public function __construct($filesystem, $inputName) {
+                public function __construct($filesystem, $inputName)
+                {
                     parent::__construct($filesystem);
                     $this->inputName = $inputName;
                 }
@@ -374,6 +390,7 @@ class MakeEvalCommandTest extends TestCase
                     if ($key === 'name') {
                         return $this->inputName;
                     }
+
                     return parent::argument($key);
                 }
             };

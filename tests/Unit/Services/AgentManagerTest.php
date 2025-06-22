@@ -1,11 +1,11 @@
 <?php
 
-use Vizra\VizraADK\Services\AgentManager;
-use Vizra\VizraADK\Services\AgentRegistry;
-use Vizra\VizraADK\Services\AgentBuilder;
-use Vizra\VizraADK\Services\StateManager;
 use Vizra\VizraADK\Agents\BaseAgent;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Services\AgentBuilder;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Services\StateManager;
 use Vizra\VizraADK\System\AgentContext;
 
 beforeEach(function () {
@@ -152,10 +152,11 @@ it('can get all registered agents', function () {
 class TestManagerAgent extends BaseAgent
 {
     protected string $name = 'test-manager-agent';
+
     protected string $description = 'A test agent for manager testing';
 
     public function run(mixed $input, AgentContext $context): mixed
     {
-        return 'Manager test response: ' . $input;
+        return 'Manager test response: '.$input;
     }
 }

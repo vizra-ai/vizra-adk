@@ -3,13 +3,14 @@
 namespace Vizra\VizraADK\Livewire;
 
 use Livewire\Component;
-use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\Services\AgentRegistry;
 
 class Dashboard extends Component
 {
     public $packageVersion;
+
     public $agentCount;
+
     public $registeredAgents = [];
 
     public function mount()
@@ -27,11 +28,13 @@ class Dashboard extends Component
 
     private function getPackageVersion()
     {
-        $composerPath = __DIR__ . '/../../composer.json';
+        $composerPath = __DIR__.'/../../composer.json';
         if (file_exists($composerPath)) {
             $composer = json_decode(file_get_contents($composerPath), true);
+
             return $composer['version'] ?? 'dev';
         }
+
         return 'unknown';
     }
 

@@ -2,16 +2,18 @@
 
 namespace Vizra\VizraADK\Services\Drivers;
 
-use Vizra\VizraADK\Models\VectorMemory;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Collection;
 use RuntimeException;
+use Vizra\VizraADK\Models\VectorMemory;
 
 class MeilisearchVectorDriver
 {
     protected string $host;
+
     protected ?string $apiKey;
+
     protected string $indexPrefix;
 
     public function __construct()
@@ -69,7 +71,7 @@ class MeilisearchVectorDriver
                 'index' => $indexName,
                 'document_id' => $memory->id,
             ]);
-            throw new RuntimeException('Failed to store in Meilisearch: ' . $e->getMessage());
+            throw new RuntimeException('Failed to store in Meilisearch: '.$e->getMessage());
         }
     }
 
@@ -100,6 +102,7 @@ class MeilisearchVectorDriver
                 ->filter(function ($hit) use ($threshold) {
                     // Convert Meilisearch ranking score to similarity (0-1)
                     $similarity = $hit['_rankingScore'] ?? 0;
+
                     return $similarity >= $threshold;
                 })
                 ->map(function ($hit) {
@@ -134,7 +137,7 @@ class MeilisearchVectorDriver
                 'index' => $indexName,
                 'agent_name' => $agentName,
             ]);
-            throw new RuntimeException('Meilisearch search failed: ' . $e->getMessage());
+            throw new RuntimeException('Meilisearch search failed: '.$e->getMessage());
         }
     }
 
@@ -155,7 +158,7 @@ class MeilisearchVectorDriver
             }
 
             $response = $this->makeRequest('POST', "/indexes/{$indexName}/documents/delete", [
-                'filter' => $filter
+                'filter' => $filter,
             ]);
 
             // Get the task to track deletion
@@ -178,7 +181,7 @@ class MeilisearchVectorDriver
                 'index' => $indexName,
                 'agent_name' => $agentName,
             ]);
-            throw new RuntimeException('Meilisearch deletion failed: ' . $e->getMessage());
+            throw new RuntimeException('Meilisearch deletion failed: '.$e->getMessage());
         }
     }
 
@@ -210,7 +213,7 @@ class MeilisearchVectorDriver
                 $provider = $doc['embedding_provider'] ?? 'unknown';
                 $providers[$provider] = ($providers[$provider] ?? 0) + 1;
 
-                if (!empty($doc['source'])) {
+                if (! empty($doc['source'])) {
                     $source = $doc['source'];
                     $sources[$source] = ($sources[$source] ?? 0) + 1;
                 }
@@ -232,6 +235,7 @@ class MeilisearchVectorDriver
                 'index' => $indexName,
                 'agent_name' => $agentName,
             ]);
+
             return [
                 'total_memories' => 0,
                 'total_tokens' => 0,
@@ -265,7 +269,7 @@ class MeilisearchVectorDriver
                 'searchableAttributes' => ['content', 'metadata'],
                 'filterableAttributes' => [
                     'agent_name', 'namespace', 'source', 'source_id',
-                    'embedding_provider', 'embedding_model', 'created_at'
+                    'embedding_provider', 'embedding_model', 'created_at',
                 ],
                 'sortableAttributes' => ['created_at', 'token_count'],
                 'distinctAttribute' => 'content_hash',
@@ -276,14 +280,14 @@ class MeilisearchVectorDriver
                     'proximity',
                     'attribute',
                     'sort',
-                    'exactness'
+                    'exactness',
                 ],
                 'vectorSettings' => [
                     'embedding_vector' => [
                         'dimensions' => $dimensions,
                         'metric' => 'cosine',
-                    ]
-                ]
+                    ],
+                ],
             ]);
 
             Log::info('Created and configured Meilisearch index', [
@@ -298,7 +302,7 @@ class MeilisearchVectorDriver
      */
     protected function getIndexName(string $agentName, string $namespace): string
     {
-        return $this->indexPrefix . strtolower($agentName) . '_' . strtolower($namespace);
+        return $this->indexPrefix.strtolower($agentName).'_'.strtolower($namespace);
     }
 
     /**
@@ -309,18 +313,18 @@ class MeilisearchVectorDriver
         $headers = ['Content-Type' => 'application/json'];
 
         if ($this->apiKey) {
-            $headers['Authorization'] = 'Bearer ' . $this->apiKey;
+            $headers['Authorization'] = 'Bearer '.$this->apiKey;
         }
 
-        $url = rtrim($this->host, '/') . $endpoint;
+        $url = rtrim($this->host, '/').$endpoint;
 
         $response = Http::withHeaders($headers)
             ->timeout(30)
             ->send($method, $url, $method === 'GET' ? ['query' => $data] : ['json' => $data]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new RuntimeException(
-                "Meilisearch API error: {$response->status()} - " . $response->body()
+                "Meilisearch API error: {$response->status()} - ".$response->body()
             );
         }
 
@@ -332,7 +336,7 @@ class MeilisearchVectorDriver
      */
     protected function waitForTask(?string $taskUid, int $maxWaitSeconds = 10): int
     {
-        if (!$taskUid) {
+        if (! $taskUid) {
             return 0;
         }
 
@@ -348,7 +352,7 @@ class MeilisearchVectorDriver
                 }
 
                 if ($task['status'] === 'failed') {
-                    throw new RuntimeException('Meilisearch task failed: ' . ($task['error'] ?? 'Unknown error'));
+                    throw new RuntimeException('Meilisearch task failed: '.($task['error'] ?? 'Unknown error'));
                 }
 
                 sleep(1);
@@ -367,6 +371,7 @@ class MeilisearchVectorDriver
     {
         try {
             $this->makeRequest('GET', '/health');
+
             return true;
         } catch (\Exception $e) {
             return false;

@@ -13,15 +13,13 @@ use Vizra\VizraADK\System\AgentContext;
 class SequentialWorkflow extends BaseWorkflowAgent
 {
     protected string $name = 'SequentialWorkflow';
+
     protected string $description = 'Executes agents sequentially, passing results between steps';
 
     /**
      * Add the next agent in the sequence
      *
-     * @param string $agentClass The agent class name (e.g., DataCollector::class)
-     * @param mixed $params
-     * @param array $options
-     * @return static
+     * @param  string  $agentClass  The agent class name (e.g., DataCollector::class)
      */
     public function then(string $agentClass, mixed $params = null, array $options = []): static
     {
@@ -31,10 +29,7 @@ class SequentialWorkflow extends BaseWorkflowAgent
     /**
      * Add the first agent in the sequence
      *
-     * @param string $agentClass The agent class name (e.g., DataCollector::class)
-     * @param mixed $params
-     * @param array $options
-     * @return static
+     * @param  string  $agentClass  The agent class name (e.g., DataCollector::class)
      */
     public function start(string $agentClass, mixed $params = null, array $options = []): static
     {
@@ -44,23 +39,17 @@ class SequentialWorkflow extends BaseWorkflowAgent
     /**
      * Add a final step that always runs (like finally in try-catch)
      *
-     * @param string $agentClass The agent class name (e.g., CleanupAgent::class)
-     * @param mixed $params
-     * @param array $options
-     * @return static
+     * @param  string  $agentClass  The agent class name (e.g., CleanupAgent::class)
      */
     public function finally(string $agentClass, mixed $params = null, array $options = []): static
     {
         $options['finally'] = true;
+
         return $this->addAgent($agentClass, $params, $options);
     }
 
     /**
      * Execute agents sequentially
-     *
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return mixed
      */
     protected function executeWorkflow(mixed $input, AgentContext $context): mixed
     {
@@ -101,17 +90,12 @@ class SequentialWorkflow extends BaseWorkflowAgent
         return [
             'final_result' => $currentInput,
             'step_results' => $finalResults,
-            'workflow_type' => 'sequential'
+            'workflow_type' => 'sequential',
         ];
     }
 
     /**
      * Execute finally steps (cleanup, notifications, etc.)
-     *
-     * @param array $finallySteps
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return void
      */
     private function executeFinallySteps(array $finallySteps, mixed $input, AgentContext $context): void
     {
@@ -120,9 +104,9 @@ class SequentialWorkflow extends BaseWorkflowAgent
                 $this->executeStep($step, $input, $context);
             } catch (\Throwable $e) {
                 // Log but don't throw - finally steps shouldn't break the main flow
-                logger()->warning('Finally step failed: ' . $e->getMessage(), [
+                logger()->warning('Finally step failed: '.$e->getMessage(), [
                     'agent' => $step['agent'],
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -131,41 +115,35 @@ class SequentialWorkflow extends BaseWorkflowAgent
     /**
      * Add conditional step that only runs if condition is met
      *
-     * @param string $agentClass The agent class name
-     * @param \Closure $condition
-     * @param mixed $params
-     * @param array $options
-     * @return static
+     * @param  string  $agentClass  The agent class name
      */
     public function when(string $agentClass, \Closure $condition, mixed $params = null, array $options = []): static
     {
         $options['condition'] = $condition;
+
         return $this->then($agentClass, $params, $options);
     }
 
     /**
      * Add step that only runs if previous step failed
      *
-     * @param string $agentClass The agent class name
-     * @param mixed $params
-     * @param array $options
-     * @return static
+     * @param  string  $agentClass  The agent class name
      */
     public function onError(string $agentClass, mixed $params = null, array $options = []): static
     {
         $options['on_error'] = true;
+
         return $this->then($agentClass, $params, $options);
     }
 
     /**
      * Create a quick sequential workflow from agent classes
      *
-     * @param string ...$agentClasses Agent class names (e.g., DataCollector::class)
-     * @return static
+     * @param  string  ...$agentClasses  Agent class names (e.g., DataCollector::class)
      */
     public static function create(string ...$agentClasses): static
     {
-        $workflow = new static();
+        $workflow = new static;
 
         foreach ($agentClasses as $agentClass) {
             $workflow->then($agentClass);
@@ -176,14 +154,11 @@ class SequentialWorkflow extends BaseWorkflowAgent
 
     /**
      * Execute the workflow with simplified syntax
-     *
-     * @param mixed $input
-     * @param AgentContext|null $context
-     * @return mixed
      */
     public function execute(mixed $input, ?AgentContext $context = null): mixed
     {
-        $context = $context ?: new AgentContext('workflow-' . uniqid());
+        $context = $context ?: new AgentContext('workflow-'.uniqid());
+
         return $this->run($input, $context);
     }
 }

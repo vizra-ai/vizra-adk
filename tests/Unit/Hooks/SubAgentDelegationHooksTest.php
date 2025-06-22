@@ -1,23 +1,37 @@
 <?php
 
 use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Tools\DelegateToSubAgentTool;
-use Vizra\VizraADK\Memory\AgentMemory;
-use Mockery;
 
 describe('Sub-Agent Delegation Hooks', function () {
     beforeEach(function () {
         // Create test agents with delegation hooks
-        $this->parentAgent = new class extends BaseLlmAgent {
+        $this->parentAgent = new class extends BaseLlmAgent
+        {
             public string $beforeHookCalled = '';
+
             public string $afterHookCalled = '';
+
             public array $beforeHookArgs = [];
+
             public array $afterHookArgs = [];
 
-            public function getName(): string { return 'parent-agent'; }
-            public function getInstructions(): string { return 'Parent agent'; }
-            public function getTools(): array { return []; }
+            public function getName(): string
+            {
+                return 'parent-agent';
+            }
+
+            public function getInstructions(): string
+            {
+                return 'Parent agent';
+            }
+
+            public function getTools(): array
+            {
+                return [];
+            }
 
             public function beforeSubAgentDelegation(string $subAgentName, string $taskInput, string $contextSummary, AgentContext $parentContext): array
             {
@@ -40,22 +54,34 @@ describe('Sub-Agent Delegation Hooks', function () {
             }
         };
 
-        $this->subAgent = new class extends BaseLlmAgent {
-            public function getName(): string { return 'sub-agent'; }
-            public function getInstructions(): string { return 'Sub agent'; }
-            public function getTools(): array { return []; }
+        $this->subAgent = new class extends BaseLlmAgent
+        {
+            public function getName(): string
+            {
+                return 'sub-agent';
+            }
+
+            public function getInstructions(): string
+            {
+                return 'Sub agent';
+            }
+
+            public function getTools(): array
+            {
+                return [];
+            }
 
             public function run(mixed $input, AgentContext $context): mixed
             {
                 return "Sub-agent response to: {$input}";
             }
         };
-        
+
         // Create a mock agent for AgentMemory
         $this->mockAgent = Mockery::mock(BaseLlmAgent::class);
         $this->mockAgent->shouldReceive('getName')->andReturn('test-agent');
     });
-    
+
     afterEach(function () {
         Mockery::close();
     });
@@ -81,7 +107,7 @@ describe('Sub-Agent Delegation Hooks', function () {
         $arguments = [
             'sub_agent_name' => 'sub-agent',
             'task_input' => 'original task',
-            'context_summary' => 'context summary'
+            'context_summary' => 'context summary',
         ];
 
         $memory = new AgentMemory($this->mockAgent);
@@ -116,7 +142,7 @@ describe('Sub-Agent Delegation Hooks', function () {
 
         $arguments = [
             'sub_agent_name' => 'sub-agent',
-            'task_input' => 'task input'
+            'task_input' => 'task input',
         ];
 
         $memory = new AgentMemory($this->mockAgent);
@@ -128,18 +154,30 @@ describe('Sub-Agent Delegation Hooks', function () {
     });
 
     it('allows beforeSubAgentDelegation hook to modify delegation parameters', function () {
-        $parentAgent = new class extends BaseLlmAgent {
-            public function getName(): string { return 'parent-agent'; }
-            public function getInstructions(): string { return 'Parent agent'; }
-            public function getTools(): array { return []; }
+        $parentAgent = new class extends BaseLlmAgent
+        {
+            public function getName(): string
+            {
+                return 'parent-agent';
+            }
+
+            public function getInstructions(): string
+            {
+                return 'Parent agent';
+            }
+
+            public function getTools(): array
+            {
+                return [];
+            }
 
             public function beforeSubAgentDelegation(string $subAgentName, string $taskInput, string $contextSummary, AgentContext $parentContext): array
             {
                 // Modify all parameters
                 return [
                     'modified-sub-agent',
-                    'ENHANCED: ' . $taskInput,
-                    'ENRICHED: ' . $contextSummary
+                    'ENHANCED: '.$taskInput,
+                    'ENRICHED: '.$contextSummary,
                 ];
             }
 
@@ -150,10 +188,22 @@ describe('Sub-Agent Delegation Hooks', function () {
 
             public function getLoadedSubAgents(): array
             {
-                return ['modified-sub-agent' => new class extends BaseLlmAgent {
-                    public function getName(): string { return 'modified-sub-agent'; }
-                    public function getInstructions(): string { return 'Modified sub agent'; }
-                    public function getTools(): array { return []; }
+                return ['modified-sub-agent' => new class extends BaseLlmAgent
+                {
+                    public function getName(): string
+                    {
+                        return 'modified-sub-agent';
+                    }
+
+                    public function getInstructions(): string
+                    {
+                        return 'Modified sub agent';
+                    }
+
+                    public function getTools(): array
+                    {
+                        return [];
+                    }
 
                     public function run(mixed $input, AgentContext $context): mixed
                     {
@@ -174,7 +224,7 @@ describe('Sub-Agent Delegation Hooks', function () {
         $arguments = [
             'sub_agent_name' => 'original-sub-agent', // This will be modified by the hook
             'task_input' => 'original task',
-            'context_summary' => 'original context'
+            'context_summary' => 'original context',
         ];
 
         $memory = new AgentMemory($this->mockAgent);
@@ -188,10 +238,22 @@ describe('Sub-Agent Delegation Hooks', function () {
     });
 
     it('allows afterSubAgentDelegation hook to process and modify results', function () {
-        $parentAgent = new class extends BaseLlmAgent {
-            public function getName(): string { return 'parent-agent'; }
-            public function getInstructions(): string { return 'Parent agent'; }
-            public function getTools(): array { return []; }
+        $parentAgent = new class extends BaseLlmAgent
+        {
+            public function getName(): string
+            {
+                return 'parent-agent';
+            }
+
+            public function getInstructions(): string
+            {
+                return 'Parent agent';
+            }
+
+            public function getTools(): array
+            {
+                return [];
+            }
 
             public function beforeSubAgentDelegation(string $subAgentName, string $taskInput, string $contextSummary, AgentContext $parentContext): array
             {
@@ -205,20 +267,32 @@ describe('Sub-Agent Delegation Hooks', function () {
                     'original_result' => $subAgentResult,
                     'processed_by' => $this->getName(),
                     'delegation_timestamp' => now()->toISOString(),
-                    'sub_agent_session' => $subAgentContext->getSessionId()
+                    'sub_agent_session' => $subAgentContext->getSessionId(),
                 ]);
             }
 
             public function getLoadedSubAgents(): array
             {
-                return ['sub-agent' => new class extends BaseLlmAgent {
-                    public function getName(): string { return 'sub-agent'; }
-                    public function getInstructions(): string { return 'Sub agent'; }
-                    public function getTools(): array { return []; }
+                return ['sub-agent' => new class extends BaseLlmAgent
+                {
+                    public function getName(): string
+                    {
+                        return 'sub-agent';
+                    }
+
+                    public function getInstructions(): string
+                    {
+                        return 'Sub agent';
+                    }
+
+                    public function getTools(): array
+                    {
+                        return [];
+                    }
 
                     public function run(mixed $input, AgentContext $context): mixed
                     {
-                        return "Simple response";
+                        return 'Simple response';
                     }
                 }];
             }
@@ -234,7 +308,7 @@ describe('Sub-Agent Delegation Hooks', function () {
 
         $arguments = [
             'sub_agent_name' => 'sub-agent',
-            'task_input' => 'test task'
+            'task_input' => 'test task',
         ];
 
         $memory = new AgentMemory($this->mockAgent);
@@ -251,10 +325,22 @@ describe('Sub-Agent Delegation Hooks', function () {
     });
 
     it('handles exceptions in delegation hooks gracefully', function () {
-        $parentAgent = new class extends BaseLlmAgent {
-            public function getName(): string { return 'parent-agent'; }
-            public function getInstructions(): string { return 'Parent agent'; }
-            public function getTools(): array { return []; }
+        $parentAgent = new class extends BaseLlmAgent
+        {
+            public function getName(): string
+            {
+                return 'parent-agent';
+            }
+
+            public function getInstructions(): string
+            {
+                return 'Parent agent';
+            }
+
+            public function getTools(): array
+            {
+                return [];
+            }
 
             public function beforeSubAgentDelegation(string $subAgentName, string $taskInput, string $contextSummary, AgentContext $parentContext): array
             {
@@ -263,14 +349,26 @@ describe('Sub-Agent Delegation Hooks', function () {
 
             public function getLoadedSubAgents(): array
             {
-                return ['sub-agent' => new class extends BaseLlmAgent {
-                    public function getName(): string { return 'sub-agent'; }
-                    public function getInstructions(): string { return 'Sub agent'; }
-                    public function getTools(): array { return []; }
+                return ['sub-agent' => new class extends BaseLlmAgent
+                {
+                    public function getName(): string
+                    {
+                        return 'sub-agent';
+                    }
+
+                    public function getInstructions(): string
+                    {
+                        return 'Sub agent';
+                    }
+
+                    public function getTools(): array
+                    {
+                        return [];
+                    }
 
                     public function run(mixed $input, AgentContext $context): mixed
                     {
-                        return "Response";
+                        return 'Response';
                     }
                 }];
             }
@@ -286,7 +384,7 @@ describe('Sub-Agent Delegation Hooks', function () {
 
         $arguments = [
             'sub_agent_name' => 'sub-agent',
-            'task_input' => 'test task'
+            'task_input' => 'test task',
         ];
 
         $memory = new AgentMemory($this->mockAgent);
@@ -298,10 +396,22 @@ describe('Sub-Agent Delegation Hooks', function () {
     });
 
     it('has default hook implementations that return unmodified values', function () {
-        $agent = new class extends BaseLlmAgent {
-            public function getName(): string { return 'test-agent'; }
-            public function getInstructions(): string { return 'Test agent'; }
-            public function getTools(): array { return []; }
+        $agent = new class extends BaseLlmAgent
+        {
+            public function getName(): string
+            {
+                return 'test-agent';
+            }
+
+            public function getInstructions(): string
+            {
+                return 'Test agent';
+            }
+
+            public function getTools(): array
+            {
+                return [];
+            }
         };
 
         $parentContext = new AgentContext('parent-session', 'parent input');

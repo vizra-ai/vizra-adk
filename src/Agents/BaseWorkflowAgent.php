@@ -2,12 +2,11 @@
 
 namespace Vizra\VizraADK\Agents;
 
-use Vizra\VizraADK\System\AgentContext;
+use Closure;
 use Vizra\VizraADK\Exceptions\AgentNotFoundException;
 use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\Services\AgentRegistry;
-use Closure;
-use Illuminate\Support\Collection;
+use Vizra\VizraADK\System\AgentContext;
 
 /**
  * Abstract base class for workflow agents that orchestrate other agents
@@ -16,21 +15,25 @@ use Illuminate\Support\Collection;
 abstract class BaseWorkflowAgent extends BaseAgent
 {
     protected array $steps = [];
+
     protected array $results = [];
+
     protected ?Closure $onSuccess = null;
+
     protected ?Closure $onFailure = null;
+
     protected ?Closure $onComplete = null;
+
     protected int $timeout = 300; // 5 minutes default
+
     protected int $retryAttempts = 0;
+
     protected int $retryDelay = 1000; // 1 second in milliseconds
 
     /**
      * Add an agent step to the workflow
      *
-     * @param string $agentClass The agent class name (e.g., DataCollector::class)
-     * @param mixed $params
-     * @param array $options
-     * @return static
+     * @param  string  $agentClass  The agent class name (e.g., DataCollector::class)
      */
     public function addAgent(string $agentClass, mixed $params = null, array $options = []): static
     {
@@ -48,73 +51,58 @@ abstract class BaseWorkflowAgent extends BaseAgent
 
     /**
      * Set success callback
-     *
-     * @param Closure $callback
-     * @return static
      */
     public function onSuccess(Closure $callback): static
     {
         $this->onSuccess = $callback;
+
         return $this;
     }
 
     /**
      * Set failure callback
-     *
-     * @param Closure $callback
-     * @return static
      */
     public function onFailure(Closure $callback): static
     {
         $this->onFailure = $callback;
+
         return $this;
     }
 
     /**
      * Set completion callback (runs regardless of success/failure)
-     *
-     * @param Closure $callback
-     * @return static
      */
     public function onComplete(Closure $callback): static
     {
         $this->onComplete = $callback;
+
         return $this;
     }
 
     /**
      * Set timeout for the entire workflow
-     *
-     * @param int $seconds
-     * @return static
      */
     public function timeout(int $seconds): static
     {
         $this->timeout = $seconds;
+
         return $this;
     }
 
     /**
      * Set retry attempts for failed steps
-     *
-     * @param int $attempts
-     * @param int $delayMs
-     * @return static
      */
     public function retryOnFailure(int $attempts, int $delayMs = 1000): static
     {
         $this->retryAttempts = $attempts;
         $this->retryDelay = $delayMs;
+
         return $this;
     }
 
     /**
      * Execute a single agent step with error handling and retries
      *
-     * @param array $step
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return mixed
      * @throws AgentNotFoundException
      */
     protected function executeStep(array $step, mixed $input, AgentContext $context): mixed
@@ -126,7 +114,7 @@ abstract class BaseWorkflowAgent extends BaseAgent
         while ($attempts < $maxAttempts) {
             try {
                 // Check if step has a condition
-                if (isset($step['condition']) && $step['condition'] && !$this->evaluateCondition($step['condition'], $input, $context)) {
+                if (isset($step['condition']) && $step['condition'] && ! $this->evaluateCondition($step['condition'], $input, $context)) {
                     return null; // Skip this step
                 }
 
@@ -161,11 +149,6 @@ abstract class BaseWorkflowAgent extends BaseAgent
 
     /**
      * Prepare step parameters, supporting closures for dynamic params
-     *
-     * @param mixed $params
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return mixed
      */
     protected function prepareStepParams(mixed $params, mixed $input, AgentContext $context): mixed
     {
@@ -178,11 +161,6 @@ abstract class BaseWorkflowAgent extends BaseAgent
 
     /**
      * Evaluate a condition for conditional execution
-     *
-     * @param mixed $condition
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return bool
      */
     protected function evaluateCondition(mixed $condition, mixed $input, AgentContext $context): bool
     {
@@ -195,11 +173,6 @@ abstract class BaseWorkflowAgent extends BaseAgent
 
     /**
      * Handle workflow completion callbacks
-     *
-     * @param mixed $result
-     * @param bool $success
-     * @param \Throwable|null $exception
-     * @return void
      */
     protected function handleCompletion(mixed $result, bool $success, ?\Throwable $exception = null): void
     {
@@ -208,7 +181,7 @@ abstract class BaseWorkflowAgent extends BaseAgent
                 ($this->onSuccess)($result, $this->results);
             }
 
-            if (!$success && $this->onFailure) {
+            if (! $success && $this->onFailure) {
                 ($this->onFailure)($exception, $this->results);
             }
 
@@ -217,14 +190,12 @@ abstract class BaseWorkflowAgent extends BaseAgent
             }
         } catch (\Throwable $e) {
             // Log callback errors but don't let them affect the main result
-            logger()->error('Workflow callback error: ' . $e->getMessage());
+            logger()->error('Workflow callback error: '.$e->getMessage());
         }
     }
 
     /**
      * Get all step results
-     *
-     * @return array
      */
     public function getResults(): array
     {
@@ -234,8 +205,7 @@ abstract class BaseWorkflowAgent extends BaseAgent
     /**
      * Get result from a specific step
      *
-     * @param string $agentClass The agent class name used when adding the step
-     * @return mixed
+     * @param  string  $agentClass  The agent class name used when adding the step
      */
     public function getStepResult(string $agentClass): mixed
     {
@@ -244,32 +214,23 @@ abstract class BaseWorkflowAgent extends BaseAgent
 
     /**
      * Clear workflow state for reuse
-     *
-     * @return static
      */
     public function reset(): static
     {
         $this->steps = [];
         $this->results = [];
+
         return $this;
     }
 
     /**
      * Abstract method that each workflow type must implement
-     *
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return mixed
      */
     abstract protected function executeWorkflow(mixed $input, AgentContext $context): mixed;
 
     /**
      * Main execution method that orchestrates the workflow
      * Required by BaseAgent interface
-     *
-     * @param mixed $input
-     * @param AgentContext $context
-     * @return mixed
      */
     final public function run(mixed $input, AgentContext $context): mixed
     {
@@ -288,7 +249,7 @@ abstract class BaseWorkflowAgent extends BaseAgent
             $this->handleCompletion($result, $success, $exception);
         }
 
-        if (!$success) {
+        if (! $success) {
             throw $exception;
         }
 
@@ -297,14 +258,11 @@ abstract class BaseWorkflowAgent extends BaseAgent
 
     /**
      * Execute the workflow with optional context
-     *
-     * @param mixed $input
-     * @param AgentContext|null $context
-     * @return mixed
      */
     public function execute(mixed $input, ?AgentContext $context = null): mixed
     {
-        $context = $context ?: new AgentContext('workflow-' . uniqid());
+        $context = $context ?: new AgentContext('workflow-'.uniqid());
+
         return $this->run($input, $context);
     }
 }

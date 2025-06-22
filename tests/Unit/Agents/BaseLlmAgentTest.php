@@ -1,11 +1,11 @@
 <?php
 
+use Prism\Prism\Enums\Provider;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\System\AgentContext;
-use Prism\Prism\Enums\Provider;
 
 beforeEach(function () {
-    $this->agent = new TestLlmAgent();
+    $this->agent = new TestLlmAgent;
 });
 
 it('can get agent instructions', function () {
@@ -86,10 +86,15 @@ it('executes with context', function () {
 class TestLlmAgent extends BaseLlmAgent
 {
     protected string $name = 'test-llm-agent';
+
     protected string $description = 'A test LLM agent for unit testing';
+
     protected string $instructions = 'Test LLM agent instructions';
+
     protected string $model = 'gpt-3.5-turbo';
+
     protected ?float $temperature = 0.7;
+
     protected ?int $maxTokens = 1000;
 
     public function getInstructions(): string
@@ -121,6 +126,7 @@ class TestLlmAgent extends BaseLlmAgent
     {
         // Make sure tools are loaded before returning them
         $this->loadTools();
+
         return $this->loadedTools;
     }
 
@@ -128,7 +134,7 @@ class TestLlmAgent extends BaseLlmAgent
     public function run(mixed $input, AgentContext $context): mixed
     {
         // Simple mock response for testing
-        return "Test response for: " . $input;
+        return 'Test response for: '.$input;
     }
 
     // Keep the execute method for backward compatibility

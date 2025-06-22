@@ -2,15 +2,17 @@
 
 namespace Vizra\VizraADK\Providers;
 
-use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
+use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 
 class OllamaEmbeddingProvider implements EmbeddingProviderInterface
 {
     protected string $baseUrl;
+
     protected string $model;
+
     protected array $dimensions;
 
     public function __construct()
@@ -36,23 +38,23 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
             }
 
             try {
-                $response = Http::timeout(120)->post($this->baseUrl . '/api/embeddings', [
+                $response = Http::timeout(120)->post($this->baseUrl.'/api/embeddings', [
                     'model' => $this->model,
                     'prompt' => $text,
                 ]);
 
-                if (!$response->successful()) {
+                if (! $response->successful()) {
                     Log::error('Ollama embedding API error', [
                         'status' => $response->status(),
                         'response' => $response->body(),
                         'url' => $this->baseUrl,
                     ]);
-                    throw new RuntimeException('Ollama embedding API request failed: ' . $response->body());
+                    throw new RuntimeException('Ollama embedding API request failed: '.$response->body());
                 }
 
                 $data = $response->json();
 
-                if (!isset($data['embedding']) || !is_array($data['embedding'])) {
+                if (! isset($data['embedding']) || ! is_array($data['embedding'])) {
                     throw new RuntimeException('Invalid response format from Ollama embedding API');
                 }
 
@@ -65,7 +67,7 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
                     'text_length' => strlen($text),
                     'url' => $this->baseUrl,
                 ]);
-                throw new RuntimeException('Failed to generate Ollama embeddings: ' . $e->getMessage());
+                throw new RuntimeException('Failed to generate Ollama embeddings: '.$e->getMessage());
             }
         }
 
@@ -106,7 +108,8 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
     public function isAvailable(): bool
     {
         try {
-            $response = Http::timeout(5)->get($this->baseUrl . '/api/tags');
+            $response = Http::timeout(5)->get($this->baseUrl.'/api/tags');
+
             return $response->successful();
         } catch (\Exception $e) {
             return false;
@@ -119,15 +122,15 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
     public function isModelAvailable(): bool
     {
         try {
-            $response = Http::timeout(5)->get($this->baseUrl . '/api/tags');
+            $response = Http::timeout(5)->get($this->baseUrl.'/api/tags');
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return false;
             }
 
             $data = $response->json();
 
-            if (!isset($data['models']) || !is_array($data['models'])) {
+            if (! isset($data['models']) || ! is_array($data['models'])) {
                 return false;
             }
 
@@ -144,6 +147,7 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
                 'error' => $e->getMessage(),
                 'model' => $this->model,
             ]);
+
             return false;
         }
     }

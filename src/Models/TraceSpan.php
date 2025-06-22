@@ -2,10 +2,10 @@
 
 namespace Vizra\VizraADK\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * TraceSpan Model
@@ -129,7 +129,7 @@ class TraceSpan extends Model
      */
     public function isCompleted(): bool
     {
-        return !is_null($this->end_time);
+        return ! is_null($this->end_time);
     }
 
     /**
@@ -158,10 +158,10 @@ class TraceSpan extends Model
         }
 
         if ($this->duration_ms < 1000) {
-            return $this->duration_ms . 'ms';
+            return $this->duration_ms.'ms';
         }
 
-        return round($this->duration_ms / 1000, 2) . 's';
+        return round($this->duration_ms / 1000, 2).'s';
     }
 
     /**

@@ -2,10 +2,10 @@
 
 namespace Vizra\VizraADK\Console\Commands;
 
-use Vizra\VizraADK\Services\Tracer;
-use Vizra\VizraADK\Models\TraceSpan;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
+use Vizra\VizraADK\Models\TraceSpan;
+use Vizra\VizraADK\Services\Tracer;
 
 /**
  * Agent Trace Command
@@ -44,8 +44,9 @@ class AgentTraceCommand extends Command
         /** @var Tracer $tracer */
         $tracer = app(Tracer::class);
 
-        if (!$tracer->isEnabled()) {
+        if (! $tracer->isEnabled()) {
             $this->error('Tracing is disabled. Enable it in config/vizra-adk.php');
+
             return self::FAILURE;
         }
 
@@ -60,24 +61,27 @@ class AgentTraceCommand extends Command
 
         if ($spans->isEmpty()) {
             $this->warn('No traces found for the given criteria.');
+
             return self::SUCCESS;
         }
 
         // Filter by errors if requested
         if ($this->option('errors-only')) {
-            $spans = $spans->filter(fn($span) => $span->status === 'error');
+            $spans = $spans->filter(fn ($span) => $span->status === 'error');
             if ($spans->isEmpty()) {
                 $this->info('No error spans found.');
+
                 return self::SUCCESS;
             }
         }
 
         // Convert to TraceSpan models for better handling
         $traceSpans = $spans->map(function ($span) {
-            $model = new TraceSpan();
+            $model = new TraceSpan;
             foreach ((array) $span as $key => $value) {
                 $model->setAttribute($key, $value);
             }
+
             return $model;
         });
 
@@ -134,11 +138,11 @@ class AgentTraceCommand extends Command
 
         $rows = $spans->map(function (TraceSpan $span) {
             $row = [
-                $span->getTypeIcon() . ' ' . $span->type,
+                $span->getTypeIcon().' '.$span->type,
                 $span->name,
-                $span->getStatusIcon() . ' ' . $span->status,
+                $span->getStatusIcon().' '.$span->status,
                 $span->getFormattedDuration(),
-                date('H:i:s.v', (int) $span->start_time)
+                date('H:i:s.v', (int) $span->start_time),
             ];
 
             if ($this->option('show-input')) {
@@ -216,7 +220,7 @@ class AgentTraceCommand extends Command
             'start_time' => $span->start_time,
             'end_time' => $span->end_time,
             'duration_ms' => $span->duration_ms,
-            'children' => []
+            'children' => [],
         ];
 
         $children = $spansByParent->get($span->span_id, collect());
@@ -258,15 +262,15 @@ class AgentTraceCommand extends Command
 
         // Show input/output if requested
         if ($this->option('show-input') && $span->input) {
-            $this->line("{$indent}    <fg=blue>Input:</fg=blue> " . $this->formatData($span->input));
+            $this->line("{$indent}    <fg=blue>Input:</fg=blue> ".$this->formatData($span->input));
         }
 
         if ($this->option('show-output') && $span->output) {
-            $this->line("{$indent}    <fg=cyan>Output:</fg=cyan> " . $this->formatData($span->output));
+            $this->line("{$indent}    <fg=cyan>Output:</fg=cyan> ".$this->formatData($span->output));
         }
 
         if ($this->option('show-metadata') && $span->metadata) {
-            $this->line("{$indent}    <fg=gray>Metadata:</fg=gray> " . $this->formatData($span->metadata));
+            $this->line("{$indent}    <fg=gray>Metadata:</fg=gray> ".$this->formatData($span->metadata));
         }
 
         // Display children
@@ -321,7 +325,7 @@ class AgentTraceCommand extends Command
         }
 
         if (strlen($json) > $maxLength) {
-            return substr($json, 0, $maxLength) . '...';
+            return substr($json, 0, $maxLength).'...';
         }
 
         return $json;
@@ -368,6 +372,7 @@ class AgentTraceCommand extends Command
         }
 
         $seconds = round($durationMs / 1000, 2);
+
         return "{$seconds}s";
     }
 }

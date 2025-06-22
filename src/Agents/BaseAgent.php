@@ -2,8 +2,8 @@
 
 namespace Vizra\VizraADK\Agents;
 
-use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Execution\AgentExecutor;
+use Vizra\VizraADK\System\AgentContext;
 
 /**
  * Abstract Class BaseAgent
@@ -14,19 +14,16 @@ abstract class BaseAgent
     /**
      * The unique name of the agent.
      * Used for registration and identification.
-     * @var string
      */
     protected string $name = '';
 
     /**
      * A brief description of what the agent does.
-     * @var string
      */
     protected string $description = '';
 
     /**
      * Get the name of the agent.
-     * @return string
      */
     public function getName(): string
     {
@@ -35,7 +32,6 @@ abstract class BaseAgent
 
     /**
      * Get the description of the agent.
-     * @return string
      */
     public function getDescription(): string
     {
@@ -45,8 +41,8 @@ abstract class BaseAgent
     /**
      * Execute the agent's primary logic.
      *
-     * @param mixed $input The input for the agent.
-     * @param AgentContext $context The context for this execution.
+     * @param  mixed  $input  The input for the agent.
+     * @param  AgentContext  $context  The context for this execution.
      * @return mixed The result of the agent's execution.
      */
     abstract public function run(mixed $input, AgentContext $context): mixed;
@@ -56,8 +52,7 @@ abstract class BaseAgent
      *
      * Usage: CustomerSupportAgent::ask('Where is my order?')->forUser($user)
      *
-     * @param mixed $input The input for the agent.
-     * @return AgentExecutor
+     * @param  mixed  $input  The input for the agent.
      */
     public static function ask(mixed $input): AgentExecutor
     {
@@ -69,8 +64,7 @@ abstract class BaseAgent
      *
      * Usage: NotificationAgent::trigger($orderCreatedEvent)->forUser($user)
      *
-     * @param mixed $event The event or data to process.
-     * @return AgentExecutor
+     * @param  mixed  $event  The event or data to process.
      */
     public static function trigger(mixed $event): AgentExecutor
     {
@@ -82,8 +76,7 @@ abstract class BaseAgent
      *
      * Usage: FraudDetectionAgent::analyze($paymentData)->withContext($context)
      *
-     * @param mixed $data The data to analyze.
-     * @return AgentExecutor
+     * @param  mixed  $data  The data to analyze.
      */
     public static function analyze(mixed $data): AgentExecutor
     {
@@ -95,8 +88,7 @@ abstract class BaseAgent
      *
      * Usage: DataProcessorAgent::process($largeDataset)->async()
      *
-     * @param mixed $data The data to process.
-     * @return AgentExecutor
+     * @param  mixed  $data  The data to process.
      */
     public static function process(mixed $data): AgentExecutor
     {
@@ -108,8 +100,7 @@ abstract class BaseAgent
      *
      * Usage: SystemMonitorAgent::monitor($metrics)->onQueue('monitoring')
      *
-     * @param mixed $data The data to monitor.
-     * @return AgentExecutor
+     * @param  mixed  $data  The data to monitor.
      */
     public static function monitor(mixed $data): AgentExecutor
     {
@@ -121,8 +112,7 @@ abstract class BaseAgent
      *
      * Usage: ReportAgent::generate('daily_sales')->withContext(['date' => today()])
      *
-     * @param mixed $data The data for report generation.
-     * @return AgentExecutor
+     * @param  mixed  $data  The data for report generation.
      */
     public static function generate(mixed $data): AgentExecutor
     {

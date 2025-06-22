@@ -2,15 +2,16 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Console\Commands;
 
-use Vizra\VizraADK\Console\Commands\MakeAgentCommand;
-use Vizra\VizraADK\Tests\TestCase;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Config;
 use Mockery;
+use Vizra\VizraADK\Console\Commands\MakeAgentCommand;
+use Vizra\VizraADK\Tests\TestCase;
 
 class MakeAgentCommandTest extends TestCase
 {
     protected $filesystem;
+
     protected $command;
 
     protected function setUp(): void
@@ -139,17 +140,17 @@ class MakeAgentCommandTest extends TestCase
     public function test_command_creates_file_with_correct_content()
     {
         // Create a temporary directory for this test
-        $tempDir = sys_get_temp_dir() . '/agent-test-' . uniqid();
+        $tempDir = sys_get_temp_dir().'/agent-test-'.uniqid();
         mkdir($tempDir, 0755, true);
 
         // Mock the app_path to return our temp directory
-        $this->app->bind('path', fn() => $tempDir);
+        $this->app->bind('path', fn () => $tempDir);
 
         $this->artisan('vizra:make:agent', ['name' => 'TestAgent'])
             ->assertExitCode(0);
 
         // Verify the file was created
-        $expectedPath = $tempDir . '/Agents/TestAgent.php';
+        $expectedPath = $tempDir.'/Agents/TestAgent.php';
         $this->assertFileExists($expectedPath);
 
         // Verify the file content
@@ -168,12 +169,12 @@ class MakeAgentCommandTest extends TestCase
     {
         // Create the Agents directory in the actual app path
         $agentsDir = app_path('Agents');
-        if (!is_dir($agentsDir)) {
+        if (! is_dir($agentsDir)) {
             mkdir($agentsDir, 0755, true);
         }
 
         // Create an existing file
-        $existingFile = $agentsDir . '/TestAgent.php';
+        $existingFile = $agentsDir.'/TestAgent.php';
         file_put_contents($existingFile, '<?php // existing file');
 
         $this->artisan('vizra:make:agent', ['name' => 'TestAgent'])
@@ -198,7 +199,7 @@ class MakeAgentCommandTest extends TestCase
         // The command should create the file in app_path following the namespace structure
         // Since it's Custom\MyAgents, it should create app_path/Custom/MyAgents/TestAgent.php
         $customDir = app_path('Custom/MyAgents');
-        if (!is_dir($customDir)) {
+        if (! is_dir($customDir)) {
             mkdir($customDir, 0755, true);
         }
 
@@ -206,7 +207,7 @@ class MakeAgentCommandTest extends TestCase
             ->assertExitCode(0);
 
         // Verify the file was created in the custom namespace path
-        $expectedPath = $customDir . '/TestAgent.php';
+        $expectedPath = $customDir.'/TestAgent.php';
         $this->assertFileExists($expectedPath);
 
         // Verify the content has the custom namespace (as configured, not with App prefix)
@@ -223,11 +224,11 @@ class MakeAgentCommandTest extends TestCase
         if (is_dir($dir)) {
             $objects = scandir($dir);
             foreach ($objects as $object) {
-                if ($object != "." && $object != "..") {
-                    if (is_dir($dir . "/" . $object)) {
-                        $this->removeDirectoryRecursively($dir . "/" . $object);
+                if ($object != '.' && $object != '..') {
+                    if (is_dir($dir.'/'.$object)) {
+                        $this->removeDirectoryRecursively($dir.'/'.$object);
                     } else {
-                        unlink($dir . "/" . $object);
+                        unlink($dir.'/'.$object);
                     }
                 }
             }
@@ -238,17 +239,17 @@ class MakeAgentCommandTest extends TestCase
     public function test_command_with_nested_class_name()
     {
         // Create a temporary directory for this test
-        $tempDir = sys_get_temp_dir() . '/agent-test-' . uniqid();
+        $tempDir = sys_get_temp_dir().'/agent-test-'.uniqid();
         mkdir($tempDir, 0755, true);
 
         // Mock the app_path to return our temp directory
-        $this->app->bind('path', fn() => $tempDir);
+        $this->app->bind('path', fn () => $tempDir);
 
         $this->artisan('vizra:make:agent', ['name' => 'Support/CustomerAgent'])
             ->assertExitCode(0);
 
         // Verify the file was created in the nested directory
-        $expectedPath = $tempDir . '/Agents/Support/CustomerAgent.php';
+        $expectedPath = $tempDir.'/Agents/Support/CustomerAgent.php';
         $this->assertFileExists($expectedPath);
 
         // Verify the content has the nested namespace and correct class

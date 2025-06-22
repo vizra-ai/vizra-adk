@@ -3,7 +3,6 @@
 namespace Vizra\VizraADK\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Route;
 
 class DashboardCommand extends Command
 {

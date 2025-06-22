@@ -2,32 +2,39 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Services;
 
-use Vizra\VizraADK\Services\AgentRegistry;
-use Vizra\VizraADK\Services\AgentBuilder;
+use Illuminate\Support\Facades\App;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Exceptions\AgentNotFoundException;
+use Vizra\VizraADK\Services\AgentBuilder;
+use Vizra\VizraADK\Services\AgentRegistry;
 use Vizra\VizraADK\Tests\TestCase;
-use Illuminate\Support\Facades\App;
 
 // Test agent classes
-class TestRegistryAgent extends BaseLlmAgent {
+class TestRegistryAgent extends BaseLlmAgent
+{
     protected string $name = 'test_registry_agent';
+
     protected string $description = 'Test agent for registry';
 }
 
-class AnotherTestAgent extends BaseLlmAgent {
+class AnotherTestAgent extends BaseLlmAgent
+{
     protected string $name = 'another_test_agent';
+
     protected string $description = 'Another test agent';
 }
 
-class UnregisteredAgent extends BaseLlmAgent {
+class UnregisteredAgent extends BaseLlmAgent
+{
     protected string $name = 'unregistered_agent';
+
     protected string $description = 'This agent is not registered';
 }
 
 class AgentRegistryClassResolutionTest extends TestCase
 {
     protected AgentRegistry $registry;
+
     protected AgentBuilder $builder;
 
     protected function setUp(): void
@@ -78,9 +85,9 @@ class AgentRegistryClassResolutionTest extends TestCase
     {
         // Don't register the agent, let it be resolved by instantiation
         $resolvedName = $this->registry->getAgentNameByClass(UnregisteredAgent::class);
-        
+
         $this->assertEquals('unregistered_agent', $resolvedName);
-        
+
         // Verify it was registered after resolution
         $this->assertTrue($this->registry->hasAgent('unregistered_agent'));
     }

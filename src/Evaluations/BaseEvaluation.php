@@ -2,8 +2,6 @@
 
 namespace Vizra\VizraADK\Evaluations;
 
-use InvalidArgumentException;
-
 abstract class BaseEvaluation
 {
     /**
@@ -37,6 +35,20 @@ abstract class BaseEvaluation
     public string $promptCsvColumn = 'prompt';
 
     /**
+     * Agent configuration for this evaluation.
+     * Can include prompt version, temperature, and other settings.
+     * Example: ['prompt_version' => 'v2', 'temperature' => 0.7]
+     */
+    public array $agentConfig = [];
+
+    /**
+     * Column in the CSV that specifies prompt version (optional).
+     * If set, will override the default prompt version for each row.
+     * Example: 'prompt_version'
+     */
+    public ?string $promptVersionColumn = null;
+
+    /**
      * Stores the results of assertion methods called during an evaluateRow execution.
      */
     protected array $assertionResults = [];
@@ -53,8 +65,8 @@ abstract class BaseEvaluation
      * This method should utilize the assertion methods to check various conditions
      * and then compile these assertion results into a final structured array for the row.
      *
-     * @param array $csvRowData The data from a single row of the CSV file.
-     * @param string $llmResponse The response from the LLM for the prompt generated from $csvRowData.
+     * @param  array  $csvRowData  The data from a single row of the CSV file.
+     * @param  string  $llmResponse  The response from the LLM for the prompt generated from $csvRowData.
      * @return array Structured results/metrics for the row.
      */
     abstract public function evaluateRow(array $csvRowData, string $llmResponse): array;
@@ -86,6 +98,7 @@ abstract class BaseEvaluation
         }
 
         $this->assertionResults[] = $result;
+
         return $result;
     }
 
@@ -94,13 +107,15 @@ abstract class BaseEvaluation
     protected function assertResponseContains(string $actualResponse, string $expectedSubstring, string $message = 'Response should contain substring.'): array
     {
         $status = strpos($actualResponse, $expectedSubstring) !== false;
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $expectedSubstring, $actualResponse);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, $expectedSubstring, $actualResponse);
     }
 
     protected function assertResponseDoesNotContain(string $actualResponse, string $unexpectedSubstring, string $message = 'Response should not contain substring.'): array
     {
         $status = strpos($actualResponse, $unexpectedSubstring) === false;
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $unexpectedSubstring, $actualResponse);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, $unexpectedSubstring, $actualResponse);
     }
 
     protected function assertToolCalled(string $expectedToolName, array $calledTools, string $message = 'Expected tool was not called.'): array
@@ -122,45 +137,52 @@ abstract class BaseEvaluation
                 }
             }
         }
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $expectedToolName, $calledTools);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, $expectedToolName, $calledTools);
     }
 
     protected function assertEquals($expected, $actual, string $message = 'Values should be equal.'): array
     {
         $status = ($expected == $actual); // Using '==' for loose comparison as per original
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $expected, $actual);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, $expected, $actual);
     }
 
     protected function assertTrue(bool $condition, string $message = 'Condition should be true.'): array
     {
         $status = ($condition === true);
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, true, $condition);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, true, $condition);
     }
 
     protected function assertFalse(bool $condition, string $message = 'Condition should be false.'): array
     {
         $status = ($condition === false);
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, false, $condition);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, false, $condition);
     }
 
     protected function assertResponseMatchesRegex(string $actualResponse, string $pattern, string $message = 'Response should match regex pattern.'): array
     {
         $status = preg_match($pattern, $actualResponse) === 1;
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $pattern, $actualResponse);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, $pattern, $actualResponse);
     }
 
     protected function assertResponseIsValidJson(string $actualResponse, string $message = 'Response should be valid JSON.'): array
     {
         json_decode($actualResponse);
         $status = json_last_error() === JSON_ERROR_NONE;
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, 'valid JSON', $actualResponse);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, 'valid JSON', $actualResponse);
     }
 
     protected function assertJsonHasKey(string $actualResponse, string $key, string $message = 'JSON response should contain key.'): array
     {
         $decoded = json_decode($actualResponse, true);
         $status = $decoded !== null && array_key_exists($key, $decoded);
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $key, $actualResponse);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, $key, $actualResponse);
     }
 
     protected function assertResponseIsValidXml(string $actualResponse, string $message = 'Response should be valid XML.'): array
@@ -169,7 +191,8 @@ abstract class BaseEvaluation
         $doc = simplexml_load_string($actualResponse);
         $status = $doc !== false;
         libxml_clear_errors();
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, 'valid XML', $actualResponse);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, 'valid XML', $actualResponse);
     }
 
     protected function assertXmlHasValidTag(string $actualResponse, string $tagName, string $message = 'XML response should contain valid tag.'): array
@@ -183,37 +206,42 @@ abstract class BaseEvaluation
         } else {
             // Check if the tag exists using XPath
             $elements = $doc->xpath("//{$tagName}");
-            $status = !empty($elements);
+            $status = ! empty($elements);
         }
 
         libxml_clear_errors();
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $tagName, $actualResponse);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, $tagName, $actualResponse);
     }
 
     protected function assertResponseLengthBetween(string $actualResponse, int $minLength, int $maxLength, string $message = 'Response length should be within range.'): array
     {
         $length = strlen($actualResponse);
         $status = $length >= $minLength && $length <= $maxLength;
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, "between {$minLength}-{$maxLength} chars", "{$length} chars");
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, "between {$minLength}-{$maxLength} chars", "{$length} chars");
     }
 
     protected function assertWordCountBetween(string $actualResponse, int $minWords, int $maxWords, string $message = 'Word count should be within range.'): array
     {
         $wordCount = str_word_count($actualResponse);
         $status = $wordCount >= $minWords && $wordCount <= $maxWords;
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, "between {$minWords}-{$maxWords} words", "{$wordCount} words");
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, "between {$minWords}-{$maxWords} words", "{$wordCount} words");
     }
 
     protected function assertGreaterThan($expected, $actual, string $message = 'Actual value should be greater than expected.'): array
     {
         $status = $actual > $expected;
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, "> {$expected}", $actual);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, "> {$expected}", $actual);
     }
 
     protected function assertLessThan($expected, $actual, string $message = 'Actual value should be less than expected.'): array
     {
         $status = $actual < $expected;
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, "< {$expected}", $actual);
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, "< {$expected}", $actual);
     }
 
     protected function assertContainsAnyOf(string $actualResponse, array $expectedSubstrings, string $message = 'Response should contain at least one of the expected substrings.'): array
@@ -227,7 +255,8 @@ abstract class BaseEvaluation
                 break;
             }
         }
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $expectedSubstrings, $foundSubstring ?? 'none found');
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, $expectedSubstrings, $foundSubstring ?? 'none found');
     }
 
     protected function assertContainsAllOf(string $actualResponse, array $expectedSubstrings, string $message = 'Response should contain all expected substrings.'): array
@@ -239,19 +268,22 @@ abstract class BaseEvaluation
             }
         }
         $status = empty($missingSubstrings);
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $expectedSubstrings, $missingSubstrings ?: 'all found');
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, $expectedSubstrings, $missingSubstrings ?: 'all found');
     }
 
     protected function assertResponseStartsWith(string $actualResponse, string $expectedPrefix, string $message = 'Response should start with expected prefix.'): array
     {
         $status = strpos($actualResponse, $expectedPrefix) === 0;
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $expectedPrefix, substr($actualResponse, 0, strlen($expectedPrefix)));
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, $expectedPrefix, substr($actualResponse, 0, strlen($expectedPrefix)));
     }
 
     protected function assertResponseEndsWith(string $actualResponse, string $expectedSuffix, string $message = 'Response should end with expected suffix.'): array
     {
         $status = substr($actualResponse, -strlen($expectedSuffix)) === $expectedSuffix;
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, $expectedSuffix, substr($actualResponse, -strlen($expectedSuffix)));
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, $expectedSuffix, substr($actualResponse, -strlen($expectedSuffix)));
     }
 
     protected function assertResponseHasPositiveSentiment(string $actualResponse, string $message = 'Response should have positive sentiment.'): array
@@ -271,13 +303,15 @@ abstract class BaseEvaluation
         }
 
         $status = $positiveCount > $negativeCount;
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, 'positive sentiment', "positive: {$positiveCount}, negative: {$negativeCount}");
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, 'positive sentiment', "positive: {$positiveCount}, negative: {$negativeCount}");
     }
 
     protected function assertResponseIsNotEmpty(string $actualResponse, string $message = 'Response should not be empty.'): array
     {
-        $status = !empty(trim($actualResponse));
-        return $this->recordAssertion(static::class . '::' . __FUNCTION__, $status, $message, 'non-empty response', $actualResponse ?: 'empty');
+        $status = ! empty(trim($actualResponse));
+
+        return $this->recordAssertion(static::class.'::'.__FUNCTION__, $status, $message, 'non-empty response', $actualResponse ?: 'empty');
     }
 
     // --- Safety & Content Assertions ---
@@ -305,7 +339,7 @@ abstract class BaseEvaluation
 
             // Self-harm indicators
             'cutting', 'self-harm', 'hurt myself', 'end it all', 'worthless',
-            'hopeless', 'give up', 'no point'
+            'hopeless', 'give up', 'no point',
         ];
 
         // Merge default words with additional user-provided words
@@ -321,12 +355,13 @@ abstract class BaseEvaluation
         }
 
         $status = empty($foundToxicWords);
+
         return $this->recordAssertion(
-            static::class . '::' . __FUNCTION__,
+            static::class.'::'.__FUNCTION__,
             $status,
             $message,
             'no toxic content',
-            $foundToxicWords ? 'found: ' . implode(', ', $foundToxicWords) : 'clean'
+            $foundToxicWords ? 'found: '.implode(', ', $foundToxicWords) : 'clean'
         );
     }
 
@@ -337,7 +372,7 @@ abstract class BaseEvaluation
             'ssn' => '/\b\d{3}-?\d{2}-?\d{4}\b/',
             'phone' => '/\b(\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}\b/',
             'credit_card' => '/\b(?:\d{4}[-\s]?){3}\d{4}\b/',
-            'ip_address' => '/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/'
+            'ip_address' => '/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/',
         ];
 
         $foundPII = [];
@@ -349,12 +384,13 @@ abstract class BaseEvaluation
         }
 
         $status = empty($foundPII);
+
         return $this->recordAssertion(
-            static::class . '::' . __FUNCTION__,
+            static::class.'::'.__FUNCTION__,
             $status,
             $message,
             'no PII',
-            $foundPII ? 'found: ' . implode(', ', $foundPII) : 'clean'
+            $foundPII ? 'found: '.implode(', ', $foundPII) : 'clean'
         );
     }
 
@@ -384,12 +420,13 @@ abstract class BaseEvaluation
         }
 
         $status = empty($grammarIssues);
+
         return $this->recordAssertion(
-            static::class . '::' . __FUNCTION__,
+            static::class.'::'.__FUNCTION__,
             $status,
             $message,
             'correct grammar',
-            $grammarIssues ? 'issues: ' . implode(', ', $grammarIssues) : 'good grammar'
+            $grammarIssues ? 'issues: '.implode(', ', $grammarIssues) : 'good grammar'
         );
     }
 
@@ -399,7 +436,7 @@ abstract class BaseEvaluation
         $status = $score <= $maxGradeLevel;
 
         return $this->recordAssertion(
-            static::class . '::' . __FUNCTION__,
+            static::class.'::'.__FUNCTION__,
             $status,
             $message,
             "<= grade {$maxGradeLevel}",
@@ -413,7 +450,7 @@ abstract class BaseEvaluation
         $status = $repetitionRatio <= $maxRepetitionRatio;
 
         return $this->recordAssertion(
-            static::class . '::' . __FUNCTION__,
+            static::class.'::'.__FUNCTION__,
             $status,
             $message,
             "<= {$maxRepetitionRatio} repetition ratio",
@@ -426,7 +463,7 @@ abstract class BaseEvaluation
         $status = $actualTime <= $maxTime;
 
         return $this->recordAssertion(
-            static::class . '::' . __FUNCTION__,
+            static::class.'::'.__FUNCTION__,
             $status,
             $message,
             "<= {$maxTime}s",
@@ -458,17 +495,18 @@ abstract class BaseEvaluation
         $americanisms = [];
         foreach ($americanPatterns as $pattern => $description) {
             if (preg_match_all($pattern, $actualResponse, $matches)) {
-                $americanisms[] = $description . ': ' . implode(', ', array_unique($matches[0]));
+                $americanisms[] = $description.': '.implode(', ', array_unique($matches[0]));
             }
         }
 
         $status = empty($americanisms);
+
         return $this->recordAssertion(
-            static::class . '::' . __FUNCTION__,
+            static::class.'::'.__FUNCTION__,
             $status,
             $message,
             'British spelling only',
-            $americanisms ? 'Found Americanisms: ' . implode('; ', $americanisms) : 'British spelling'
+            $americanisms ? 'Found Americanisms: '.implode('; ', $americanisms) : 'British spelling'
         );
     }
 
@@ -496,17 +534,18 @@ abstract class BaseEvaluation
         $briticisms = [];
         foreach ($britishPatterns as $pattern => $description) {
             if (preg_match_all($pattern, $actualResponse, $matches)) {
-                $briticisms[] = $description . ': ' . implode(', ', array_unique($matches[0]));
+                $briticisms[] = $description.': '.implode(', ', array_unique($matches[0]));
             }
         }
 
         $status = empty($briticisms);
+
         return $this->recordAssertion(
-            static::class . '::' . __FUNCTION__,
+            static::class.'::'.__FUNCTION__,
             $status,
             $message,
             'American spelling only',
-            $briticisms ? 'Found Briticisms: ' . implode('; ', $briticisms) : 'American spelling'
+            $briticisms ? 'Found Briticisms: '.implode('; ', $briticisms) : 'American spelling'
         );
     }
 
@@ -590,18 +629,18 @@ abstract class BaseEvaluation
             $status = $judgment['outcome'] === $expectedOutcome;
 
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__,
+                static::class.'::'.__FUNCTION__,
                 $status,
-                $message . " Judge reasoning: " . $judgment['reasoning'],
+                $message.' Judge reasoning: '.$judgment['reasoning'],
                 $expectedOutcome,
                 $judgment['outcome']
             );
 
         } catch (\Exception $e) {
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__,
+                static::class.'::'.__FUNCTION__,
                 false,
-                "LLM judge failed: " . $e->getMessage(),
+                'LLM judge failed: '.$e->getMessage(),
                 $expectedOutcome,
                 'error'
             );
@@ -631,18 +670,18 @@ abstract class BaseEvaluation
             $status = $score >= $minScore;
 
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__,
+                static::class.'::'.__FUNCTION__,
                 $status,
-                $message . " Score: {$score}/{$minScore}",
+                $message." Score: {$score}/{$minScore}",
                 ">= {$minScore}",
                 $score
             );
 
         } catch (\Exception $e) {
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__,
+                static::class.'::'.__FUNCTION__,
                 false,
-                "LLM quality judge failed: " . $e->getMessage(),
+                'LLM quality judge failed: '.$e->getMessage(),
                 ">= {$minScore}",
                 'error'
             );
@@ -673,18 +712,18 @@ abstract class BaseEvaluation
             $status = $comparison['winner'] === $expectedWinner;
 
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__,
+                static::class.'::'.__FUNCTION__,
                 $status,
-                $message . " Judge reasoning: " . $comparison['reasoning'],
+                $message.' Judge reasoning: '.$comparison['reasoning'],
                 $expectedWinner,
                 $comparison['winner']
             );
 
         } catch (\Exception $e) {
             return $this->recordAssertion(
-                static::class . '::' . __FUNCTION__,
+                static::class.'::'.__FUNCTION__,
                 false,
-                "LLM comparison judge failed: " . $e->getMessage(),
+                'LLM comparison judge failed: '.$e->getMessage(),
                 $expectedWinner,
                 'error'
             );
@@ -778,7 +817,7 @@ Be objective and thorough in your comparison.";
                 return [
                     'outcome' => strtolower($json['outcome']),
                     'reasoning' => $json['reasoning'] ?? 'No reasoning provided',
-                    'confidence' => $json['confidence'] ?? 'Unknown'
+                    'confidence' => $json['confidence'] ?? 'Unknown',
                 ];
             }
         }
@@ -826,7 +865,7 @@ Be objective and thorough in your comparison.";
                     'winner' => strtolower($json['winner']),
                     'reasoning' => $json['reasoning'] ?? 'No reasoning provided',
                     'strengths_actual' => $json['strengths_actual'] ?? [],
-                    'strengths_reference' => $json['strengths_reference'] ?? []
+                    'strengths_reference' => $json['strengths_reference'] ?? [],
                 ];
             }
         }

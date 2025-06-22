@@ -1,24 +1,22 @@
 <?php
 
-use Vizra\VizraADK\Tools\MemoryTool;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Models\AgentMemory;
-use Vizra\VizraADK\Models\AgentSession;
-use Vizra\VizraADK\Models\AgentMessage;
-use Vizra\VizraADK\Services\MemoryManager;
-use Vizra\VizraADK\Memory\AgentMemory as AgentMemoryClass;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Vizra\VizraADK\Memory\AgentMemory as AgentMemoryClass;
+use Vizra\VizraADK\Models\AgentMemory;
+use Vizra\VizraADK\Services\MemoryManager;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Tools\MemoryTool;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Run migrations for testing
-    $this->loadMigrationsFrom(__DIR__ . '/../../../database/migrations');
+    $this->loadMigrationsFrom(__DIR__.'/../../../database/migrations');
 
-    $this->memoryManager = new MemoryManager();
+    $this->memoryManager = new MemoryManager;
     $this->memoryTool = new MemoryTool($this->memoryManager);
-    
+
     // Create a mock agent for AgentMemory
     $this->mockAgent = Mockery::mock(\Vizra\VizraADK\Agents\BaseLlmAgent::class);
     $this->mockAgent->shouldReceive('getName')->andReturn('test-agent');
@@ -29,10 +27,12 @@ afterEach(function () {
 });
 
 // Helper function to create context with agent name
-function createContextWithAgent(string $agentName, string $input = 'test input'): AgentContext {
+function createContextWithAgent(string $agentName, string $input = 'test input'): AgentContext
+{
     $sessionId = (string) Str::uuid();
     $context = new AgentContext($sessionId, $input);
     $context->setState('agent_name', $agentName);
+
     return $context;
 }
 
@@ -69,7 +69,7 @@ it('can add learning via tool', function () {
 
     $arguments = [
         'action' => 'add_learning',
-        'content' => 'Users prefer detailed explanations'
+        'content' => 'Users prefer detailed explanations',
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);
@@ -91,7 +91,7 @@ it('can add fact via tool', function () {
     $arguments = [
         'action' => 'add_fact',
         'key' => 'user_preference',
-        'value' => 'concise responses'
+        'value' => 'concise responses',
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);
@@ -120,7 +120,7 @@ it('can get memory context via tool', function () {
     $context = createContextWithAgent($agentName);
 
     $arguments = [
-        'action' => 'get_context'
+        'action' => 'get_context',
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);
@@ -142,7 +142,7 @@ it('can get conversation history via tool', function () {
     $context->addMessage(['role' => 'assistant', 'content' => 'I can help you with that']);
 
     $arguments = [
-        'action' => 'get_history'
+        'action' => 'get_history',
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);
@@ -162,13 +162,13 @@ it('can get limited conversation history via tool', function () {
     for ($i = 1; $i <= 10; $i++) {
         $context->addMessage([
             'role' => $i % 2 === 1 ? 'user' : 'assistant',
-            'content' => "Message number $i"
+            'content' => "Message number $i",
         ]);
     }
 
     $arguments = [
         'action' => 'get_history',
-        'limit' => 3
+        'limit' => 3,
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);
@@ -201,7 +201,7 @@ it('handles invalid action gracefully', function () {
     $context = createContextWithAgent($agentName);
 
     $arguments = [
-        'action' => 'invalid_action'
+        'action' => 'invalid_action',
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);
@@ -216,7 +216,7 @@ it('handles add_learning with missing learning parameter', function () {
     $context = createContextWithAgent($agentName);
 
     $arguments = [
-        'action' => 'add_learning'
+        'action' => 'add_learning',
         // Missing 'content' parameter
     ];
 
@@ -234,7 +234,7 @@ it('handles add_fact with missing parameters', function () {
     // Missing 'key' parameter
     $arguments = [
         'action' => 'add_fact',
-        'value' => 'some value'
+        'value' => 'some value',
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);
@@ -246,7 +246,7 @@ it('handles add_fact with missing parameters', function () {
     // Missing 'value' parameter
     $arguments = [
         'action' => 'add_fact',
-        'key' => 'some_key'
+        'key' => 'some_key',
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);
@@ -261,7 +261,7 @@ it('handles empty memory context gracefully', function () {
     $context = createContextWithAgent($agentName);
 
     $arguments = [
-        'action' => 'get_context'
+        'action' => 'get_context',
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);
@@ -279,7 +279,7 @@ it('handles empty conversation history gracefully', function () {
     $context = createContextWithAgent($agentName);
 
     $arguments = [
-        'action' => 'get_history'
+        'action' => 'get_history',
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);
@@ -297,7 +297,7 @@ it('can handle different data types for fact values', function () {
     $arguments = [
         'action' => 'add_fact',
         'key' => 'string_fact',
-        'value' => 'string value'
+        'value' => 'string value',
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);
@@ -308,7 +308,7 @@ it('can handle different data types for fact values', function () {
     $arguments = [
         'action' => 'add_fact',
         'key' => 'numeric_fact',
-        'value' => '42'
+        'value' => '42',
     ];
 
     $memory = new AgentMemoryClass($this->mockAgent);

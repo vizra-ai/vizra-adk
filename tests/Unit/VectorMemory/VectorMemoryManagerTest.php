@@ -2,21 +2,23 @@
 
 namespace Vizra\VizraADK\Tests\Unit\VectorMemory;
 
-use Vizra\VizraADK\Tests\TestCase;
-use Vizra\VizraADK\Services\VectorMemoryManager;
-use Vizra\VizraADK\Services\DocumentChunker;
-use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
-use Vizra\VizraADK\Models\VectorMemory;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Collection;
 use Mockery;
+use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Models\VectorMemory;
+use Vizra\VizraADK\Services\DocumentChunker;
+use Vizra\VizraADK\Services\VectorMemoryManager;
+use Vizra\VizraADK\Tests\TestCase;
 
 class VectorMemoryManagerTest extends TestCase
 {
     use DatabaseTransactions;
 
     protected VectorMemoryManager $vectorMemoryManager;
+
     protected $mockEmbeddingProvider;
+
     protected $mockChunker;
 
     protected function setUp(): void
@@ -157,7 +159,7 @@ class VectorMemoryManagerTest extends TestCase
             'embedding_dimensions' => 384,
             'embedding_vector' => array_fill(0, 384, 0.4), // Similar to query
             'embedding_norm' => 1.0,
-            'content_hash' => hash('sha256', $agentName . ':Similar content one'),
+            'content_hash' => hash('sha256', $agentName.':Similar content one'),
             'token_count' => 10,
         ]);
 
@@ -170,7 +172,7 @@ class VectorMemoryManagerTest extends TestCase
             'embedding_dimensions' => 384,
             'embedding_vector' => array_fill(0, 384, 0.1), // Less similar to query
             'embedding_norm' => 1.0,
-            'content_hash' => hash('sha256', $agentName . ':Different content'),
+            'content_hash' => hash('sha256', $agentName.':Different content'),
             'token_count' => 8,
         ]);
 
@@ -218,7 +220,7 @@ class VectorMemoryManagerTest extends TestCase
             'embedding_dimensions' => 384,
             'embedding_vector' => array_fill(0, 384, 0.6),
             'embedding_norm' => 1.0,
-            'content_hash' => hash('sha256', $agentName . ':Paris is the capital'),
+            'content_hash' => hash('sha256', $agentName.':Paris is the capital'),
             'token_count' => 10,
         ]);
 
@@ -261,7 +263,7 @@ class VectorMemoryManagerTest extends TestCase
             'embedding_model' => 'mock-model',
             'embedding_dimensions' => 384,
             'embedding_vector' => [],
-            'content_hash' => hash('sha256', $agentName . ':Content to delete'),
+            'content_hash' => hash('sha256', $agentName.':Content to delete'),
             'token_count' => 5,
         ]);
 
@@ -273,7 +275,7 @@ class VectorMemoryManagerTest extends TestCase
             'embedding_model' => 'mock-model',
             'embedding_dimensions' => 384,
             'embedding_vector' => [],
-            'content_hash' => hash('sha256', $agentName . ':Content to keep'),
+            'content_hash' => hash('sha256', $agentName.':Content to keep'),
             'token_count' => 5,
         ]);
 
@@ -308,7 +310,7 @@ class VectorMemoryManagerTest extends TestCase
             'embedding_model' => 'mock-model',
             'embedding_dimensions' => 384,
             'embedding_vector' => [],
-            'content_hash' => hash('sha256', $agentName . ':Content from document'),
+            'content_hash' => hash('sha256', $agentName.':Content from document'),
             'token_count' => 5,
         ]);
 
@@ -321,7 +323,7 @@ class VectorMemoryManagerTest extends TestCase
             'embedding_model' => 'mock-model',
             'embedding_dimensions' => 384,
             'embedding_vector' => [],
-            'content_hash' => hash('sha256', $agentName . ':Content from other document'),
+            'content_hash' => hash('sha256', $agentName.':Content from other document'),
             'token_count' => 5,
         ]);
 
@@ -355,7 +357,7 @@ class VectorMemoryManagerTest extends TestCase
             'embedding_model' => 'text-embedding-3-small',
             'embedding_dimensions' => 1536,
             'embedding_vector' => [],
-            'content_hash' => hash('sha256', $agentName . ':First memory'),
+            'content_hash' => hash('sha256', $agentName.':First memory'),
             'token_count' => 10,
         ]);
 
@@ -368,7 +370,7 @@ class VectorMemoryManagerTest extends TestCase
             'embedding_model' => 'embed-english-v3.0',
             'embedding_dimensions' => 1024,
             'embedding_vector' => [],
-            'content_hash' => hash('sha256', $agentName . ':Second memory'),
+            'content_hash' => hash('sha256', $agentName.':Second memory'),
             'token_count' => 15,
         ]);
 

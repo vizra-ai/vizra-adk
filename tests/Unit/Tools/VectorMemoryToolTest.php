@@ -2,20 +2,22 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Tools;
 
-use Vizra\VizraADK\Tests\TestCase;
-use Vizra\VizraADK\Tools\VectorMemoryTool;
-use Vizra\VizraADK\Services\VectorMemoryManager;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Memory\AgentMemory;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Mockery;
+use Vizra\VizraADK\Memory\AgentMemory;
+use Vizra\VizraADK\Services\VectorMemoryManager;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Tools\VectorMemoryTool;
 
 class VectorMemoryToolTest extends TestCase
 {
     protected VectorMemoryTool $tool;
+
     protected $mockVectorMemory;
+
     protected $mockContext;
+
     protected $mockMemory;
 
     protected function setUp(): void
@@ -76,7 +78,7 @@ class VectorMemoryToolTest extends TestCase
 
         $result = $this->tool->execute([
             'action' => 'store',
-            'content' => 'Test content'
+            'content' => 'Test content',
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -91,8 +93,8 @@ class VectorMemoryToolTest extends TestCase
         $this->mockContext->shouldReceive('getSessionId')->andReturn('session-123');
 
         $mockMemories = collect([
-            (object)['id' => 'chunk-1', 'content' => 'Chunk 1'],
-            (object)['id' => 'chunk-2', 'content' => 'Chunk 2'],
+            (object) ['id' => 'chunk-1', 'content' => 'Chunk 1'],
+            (object) ['id' => 'chunk-2', 'content' => 'Chunk 2'],
         ]);
 
         $this->mockVectorMemory->shouldReceive('addDocument')
@@ -117,7 +119,7 @@ class VectorMemoryToolTest extends TestCase
             'namespace' => 'default',
             'source' => 'test-doc.txt',
             'source_id' => 'doc-123',
-            'metadata' => ['type' => 'test']
+            'metadata' => ['type' => 'test'],
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -136,7 +138,7 @@ class VectorMemoryToolTest extends TestCase
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $result = $this->tool->execute([
-            'action' => 'store'
+            'action' => 'store',
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -149,7 +151,7 @@ class VectorMemoryToolTest extends TestCase
     {
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
-        $result1 = new \stdClass();
+        $result1 = new \stdClass;
         $result1->id = 'result-1';
         $result1->content = 'First result content';
         $result1->similarity = 0.95;
@@ -158,7 +160,7 @@ class VectorMemoryToolTest extends TestCase
         $result1->source_id = 'doc-1';
         $result1->created_at = now();
 
-        $result2 = new \stdClass();
+        $result2 = new \stdClass;
         $result2->id = 'result-2';
         $result2->content = 'Second result content';
         $result2->similarity = 0.87;
@@ -180,7 +182,7 @@ class VectorMemoryToolTest extends TestCase
             'namespace' => 'default',
             'limit' => 5,
             'threshold' => 0.7,
-            'generate_rag_context' => false
+            'generate_rag_context' => false,
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -221,7 +223,7 @@ class VectorMemoryToolTest extends TestCase
             'namespace' => 'default',
             'limit' => 3,
             'threshold' => 0.8,
-            'generate_rag_context' => true
+            'generate_rag_context' => true,
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -241,7 +243,7 @@ class VectorMemoryToolTest extends TestCase
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $result = $this->tool->execute([
-            'action' => 'search'
+            'action' => 'search',
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -262,7 +264,7 @@ class VectorMemoryToolTest extends TestCase
         $result = $this->tool->execute([
             'action' => 'delete',
             'namespace' => 'default',
-            'source' => 'test-doc.txt'
+            'source' => 'test-doc.txt',
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -286,7 +288,7 @@ class VectorMemoryToolTest extends TestCase
 
         $result = $this->tool->execute([
             'action' => 'delete',
-            'namespace' => 'default'
+            'namespace' => 'default',
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -318,7 +320,7 @@ class VectorMemoryToolTest extends TestCase
 
         $result = $this->tool->execute([
             'action' => 'stats',
-            'namespace' => 'default'
+            'namespace' => 'default',
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -340,7 +342,7 @@ class VectorMemoryToolTest extends TestCase
             ->andReturn([]);
 
         $result = $this->tool->execute([
-            'action' => 'stats'
+            'action' => 'stats',
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -359,7 +361,7 @@ class VectorMemoryToolTest extends TestCase
             ->andReturn([]);
 
         $result = $this->tool->execute([
-            'action' => 'stats'
+            'action' => 'stats',
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -372,7 +374,7 @@ class VectorMemoryToolTest extends TestCase
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
         $this->mockContext->shouldReceive('getSessionId')->andReturn(null);
 
-        $mockMemories = collect([(object)['id' => 'chunk-1']]);
+        $mockMemories = collect([(object) ['id' => 'chunk-1']]);
 
         $this->mockVectorMemory->shouldReceive('addDocument')
             ->once()
@@ -381,7 +383,7 @@ class VectorMemoryToolTest extends TestCase
                 'Simple content',
                 Mockery::on(function ($metadata) {
                     return $metadata['stored_by_agent'] === 'TestAgent' &&
-                           !isset($metadata['session_id']);
+                           ! isset($metadata['session_id']);
                 }),
                 'default',
                 null,
@@ -391,7 +393,7 @@ class VectorMemoryToolTest extends TestCase
 
         $result = $this->tool->execute([
             'action' => 'store',
-            'content' => 'Simple content'
+            'content' => 'Simple content',
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);
@@ -412,7 +414,7 @@ class VectorMemoryToolTest extends TestCase
 
         $result = $this->tool->execute([
             'action' => 'search',
-            'query' => 'simple query'
+            'query' => 'simple query',
         ], $this->mockContext, $this->mockMemory);
 
         $response = json_decode($result, true);

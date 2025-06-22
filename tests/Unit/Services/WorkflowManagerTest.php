@@ -2,33 +2,37 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Services;
 
-use Vizra\VizraADK\Services\WorkflowManager;
-use Vizra\VizraADK\Agents\SequentialWorkflow;
-use Vizra\VizraADK\Agents\ParallelWorkflow;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Agents\ConditionalWorkflow;
 use Vizra\VizraADK\Agents\LoopWorkflow;
-use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Agents\ParallelWorkflow;
+use Vizra\VizraADK\Agents\SequentialWorkflow;
+use Vizra\VizraADK\Services\WorkflowManager;
 use Vizra\VizraADK\Tests\TestCase;
 
 // Mock agent classes for testing
-class FirstAgent extends BaseLlmAgent {
+class FirstAgent extends BaseLlmAgent
+{
     protected string $name = 'first_agent';
 }
 
-class SecondAgent extends BaseLlmAgent {
+class SecondAgent extends BaseLlmAgent
+{
     protected string $name = 'second_agent';
 }
 
-class ThirdAgent extends BaseLlmAgent {
+class ThirdAgent extends BaseLlmAgent
+{
     protected string $name = 'third_agent';
 }
 
-class TestAgent extends BaseLlmAgent {
+class TestAgent extends BaseLlmAgent
+{
     protected string $name = 'test_agent';
 }
 
-class DefaultAgent extends BaseLlmAgent {
+class DefaultAgent extends BaseLlmAgent
+{
     protected string $name = 'default_agent';
 }
 
@@ -39,7 +43,7 @@ class WorkflowManagerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->manager = new WorkflowManager();
+        $this->manager = new WorkflowManager;
     }
 
     public function test_creates_sequential_workflow()
@@ -86,7 +90,7 @@ class WorkflowManagerTest extends TestCase
 
     public function test_creates_while_loop()
     {
-        $condition = fn($input) => $input['counter'] < 5;
+        $condition = fn ($input) => $input['counter'] < 5;
         $workflow = $this->manager->while(TestAgent::class, $condition);
 
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
@@ -94,7 +98,7 @@ class WorkflowManagerTest extends TestCase
 
     public function test_creates_until_loop()
     {
-        $condition = fn($input) => $input['counter'] >= 5;
+        $condition = fn ($input) => $input['counter'] >= 5;
         $workflow = $this->manager->until(TestAgent::class, $condition);
 
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
@@ -121,8 +125,8 @@ class WorkflowManagerTest extends TestCase
             'steps' => [
                 ['agent' => FirstAgent::class, 'params' => ['param1' => 'value1']],
                 ['agent' => SecondAgent::class, 'params' => ['param2' => 'value2']],
-                ['agent' => ThirdAgent::class]
-            ]
+                ['agent' => ThirdAgent::class],
+            ],
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -136,9 +140,9 @@ class WorkflowManagerTest extends TestCase
             'agents' => [
                 ['name' => FirstAgent::class, 'params' => ['param1' => 'value1']],
                 ['name' => SecondAgent::class, 'params' => ['param2' => 'value2']],
-                ThirdAgent::class
+                ThirdAgent::class,
             ],
-            'wait_for_all' => true
+            'wait_for_all' => true,
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -151,7 +155,7 @@ class WorkflowManagerTest extends TestCase
             'type' => 'parallel',
             'agents' => [FirstAgent::class, SecondAgent::class, ThirdAgent::class],
             'wait_for_all' => false,
-            'wait_for_count' => 2
+            'wait_for_count' => 2,
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -166,17 +170,17 @@ class WorkflowManagerTest extends TestCase
                 [
                     'condition' => 'some_condition',
                     'agent' => FirstAgent::class,
-                    'params' => ['param1' => 'value1']
+                    'params' => ['param1' => 'value1'],
                 ],
                 [
                     'condition' => 'another_condition',
-                    'agent' => SecondAgent::class
-                ]
+                    'agent' => SecondAgent::class,
+                ],
             ],
             'default' => [
                 'agent' => DefaultAgent::class,
-                'params' => ['default' => true]
-            ]
+                'params' => ['default' => true],
+            ],
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -190,7 +194,7 @@ class WorkflowManagerTest extends TestCase
             'agent' => TestAgent::class,
             'loop_type' => 'while',
             'condition' => 'some_condition',
-            'max_iterations' => 10
+            'max_iterations' => 10,
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -203,7 +207,7 @@ class WorkflowManagerTest extends TestCase
             'type' => 'loop',
             'agent' => TestAgent::class,
             'loop_type' => 'until',
-            'condition' => 'some_condition'
+            'condition' => 'some_condition',
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -216,7 +220,7 @@ class WorkflowManagerTest extends TestCase
             'type' => 'loop',
             'agent' => TestAgent::class,
             'loop_type' => 'times',
-            'times' => 5
+            'times' => 5,
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -229,7 +233,7 @@ class WorkflowManagerTest extends TestCase
             'type' => 'loop',
             'agent' => TestAgent::class,
             'loop_type' => 'forEach',
-            'collection' => ['a', 'b', 'c']
+            'collection' => ['a', 'b', 'c'],
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -240,7 +244,7 @@ class WorkflowManagerTest extends TestCase
     {
         $definition = [
             'type' => 'unknown_type',
-            'agent' => 'TestAgent'
+            'agent' => 'TestAgent',
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -254,8 +258,8 @@ class WorkflowManagerTest extends TestCase
         $definition = [
             'steps' => [
                 ['agent' => FirstAgent::class],
-                ['agent' => SecondAgent::class]
-            ]
+                ['agent' => SecondAgent::class],
+            ],
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -267,7 +271,7 @@ class WorkflowManagerTest extends TestCase
         $definitions = [
             ['type' => 'sequential'],
             ['type' => 'parallel'],
-            ['type' => 'conditional']
+            ['type' => 'conditional'],
         ];
 
         foreach ($definitions as $definition) {
@@ -281,7 +285,7 @@ class WorkflowManagerTest extends TestCase
         $definition = [
             'type' => 'loop',
             'agent' => TestAgent::class,
-            'condition' => 'some_condition'
+            'condition' => 'some_condition',
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -292,7 +296,7 @@ class WorkflowManagerTest extends TestCase
     {
         $definition = [
             'type' => 'parallel',
-            'agents' => []
+            'agents' => [],
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -303,7 +307,7 @@ class WorkflowManagerTest extends TestCase
     {
         $definition = [
             'type' => 'conditional',
-            'conditions' => []
+            'conditions' => [],
         ];
 
         $workflow = $this->manager->fromArray($definition);
@@ -314,7 +318,7 @@ class WorkflowManagerTest extends TestCase
     {
         $definition = [
             'type' => 'sequential',
-            'steps' => []
+            'steps' => [],
         ];
 
         $workflow = $this->manager->fromArray($definition);

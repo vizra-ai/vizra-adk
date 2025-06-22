@@ -2,10 +2,10 @@
 
 namespace Vizra\VizraADK\Tests\Unit\VectorMemory\Providers;
 
-use Vizra\VizraADK\Tests\TestCase;
-use Vizra\VizraADK\Providers\CohereEmbeddingProvider;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use Vizra\VizraADK\Providers\CohereEmbeddingProvider;
+use Vizra\VizraADK\Tests\TestCase;
 
 class CohereEmbeddingProviderTest extends TestCase
 {
@@ -18,7 +18,7 @@ class CohereEmbeddingProviderTest extends TestCase
         Config::set('services.cohere.key', 'test-cohere-key');
         Config::set('vizra-adk.vector_memory.embedding_models.cohere', 'embed-english-v3.0');
 
-        $this->provider = new CohereEmbeddingProvider();
+        $this->provider = new CohereEmbeddingProvider;
     }
 
     public function test_can_embed_single_text()
@@ -30,12 +30,12 @@ class CohereEmbeddingProviderTest extends TestCase
         Http::fake([
             'api.cohere.ai/v1/embed' => Http::response([
                 'embeddings' => [
-                    'float' => [$mockEmbedding]
+                    'float' => [$mockEmbedding],
                 ],
                 'meta' => [
-                    'billed_units' => ['input_tokens' => 4]
-                ]
-            ], 200)
+                    'billed_units' => ['input_tokens' => 4],
+                ],
+            ], 200),
         ]);
 
         // Act
@@ -62,18 +62,18 @@ class CohereEmbeddingProviderTest extends TestCase
         $texts = ['First text', 'Second text'];
         $mockEmbeddings = [
             array_fill(0, 1024, 0.1),
-            array_fill(0, 1024, 0.2)
+            array_fill(0, 1024, 0.2),
         ];
 
         Http::fake([
             'api.cohere.ai/v1/embed' => Http::response([
                 'embeddings' => [
-                    'float' => $mockEmbeddings
+                    'float' => $mockEmbeddings,
                 ],
                 'meta' => [
-                    'billed_units' => ['input_tokens' => 6]
-                ]
-            ], 200)
+                    'billed_units' => ['input_tokens' => 6],
+                ],
+            ], 200),
         ]);
 
         // Act
@@ -94,7 +94,7 @@ class CohereEmbeddingProviderTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Cohere API key is required');
 
-        new CohereEmbeddingProvider();
+        new CohereEmbeddingProvider;
     }
 
     public function test_get_dimensions_returns_correct_value()

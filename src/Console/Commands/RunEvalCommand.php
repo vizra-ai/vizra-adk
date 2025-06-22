@@ -2,20 +2,21 @@
 
 namespace Vizra\VizraADK\Console\Commands; // Updated namespace
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str; // Added for UUID
-use Vizra\VizraADK\Evaluations\BaseEvaluation; // Updated namespace
-use Vizra\VizraADK\Facades\Agent; // Added Agent Facade
 use Exception;
-use InvalidArgumentException;
-use League\Csv\Writer;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File; // Added for UUID
+use Illuminate\Support\Str; // Updated namespace
+use InvalidArgumentException; // Added Agent Facade
 use League\Csv\CannotInsertRecord;
+use League\Csv\Writer;
+use Vizra\VizraADK\Evaluations\BaseEvaluation;
+use Vizra\VizraADK\Facades\Agent;
 
 class RunEvalCommand extends Command
 {
     protected $signature = 'vizra:run:eval {name : The class name of the evaluation (e.g., MyTestEvaluation)}
                                      {--output= : Path to the CSV file to save results (e.g., results.csv)}';
+
     protected $description = 'Run an LLM evaluation and output the results.';
 
     // AgentManager removed from constructor
@@ -42,15 +43,17 @@ class RunEvalCommand extends Command
             $evaluationClass = $evaluationNameArgument;
         } else {
             $this->error("Evaluation class '{$evaluationNameArgument}' not found.");
-            $this->line("Searched in:");
+            $this->line('Searched in:');
             $this->line("  - {$evaluationAppNamespace}");
             $this->line("  - {$evaluationPackageNamespace}");
             $this->line("  - As fully qualified: {$evaluationNameArgument}");
+
             return Command::FAILURE;
         }
 
-        if (!is_subclass_of($evaluationClass, BaseEvaluation::class)) {
+        if (! is_subclass_of($evaluationClass, BaseEvaluation::class)) {
             $this->error("Class '{$evaluationClass}' must extend ".BaseEvaluation::class);
+
             return Command::FAILURE;
         }
 
@@ -58,35 +61,39 @@ class RunEvalCommand extends Command
             /** @var BaseEvaluation $evaluation */
             $evaluation = $this->laravel->make($evaluationClass);
         } catch (Exception $e) {
-            $this->error("Could not instantiate evaluation class '{$evaluationClass}': " . $e->getMessage());
+            $this->error("Could not instantiate evaluation class '{$evaluationClass}': ".$e->getMessage());
+
             return Command::FAILURE;
         }
 
-        $this->info("Running evaluation: " . $evaluation->name);
-        $this->line("Description: " . $evaluation->description);
+        $this->info('Running evaluation: '.$evaluation->name);
+        $this->line('Description: '.$evaluation->description);
 
         $agentName = $evaluation->agentName; // Now using agentName
         if (empty($agentName)) {
             $this->error("Agent name property (\$agentName) is not set in '{$evaluationClass}'. This should be the registered alias of the agent.");
+
             return Command::FAILURE;
         }
 
         $csvPath = $evaluation->csvPath;
         $fullCsvPath = base_path($csvPath);
 
-        if (!File::exists($fullCsvPath)) {
+        if (! File::exists($fullCsvPath)) {
             $this->error("CSV file not found at: {$fullCsvPath} (defined in {$evaluationClass}::getCsvPath())");
+
             return Command::FAILURE;
         }
 
         $csvData = $this->readCsv($fullCsvPath);
         if (empty($csvData)) {
             $this->warn("No data found in CSV file: {$fullCsvPath}");
+
             return Command::SUCCESS;
         }
 
         $results = [];
-        $this->info("Processing " . count($csvData) . " rows from CSV using agent '{$agentName}'...");
+        $this->info('Processing '.count($csvData)." rows from CSV using agent '{$agentName}'...");
         $progressBar = $this->output->createProgressBar(count($csvData));
         $progressBar->start();
 
@@ -95,13 +102,49 @@ class RunEvalCommand extends Command
             try {
                 $prompt = $evaluation->preparePrompt($row);
 
-                // Use Agent Facade to run the agent
-                $llmResponse = Agent::run($agentName, $prompt, $sessionId);
+                // Create agent builder to apply configuration
+                $agentBuilder = Agent::build($agentName);
+
+                // Apply prompt version if specified in CSV or evaluation config
+                $promptVersion = null;
+
+                // Check if CSV has a prompt version column
+                if ($evaluation->promptVersionColumn && isset($row[$evaluation->promptVersionColumn])) {
+                    $promptVersion = $row[$evaluation->promptVersionColumn];
+                }
+                // Otherwise use prompt version from evaluation config
+                elseif (isset($evaluation->agentConfig['prompt_version'])) {
+                    $promptVersion = $evaluation->agentConfig['prompt_version'];
+                }
+
+                if ($promptVersion) {
+                    $agentBuilder->withPromptVersion($promptVersion);
+                }
+
+                // Apply other agent configuration
+                if (! empty($evaluation->agentConfig)) {
+                    foreach ($evaluation->agentConfig as $key => $value) {
+                        if ($key === 'prompt_version') {
+                            continue;
+                        } // Already handled
+
+                        // Map common config keys to builder methods
+                        match ($key) {
+                            'temperature' => $agentBuilder->withTemperature($value),
+                            'max_tokens' => $agentBuilder->withMaxTokens($value),
+                            'model' => $agentBuilder->withModel($value),
+                            default => null
+                        };
+                    }
+                }
+
+                // Run the agent with the configuration
+                $llmResponse = $agentBuilder->ask($prompt)->setSession($sessionId)->go();
 
                 $evaluationResult = $evaluation->evaluateRow($row, $llmResponse);
                 $results[] = $evaluationResult;
             } catch (InvalidArgumentException $e) {
-                $this->error("Skipping row " . ($index + 1) . " due to invalid data/prompt preparation: " . $e->getMessage());
+                $this->error('Skipping row '.($index + 1).' due to invalid data/prompt preparation: '.$e->getMessage());
                 $results[] = [
                     'row_data' => $row,
                     'llm_response' => 'SKIPPED_DUE_TO_PREPARE_PROMPT_ERROR',
@@ -110,7 +153,7 @@ class RunEvalCommand extends Command
                     'error' => $e->getMessage(),
                 ];
             } catch (Exception $e) {
-                $this->error("Error processing row " . ($index + 1) . " with agent '{$agentName}': " . $e->getMessage());
+                $this->error('Error processing row '.($index + 1)." with agent '{$agentName}': ".$e->getMessage());
                 $results[] = [
                     'row_data' => $row,
                     'llm_response' => 'ERROR_DURING_PROCESSING',
@@ -139,11 +182,12 @@ class RunEvalCommand extends Command
         $data = [];
         if (($handle = fopen($path, 'r')) !== false) {
             while (($row = fgetcsv($handle)) !== false) {
-                if (!$header) {
+                if (! $header) {
                     $header = array_map('trim', $row); // Trim headers
                 } else {
                     if (count($header) !== count($row)) {
-                        $this->warn("Skipping inconsistent row (column count mismatch): " . implode(',', $row) . " (expected " . count($header) . " columns, got " . count($row) . ")");
+                        $this->warn('Skipping inconsistent row (column count mismatch): '.implode(',', $row).' (expected '.count($header).' columns, got '.count($row).')');
+
                         continue;
                     }
                     $data[] = array_combine($header, $row);
@@ -151,13 +195,15 @@ class RunEvalCommand extends Command
             }
             fclose($handle);
         }
+
         return $data;
     }
 
     protected function saveResultsToCsv(array $results, string $filePath, string $evaluationName)
     {
         if (empty($results)) {
-            $this->info("No results to save.");
+            $this->info('No results to save.');
+
             return;
         }
         try {
@@ -168,22 +214,21 @@ class RunEvalCommand extends Command
 
             // If the path includes subdirectories after the last slash, preserve them
             if (str_contains($filePath, '/')) {
-                $relativePath = basename(dirname($filePath)) . '/' . $filename;
+                $relativePath = basename(dirname($filePath)).'/'.$filename;
             } else {
                 $relativePath = $filename;
             }
 
-            $filePath = storage_path('app/evaluations/' . $relativePath);
+            $filePath = storage_path('app/evaluations/'.$relativePath);
             $outputDir = dirname($filePath);
 
-
             // Ensure the directory exists, create it recursively if it doesn't
-            if (!File::isDirectory($outputDir)) {
+            if (! File::isDirectory($outputDir)) {
                 $this->info("Directory does not exist, creating: {$outputDir}");
 
-                if (!File::makeDirectory($outputDir, 0755, true, true)) {
+                if (! File::makeDirectory($outputDir, 0755, true, true)) {
                     // Fallback to native PHP mkdir
-                    if (!mkdir($outputDir, 0755, true)) {
+                    if (! mkdir($outputDir, 0755, true)) {
                         throw new Exception("Failed to create directory: {$outputDir}. Please check permissions.");
                     }
                 }
@@ -191,8 +236,8 @@ class RunEvalCommand extends Command
             }
 
             // Ensure we can write to the directory
-            if (!is_writable($outputDir)) {
-                throw new Exception("Directory is not writable: {$outputDir}. Current permissions: " . substr(sprintf('%o', fileperms($outputDir)), -4));
+            if (! is_writable($outputDir)) {
+                throw new Exception("Directory is not writable: {$outputDir}. Current permissions: ".substr(sprintf('%o', fileperms($outputDir)), -4));
             }
 
             $csv = Writer::createFromPath($filePath, 'w+');
@@ -200,12 +245,12 @@ class RunEvalCommand extends Command
 
             /** @var array<string> $sampleRowDataKeys */
             $sampleRowDataKeys = [];
-            if (!empty($results) && isset($results[0]['row_data']) && is_array($results[0]['row_data'])) {
+            if (! empty($results) && isset($results[0]['row_data']) && is_array($results[0]['row_data'])) {
                 $sampleRowDataKeys = array_keys($results[0]['row_data']);
             }
 
-            foreach($sampleRowDataKeys as $key) {
-                $headers[] = 'Row Data: ' . $key;
+            foreach ($sampleRowDataKeys as $key) {
+                $headers[] = 'Row Data: '.$key;
             }
             $headers[] = 'Assertions (JSON)';
 
@@ -213,7 +258,7 @@ class RunEvalCommand extends Command
 
             foreach ($results as $index => $result) {
                 $rowDataValues = [];
-                foreach($sampleRowDataKeys as $key) {
+                foreach ($sampleRowDataKeys as $key) {
                     $rowDataValues[] = $result['row_data'][$key] ?? '';
                 }
 
@@ -230,20 +275,21 @@ class RunEvalCommand extends Command
                 try {
                     $csv->insertOne($row);
                 } catch (CannotInsertRecord $e) {
-                    $this->error("Failed to write row to CSV: " . $e->getMessage() . " - Data: " . json_encode($row));
+                    $this->error('Failed to write row to CSV: '.$e->getMessage().' - Data: '.json_encode($row));
                     // Optionally, add the problematic row to a separate error log or skip
                 }
             }
             $this->info("Results saved to: {$filePath}");
         } catch (Exception $e) { // Catch broader exceptions for file writing
-            $this->error("Failed to save results to CSV file '{$filePath}': " . $e->getMessage());
+            $this->error("Failed to save results to CSV file '{$filePath}': ".$e->getMessage());
         }
     }
 
     protected function displayResultsInConsole(array $results)
     {
         if (empty($results)) {
-            $this->info("No results to display.");
+            $this->info('No results to display.');
+
             return;
         }
         $this->table(
@@ -270,7 +316,7 @@ class RunEvalCommand extends Command
             }
         }
         $this->info(sprintf(
-            "Summary: Total Rows: %d, Passed: %d, Failed: %d, Errors: %d",
+            'Summary: Total Rows: %d, Passed: %d, Failed: %d, Errors: %d',
             $summary['total'],
             $summary['pass'],
             $summary['fail'],

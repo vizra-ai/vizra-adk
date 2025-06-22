@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vizra\VizraADK\Console\Commands;
 
-use Vizra\VizraADK\Services\Tracer;
 use Illuminate\Console\Command;
+use Vizra\VizraADK\Services\Tracer;
 
 class AgentTraceCleanupCommand extends Command
 {
@@ -24,8 +24,9 @@ class AgentTraceCleanupCommand extends Command
 
     public function handle(): int
     {
-        if (!config('vizra-adk.tracing.enabled', false)) {
+        if (! config('vizra-adk.tracing.enabled', false)) {
             $this->error('Agent tracing is not enabled in configuration.');
+
             return self::FAILURE;
         }
 
@@ -44,6 +45,7 @@ class AgentTraceCleanupCommand extends Command
 
         if ($count === 0) {
             $this->info('No old traces found to clean up.');
+
             return self::SUCCESS;
         }
 
@@ -51,11 +53,13 @@ class AgentTraceCleanupCommand extends Command
 
         if ($isDryRun) {
             $this->info("Would delete {$count} traces (dry run).");
+
             return self::SUCCESS;
         }
 
-        if (!$force && !$this->confirm("Are you sure you want to delete {$count} traces?")) {
+        if (! $force && ! $this->confirm("Are you sure you want to delete {$count} traces?")) {
             $this->info('Cleanup cancelled.');
+
             return self::SUCCESS;
         }
 

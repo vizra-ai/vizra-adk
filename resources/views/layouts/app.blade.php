@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vizra SDK - {{ $title ?? 'Dashboard' }}</title>
+    <title>Vizra SDK - @yield('title', 'Dashboard')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -29,6 +29,11 @@
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 
     <style>
         [x-cloak] { display: none !important; }
@@ -301,13 +306,133 @@
         <!-- Main Content -->
         <main class="p-8">
             <div class="max-w-7xl mx-auto">
-                {{ $slot }}
+                @yield('content')
             </div>
         </main>
     </div>
 
     <!-- Livewire Scripts -->
     @livewireScripts
+
+    <!-- JSON Viewer Scripts -->
+    <script>
+        // JSON Viewer functionality
+        window.jsonViewerInitialized = window.jsonViewerInitialized || false;
+        
+        if (!window.jsonViewerInitialized) {
+            window.jsonViewerInitialized = true;
+            
+            // Copy JSON to clipboard
+            window.copyJsonToClipboard = function(elementId) {
+                const element = document.getElementById(elementId);
+                const text = element.textContent || element.innerText;
+                
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        showCopyFeedback(elementId);
+                    }).catch(err => {
+                        console.error('Failed to copy: ', err);
+                        fallbackCopyToClipboard(text);
+                    });
+                } else {
+                    fallbackCopyToClipboard(text);
+                }
+            };
+            
+            // Fallback copy method
+            function fallbackCopyToClipboard(text) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showCopyFeedback();
+                } catch (err) {
+                    console.error('Fallback copy failed: ', err);
+                }
+                
+                document.body.removeChild(textArea);
+            }
+            
+            // Show copy feedback
+            function showCopyFeedback(elementId) {
+                // Create temporary feedback element
+                const feedback = document.createElement('div');
+                feedback.textContent = 'Copied!';
+                feedback.className = 'fixed top-4 right-4 bg-green-600 text-white px-3 py-2 rounded shadow-lg z-50 text-sm';
+                document.body.appendChild(feedback);
+                
+                setTimeout(() => {
+                    if (document.body.contains(feedback)) {
+                        document.body.removeChild(feedback);
+                    }
+                }, 2000);
+            }
+            
+            // Toggle JSON collapse
+            window.toggleJsonCollapse = function(elementId) {
+                const content = document.getElementById(elementId);
+                const chevron = document.getElementById('chevron-' + elementId);
+                
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    if (chevron) chevron.style.transform = 'rotate(0deg)';
+                } else {
+                    content.style.display = 'none';
+                    if (chevron) chevron.style.transform = 'rotate(-90deg)';
+                }
+            };
+            
+            // Open JSON modal
+            window.openJsonModal = function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                    
+                    // Apply syntax highlighting if Prism is available
+                    if (window.Prism) {
+                        Prism.highlightAllUnder(modal);
+                    }
+                }
+            };
+            
+            // Close JSON modal
+            window.closeJsonModal = function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+            };
+            
+            // Close modal on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const modals = document.querySelectorAll('[id^="modal-"]');
+                    modals.forEach(modal => {
+                        if (!modal.classList.contains('hidden')) {
+                            modal.classList.add('hidden');
+                            document.body.style.overflow = 'auto';
+                        }
+                    });
+                }
+            });
+            
+            // Apply syntax highlighting if Prism is available
+            document.addEventListener('DOMContentLoaded', function() {
+                if (window.Prism) {
+                    Prism.highlightAll();
+                }
+            });
+        }
+    </script>
 
     @stack('scripts')
 </body>

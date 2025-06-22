@@ -2,41 +2,47 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Facades;
 
-use Vizra\VizraADK\Facades\Workflow;
-use Vizra\VizraADK\Agents\SequentialWorkflow;
-use Vizra\VizraADK\Agents\ParallelWorkflow;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Agents\ConditionalWorkflow;
 use Vizra\VizraADK\Agents\LoopWorkflow;
-use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Agents\ParallelWorkflow;
+use Vizra\VizraADK\Agents\SequentialWorkflow;
+use Vizra\VizraADK\Facades\Workflow;
 use Vizra\VizraADK\Tests\TestCase;
 
 // Mock agent classes for testing
-class FirstAgent extends BaseLlmAgent {
+class FirstAgent extends BaseLlmAgent
+{
     protected string $name = 'first_agent';
 }
 
-class SecondAgent extends BaseLlmAgent {
+class SecondAgent extends BaseLlmAgent
+{
     protected string $name = 'second_agent';
 }
 
-class TestAgent extends BaseLlmAgent {
+class TestAgent extends BaseLlmAgent
+{
     protected string $name = 'test_agent';
 }
 
-class TrueAgent extends BaseLlmAgent {
+class TrueAgent extends BaseLlmAgent
+{
     protected string $name = 'true_agent';
 }
 
-class FalseAgent extends BaseLlmAgent {
+class FalseAgent extends BaseLlmAgent
+{
     protected string $name = 'false_agent';
 }
 
-class InitAgent extends BaseLlmAgent {
+class InitAgent extends BaseLlmAgent
+{
     protected string $name = 'init_agent';
 }
 
-class ProcessAgent extends BaseLlmAgent {
+class ProcessAgent extends BaseLlmAgent
+{
     protected string $name = 'process_agent';
 }
 
@@ -48,7 +54,7 @@ class WorkflowTest extends TestCase
         $method = $reflection->getMethod('getFacadeAccessor');
         $method->setAccessible(true);
 
-        $this->assertEquals('laravel-ai-adk.workflow', $method->invoke(new Workflow()));
+        $this->assertEquals('vizra-adk.workflow', $method->invoke(new Workflow));
     }
 
     public function test_sequential_method_creates_sequential_workflow()
@@ -95,7 +101,7 @@ class WorkflowTest extends TestCase
 
     public function test_while_method_creates_while_loop()
     {
-        $condition = fn($input) => $input['counter'] < 5;
+        $condition = fn ($input) => $input['counter'] < 5;
         $workflow = Workflow::while(TestAgent::class, $condition);
 
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
@@ -103,7 +109,7 @@ class WorkflowTest extends TestCase
 
     public function test_until_method_creates_until_loop()
     {
-        $condition = fn($input) => $input['counter'] >= 5;
+        $condition = fn ($input) => $input['counter'] >= 5;
         $workflow = Workflow::until(TestAgent::class, $condition);
 
         $this->assertInstanceOf(LoopWorkflow::class, $workflow);
@@ -144,8 +150,8 @@ class WorkflowTest extends TestCase
             'parallel' => Workflow::parallel(),
             'conditional' => Workflow::conditional(),
             'loop' => Workflow::loop(),
-            'while' => Workflow::while(TestAgent::class, fn() => true),
-            'until' => Workflow::until(TestAgent::class, fn() => false),
+            'while' => Workflow::while(TestAgent::class, fn () => true),
+            'until' => Workflow::until(TestAgent::class, fn () => false),
             'times' => Workflow::times(TestAgent::class, 3),
             'forEach' => Workflow::forEach(TestAgent::class, ['a', 'b']),
         ];
@@ -182,7 +188,7 @@ class WorkflowTest extends TestCase
             ->waitForAll();
 
         $conditional = Workflow::conditional()
-            ->when(fn() => true, TrueAgent::class)
+            ->when(fn () => true, TrueAgent::class)
             ->otherwise(FalseAgent::class);
 
         $loop = Workflow::loop()
@@ -212,14 +218,14 @@ class WorkflowTest extends TestCase
             Workflow::sequential(),
             Workflow::parallel(),
             Workflow::conditional(),
-            Workflow::loop()
+            Workflow::loop(),
         ];
 
         $expectedClasses = [
             SequentialWorkflow::class,
             ParallelWorkflow::class,
             ConditionalWorkflow::class,
-            LoopWorkflow::class
+            LoopWorkflow::class,
         ];
 
         foreach ($workflowTypes as $index => $workflow) {

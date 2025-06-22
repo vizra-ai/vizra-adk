@@ -20,7 +20,6 @@ class AgentMessage extends Model
 {
     protected $table = 'agent_messages'; // Default, will be configurable
 
-
     protected $fillable = [
         'agent_session_id',
         'role',

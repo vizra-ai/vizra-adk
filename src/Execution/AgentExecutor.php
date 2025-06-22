@@ -2,32 +2,47 @@
 
 namespace Vizra\VizraADK\Execution;
 
-use Vizra\VizraADK\Services\AgentManager;
-use Vizra\VizraADK\Services\StateManager;
-use Vizra\VizraADK\Jobs\AgentJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Prism\Prism\ValueObjects\Messages\Support\Image;
 use Prism\Prism\ValueObjects\Messages\Support\Document;
+use Prism\Prism\ValueObjects\Messages\Support\Image;
+use Vizra\VizraADK\Jobs\AgentJob;
+use Vizra\VizraADK\Services\AgentManager;
+use Vizra\VizraADK\Services\StateManager;
 
 class AgentExecutor
 {
     protected string $agentClass;
+
     protected mixed $input;
+
     protected string $mode;
+
     protected ?Model $user = null;
+
     protected ?string $sessionId = null;
+
     protected array $context = [];
+
     protected bool $streaming = false;
+
     protected array $parameters = [];
+
     protected bool $async = false;
+
     protected ?string $queue = null;
+
     protected ?int $delay = null;
+
     protected int $tries = 3;
+
     protected ?int $timeout = null;
+
+    protected ?string $promptVersion = null;
+
     /** @var array<Image> */
     protected array $images = [];
+
     /** @var array<Document> */
     protected array $documents = [];
 
@@ -44,6 +59,7 @@ class AgentExecutor
     public function forUser(?Model $user): self
     {
         $this->user = $user;
+
         return $this;
     }
 
@@ -53,6 +69,7 @@ class AgentExecutor
     public function withSession(string $sessionId): self
     {
         $this->sessionId = $sessionId;
+
         return $this;
     }
 
@@ -62,6 +79,7 @@ class AgentExecutor
     public function withContext(array $context): self
     {
         $this->context = array_merge($this->context, $context);
+
         return $this;
     }
 
@@ -71,6 +89,7 @@ class AgentExecutor
     public function streaming(bool $enabled = true): self
     {
         $this->streaming = $enabled;
+
         return $this;
     }
 
@@ -80,6 +99,7 @@ class AgentExecutor
     public function withParameters(array $parameters): self
     {
         $this->parameters = array_merge($this->parameters, $parameters);
+
         return $this;
     }
 
@@ -89,6 +109,7 @@ class AgentExecutor
     public function temperature(float $temperature): self
     {
         $this->parameters['temperature'] = $temperature;
+
         return $this;
     }
 
@@ -98,6 +119,17 @@ class AgentExecutor
     public function maxTokens(int $maxTokens): self
     {
         $this->parameters['max_tokens'] = $maxTokens;
+
+        return $this;
+    }
+
+    /**
+     * Set prompt version for this execution
+     */
+    public function withPromptVersion(string $version): self
+    {
+        $this->promptVersion = $version;
+
         return $this;
     }
 
@@ -107,6 +139,7 @@ class AgentExecutor
     public function async(bool $enabled = true): self
     {
         $this->async = $enabled;
+
         return $this;
     }
 
@@ -117,6 +150,7 @@ class AgentExecutor
     {
         $this->queue = $queue;
         $this->async = true; // Auto-enable async when queue is specified
+
         return $this;
     }
 
@@ -126,6 +160,7 @@ class AgentExecutor
     public function delay(int $seconds): self
     {
         $this->delay = $seconds;
+
         return $this;
     }
 
@@ -135,6 +170,7 @@ class AgentExecutor
     public function tries(int $tries): self
     {
         $this->tries = $tries;
+
         return $this;
     }
 
@@ -144,89 +180,90 @@ class AgentExecutor
     public function timeout(int $seconds): self
     {
         $this->timeout = $seconds;
+
         return $this;
     }
 
     /**
      * Add an image to the conversation using Prism's Image class.
      *
-     * @param string $path Path to the image file
-     * @param string|null $mimeType Optional MIME type (auto-detected if not provided)
-     * @return self
+     * @param  string  $path  Path to the image file
+     * @param  string|null  $mimeType  Optional MIME type (auto-detected if not provided)
      */
     public function withImage(string $path, ?string $mimeType = null): self
     {
         $this->images[] = Image::fromPath($path, $mimeType);
+
         return $this;
     }
 
     /**
      * Add an image from base64 data using Prism's Image class.
      *
-     * @param string $base64Data Base64 encoded image data
-     * @param string $mimeType MIME type of the image
-     * @return self
+     * @param  string  $base64Data  Base64 encoded image data
+     * @param  string  $mimeType  MIME type of the image
      */
     public function withImageFromBase64(string $base64Data, string $mimeType): self
     {
         $this->images[] = Image::fromBase64($base64Data, $mimeType);
+
         return $this;
     }
 
     /**
      * Add an image from a URL using Prism's Image class.
      *
-     * @param string $url URL to the image
-     * @return self
+     * @param  string  $url  URL to the image
      */
     public function withImageFromUrl(string $url): self
     {
         $this->images[] = Image::fromUrl($url);
+
         return $this;
     }
 
     /**
      * Add a document to the conversation using Prism's Document class.
      *
-     * @param string $path Path to the document file
-     * @param string|null $mimeType Optional MIME type (auto-detected if not provided)
-     * @return self
+     * @param  string  $path  Path to the document file
+     * @param  string|null  $mimeType  Optional MIME type (auto-detected if not provided)
      */
     public function withDocument(string $path, ?string $mimeType = null): self
     {
         $this->documents[] = Document::fromPath($path, $mimeType);
+
         return $this;
     }
 
     /**
      * Add a document from base64 data using Prism's Document class.
      *
-     * @param string $base64Data Base64 encoded document data
-     * @param string $mimeType MIME type of the document
-     * @return self
+     * @param  string  $base64Data  Base64 encoded document data
+     * @param  string  $mimeType  MIME type of the document
      */
     public function withDocumentFromBase64(string $base64Data, string $mimeType): self
     {
         $this->documents[] = Document::fromBase64($base64Data, $mimeType);
+
         return $this;
     }
 
     /**
      * Add a document from a URL using Prism's Document class.
      *
-     * @param string $url URL to the document
-     * @return self
+     * @param  string  $url  URL to the document
      */
     public function withDocumentFromUrl(string $url): self
     {
         $this->documents[] = Document::fromUrl($url);
+
         return $this;
     }
 
     /**
      * Execute the agent and return the response
      */
-    public function execute(): mixed
+    public function go(): mixed
     {
         // If async execution is requested, dispatch to queue
         if ($this->async) {
@@ -277,16 +314,21 @@ class AgentExecutor
         }
 
         // Add Prism Image and Document objects to context
-        if (!empty($this->images)) {
+        if (! empty($this->images)) {
             $agentContext->setState('prism_images', $this->images);
         }
-        if (!empty($this->documents)) {
+        if (! empty($this->documents)) {
             $agentContext->setState('prism_documents', $this->documents);
         }
 
         // Add agent parameters
-        if (!empty($this->parameters)) {
+        if (! empty($this->parameters)) {
             $agentContext->setState('agent_parameters', $this->parameters);
+        }
+
+        // Set prompt version if specified
+        if ($this->promptVersion !== null) {
+            $agentContext->setState('prompt_version', $this->promptVersion);
         }
 
         // Set streaming mode
@@ -357,8 +399,8 @@ class AgentExecutor
             'parameters' => $this->parameters,
             'streaming' => $this->streaming,
             // Note: Prism Image/Document objects need special serialization for queue jobs
-            'images' => array_map(fn($img) => ['type' => 'serialized', 'data' => serialize($img)], $this->images),
-            'documents' => array_map(fn($doc) => ['type' => 'serialized', 'data' => serialize($doc)], $this->documents),
+            'images' => array_map(fn ($img) => ['type' => 'serialized', 'data' => serialize($img)], $this->images),
+            'documents' => array_map(fn ($doc) => ['type' => 'serialized', 'data' => serialize($doc)], $this->documents),
         ];
 
         if ($this->user) {
@@ -398,6 +440,7 @@ class AgentExecutor
 
         // Fallback to class name transformation
         $className = class_basename($this->agentClass);
+
         return Str::snake(str_replace('Agent', '', $className));
     }
 
@@ -411,10 +454,10 @@ class AgentExecutor
         }
 
         if ($this->user) {
-            return 'user_' . $this->user->getKey() . '_' . Str::random(8);
+            return 'user_'.$this->user->getKey().'_'.Str::random(8);
         }
 
-        return 'session_' . Str::random(12);
+        return 'session_'.Str::random(12);
     }
 
     /**
@@ -423,10 +466,11 @@ class AgentExecutor
     public function __toString(): string
     {
         try {
-            $result = $this->execute();
+            $result = $this->go();
+
             return is_string($result) ? $result : (string) $result;
         } catch (\Exception $e) {
-            return "Error executing agent: " . $e->getMessage();
+            return 'Error executing agent: '.$e->getMessage();
         }
     }
 
@@ -435,6 +479,6 @@ class AgentExecutor
      */
     public function __invoke(): mixed
     {
-        return $this->execute();
+        return $this->go();
     }
 }

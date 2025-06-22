@@ -2,13 +2,11 @@
 
 namespace Vizra\VizraADK\Services;
 
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Vizra\VizraADK\Events\MemoryUpdated;
 use Vizra\VizraADK\Models\AgentMemory;
 use Vizra\VizraADK\Models\AgentSession;
-use Vizra\VizraADK\Models\AgentMessage;
-use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Events\MemoryUpdated;
-use Illuminate\Support\Collection;
-use Carbon\Carbon;
 
 /**
  * Class MemoryManager
@@ -61,7 +59,7 @@ class MemoryManager
             ->where('user_id', $userId)
             ->first();
 
-        if (!$memory) {
+        if (! $memory) {
             return '';
         }
 
@@ -77,12 +75,12 @@ class MemoryManager
             ->where('user_id', $userId)
             ->first();
 
-        if (!$memory) {
+        if (! $memory) {
             return [
                 'summary' => null,
                 'key_learnings' => [],
                 'facts' => [],
-                'total_sessions' => 0
+                'total_sessions' => 0,
             ];
         }
 
@@ -90,7 +88,7 @@ class MemoryManager
             'summary' => $memory->memory_summary,
             'key_learnings' => $memory->key_learnings ?? [],
             'facts' => $memory->memory_data ?? [],
-            'total_sessions' => $memory->total_sessions
+            'total_sessions' => $memory->total_sessions,
         ];
     }
 
@@ -114,19 +112,19 @@ class MemoryManager
 
         foreach ($recentSessions as $session) {
             $sessionText = $this->extractSessionSummary($session);
-            if (!empty($sessionText)) {
+            if (! empty($sessionText)) {
                 $conversationTexts[] = $sessionText;
             }
         }
 
-        if (!empty($conversationTexts)) {
+        if (! empty($conversationTexts)) {
             // For now, we'll create a simple concatenated summary
             // In a real implementation, you might use an LLM to create a better summary
             $summary = implode("\n\n", array_slice($conversationTexts, 0, 5));
 
             // Truncate if too long
             if (strlen($summary) > 2000) {
-                $summary = substr($summary, 0, 1997) . '...';
+                $summary = substr($summary, 0, 1997).'...';
             }
 
             $memory->memory_summary = $summary;
@@ -143,7 +141,7 @@ class MemoryManager
         $memory = $this->getOrCreateMemory($agentName, $userId);
 
         $learnings = $memory->key_learnings ?? [];
-        if (!in_array($learning, $learnings)) {
+        if (! in_array($learning, $learnings)) {
             $learnings[] = $learning;
             $memory->key_learnings = $learnings;
             $memory->memory_updated_at = now();
@@ -214,7 +212,7 @@ class MemoryManager
             ->where('user_id', $userId)
             ->first();
 
-        if (!$memory) {
+        if (! $memory) {
             return collect();
         }
 
@@ -234,7 +232,7 @@ class MemoryManager
 
         $deleted = AgentMemory::where(function ($query) use ($cutoffDate, $maxSessions) {
             $query->where('last_session_at', '<', $cutoffDate)
-                  ->orWhere('total_sessions', '>', $maxSessions);
+                ->orWhere('total_sessions', '>', $maxSessions);
         })->delete();
 
         return $deleted;
@@ -274,11 +272,11 @@ class MemoryManager
                     $sentiment = in_array(strtolower($matches[1]), ['like', 'prefer', 'love']) ? 'positive' : 'negative';
 
                     $memory->updateMemoryData([
-                        'preferences.' . md5($preference) => [
+                        'preferences.'.md5($preference) => [
                             'item' => $preference,
                             'sentiment' => $sentiment,
                             'learned_at' => $session->updated_at->toISOString(),
-                        ]
+                        ],
                     ]);
                 }
 
@@ -312,12 +310,12 @@ class MemoryManager
 
         if ($firstUserMessage) {
             $userContent = is_string($firstUserMessage->content) ? $firstUserMessage->content : 'Complex interaction';
-            $summary .= "User: " . substr($userContent, 0, 100) . (strlen($userContent) > 100 ? '...' : '') . "\n";
+            $summary .= 'User: '.substr($userContent, 0, 100).(strlen($userContent) > 100 ? '...' : '')."\n";
         }
 
         if ($lastAssistantMessage) {
             $assistantContent = is_string($lastAssistantMessage->content) ? $lastAssistantMessage->content : 'Complex response';
-            $summary .= "Agent: " . substr($assistantContent, 0, 100) . (strlen($assistantContent) > 100 ? '...' : '');
+            $summary .= 'Agent: '.substr($assistantContent, 0, 100).(strlen($assistantContent) > 100 ? '...' : '');
         }
 
         return $summary;
@@ -351,7 +349,7 @@ class MemoryManager
                 return [
                     'role' => $message->role,
                     'content' => $message->content,
-                    'created_at' => $message->created_at->toISOString()
+                    'created_at' => $message->created_at->toISOString(),
                 ];
             })
             ->values()

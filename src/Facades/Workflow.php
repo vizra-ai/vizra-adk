@@ -3,10 +3,10 @@
 namespace Vizra\VizraADK\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Vizra\VizraADK\Agents\SequentialWorkflow;
-use Vizra\VizraADK\Agents\ParallelWorkflow;
 use Vizra\VizraADK\Agents\ConditionalWorkflow;
 use Vizra\VizraADK\Agents\LoopWorkflow;
+use Vizra\VizraADK\Agents\ParallelWorkflow;
+use Vizra\VizraADK\Agents\SequentialWorkflow;
 
 /**
  * @method static SequentialWorkflow sequential(string ...$agentClasses)
@@ -25,11 +25,9 @@ class Workflow extends Facade
 {
     /**
      * Get the registered name of the component.
-     *
-     * @return string
      */
     protected static function getFacadeAccessor(): string
     {
-        return 'laravel-ai-adk.workflow';
+        return 'vizra-adk.workflow';
     }
 }

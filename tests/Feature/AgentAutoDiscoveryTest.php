@@ -2,24 +2,24 @@
 
 namespace Vizra\VizraADK\Tests\Feature;
 
-use Vizra\VizraADK\Tests\TestCase;
-use Vizra\VizraADK\Facades\Agent;
-use Vizra\VizraADK\Services\AgentRegistry;
-use Vizra\VizraADK\Services\AgentDiscovery;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Exceptions\AgentNotFoundException;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Artisan;
+use Vizra\VizraADK\Facades\Agent;
+use Vizra\VizraADK\Services\AgentDiscovery;
+use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Tests\TestCase;
 
 class AgentAutoDiscoveryTest extends TestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Clear any cached discoveries
         app(AgentDiscovery::class)->clearCache();
-        
+
         // Create test agents directory
         $this->createTestAgentsDirectory();
     }
@@ -31,7 +31,7 @@ class AgentAutoDiscoveryTest extends TestCase
         if (File::exists($testDir)) {
             File::deleteDirectory($testDir);
         }
-        
+
         parent::tearDown();
     }
 
@@ -39,15 +39,15 @@ class AgentAutoDiscoveryTest extends TestCase
     {
         // Create a test agent
         $this->createTestAgent('AutoDiscoveredAgent', 'auto_discovered');
-        
+
         // Create a new instance of the service provider and boot it
         $provider = new \Vizra\VizraADK\Providers\AgentServiceProvider($this->app);
         $provider->register();
         $provider->boot();
-        
+
         // Check if agent is available
         $this->assertTrue(Agent::hasAgent('auto_discovered'));
-        
+
         // Use the agent
         $agent = Agent::named('auto_discovered');
         $this->assertInstanceOf(BaseLlmAgent::class, $agent);
@@ -58,20 +58,20 @@ class AgentAutoDiscoveryTest extends TestCase
     {
         // Create a test agent
         $this->createTestAgent('DirectUseAgent', 'direct_use');
-        
+
         // Clear the registry to ensure it's not pre-registered
         $registry = app(AgentRegistry::class);
-        
+
         // Initially, agent should not be registered
         $this->assertFalse($registry->hasAgent('direct_use'));
-        
+
         // Try to use the agent - should trigger lazy discovery
         $agent = Agent::named('direct_use');
-        
+
         // Verify it works
         $this->assertInstanceOf(BaseLlmAgent::class, $agent);
         $this->assertEquals('direct_use', $agent->getName());
-        
+
         // Now it should be registered
         $this->assertTrue($registry->hasAgent('direct_use'));
     }
@@ -96,12 +96,12 @@ class AskMethodAgent extends BaseLlmAgent
         return "Received: " . $input;
     }
 }';
-        
+
         File::put(app_path('TestAgents/AskMethodAgent.php'), $agentContent);
-        
+
         // Include the file so the class is available
         require_once app_path('TestAgents/AskMethodAgent.php');
-        
+
         // Use the ask method directly
         $executor = \App\TestAgents\AskMethodAgent::ask('Hello');
         $this->assertInstanceOf(\Vizra\VizraADK\Execution\AgentExecutor::class, $executor);
@@ -111,17 +111,17 @@ class AskMethodAgent extends BaseLlmAgent
     {
         // Manually register an agent
         Agent::build(\Vizra\VizraADK\Tests\Fixtures\TestAgent::class)->register();
-        
+
         // Create a test agent that would be discovered
         $this->createTestAgent('LazyTestAgent', 'lazy_test');
-        
+
         // Access the manually registered agent - should not trigger discovery
         $agent = Agent::named('test_agent');
         $this->assertInstanceOf(\Vizra\VizraADK\Tests\Fixtures\TestAgent::class, $agent);
-        
+
         // Verify lazy agent is not yet registered
         $this->assertFalse(Agent::hasAgent('lazy_test'));
-        
+
         // Now access the lazy agent - should trigger discovery
         $lazyAgent = Agent::named('lazy_test');
         $this->assertInstanceOf(BaseLlmAgent::class, $lazyAgent);
@@ -132,7 +132,7 @@ class AskMethodAgent extends BaseLlmAgent
     {
         $this->expectException(AgentNotFoundException::class);
         $this->expectExceptionMessage("Agent 'non_existent' is not registered");
-        
+
         Agent::named('non_existent');
     }
 
@@ -141,11 +141,11 @@ class AskMethodAgent extends BaseLlmAgent
         // Create test agents
         $this->createTestAgent('CommandTestAgent1', 'command_test_1');
         $this->createTestAgent('CommandTestAgent2', 'command_test_2');
-        
+
         // Run the discover command
         Artisan::call('vizra:discover-agents');
         $output = Artisan::output();
-        
+
         // Check output contains discovered agents
         $this->assertStringContainsString('command_test_1', $output);
         $this->assertStringContainsString('command_test_2', $output);
@@ -158,14 +158,14 @@ class AskMethodAgent extends BaseLlmAgent
         // Create and discover an agent
         $this->createTestAgent('CachedCommandAgent', 'cached_command');
         Agent::named('cached_command'); // This will cache it
-        
+
         // Add a new agent
         $this->createTestAgent('NewCommandAgent', 'new_command');
-        
+
         // Run command with clear-cache option
         Artisan::call('vizra:discover-agents', ['--clear-cache' => true]);
         $output = Artisan::output();
-        
+
         $this->assertStringContainsString('Discovery cache cleared', $output);
         $this->assertStringContainsString('new_command', $output);
     }
@@ -177,16 +177,16 @@ class AskMethodAgent extends BaseLlmAgent
             ->instructions('A manually defined agent')
             ->model('gpt-4')
             ->register();
-        
+
         // Create an auto-discovered agent
         $this->createTestAgent('AutoAgent', 'auto_agent');
-        
+
         // Both should be available
         $this->assertTrue(Agent::hasAgent('manual_agent'));
-        
+
         $autoAgent = Agent::named('auto_agent');
         $this->assertInstanceOf(BaseLlmAgent::class, $autoAgent);
-        
+
         // Get all agents
         $allAgents = Agent::getAllRegisteredAgents();
         $this->assertArrayHasKey('manual_agent', $allAgents);
@@ -198,7 +198,7 @@ class AskMethodAgent extends BaseLlmAgent
         // Create subdirectory
         $subDir = app_path('TestAgents/SubAgents');
         File::makeDirectory($subDir, 0755, true, true);
-        
+
         // Create agent in subdirectory
         $content = '<?php
 namespace App\TestAgents\SubAgents;
@@ -216,9 +216,9 @@ class NestedAgent extends BaseLlmAgent
         return "Nested response";
     }
 }';
-        
-        File::put($subDir . '/NestedAgent.php', $content);
-        
+
+        File::put($subDir.'/NestedAgent.php', $content);
+
         // Discover and use the nested agent
         $agent = Agent::named('nested_agent');
         $this->assertInstanceOf(BaseLlmAgent::class, $agent);
@@ -228,10 +228,10 @@ class NestedAgent extends BaseLlmAgent
     protected function createTestAgentsDirectory(): void
     {
         $testDir = app_path('TestAgents');
-        if (!File::exists($testDir)) {
+        if (! File::exists($testDir)) {
             File::makeDirectory($testDir, 0755, true, true);
         }
-        
+
         // Update config to use test directory
         config(['vizra-adk.namespaces.agents' => 'App\\TestAgents']);
     }
@@ -244,18 +244,18 @@ namespace App\TestAgents;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\System\AgentContext;
 
-class ' . $className . ' extends BaseLlmAgent
+class '.$className.' extends BaseLlmAgent
 {
-    protected string $name = "' . $agentName . '";
+    protected string $name = "'.$agentName.'";
     protected string $description = "Test agent for auto-discovery";
     protected string $model = "gemini-1.5-flash";
     
     public function run(mixed $input, AgentContext $context): mixed
     {
-        return "Response from ' . $agentName . ': " . $input;
+        return "Response from '.$agentName.': " . $input;
     }
 }';
 
-        File::put(app_path('TestAgents/' . $className . '.php'), $content);
+        File::put(app_path('TestAgents/'.$className.'.php'), $content);
     }
 }

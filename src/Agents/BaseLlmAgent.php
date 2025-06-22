@@ -2,40 +2,47 @@
 
 namespace Vizra\VizraADK\Agents;
 
-use Vizra\VizraADK\System\AgentContext;
+use Generator;
+use Illuminate\Support\Facades\Event;
+use Prism\Prism\Enums\Provider;
+use Prism\Prism\Facades\Tool;
+use Prism\Prism\Prism;
+use Prism\Prism\Schema\StringSchema;
+use Prism\Prism\Text\Response;
+use Prism\Prism\ValueObjects\Messages\AssistantMessage;
+use Prism\Prism\ValueObjects\Messages\Support\Document;
+use Prism\Prism\ValueObjects\Messages\Support\Image;
+use Prism\Prism\ValueObjects\Messages\UserMessage;
+use Prism\Prism\ValueObjects\Usage;
 use Vizra\VizraADK\Contracts\ToolInterface;
-use Vizra\VizraADK\Events\LlmCallInitiating;
+use Vizra\VizraADK\Events\AgentResponseGenerated;
+use Vizra\VizraADK\Events\LlmCallInitiating; // Use the Tool facade instead of Tool class
 use Vizra\VizraADK\Events\LlmResponseReceived;
 use Vizra\VizraADK\Events\ToolCallCompleted;
 use Vizra\VizraADK\Events\ToolCallInitiating;
-use Vizra\VizraADK\Events\AgentResponseGenerated;
 use Vizra\VizraADK\Exceptions\ToolExecutionException;
-use Vizra\VizraADK\Services\Tracer;
 use Vizra\VizraADK\Memory\AgentMemory;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Arr;
-use Prism\Prism\Prism;
-use Prism\Prism\Enums\Provider;
-use Prism\Prism\Facades\Tool; // Use the Tool facade instead of Tool class
-use Prism\Prism\ValueObjects\Usage;
-use Prism\Prism\Text\Response;
-use Generator;
-use Prism\Prism\Schema\StringSchema;
-use Prism\Prism\ValueObjects\Messages\UserMessage;
-use Prism\Prism\ValueObjects\Messages\AssistantMessage;
-use Prism\Prism\ValueObjects\Messages\SystemMessage;
-use Prism\Prism\ValueObjects\Messages\ToolResultMessage;
-use Prism\Prism\ValueObjects\Messages\Support\Image;
-use Prism\Prism\ValueObjects\Messages\Support\Document;
+use Vizra\VizraADK\Services\Tracer;
+use Vizra\VizraADK\Services\VectorMemoryManager;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Traits\VersionablePrompts;
 
 abstract class BaseLlmAgent extends BaseAgent
 {
+    use VersionablePrompts;
+
     protected string $instructions = '';
+
     protected string $model = '';
+
     protected ?Provider $provider = null;
+
     protected ?float $temperature = null;
+
     protected ?int $maxTokens = null;
+
     protected ?float $topP = null;
+
     protected bool $streaming = false;
 
     /** @var array<class-string<ToolInterface>> */
@@ -46,11 +53,12 @@ abstract class BaseLlmAgent extends BaseAgent
 
     /** @var array<string, BaseLlmAgent> */
     protected array $loadedSubAgents = [];
-    
-    /** @var AgentMemory|null */
+
+    /** @var array<class-string<BaseLlmAgent>> */
+    protected array $subAgents = [];
+
     protected ?AgentMemory $memory = null;
-    
-    /** @var AgentContext|null */
+
     protected ?AgentContext $context = null;
 
     public function __construct()
@@ -64,13 +72,20 @@ abstract class BaseLlmAgent extends BaseAgent
     {
         if ($this->provider === null) {
             $defaultProvider = config('vizra-adk.default_provider', 'openai');
-            $this->provider = match($defaultProvider) {
+            $this->provider = match ($defaultProvider) {
                 'openai' => Provider::OpenAI,
                 'anthropic' => Provider::Anthropic,
                 'gemini', 'google' => Provider::Gemini,
+                'deepseek' => Provider::DeepSeek,
+                'ollama' => Provider::Ollama,
+                'mistral' => Provider::Mistral,
+                'groq' => Provider::Groq,
+                'xai', 'grok' => Provider::XAI,
+                'voyageai', 'voyage' => Provider::VoyageAI,
                 default => Provider::OpenAI,
             };
         }
+
         return $this->provider;
     }
 
@@ -86,32 +101,26 @@ abstract class BaseLlmAgent extends BaseAgent
                 $this->provider = Provider::Anthropic;
             } elseif (str_contains($model, 'gpt') || str_contains($model, 'o1')) {
                 $this->provider = Provider::OpenAI;
+            } elseif (str_contains($model, 'deepseek')) {
+                $this->provider = Provider::DeepSeek;
+            } elseif (str_contains($model, 'mistral') || str_contains($model, 'mixtral')) {
+                $this->provider = Provider::Mistral;
+            } elseif (str_contains($model, 'llama') || str_contains($model, 'codellama') || str_contains($model, 'phi')) {
+                $this->provider = Provider::Ollama;
+            } elseif (str_contains($model, 'groq')) {
+                $this->provider = Provider::Groq;
+            } elseif (str_contains($model, 'grok')) {
+                $this->provider = Provider::XAI;
+            } elseif (str_contains($model, 'voyage')) {
+                $this->provider = Provider::VoyageAI;
             }
         }
 
         return $model;
     }
 
-    public function getInstructions(): string
-    {
-        $instructions = $this->instructions;
-
-        // Add delegation information if sub-agents are available
-        if (!empty($this->loadedSubAgents)) {
-            $subAgentNames = array_keys($this->loadedSubAgents);
-            $subAgentsList = implode(', ', $subAgentNames);
-
-            $delegationInfo = "\n\nDELEGATION CAPABILITIES:\n" .
-                "You have access to specialized sub-agents for handling specific tasks. " .
-                "Available sub-agents: {$subAgentsList}. " .
-                "Use the 'delegate_to_sub_agent' tool when a task would be better handled by one of your sub-agents. " .
-                "This allows you to leverage specialized expertise and break down complex problems into manageable parts.";
-
-            $instructions .= $delegationInfo;
-        }
-
-        return $instructions;
-    }
+    // Now provided by VersionablePrompts trait
+    // Original getInstructions logic moved to trait and enhanced with versioning support
 
     /**
      * Get instructions with memory context included.
@@ -122,17 +131,17 @@ abstract class BaseLlmAgent extends BaseAgent
 
         // Add memory context if available
         $memoryContext = $context->getState('memory_context');
-        if (!empty($memoryContext)) {
+        if (! empty($memoryContext)) {
             // Handle memory_context that might be an array
             $memoryContextString = is_array($memoryContext) || is_object($memoryContext)
                 ? json_encode($memoryContext, JSON_PRETTY_PRINT)
-                : (string)$memoryContext;
+                : (string) $memoryContext;
 
-            $memoryInfo = "\n\nMEMORY CONTEXT:\n" .
-                "Based on your previous interactions, here's what you should remember:\n\n" .
-                $memoryContextString . "\n\n" .
-                "Use this information to provide more personalized and contextual responses. " .
-                "Build upon previous conversations and maintain continuity in your interactions.";
+            $memoryInfo = "\n\nMEMORY CONTEXT:\n".
+                "Based on your previous interactions, here's what you should remember:\n\n".
+                $memoryContextString."\n\n".
+                'Use this information to provide more personalized and contextual responses. '.
+                'Build upon previous conversations and maintain continuity in your interactions.';
 
             $instructions .= $memoryInfo;
         }
@@ -143,18 +152,14 @@ abstract class BaseLlmAgent extends BaseAgent
     public function setInstructions(string $instructions): static
     {
         $this->instructions = $instructions;
+
         return $this;
     }
 
     public function setModel(string $model): static
     {
         $this->model = $model;
-        return $this;
-    }
 
-    public function setProvider(Provider $provider): static
-    {
-        $this->provider = $provider;
         return $this;
     }
 
@@ -166,6 +171,7 @@ abstract class BaseLlmAgent extends BaseAgent
     public function setTemperature(?float $temperature): static
     {
         $this->temperature = $temperature;
+
         return $this;
     }
 
@@ -177,6 +183,7 @@ abstract class BaseLlmAgent extends BaseAgent
     public function setMaxTokens(?int $maxTokens): static
     {
         $this->maxTokens = $maxTokens;
+
         return $this;
     }
 
@@ -188,6 +195,7 @@ abstract class BaseLlmAgent extends BaseAgent
     public function setTopP(?float $topP): static
     {
         $this->topP = $topP;
+
         return $this;
     }
 
@@ -199,42 +207,94 @@ abstract class BaseLlmAgent extends BaseAgent
     public function setStreaming(bool $streaming): static
     {
         $this->streaming = $streaming;
+
         return $this;
     }
 
     /**
-     * Register sub-agents for this agent.
-     * Return an associative array where keys are unique names and values are class names.
+     * Set the provider for this agent.
+     * Supports all Prism providers: OpenAI, Anthropic, Gemini, DeepSeek, Ollama, Mistral, Groq, XAI, VoyageAI
      *
-     * @return array<string, class-string<BaseLlmAgent>>
+     * @param  Provider|string  $provider  The provider enum or string name
      */
-    protected function registerSubAgents(): array
+    public function setProvider(Provider|string $provider): static
     {
-        return [];
+        if (is_string($provider)) {
+            $provider = match (strtolower($provider)) {
+                'openai' => Provider::OpenAI,
+                'anthropic' => Provider::Anthropic,
+                'gemini', 'google' => Provider::Gemini,
+                'deepseek' => Provider::DeepSeek,
+                'ollama' => Provider::Ollama,
+                'mistral' => Provider::Mistral,
+                'groq' => Provider::Groq,
+                'xai', 'grok' => Provider::XAI,
+                'voyageai', 'voyage' => Provider::VoyageAI,
+                default => throw new \InvalidArgumentException("Unknown provider: {$provider}")
+            };
+        }
+
+        $this->provider = $provider;
+
+        return $this;
     }
 
     public function loadTools(): void
     {
-        if (!empty($this->loadedTools)) {
+        if (! empty($this->loadedTools)) {
             return;
         }
+
+        // Load traditional tools
         foreach ($this->tools as $toolClass) {
             if (class_exists($toolClass) && is_subclass_of($toolClass, ToolInterface::class)) {
                 $toolInstance = app($toolClass); // Resolve from container
                 $this->loadedTools[$toolInstance->definition()['name']] = $toolInstance;
             }
         }
+
+        // Load MCP tools if the discovery service is available
+        if (app()->bound(\Vizra\VizraADK\Services\MCP\MCPToolDiscovery::class)) {
+            try {
+                $mcpDiscovery = app(\Vizra\VizraADK\Services\MCP\MCPToolDiscovery::class);
+                $mcpTools = $mcpDiscovery->discoverToolsForAgent($this);
+
+                foreach ($mcpTools as $mcpTool) {
+                    $toolName = $mcpTool->definition()['name'];
+
+                    // Avoid name conflicts - prefix MCP tools if needed
+                    if (isset($this->loadedTools[$toolName])) {
+                        $serverName = $mcpTool->getServerName();
+                        $toolName = "{$serverName}_{$toolName}";
+                    }
+
+                    $this->loadedTools[$toolName] = $mcpTool;
+                }
+            } catch (\Exception $e) {
+                // Log the error but don't fail the agent loading
+                \Illuminate\Support\Facades\Log::warning('Failed to load MCP tools for agent {agent}: {error}', [
+                    'agent' => $this->getName(),
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     protected function loadSubAgents(): void
     {
-        if (!empty($this->loadedSubAgents)) {
+        if (! empty($this->loadedSubAgents)) {
             return;
         }
-        foreach ($this->registerSubAgents() as $subAgentName => $subAgentClass) {
+
+        foreach ($this->subAgents as $subAgentClass) {
             if (class_exists($subAgentClass) && is_subclass_of($subAgentClass, BaseLlmAgent::class)) {
+                // Generate a name from the class name
+                $className = class_basename($subAgentClass);
+                // Convert CamelCase to snake_case and remove 'Agent' suffix
+                $name = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', str_replace('Agent', '', $className)));
+
                 $subAgentInstance = app($subAgentClass); // Resolve from container
-                $this->loadedSubAgents[$subAgentName] = $subAgentInstance;
+                $this->loadedSubAgents[$name] = $subAgentInstance;
             }
         }
     }
@@ -242,7 +302,7 @@ abstract class BaseLlmAgent extends BaseAgent
     /**
      * Get a loaded sub-agent instance by its registered name.
      *
-     * @param string $name The name of the sub-agent
+     * @param  string  $name  The name of the sub-agent
      * @return BaseLlmAgent|null The sub-agent instance or null if not found
      */
     public function getSubAgent(string $name): ?BaseLlmAgent
@@ -269,7 +329,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
         // Include delegation tool if sub-agents are available
         $allTools = $this->loadedTools;
-        if (!empty($this->loadedSubAgents)) {
+        if (! empty($this->loadedSubAgents)) {
             $allTools[] = new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this);
         }
 
@@ -284,7 +344,7 @@ abstract class BaseLlmAgent extends BaseAgent
             $parameterOrder = [];
 
             // Add parameters based on the definition
-            if (isset($definition['parameters']['properties']) && !empty($definition['parameters']['properties'])) {
+            if (isset($definition['parameters']['properties']) && ! empty($definition['parameters']['properties'])) {
                 foreach ($definition['parameters']['properties'] as $paramName => $paramDef) {
                     $description = $paramDef['description'] ?? '';
                     $parameterOrder[] = $paramName;
@@ -309,12 +369,11 @@ abstract class BaseLlmAgent extends BaseAgent
                 }
             }
 
-
             // Set the tool execution callback - handle tools with or without parameters
             $prismTool = $prismTool->using(function (...$args) use ($tool, $context, $parameterOrder) {
                 try {
                     // Check if we have named parameters vs indexed parameters
-                    $hasNamedKeys = !empty($args) && !array_is_list($args);
+                    $hasNamedKeys = ! empty($args) && ! array_is_list($args);
 
                     // Handle different argument formats from Prism
                     $arguments = [];
@@ -335,11 +394,11 @@ abstract class BaseLlmAgent extends BaseAgent
                     }
 
                     // Only validate required parameters if the tool has parameters
-                    if (!empty($parameterOrder)) {
+                    if (! empty($parameterOrder)) {
                         $definition = $tool->definition();
                         $required = $definition['parameters']['required'] ?? [];
                         foreach ($required as $requiredParam) {
-                            if (!isset($arguments[$requiredParam]) || $arguments[$requiredParam] === null) {
+                            if (! isset($arguments[$requiredParam]) || $arguments[$requiredParam] === null) {
                                 throw new ToolExecutionException("Required parameter '{$requiredParam}' is missing or null");
                             }
                         }
@@ -364,7 +423,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     $context->addMessage([
                         'role' => 'tool',
                         'tool_name' => $tool->definition()['name'],
-                        'content' => $processedResult ?: ''
+                        'content' => $processedResult ?: '',
                     ]);
 
                     return $processedResult;
@@ -375,12 +434,13 @@ abstract class BaseLlmAgent extends BaseAgent
                         app(Tracer::class)->failSpan($spanId, $e);
                     }
 
-                    throw new ToolExecutionException("Error executing tool '{$tool->definition()['name']}': " . $e->getMessage(), 0, $e);
+                    throw new ToolExecutionException("Error executing tool '{$tool->definition()['name']}': ".$e->getMessage(), 0, $e);
                 }
             });
 
             $tools[] = $prismTool;
         }
+
         return $tools;
     }
 
@@ -388,7 +448,12 @@ abstract class BaseLlmAgent extends BaseAgent
     {
         // Store context for memory access
         $this->context = $context;
-        
+
+        // Check for prompt version in context
+        if ($context->getState('prompt_version') !== null) {
+            $this->setPromptVersion($context->getState('prompt_version'));
+        }
+
         // Initialize memory for this agent if not already done
         if ($this->memory === null) {
             $this->memory = new AgentMemory($this);
@@ -408,10 +473,10 @@ abstract class BaseLlmAgent extends BaseAgent
 
             // Add user message with attachments if present
             $userMessage = ['role' => 'user', 'content' => $input ?: ''];
-            if (!empty($images)) {
+            if (! empty($images)) {
                 $userMessage['images'] = $images;
             }
-            if (!empty($documents)) {
+            if (! empty($documents)) {
                 $userMessage['documents'] = $documents;
             }
 
@@ -430,7 +495,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     ->using($this->getProvider(), $this->getModel());
 
                 // Add system prompt if available (now includes memory context)
-                if (!empty($this->getInstructions())) {
+                if (! empty($this->getInstructions())) {
                     $prismRequest = $prismRequest->withSystemPrompt($this->getInstructionsWithMemory($context));
                 }
 
@@ -438,8 +503,8 @@ abstract class BaseLlmAgent extends BaseAgent
                 $prismRequest = $prismRequest->withMessages($messages);
 
                 // Add tools if available
-                $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this)] : []);
-                if (!empty($allTools)) {
+                $allTools = array_merge($this->loadedTools, ! empty($this->loadedSubAgents) ? [new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this)] : []);
+                if (! empty($allTools)) {
                     $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
                         ->withMaxSteps(5); // Prism will handle tool execution internally
                 }
@@ -467,7 +532,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 }
 
             } catch (\Throwable $e) {
-                throw new \RuntimeException("LLM API call failed: " . $e->getMessage(), 0, $e);
+                throw new \RuntimeException('LLM API call failed: '.$e->getMessage(), 0, $e);
             }
 
             Event::dispatch(new LlmResponseReceived($context, $this->getName(), $llmResponse));
@@ -481,8 +546,8 @@ abstract class BaseLlmAgent extends BaseAgent
 
             $processedResponse = $this->afterLlmResponse($llmResponse, $context);
 
-            if (!($processedResponse instanceof Response)) {
-                throw new \RuntimeException("afterLlmResponse hook modified the response to an incompatible type.");
+            if (! ($processedResponse instanceof Response)) {
+                throw new \RuntimeException('afterLlmResponse hook modified the response to an incompatible type.');
             }
 
             // Get the final response text - Prism has already executed any tools
@@ -490,7 +555,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
             $context->addMessage([
                 'role' => 'assistant',
-                'content' => $assistantResponseContent ?: ''
+                'content' => $assistantResponseContent ?: '',
             ]);
 
             Event::dispatch(new AgentResponseGenerated($context, $this->getName(), $assistantResponseContent));
@@ -525,12 +590,12 @@ abstract class BaseLlmAgent extends BaseAgent
                 case 'user':
                     $content = $message['content'] ?? '';
                     // Only add user messages if they have actual content
-                    if (!empty(trim($content))) {
+                    if (! empty(trim($content))) {
                         // Collect additional content (images and documents)
                         $additionalContent = [];
 
                         // Add Prism Image objects if present
-                        if (isset($message['images']) && !empty($message['images'])) {
+                        if (isset($message['images']) && ! empty($message['images'])) {
                             foreach ($message['images'] as $image) {
                                 if ($image instanceof Image) {
                                     $additionalContent[] = $image;
@@ -539,7 +604,7 @@ abstract class BaseLlmAgent extends BaseAgent
                         }
 
                         // Add Prism Document objects if present
-                        if (isset($message['documents']) && !empty($message['documents'])) {
+                        if (isset($message['documents']) && ! empty($message['documents'])) {
                             foreach ($message['documents'] as $document) {
                                 if ($document instanceof Document) {
                                     $additionalContent[] = $document;
@@ -557,7 +622,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     $content = $message['content'] ?? '';
 
                     // Only add assistant messages if they have content
-                    if (!empty(trim($content))) {
+                    if (! empty(trim($content))) {
                         $messages[] = new AssistantMessage($content);
                     }
                     break;
@@ -583,13 +648,13 @@ abstract class BaseLlmAgent extends BaseAgent
             name: $this->getModel(),
             input: [
                 'messages' => $inputMessages,
-                'system_prompt' => $this->getInstructionsWithMemory($context)
+                'system_prompt' => $this->getInstructionsWithMemory($context),
             ],
             metadata: [
                 'provider' => $this->getProvider()->value,
                 'temperature' => $this->getTemperature(),
                 'max_tokens' => $this->getMaxTokens(),
-                'top_p' => $this->getTopP()
+                'top_p' => $this->getTopP(),
             ]
         );
 
@@ -607,9 +672,54 @@ abstract class BaseLlmAgent extends BaseAgent
         if ($this->memory === null) {
             $this->memory = new AgentMemory($this);
         }
+
         return $this->memory;
     }
-    
+
+    /**
+     * Get the vector memory manager for this agent.
+     *
+     * This method provides convenient access to vector/RAG functionality,
+     * automatically using the current agent's name as the default collection.
+     *
+     * Example usage:
+     * ```php
+     * // Search for similar content
+     * $results = $this->vector()->search($this->getName(), 'query text');
+     *
+     * // Add a document to vector memory
+     * $this->vector()->addDocument($this->getName(), 'document content');
+     * ```
+     *
+     * @return VectorMemoryManager The vector memory manager instance
+     */
+    protected function vector(): VectorMemoryManager
+    {
+        return app(VectorMemoryManager::class);
+    }
+
+    /**
+     * Alias for vector() method for convenient RAG (Retrieval-Augmented Generation) access.
+     *
+     * This is a convenience alias that makes it clear when you're using
+     * vector memory for RAG purposes.
+     *
+     * Example usage:
+     * ```php
+     * // Search for relevant context
+     * $context = $this->rag()->search($this->getName(), 'user query');
+     *
+     * // Store knowledge for later retrieval
+     * $this->rag()->addDocument($this->getName(), 'important information');
+     * ```
+     *
+     * @return VectorMemoryManager The vector memory manager instance
+     */
+    protected function rag(): VectorMemoryManager
+    {
+        return $this->vector();
+    }
+
     /**
      * Get the current context
      */
@@ -617,7 +727,7 @@ abstract class BaseLlmAgent extends BaseAgent
     {
         return $this->context;
     }
-    
+
     /**
      * Get the agent ID (defaults to agent name)
      */
@@ -625,7 +735,7 @@ abstract class BaseLlmAgent extends BaseAgent
     {
         return $this->getName();
     }
-    
+
     public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
     {
         /** @var Tracer $tracer */
@@ -643,9 +753,9 @@ abstract class BaseLlmAgent extends BaseAgent
                     'usage' => $response->usage ? [
                         'input_tokens' => $response->usage->input ?? $response->usage->inputTokens ?? 0,
                         'output_tokens' => $response->usage->output ?? $response->usage->outputTokens ?? 0,
-                        'total_tokens' => ($response->usage->input ?? $response->usage->inputTokens ?? 0) + ($response->usage->output ?? $response->usage->outputTokens ?? 0)
+                        'total_tokens' => ($response->usage->input ?? $response->usage->inputTokens ?? 0) + ($response->usage->output ?? $response->usage->outputTokens ?? 0),
                     ] : null,
-                    'finish_reason' => $response->finishReason ?? null
+                    'finish_reason' => $response->finishReason ?? null,
                 ],
                 status: 'success'
             );
@@ -666,7 +776,7 @@ abstract class BaseLlmAgent extends BaseAgent
             input: $arguments,
             metadata: [
                 'agent_name' => $this->getName(),
-                'tool_class' => get_class($this->loadedTools[$toolName] ?? null)
+                'tool_class' => get_class($this->loadedTools[$toolName] ?? null),
             ]
         );
 
@@ -678,7 +788,7 @@ abstract class BaseLlmAgent extends BaseAgent
             'tool_name' => $toolName,
             'span_id' => $spanId,
             'arguments' => $arguments,
-            'agent' => $this->getName()
+            'agent' => $this->getName(),
         ]);
 
         return $arguments;
@@ -697,7 +807,7 @@ abstract class BaseLlmAgent extends BaseAgent
             'tool_name' => $toolName,
             'span_id' => $spanId,
             'result_length' => strlen($result),
-            'agent' => $this->getName()
+            'agent' => $this->getName(),
         ]);
 
         if ($spanId) {
@@ -710,7 +820,7 @@ abstract class BaseLlmAgent extends BaseAgent
         } else {
             logger()->warning('Tool call span ID not found in context', [
                 'tool_name' => $toolName,
-                'agent' => $this->getName()
+                'agent' => $this->getName(),
             ]);
         }
 
@@ -721,10 +831,10 @@ abstract class BaseLlmAgent extends BaseAgent
      * Called before delegating a task to a sub-agent.
      * Use this to modify delegation parameters, add authorization checks, or log delegation attempts.
      *
-     * @param string $subAgentName The name of the sub-agent receiving the task
-     * @param string $taskInput The task input being delegated
-     * @param string $contextSummary The context summary for the sub-agent
-     * @param AgentContext $parentContext The parent agent's context
+     * @param  string  $subAgentName  The name of the sub-agent receiving the task
+     * @param  string  $taskInput  The task input being delegated
+     * @param  string  $contextSummary  The context summary for the sub-agent
+     * @param  AgentContext  $parentContext  The parent agent's context
      * @return array Returns modified delegation parameters [subAgentName, taskInput, contextSummary]
      */
     public function beforeSubAgentDelegation(string $subAgentName, string $taskInput, string $contextSummary, AgentContext $parentContext): array
@@ -738,12 +848,12 @@ abstract class BaseLlmAgent extends BaseAgent
             name: $subAgentName,
             input: [
                 'task_input' => $taskInput,
-                'context_summary' => $contextSummary
+                'context_summary' => $contextSummary,
             ],
             metadata: [
                 'parent_agent' => $this->getName(),
                 'sub_agent_name' => $subAgentName,
-                'delegation_depth' => $parentContext->getState('delegation_depth', 0) + 1
+                'delegation_depth' => $parentContext->getState('delegation_depth', 0) + 1,
             ]
         );
 
@@ -757,11 +867,11 @@ abstract class BaseLlmAgent extends BaseAgent
      * Called after a sub-agent completes a delegated task.
      * Use this to process results, validate responses, or perform cleanup.
      *
-     * @param string $subAgentName The name of the sub-agent that handled the task
-     * @param string $taskInput The original task input
-     * @param string $subAgentResult The result from the sub-agent
-     * @param AgentContext $parentContext The parent agent's context
-     * @param AgentContext $subAgentContext The sub-agent's context
+     * @param  string  $subAgentName  The name of the sub-agent that handled the task
+     * @param  string  $taskInput  The original task input
+     * @param  string  $subAgentResult  The result from the sub-agent
+     * @param  AgentContext  $parentContext  The parent agent's context
+     * @param  AgentContext  $subAgentContext  The sub-agent's context
      * @return string Returns the processed result
      */
     public function afterSubAgentDelegation(string $subAgentName, string $taskInput, string $subAgentResult, AgentContext $parentContext, AgentContext $subAgentContext): string
@@ -778,7 +888,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 spanId: $spanId,
                 output: [
                     'result' => $subAgentResult,
-                    'sub_agent_session_id' => $subAgentContext->getSessionId()
+                    'sub_agent_session_id' => $subAgentContext->getSessionId(),
                 ],
                 status: 'success'
             );

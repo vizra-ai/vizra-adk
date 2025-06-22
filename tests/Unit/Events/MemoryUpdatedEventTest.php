@@ -1,15 +1,15 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vizra\VizraADK\Events\MemoryUpdated;
 use Vizra\VizraADK\Models\AgentMemory;
 use Vizra\VizraADK\Models\AgentSession;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Run migrations for testing
-    $this->loadMigrationsFrom(__DIR__ . '/../../../database/migrations');
+    $this->loadMigrationsFrom(__DIR__.'/../../../database/migrations');
 });
 
 it('can create memory updated event', function () {
@@ -18,7 +18,7 @@ it('can create memory updated event', function () {
         'memory_summary' => 'Test summary',
         'memory_data' => ['key' => 'value'],
         'key_learnings' => ['learning 1'],
-        'total_sessions' => 1
+        'total_sessions' => 1,
     ]);
 
     $event = new MemoryUpdated($memory, null, 'learning_added');
@@ -31,12 +31,12 @@ it('can create memory updated event', function () {
 
 it('has public properties', function () {
     $memory = AgentMemory::create([
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     $session = AgentSession::create([
         'agent_name' => 'test-agent',
-        'agent_memory_id' => $memory->id
+        'agent_memory_id' => $memory->id,
     ]);
 
     $event = new MemoryUpdated($memory, $session, 'fact_added');
@@ -53,7 +53,7 @@ it('has public properties', function () {
 
 it('accepts different update types', function () {
     $memory = AgentMemory::create([
-        'agent_name' => 'test-agent'
+        'agent_name' => 'test-agent',
     ]);
 
     $updateTypes = [
@@ -61,7 +61,7 @@ it('accepts different update types', function () {
         'fact_added',
         'summary_updated',
         'session_incremented',
-        'session_summarized'
+        'session_summarized',
     ];
 
     foreach ($updateTypes as $updateType) {
@@ -76,7 +76,7 @@ it('can be serialized and unserialized', function () {
         'memory_summary' => 'Serialization test',
         'memory_data' => ['serialized' => true],
         'key_learnings' => ['Can be serialized'],
-        'total_sessions' => 5
+        'total_sessions' => 5,
     ]);
 
     $event = new MemoryUpdated($memory, null, 'testing');
@@ -98,7 +98,7 @@ it('provides access to memory data through event', function () {
         'memory_summary' => 'Event access test',
         'memory_data' => ['accessible' => 'through_event'],
         'key_learnings' => ['Event provides memory access'],
-        'total_sessions' => 3
+        'total_sessions' => 3,
     ]);
 
     $event = new MemoryUpdated($memory, null, 'access_test');
@@ -117,7 +117,7 @@ it('can handle memory with null values', function () {
         'memory_summary' => null,
         'memory_data' => [],
         'key_learnings' => [],
-        'total_sessions' => 0
+        'total_sessions' => 0,
     ]);
 
     $event = new MemoryUpdated($memory, null, 'null_handling');
@@ -131,13 +131,13 @@ it('can handle memory with null values', function () {
 
 it('maintains memory relationships through event', function () {
     $memory = AgentMemory::create([
-        'agent_name' => 'relationship-test-agent'
+        'agent_name' => 'relationship-test-agent',
     ]);
 
     // Create a session associated with the memory
     $session = AgentSession::create([
         'agent_name' => 'relationship-test-agent',
-        'agent_memory_id' => $memory->id
+        'agent_memory_id' => $memory->id,
     ]);
 
     $event = new MemoryUpdated($memory, $session, 'relationship_test');
@@ -150,7 +150,7 @@ it('maintains memory relationships through event', function () {
 
 it('can be used with event listeners', function () {
     $memory = AgentMemory::create([
-        'agent_name' => 'listener-test-agent'
+        'agent_name' => 'listener-test-agent',
     ]);
 
     $eventFired = false;

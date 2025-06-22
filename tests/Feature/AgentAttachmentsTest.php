@@ -1,15 +1,14 @@
 <?php
 
+use Illuminate\Support\Facades\File;
+use Prism\Prism\ValueObjects\Messages\Support\Document;
+use Prism\Prism\ValueObjects\Messages\Support\Image;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Execution\AgentExecutor;
-use Prism\Prism\ValueObjects\Messages\Support\Image;
-use Prism\Prism\ValueObjects\Messages\Support\Document;
-use Illuminate\Support\Facades\File;
 
 beforeEach(function () {
     // Create test files for testing
-    if (!File::exists(storage_path('app/tests'))) {
+    if (! File::exists(storage_path('app/tests'))) {
         File::makeDirectory(storage_path('app/tests'), 0755, true);
     }
 
@@ -27,10 +26,14 @@ afterEach(function () {
 
 it('can add image to agent conversation through executor', function () {
     // Create a test agent that extends BaseLlmAgent
-    $testAgent = new class extends BaseLlmAgent {
+    $testAgent = new class extends BaseLlmAgent
+    {
         protected string $name = 'test_image_agent';
+
         protected string $description = 'Test agent for image functionality';
+
         protected string $instructions = 'You are a test agent that can process images.';
+
         protected string $model = 'gpt-4o';
     };
 
@@ -53,10 +56,14 @@ it('can add image to agent conversation through executor', function () {
 });
 
 it('can add multiple images to conversation', function () {
-    $testAgent = new class extends BaseLlmAgent {
+    $testAgent = new class extends BaseLlmAgent
+    {
         protected string $name = 'test_multi_image_agent';
+
         protected string $description = 'Test agent for multiple images';
+
         protected string $instructions = 'You are a test agent.';
+
         protected string $model = 'gpt-4o';
     };
 
@@ -78,10 +85,14 @@ it('can add multiple images to conversation', function () {
 });
 
 it('can add document to agent conversation', function () {
-    $testAgent = new class extends BaseLlmAgent {
+    $testAgent = new class extends BaseLlmAgent
+    {
         protected string $name = 'test_document_agent';
+
         protected string $description = 'Test agent for documents';
+
         protected string $instructions = 'You are a test agent.';
+
         protected string $model = 'gpt-4o';
     };
 
@@ -101,10 +112,14 @@ it('can add document to agent conversation', function () {
 });
 
 it('can add multiple documents to conversation', function () {
-    $testAgent = new class extends BaseLlmAgent {
+    $testAgent = new class extends BaseLlmAgent
+    {
         protected string $name = 'test_multi_doc_agent';
+
         protected string $description = 'Test agent for multiple documents';
+
         protected string $instructions = 'You are a test agent.';
+
         protected string $model = 'gpt-4o';
     };
 
@@ -126,10 +141,14 @@ it('can add multiple documents to conversation', function () {
 });
 
 it('can combine images and documents', function () {
-    $testAgent = new class extends BaseLlmAgent {
+    $testAgent = new class extends BaseLlmAgent
+    {
         protected string $name = 'test_combined_agent';
+
         protected string $description = 'Test agent for combined attachments';
+
         protected string $instructions = 'You are a test agent.';
+
         protected string $model = 'gpt-4o';
     };
 
@@ -155,10 +174,14 @@ it('can combine images and documents', function () {
 });
 
 it('maintains fluent interface with other methods', function () {
-    $testAgent = new class extends BaseLlmAgent {
+    $testAgent = new class extends BaseLlmAgent
+    {
         protected string $name = 'test_fluent_agent';
+
         protected string $description = 'Test agent for fluent interface';
+
         protected string $instructions = 'You are a test agent.';
+
         protected string $model = 'gpt-4o';
     };
 
@@ -199,10 +222,14 @@ it('maintains fluent interface with other methods', function () {
 it('passes prism images and documents through executor to context', function () {
     $this->markTestSkipped('This test requires full integration setup');
     // Create a test agent that can inspect what's passed to it
-    $testAgent = new class extends BaseLlmAgent {
+    $testAgent = new class extends BaseLlmAgent
+    {
         protected string $name = 'test_context_agent';
+
         protected string $description = 'Test agent for context passing';
+
         protected string $instructions = 'You are a test agent.';
+
         protected string $model = 'gpt-4o';
 
         public static $capturedContext = null;
@@ -219,8 +246,8 @@ it('passes prism images and documents through executor to context', function () 
             return json_encode([
                 'images_count' => count($images),
                 'documents_count' => count($documents),
-                'has_images' => !empty($images),
-                'has_documents' => !empty($documents),
+                'has_images' => ! empty($images),
+                'has_documents' => ! empty($documents),
                 'first_image_is_image' => isset($images[0]) && $images[0] instanceof Image,
                 'first_document_is_document' => isset($documents[0]) && $documents[0] instanceof Document,
             ]);
@@ -239,7 +266,7 @@ it('passes prism images and documents through executor to context', function () 
         ->withImage(storage_path('app/tests/test-image.jpg'))
         ->withDocument(storage_path('app/tests/test-document.pdf'))
         ->withSession('test-session')
-        ->execute();
+        ->go();
 
     $decodedResult = json_decode($result, true);
 
@@ -260,10 +287,14 @@ it('passes prism images and documents through executor to context', function () 
 
 it('correctly adds attachments to user messages in conversation history', function () {
     $this->markTestSkipped('This test requires full integration setup');
-    $testAgent = new class extends BaseLlmAgent {
+    $testAgent = new class extends BaseLlmAgent
+    {
         protected string $name = 'test_history_agent';
+
         protected string $description = 'Test agent for conversation history';
+
         protected string $instructions = 'You are a test agent.';
+
         protected string $model = 'gpt-4o';
 
         public function run(mixed $input, AgentContext $context): mixed
@@ -306,7 +337,7 @@ it('correctly adds attachments to user messages in conversation history', functi
         ->withImage(storage_path('app/tests/test-image.jpg'))
         ->withDocument(storage_path('app/tests/test-document.pdf'))
         ->withSession('test-session')
-        ->execute();
+        ->go();
 
     expect($result['has_user_message'])->toBeTrue();
     expect($result['user_message_has_images'])->toBeTrue();

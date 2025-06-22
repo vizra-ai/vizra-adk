@@ -2,28 +2,36 @@
 
 namespace Vizra\VizraADK\Tests\Feature;
 
-use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\Facades\Workflow;
-use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Tests\TestCase;
 
 // Define test agents for the integration test
-class DataCollectorAgent extends BaseLlmAgent {
+class DataCollectorAgent extends BaseLlmAgent
+{
     protected string $name = 'data_collector';
+
     protected string $description = 'Collects data from various sources';
+
     protected string $instructions = 'You collect data.';
 }
 
-class DataProcessorAgent extends BaseLlmAgent {
+class DataProcessorAgent extends BaseLlmAgent
+{
     protected string $name = 'data_processor';
+
     protected string $description = 'Processes collected data';
+
     protected string $instructions = 'You process data.';
 }
 
-class ReportGeneratorAgent extends BaseLlmAgent {
+class ReportGeneratorAgent extends BaseLlmAgent
+{
     protected string $name = 'report_generator';
+
     protected string $description = 'Generates reports from processed data';
+
     protected string $instructions = 'You generate reports.';
 }
 
@@ -89,9 +97,9 @@ class ClassBasedWorkflowIntegrationTest extends TestCase
     {
         // Mock the agent execution - the AgentManager will resolve the class internally
         Agent::shouldReceive('run')
-            ->withArgs(function($agentNameOrClass, $input, $sessionId = null) {
+            ->withArgs(function ($agentNameOrClass, $input, $sessionId = null) {
                 // The AgentManager's run method accepts either a name or class
-                return $agentNameOrClass === DataCollectorAgent::class 
+                return $agentNameOrClass === DataCollectorAgent::class
                     && $input === 'Test input';
             })
             ->once()
@@ -119,7 +127,7 @@ class ClassBasedWorkflowIntegrationTest extends TestCase
         // Create parallel workflow
         $workflow = Workflow::parallel([
             DataCollectorAgent::class,
-            DataProcessorAgent::class
+            DataProcessorAgent::class,
         ]);
 
         $result = $workflow->execute('Input');
@@ -146,7 +154,7 @@ class ClassBasedWorkflowIntegrationTest extends TestCase
         // Create workflow with dynamic parameters
         $workflow = Workflow::sequential()
             ->then(DataCollectorAgent::class)
-            ->then(DataProcessorAgent::class, function($input, $results) {
+            ->then(DataProcessorAgent::class, function ($input, $results) {
                 return ['source' => $results[DataCollectorAgent::class]['data']];
             });
 
@@ -202,12 +210,12 @@ class ClassBasedWorkflowIntegrationTest extends TestCase
             'steps' => [
                 [
                     'agent' => DataCollectorAgent::class,
-                    'params' => 'Collect this'
+                    'params' => 'Collect this',
                 ],
                 [
-                    'agent' => DataProcessorAgent::class
-                ]
-            ]
+                    'agent' => DataProcessorAgent::class,
+                ],
+            ],
         ];
 
         $workflow = Workflow::fromArray($definition);

@@ -2,29 +2,30 @@
 
 namespace Vizra\VizraADK\Tests\Unit\EventDriven;
 
-use Vizra\VizraADK\Tests\TestCase;
+use Illuminate\Database\Eloquent\Model;
+use Mockery;
 use Vizra\VizraADK\Agents\BaseAgent;
 use Vizra\VizraADK\Execution\AgentExecutor;
 use Vizra\VizraADK\System\AgentContext;
-use Illuminate\Database\Eloquent\Model;
-use Mockery;
+use Vizra\VizraADK\Tests\TestCase;
 
 class TestEventDrivenAgent extends BaseAgent
 {
     protected string $name = 'test_event_driven_agent';
+
     protected string $description = 'Test agent for event-driven functionality';
 
     public function run(mixed $input, AgentContext $context): mixed
     {
         $mode = $context->getState('execution_mode', 'ask');
 
-        return match($mode) {
-            'trigger' => "Triggered with: " . json_encode($input),
-            'analyze' => "Analyzed: " . json_encode($input),
-            'process' => "Processed: " . json_encode($input),
-            'monitor' => "Monitoring: " . json_encode($input),
-            'generate' => "Generated: " . json_encode($input),
-            default => "Asked: " . (is_array($input) ? json_encode($input) : $input),
+        return match ($mode) {
+            'trigger' => 'Triggered with: '.json_encode($input),
+            'analyze' => 'Analyzed: '.json_encode($input),
+            'process' => 'Processed: '.json_encode($input),
+            'monitor' => 'Monitoring: '.json_encode($input),
+            'generate' => 'Generated: '.json_encode($input),
+            default => 'Asked: '.(is_array($input) ? json_encode($input) : $input),
         };
     }
 
@@ -143,10 +144,10 @@ class EventDrivenAgentTest extends TestCase
         // Bind mocks to container
         $this->app->instance(\Vizra\VizraADK\Services\AgentManager::class, $mockAgentManager);
         $this->app->instance(\Vizra\VizraADK\Services\StateManager::class, $mockStateManager);
-        $this->app->instance(TestEventDrivenAgent::class, new TestEventDrivenAgent());
+        $this->app->instance(TestEventDrivenAgent::class, new TestEventDrivenAgent);
 
         // Execute and verify mode is set correctly
-        $result = TestEventDrivenAgent::trigger(['test' => 'data'])->execute();
+        $result = TestEventDrivenAgent::trigger(['test' => 'data'])->go();
 
         $this->assertEquals('Test response', $result);
     }
@@ -209,7 +210,7 @@ class EventDrivenAgentTest extends TestCase
 
     public function test_mode_execution_with_different_inputs()
     {
-        $agent = new TestEventDrivenAgent();
+        $agent = new TestEventDrivenAgent;
 
         // Test ask mode
         $askContext = Mockery::mock(\Vizra\VizraADK\System\AgentContext::class);
