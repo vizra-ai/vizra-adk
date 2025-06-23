@@ -146,7 +146,7 @@ Take your agents to production with **Vizra Cloud** - our managed hosting platfo
 - **💾 Managed Vector Database** - Built-in memory storage
 - **🔧 Zero Configuration** - We handle the infrastructure
 
-**[Join the waitlist at vizra.ai →](https://vizra.ai)**
+**[Join the waitlist at vizra.ai →](https://vizra.ai/cloud)**
 
 ## 🤝 Sponsorship
 
