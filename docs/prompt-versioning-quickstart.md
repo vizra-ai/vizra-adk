@@ -22,13 +22,13 @@ echo "You are a detailed assistant. Provide comprehensive answers." > resources/
 // Runtime version selection
 $response = MyAgent::ask('Hello')
     ->withPromptVersion('concise')
-    ->execute();
+    ->go();
 
 // With Agent facade
 $response = Agent::build('my_agent')
     ->withPromptVersion('detailed')
     ->ask('Hello')
-    ->execute();
+    ->go();
 ```
 
 ## 3. Use in Evaluations
@@ -38,7 +38,7 @@ class MyEvaluation extends BaseEvaluation
 {
     // Specify prompt version column in CSV
     public ?string $promptVersionColumn = 'prompt_version';
-    
+
     // Or set default for all tests
     public array $agentConfig = [
         'prompt_version' => 'detailed'
