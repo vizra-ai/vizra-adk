@@ -204,5 +204,5 @@ Special thanks to:
 <strong>Ready to build intelligent AI agents?</strong><br>
 <a href="https://vizra.ai/docs">Get Started →</a> • 
 <a href="https://github.com/sponsors/vizra-ai">Sponsor →</a> • 
-<a href="https://vizra.ai">Join Cloud Waitlist →</a>
+<a href="https://vizra.ai/cloud">Join Cloud Waitlist →</a>
 </p>
