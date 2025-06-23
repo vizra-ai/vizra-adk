@@ -180,7 +180,7 @@ Every contribution, no matter the size, makes a difference! Sponsors get:
 
 - **[GitHub Discussions](https://github.com/vizra-ai/vizra-adk/discussions)** - Ask questions, share ideas
 - **[GitHub Issues](https://github.com/vizra-ai/vizra-adk/issues)** - Report bugs, request features
-- **[Twitter/X](https://twitter.com/vizra_ai)** - Latest updates and tips
+- **[Twitter/X](https://twitter.com/aaronlumsden)** - Latest updates and tips
 
 ## 📄 License
 
