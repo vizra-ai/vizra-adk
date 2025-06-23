@@ -899,13 +899,15 @@ function testModalButton() {
                 <!-- Message Input -->
                 @if($selectedAgent)
                     <div class="px-6 py-4 border-t border-gray-800/50 bg-gray-800/30 rounded-b-xl">
-                        <form wire:submit.prevent="sendMessage" class="flex items-center space-x-3">
+                        <form wire:submit.prevent="sendMessage" class="flex items-center space-x-3" 
+                              x-data="{ messageText: @entangle('message') }"
+                              x-on:submit="setTimeout(() => messageText = '', 100)">
                             <div class="flex-1">
                                 <div class="relative">
                                     <input type="text"
                                            id="message-input"
-                                           wire:model.defer="message"
-                                           wire:keydown.enter.prevent="sendMessage"
+                                           wire:model="message"
+                                           x-model="messageText"
                                            placeholder="Type your message..."
                                            class="w-full px-4 py-3 pr-12 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-gray-800 text-gray-200 placeholder-gray-500 hover:bg-gray-750 transition-colors duration-200 disabled:bg-gray-900 disabled:cursor-not-allowed"
                                            @if($isLoading) disabled @endif>
@@ -916,16 +918,17 @@ function testModalButton() {
                                     </div>
                                 </div>
                                 <div class="absolute bottom-[-22px] right-0 flex items-center justify-end text-xs text-gray-500">
-                                    @if(!empty($message) && is_string($message))
+                                    @if(!empty($message))
                                         <div class="flex items-center space-x-1">
-                                            <span>{{ $this->getMessageCharacterCount() }}</span>
+                                            <span>{{ strlen($message) }}</span>
                                             <span>/ 2000 characters</span>
                                         </div>
                                     @endif
                                 </div>
                             </div>
                             <button type="submit"
-                                    @if($isLoading || !$message || trim($message) === '') disabled @endif
+                                    x-bind:disabled="!messageText.trim()"
+                                    wire:loading.attr="disabled"
                                     class="flex items-center justify-center px-4 py-3 h-[46px] bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg min-w-[80px]">
                                 @if($isLoading)
                                     <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -1018,31 +1021,12 @@ function testModalButton() {
 
         <!-- Scripts -->
         <script>
-            // Auto-scroll chat messages to bottom and clear input
+            // Auto-scroll chat messages to bottom
             document.addEventListener('livewire:updated', () => {
                 const chatMessages = document.getElementById('chat-messages');
                 if (chatMessages) {
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 }
-                
-                // Clear message input after sending
-                const messageInput = document.getElementById('message-input');
-                if (messageInput && @json($isLoading) === false) {
-                    // Only clear if not loading (message was sent successfully)
-                    if (messageInput.value === '') {
-                        // Already cleared by Livewire
-                    }
-                }
-            });
-
-            // Listen for message sent event
-            document.addEventListener('livewire:load', () => {
-                Livewire.on('messageSent', () => {
-                    const messageInput = document.getElementById('message-input');
-                    if (messageInput) {
-                        messageInput.value = '';
-                    }
-                });
             });
 
             // Toggle span details in trace visualization

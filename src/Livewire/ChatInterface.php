@@ -170,12 +170,12 @@ class ChatInterface extends Component
 
     public function sendMessage()
     {
-        if (empty($this->message) || empty($this->selectedAgent)) {
+        if (empty(trim($this->message)) || empty($this->selectedAgent)) {
             return;
         }
 
         $userMessage = trim($this->message);
-        $this->reset('message'); // Use Livewire's reset method
+        $this->message = ''; // Clear the message
         $this->isLoading = true;
 
         // Add user message to chat history
@@ -209,9 +209,6 @@ class ChatInterface extends Component
         }
 
         $this->isLoading = false;
-
-        // Dispatch event to clear input (belt and suspenders approach)
-        $this->dispatch('messageSent');
     }
 
     public function clearChat()
@@ -464,13 +461,7 @@ class ChatInterface extends Component
 
     public function getMessageCharacterCount()
     {
-        return is_string($this->message) ? strlen($this->message) : 0;
-    }
-
-    public function updatedMessage($value)
-    {
-        // Ensure message is always a string
-        $this->message = is_string($value) ? $value : '';
+        return strlen($this->message);
     }
 
     public function render()
