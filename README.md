@@ -192,7 +192,7 @@ Built with ❤️ by the Vizra team and contributors.
 
 Special thanks to:
 
-- The [Laravel team](https://github.com/laravel) for creating an amazing framework
+- [Laravel](https://github.com/laravel) for creating an amazing framework
 - [Prism PHP](https://github.com/prism-php/prism) for the powerful LLM integration library
 - [Livewire](https://livewire.laravel.com/) for making our web dashboard reactive and beautiful
 - [League CSV](https://csv.thephpleague.com/) for handling CSV in our evaluation framework
