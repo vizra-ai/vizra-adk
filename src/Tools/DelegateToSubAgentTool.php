@@ -56,6 +56,7 @@ class DelegateToSubAgentTool implements ToolInterface
 
     public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
+
         // Check delegation depth to prevent excessive recursion
         $currentDepth = $context->getState('delegation_depth', 0);
         $maxDepth = config('vizra-adk.max_delegation_depth', 5);
@@ -154,12 +155,15 @@ class DelegateToSubAgentTool implements ToolInterface
             );
 
             // Return the sub-agent's response
-            return json_encode([
+            $response = [
                 'sub_agent' => $subAgentName,
                 'task_input' => $taskInput,
                 'result' => $processedResult,
                 'success' => true,
-            ]);
+            ];
+
+
+            return json_encode($response);
 
         } catch (\Throwable $e) {
             return json_encode([

@@ -315,9 +315,36 @@ class AgentExecutor
 
         // Add Prism Image and Document objects to context
         if (! empty($this->images)) {
+            // Store image metadata instead of actual objects for serialization
+            $imageMetadata = [];
+            foreach ($this->images as $image) {
+                // The Image class has public properties: image (base64 data) and mimeType
+                $imageMetadata[] = [
+                    'type' => 'image',
+                    'data' => $image->image,  // This is the base64 encoded image data
+                    'mimeType' => $image->mimeType,
+                ];
+            }
+            $agentContext->setState('prism_images_metadata', $imageMetadata);
+            // Also store the actual objects for immediate use
             $agentContext->setState('prism_images', $this->images);
         }
         if (! empty($this->documents)) {
+            // Store document metadata for consistency
+            $documentMetadata = [];
+            foreach ($this->documents as $document) {
+                // Document class has: document (string|array), mimeType, dataFormat, documentTitle, documentContext
+                $documentMetadata[] = [
+                    'type' => 'document',
+                    'data' => is_string($document->document) ? $document->document : json_encode($document->document),
+                    'mimeType' => $document->mimeType,
+                    'dataFormat' => $document->dataFormat,
+                    'documentTitle' => $document->documentTitle,
+                    'documentContext' => $document->documentContext,
+                ];
+            }
+            $agentContext->setState('prism_documents_metadata', $documentMetadata);
+            // Also store the actual objects for immediate use
             $agentContext->setState('prism_documents', $this->documents);
         }
 
@@ -340,6 +367,9 @@ class AgentExecutor
         if ($this->timeout) {
             set_time_limit($this->timeout);
         }
+
+        // Save the context state before running so it's available when AgentManager loads context
+        $stateManager->saveContext($agentContext, $agentName, false);
 
         // Execute the agent
         return $agentManager->run($agentName, $this->input, $sessionId);

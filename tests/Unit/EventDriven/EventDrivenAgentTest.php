@@ -136,6 +136,9 @@ class EventDrivenAgentTest extends TestCase
         $mockStateManager->shouldReceive('loadContext')
             ->once()
             ->andReturn($mockContext);
+        $mockStateManager->shouldReceive('saveContext')
+            ->once()
+            ->with($mockContext, 'test_event_driven_agent', false);
 
         $mockAgentManager->shouldReceive('run')
             ->once()

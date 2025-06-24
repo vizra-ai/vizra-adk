@@ -14,22 +14,11 @@ class {{ class }} extends BaseLlmAgent
 
     /**
      * System prompt / instructions for the LLM.
-     * This guides the agent's behavior and responses.
      */
     protected string $instructions = 'You are a helpful assistant. Your name is {{ agentName }}.';
 
-    /**
-     * The LLM model to use for this agent.
-     * Leave empty to use the default from config/vizra-adk.php.
-     * Example: 'gemini-pro', 'gpt-4-turbo'
-     */
     protected string $model = '';
 
-    /**
-     * Tools this agent can use.
-     *
-     * @var array<class-string<ToolInterface>>
-     */
     protected array $tools = [
         // Example: YourTool::class,
     ];

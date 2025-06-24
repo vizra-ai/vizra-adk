@@ -470,6 +470,54 @@ abstract class BaseLlmAgent extends BaseAgent
             // Check for Prism Image and Document objects in context from AgentExecutor
             $images = $context->getState('prism_images', []);
             $documents = $context->getState('prism_documents', []);
+            
+            // If no direct images but we have metadata, recreate them
+            if (empty($images) && $context->getState('prism_images_metadata')) {
+                $images = [];
+                foreach ($context->getState('prism_images_metadata', []) as $metadata) {
+                    if ($metadata['type'] === 'image' && isset($metadata['data']) && isset($metadata['mimeType'])) {
+                        // Recreate the Image object from metadata
+                        // The data is already base64 encoded from the Image object
+                        $images[] = Image::fromBase64($metadata['data'], $metadata['mimeType']);
+                    }
+                }
+            }
+            
+            // If no direct documents but we have metadata, recreate them
+            if (empty($documents) && $context->getState('prism_documents_metadata')) {
+                $documents = [];
+                foreach ($context->getState('prism_documents_metadata', []) as $metadata) {
+                    if ($metadata['type'] === 'document' && isset($metadata['data'])) {
+                        // Recreate the Document object from metadata based on dataFormat
+                        if ($metadata['dataFormat'] === 'base64') {
+                            $documents[] = Document::fromBase64(
+                                $metadata['data'], 
+                                $metadata['mimeType'],
+                                $metadata['documentTitle'] ?? null,
+                                $metadata['documentContext'] ?? null
+                            );
+                        } elseif ($metadata['dataFormat'] === 'text') {
+                            $documents[] = Document::fromText(
+                                $metadata['data'],
+                                $metadata['documentTitle'] ?? null,
+                                $metadata['documentContext'] ?? null
+                            );
+                        } elseif ($metadata['dataFormat'] === 'content' && $data = json_decode($metadata['data'], true)) {
+                            $documents[] = Document::fromChunks(
+                                $data,
+                                $metadata['documentTitle'] ?? null,
+                                $metadata['documentContext'] ?? null
+                            );
+                        } elseif ($metadata['dataFormat'] === 'url') {
+                            $documents[] = Document::fromUrl(
+                                $metadata['data'],
+                                $metadata['documentTitle'] ?? null,
+                                $metadata['documentContext'] ?? null
+                            );
+                        }
+                    }
+                }
+            }
 
             // Add user message with attachments if present
             $userMessage = ['role' => 'user', 'content' => $input ?: ''];
@@ -599,6 +647,9 @@ abstract class BaseLlmAgent extends BaseAgent
                             foreach ($message['images'] as $image) {
                                 if ($image instanceof Image) {
                                     $additionalContent[] = $image;
+                                } elseif (is_array($image) && isset($image['image']) && isset($image['mimeType'])) {
+                                    // Recreate Image object from array (happens when loaded from database)
+                                    $additionalContent[] = Image::fromBase64($image['image'], $image['mimeType']);
                                 }
                             }
                         }
@@ -608,6 +659,15 @@ abstract class BaseLlmAgent extends BaseAgent
                             foreach ($message['documents'] as $document) {
                                 if ($document instanceof Document) {
                                     $additionalContent[] = $document;
+                                } elseif (is_array($document) && isset($document['document']) && isset($document['mimeType'])) {
+                                    // Recreate Document object from array (happens when loaded from database)
+                                    $additionalContent[] = new Document(
+                                        $document['document'],
+                                        $document['mimeType'],
+                                        $document['dataFormat'] ?? null,
+                                        $document['documentTitle'] ?? null,
+                                        $document['documentContext'] ?? null
+                                    );
                                 }
                             }
                         }
@@ -776,7 +836,7 @@ abstract class BaseLlmAgent extends BaseAgent
             input: $arguments,
             metadata: [
                 'agent_name' => $this->getName(),
-                'tool_class' => get_class($this->loadedTools[$toolName] ?? null),
+                'tool_class' => isset($this->loadedTools[$toolName]) ? get_class($this->loadedTools[$toolName]) : 'DelegateToSubAgentTool',
             ]
         );
 

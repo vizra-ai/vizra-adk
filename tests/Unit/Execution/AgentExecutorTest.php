@@ -201,6 +201,9 @@ class AgentExecutorTest extends TestCase
         $mockStateManager->shouldReceive('loadContext')
             ->once()
             ->andReturn($mockContext);
+        $mockStateManager->shouldReceive('saveContext')
+            ->once()
+            ->with($mockContext, 'test', false);
 
         // Mock an agent
         $mockAgent = Mockery::mock();
@@ -260,6 +263,9 @@ class AgentExecutorTest extends TestCase
         $mockStateManager->shouldReceive('loadContext')
             ->once()
             ->andReturn($mockContext);
+        $mockStateManager->shouldReceive('saveContext')
+            ->once()
+            ->with($mockContext, 'test', false);
 
         // Mock the AgentManager
         $mockAgentManager = Mockery::mock(AgentManager::class);
@@ -293,6 +299,9 @@ class AgentExecutorTest extends TestCase
         $mockContext = Mockery::mock(AgentContext::class);
         $mockContext->shouldReceive('setState')->zeroOrMoreTimes();
         $mockStateManager->shouldReceive('loadContext')->andReturn($mockContext);
+        $mockStateManager->shouldReceive('saveContext')
+            ->once()
+            ->with($mockContext, 'test', false);
 
         $mockAgent = Mockery::mock();
         $mockAgent->shouldReceive('getName')->andReturn('test_agent');
@@ -318,6 +327,9 @@ class AgentExecutorTest extends TestCase
         $mockContext = Mockery::mock(AgentContext::class);
         $mockContext->shouldReceive('setState')->zeroOrMoreTimes();
         $mockStateManager->shouldReceive('loadContext')->andReturn($mockContext);
+        $mockStateManager->shouldReceive('saveContext')
+            ->once()
+            ->with($mockContext, 'test', false);
 
         $mockAgent = Mockery::mock();
         $mockAgent->shouldReceive('getName')->andReturn('test_agent');
