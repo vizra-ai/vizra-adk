@@ -68,7 +68,7 @@
     </style>
 </head>
 <body class="font-inter antialiased bg-gray-950 text-white">
-    <div class="min-h-screen bg-gray-950">
+    <div class="min-h-screen bg-gray-950 flex flex-col">
         <!-- Top Navigation -->
         <header class="bg-gray-900/30 backdrop-blur-xl border-b border-gray-800 sticky top-0 z-50">
             <div class="flex items-center justify-between px-6 py-4">
@@ -304,10 +304,8 @@
         </header>
 
         <!-- Main Content -->
-        <main class="p-8">
-            <div class="max-w-7xl mx-auto">
-                @yield('content')
-            </div>
+        <main class="flex-1 flex flex-col overflow-hidden">
+            @yield('content')
         </main>
     </div>
 

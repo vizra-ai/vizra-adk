@@ -191,8 +191,7 @@ function testModalButton() {
 </script>
 @endpush
 
-<div class="min-h-screen bg-gray-950">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col flex-1 w-full h-full">
         <!-- Minimal Header -->
         <div class="text-center mb-8">
             <h1 class="text-2xl font-bold text-white mb-2">Chat Interface</h1>
@@ -206,11 +205,11 @@ function testModalButton() {
                     <div class="flex items-center space-x-3">
                         <label class="text-sm font-medium text-gray-300">Agent:</label>
                         <select id="agent-select"
-                                wire:change="selectAgent($event.target.value)"
+                                wire:model.live="selectedAgent"
                                 class="px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium text-gray-300 min-w-[220px] transition-all duration-200">
                             <option value="">Choose an agent...</option>
                             @foreach($registeredAgents as $name => $class)
-                                <option value="{{ $name }}" {{ $selectedAgent === $name ? 'selected' : '' }}>
+                                <option value="{{ $name }}">
                                     {{ $name }}
                                 </option>
                             @endforeach
@@ -245,7 +244,7 @@ function testModalButton() {
         </div>
 
         <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-280px)]">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
         <!-- Details Panel -->
         <div class="flex flex-col h-full">
             <div class="flex flex-col h-full overflow-hidden">
@@ -287,7 +286,7 @@ function testModalButton() {
                     <!-- Tab Content -->
                     <div class="bg-gray-900/50 rounded-xl border border-gray-800/50 shadow-sm flex-1 overflow-hidden flex flex-col">
                         <!-- Agent Info Tab -->
-                        @if($activeTab === 'agent-info' && $selectedAgent && $agentInfo)
+                        @if($activeTab === 'agent-info' && $selectedAgent && !empty($agentInfo))
                             <div class="flex-1 overflow-y-auto custom-scrollbar">
                                 <div class="space-y-3 p-4">
                                     <!-- Compact Agent Header -->
@@ -402,7 +401,7 @@ function testModalButton() {
                                     @endif
                                 </div>
                             </div>
-                            @elseif($activeTab === 'agent-info')
+                            @elseif($activeTab === 'agent-info' && !$selectedAgent)
                             <div class="text-center py-12 px-6">
                                 <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-800 mb-4">
                                     <svg class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -411,6 +410,17 @@ function testModalButton() {
                                 </div>
                                 <h3 class="text-lg font-medium text-white mb-2">No Agent Selected</h3>
                                 <p class="text-gray-400 max-w-sm mx-auto">Choose an agent from the dropdown above to view its information, capabilities, and configuration details.</p>
+                            </div>
+                            @elseif($activeTab === 'agent-info' && $selectedAgent && empty($agentInfo))
+                            <div class="text-center py-12 px-6">
+                                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-800 mb-4">
+                                    <svg class="h-8 w-8 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-medium text-white mb-2">Loading Agent Info...</h3>
+                                <p class="text-gray-400 max-w-sm mx-auto">Loading agent information for {{ $selectedAgent }}</p>
                             </div>
                         @endif
 
@@ -685,7 +695,7 @@ function testModalButton() {
             </div>
 
         <!-- Chat Area -->
-        <div class="flex flex-col h-[calc(100vh-280px)]">
+        <div class="flex flex-col h-full">
             <div class="bg-gray-900/50 rounded-xl shadow-lg border border-gray-800/50 flex flex-col h-full overflow-hidden">
                 <!-- Chat Header -->
                 <div class="px-6 py-4 border-b border-gray-800/50 bg-gray-800/30 rounded-t-xl">
@@ -899,15 +909,13 @@ function testModalButton() {
                 <!-- Message Input -->
                 @if($selectedAgent)
                     <div class="px-6 py-4 border-t border-gray-800/50 bg-gray-800/30 rounded-b-xl">
-                        <form wire:submit.prevent="sendMessage" class="flex items-center space-x-3" 
-                              x-data="{ messageText: @entangle('message') }"
-                              x-on:submit="setTimeout(() => messageText = '', 100)">
+                        <form wire:submit.prevent="sendMessage" class="flex items-center space-x-3" x-data="{ messageValue: '' }" @submit="messageValue = ''">
                             <div class="flex-1">
                                 <div class="relative">
                                     <input type="text"
                                            id="message-input"
                                            wire:model="message"
-                                           x-model="messageText"
+                                           x-model="messageValue"
                                            placeholder="Type your message..."
                                            class="w-full px-4 py-3 pr-12 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-gray-800 text-gray-200 placeholder-gray-500 hover:bg-gray-750 transition-colors duration-200 disabled:bg-gray-900 disabled:cursor-not-allowed"
                                            @if($isLoading) disabled @endif>
@@ -927,7 +935,7 @@ function testModalButton() {
                                 </div>
                             </div>
                             <button type="submit"
-                                    x-bind:disabled="!messageText.trim()"
+                                    x-bind:disabled="!messageValue.trim()"
                                     wire:loading.attr="disabled"
                                     class="flex items-center justify-center px-4 py-3 h-[46px] bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg min-w-[80px]">
                                 @if($isLoading)
@@ -958,6 +966,7 @@ function testModalButton() {
                     </div>
                 @endif
             </div>
+        </div>
         </div>
     </div>
 
@@ -1048,5 +1057,4 @@ function testModalButton() {
                 }
             }
         </script>
-</div>
 </div>

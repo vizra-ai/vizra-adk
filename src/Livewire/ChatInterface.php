@@ -44,6 +44,8 @@ class ChatInterface extends Component
     public bool $showLoadSessionModal = false;
 
     public string $loadSessionId = '';
+    
+    // Track if agent was set from URL to prevent re-initialization
 
     public function mount()
     {
@@ -58,9 +60,19 @@ class ChatInterface extends Component
 
     public function selectAgent($agentName)
     {
+        // Store previous agent to check if we're switching
+        $previousAgent = $this->selectedAgent;
+        
+        // Update selected agent
         $this->selectedAgent = $agentName;
-        $this->chatHistory = [];
-        $this->sessionId = 'chat-'.Str::random(8);
+        
+        // Only reset chat if switching to a different agent
+        if ($previousAgent !== $agentName) {
+            $this->chatHistory = [];
+            $this->sessionId = 'chat-'.Str::random(8);
+        }
+        
+        // Always load agent info, context, and traces
         $this->loadAgentInfo();
         $this->loadContextData();
         $this->loadTraceData();
@@ -70,7 +82,6 @@ class ChatInterface extends Component
     {
         if (empty($this->selectedAgent)) {
             $this->agentInfo = [];
-
             return;
         }
 
@@ -92,6 +103,13 @@ class ChatInterface extends Component
                             'class' => get_class($tool),
                         ];
                     })->toArray(),
+                ];
+            } else {
+                // Agent class not found
+                $this->agentInfo = [
+                    'name' => $this->selectedAgent,
+                    'class' => 'Not found',
+                    'error' => 'Agent class not found in registry',
                 ];
             }
         } catch (\Exception $e) {
@@ -115,18 +133,10 @@ class ChatInterface extends Component
         try {
             // Load session and context data
             $stateManager = app(StateManager::class);
-            $context = $stateManager->loadContext($this->selectedAgent, $this->sessionId);                // Extract messages from context conversation history
-            $conversationHistory = $context->getConversationHistory();
-            if ($conversationHistory && $conversationHistory->isNotEmpty()) {
-                $this->chatHistory = $conversationHistory->map(function ($message) {
-                    return [
-                        'role' => $message['role'] ?? 'unknown',
-                        'content' => $message['content'] ?? '',
-                        'timestamp' => isset($message['timestamp']) ? $message['timestamp'] : now()->format('H:i:s'),
-                        'tool_name' => $message['tool_name'] ?? null,
-                    ];
-                })->toArray();
-            }
+            $context = $stateManager->loadContext($this->selectedAgent, $this->sessionId);
+            
+            // Skip loading conversation history - we'll manage it in the component
+            // This prevents the chat from being overwritten
 
             // Get context data for details panel
             $this->contextData = [
@@ -449,6 +459,21 @@ class ChatInterface extends Component
     public function setActiveTab($tab)
     {
         $this->activeTab = $tab;
+    }
+    
+    public function updatedSelectedAgent($value)
+    {
+        if (!empty($value)) {
+            $this->selectAgent($value);
+        } else {
+            // Clear agent info when no agent is selected
+            $this->selectedAgent = '';
+            $this->agentInfo = [];
+            $this->contextData = [];
+            $this->memoryData = [];
+            $this->traceData = [];
+            $this->chatHistory = [];
+        }
     }
 
     #[On('setSessionId')]
