@@ -73,7 +73,7 @@ class CustomerSupportAgent extends BaseLlmAgent
 // That's it! No registration needed - agents are auto-discovered
 
 // Use your agent immediately
-$response = CustomerSupportAgent::ask('I need help with my order')
+$response = CustomerSupportAgent::run('I need help with my order')
     ->forUser($user)
     ->go();
 ```
@@ -148,27 +148,6 @@ Take your agents to production with **Vizra Cloud** - our managed hosting platfo
 
 **[Join the waitlist at vizra.ai →](https://vizra.ai/cloud)**
 
-## 🤝 Sponsorship
-
-Vizra ADK is open source and free to use. If you find it valuable, please consider sponsoring the project to help us maintain and improve it.
-
-### 💖 Become a Sponsor
-
-Your sponsorship helps us:
-
-- 🚀 Develop new features faster
-- 🐛 Provide better support and bug fixes
-- 📚 Improve documentation and examples
-- 🌟 Keep the project sustainable
-
-**[Sponsor Vizra ADK on GitHub →](https://github.com/sponsors/vizra-ai)**
-
-Every contribution, no matter the size, makes a difference! Sponsors get:
-
-- 🏆 Recognition in our README and website
-- 🎯 Priority support for issues
-- 🗳️ Influence on the roadmap
-
 ## 🔧 Requirements
 
 - PHP 8.2+
@@ -203,6 +182,5 @@ Special thanks to:
 <p align="center">
 <strong>Ready to build intelligent AI agents?</strong><br>
 <a href="https://vizra.ai/docs">Get Started →</a> • 
-<a href="https://github.com/sponsors/vizra-ai">Sponsor →</a> • 
 <a href="https://vizra.ai/cloud">Join Cloud Waitlist →</a>
 </p>

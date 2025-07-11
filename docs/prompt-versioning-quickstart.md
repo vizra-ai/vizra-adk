@@ -20,7 +20,7 @@ echo "You are a detailed assistant. Provide comprehensive answers." > resources/
 
 ```php
 // Runtime version selection
-$response = MyAgent::ask('Hello')
+$response = MyAgent::run('Hello')
     ->withPromptVersion('concise')
     ->go();
 

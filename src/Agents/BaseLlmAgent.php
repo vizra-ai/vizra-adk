@@ -31,6 +31,23 @@ abstract class BaseLlmAgent extends BaseAgent
 {
     use VersionablePrompts;
 
+    /**
+     * Framework control parameters that should not be included in context messages.
+     * These are used internally to control agent behavior.
+     */
+    private const CONTROL_PARAMS = [
+        'include_history',
+        'history_depth',
+        'context_strategy',
+        'llm_call_span_id',
+        'execution_mode',
+        'prism_images',
+        'prism_documents',
+        'prism_images_metadata',
+        'prism_documents_metadata',
+        'memory_context',  // Already handled separately in instructions
+    ];
+
     protected string $instructions = '';
 
     protected string $model = '';
@@ -60,6 +77,29 @@ abstract class BaseLlmAgent extends BaseAgent
     protected ?AgentMemory $memory = null;
 
     protected ?AgentContext $context = null;
+
+    /**
+     * Whether to include conversation history in LLM calls.
+     * Default is false for lightweight, task-oriented agents.
+     * Set to true for conversational agents.
+     */
+    protected bool $includeConversationHistory = false;
+
+    /**
+     * Maximum number of historical messages to include when history is enabled.
+     * Only applies when $includeConversationHistory is true.
+     */
+    protected int $historyLimit = 10;
+
+    /**
+     * Context strategy for managing conversation history.
+     * Options: 'none', 'recent', 'full', 'smart'
+     * - 'none': No history included (default)
+     * - 'recent': Include last N messages based on historyLimit
+     * - 'full': Include all conversation history
+     * - 'smart': Use relevance-based filtering (future feature)
+     */
+    protected string $contextStrategy = 'none';
 
     public function __construct()
     {
@@ -627,8 +667,35 @@ abstract class BaseLlmAgent extends BaseAgent
     {
         $messages = [];
 
+        // First, automatically include any user context state
+        $allState = $context->getAllState();
+        
+        // Filter out control parameters and internal state
+        $userContext = $this->filterUserContext($allState);
+        
+        // If there's any user context, add it as the first message
+        if (!empty($userContext)) {
+            $contextMessage = new UserMessage(
+                "Context:\n" . json_encode($userContext, JSON_PRETTY_PRINT)
+            );
+            $messages[] = $contextMessage;
+        }
+
+        // Check for user overrides in context state
+        $includeHistory = $context->getState('include_history', $this->includeConversationHistory);
+        $historyDepth = $context->getState('history_depth', $this->historyLimit);
+        $contextStrategy = $context->getState('context_strategy', $this->contextStrategy);
+
+        // If context strategy is 'none' or history is disabled, return messages with context
+        if (!$includeHistory || $contextStrategy === 'none') {
+            return $messages;
+        }
+
+        // Get conversation history based on strategy
+        $conversationHistory = $this->getHistoryByStrategy($context, $contextStrategy, $historyDepth);
+
         // Convert conversation history to Prism Message objects
-        foreach ($context->getConversationHistory() as $message) {
+        foreach ($conversationHistory as $message) {
             // Skip system messages as Prism handles them via withSystemPrompt()
             if ($message['role'] === 'system') {
                 continue;
@@ -697,6 +764,73 @@ abstract class BaseLlmAgent extends BaseAgent
         return $messages;
     }
 
+    /**
+     * Filter user context by removing framework control parameters.
+     *
+     * @param array $state All context state
+     * @return array Filtered user context
+     */
+    protected function filterUserContext(array $state): array
+    {
+        // Remove exact matches for control params
+        $filtered = array_diff_key($state, array_flip(self::CONTROL_PARAMS));
+        
+        // Remove dynamic span IDs (they have patterns like tool_call_span_id_*)
+        foreach ($filtered as $key => $value) {
+            if (str_starts_with($key, 'tool_call_span_id_') || 
+                str_starts_with($key, 'sub_agent_delegation_span_id_')) {
+                unset($filtered[$key]);
+            }
+        }
+        
+        return $filtered;
+    }
+
+    /**
+     * Get conversation history based on the selected strategy.
+     *
+     * @param AgentContext $context The agent context
+     * @param string $strategy The context strategy ('recent', 'full', 'smart')
+     * @param int $limit Maximum number of messages for 'recent' strategy
+     * @return array The filtered conversation history
+     */
+    protected function getHistoryByStrategy(AgentContext $context, string $strategy, int $limit): array
+    {
+        $history = $context->getConversationHistory();
+        
+        // Ensure history is an array
+        if ($history instanceof \Illuminate\Support\Collection) {
+            $history = $history->toArray();
+        }
+
+        switch ($strategy) {
+            case 'recent':
+                // Get the last N messages (excluding the current user input)
+                // We slice from the end, keeping the most recent messages
+                if (count($history) > $limit) {
+                    return array_slice($history, -$limit);
+                }
+                return $history;
+
+            case 'full':
+                // Return all conversation history
+                return $history;
+
+            case 'smart':
+                // Future enhancement: implement relevance-based filtering
+                // For now, fallback to recent strategy
+                if (count($history) > $limit) {
+                    return array_slice($history, -$limit);
+                }
+                return $history;
+
+            default:
+                // Default to empty array for unknown strategies
+                return [];
+        }
+    }
+
+
     public function beforeLlmCall(array $inputMessages, AgentContext $context): array
     {
         /** @var Tracer $tracer */
@@ -715,7 +849,8 @@ abstract class BaseLlmAgent extends BaseAgent
                 'temperature' => $this->getTemperature(),
                 'max_tokens' => $this->getMaxTokens(),
                 'top_p' => $this->getTopP(),
-            ]
+            ],
+            context: $context
         );
 
         // Store span ID in context for afterLlmResponse
@@ -837,7 +972,8 @@ abstract class BaseLlmAgent extends BaseAgent
             metadata: [
                 'agent_name' => $this->getName(),
                 'tool_class' => isset($this->loadedTools[$toolName]) ? get_class($this->loadedTools[$toolName]) : 'DelegateToSubAgentTool',
-            ]
+            ],
+            context: $context
         );
 
         // Store span ID in context for afterToolResult
@@ -914,7 +1050,8 @@ abstract class BaseLlmAgent extends BaseAgent
                 'parent_agent' => $this->getName(),
                 'sub_agent_name' => $subAgentName,
                 'delegation_depth' => $parentContext->getState('delegation_depth', 0) + 1,
-            ]
+            ],
+            context: $parentContext
         );
 
         // Store span ID in context for afterSubAgentDelegation

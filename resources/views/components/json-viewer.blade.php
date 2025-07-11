@@ -10,7 +10,8 @@
     'maxHeight' => 'max-h-32',
     'collapsible' => true,
     'copyable' => true,
-    'expandable' => true
+    'expandable' => true,
+    'startCollapsed' => false
 ])
 
 @php
@@ -50,9 +51,9 @@
 @endphp
 
 @if($processedData !== null || $hasError)
-<div class="{{ $bgColor }} border {{ $borderColor }} rounded-md p-2">
+<div class="{{ $bgColor }} border {{ $borderColor }} rounded-md p-2 overflow-hidden flex flex-col h-full">
     @if($title)
-        <div class="flex items-center justify-between mb-1.5">
+        <div class="flex items-center justify-between mb-1.5 flex-shrink-0">
             <div class="flex items-center space-x-1.5">
                 @if($icon)
                     <div class="w-3 h-3 {{ $iconColor }}">
@@ -94,7 +95,7 @@
                         class="p-1 rounded text-xs {{ $iconColor }} hover:text-gray-300 hover:bg-gray-700/50 transition-colors duration-150"
                         title="Toggle collapse"
                     >
-                        <svg class="w-3 h-3 transform transition-transform duration-200" id="chevron-{{ $jsonId }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-3 h-3 transform transition-transform duration-200 @if($startCollapsed) -rotate-90 @endif" id="chevron-{{ $jsonId }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
@@ -104,16 +105,16 @@
     @endif
     
     <!-- JSON Content -->
-    <div id="{{ $jsonId }}" class="json-content">
-        <pre class="text-xs {{ $textColor }} bg-gray-900/60 rounded border {{ $borderColor }} p-1.5 overflow-auto {{ $maxHeight }} whitespace-pre-wrap"><code class="language-json">{{ $jsonString }}</code></pre>
+    <div id="{{ $jsonId }}" class="json-content flex-1 min-h-0 flex flex-col @if(!$title) h-full @endif" @if($startCollapsed && $collapsible) style="display: none;" @endif>
+        <pre class="text-xs {{ $textColor }} bg-gray-900/60 rounded border {{ $borderColor }} p-1.5 overflow-auto flex-1 whitespace-pre-wrap m-0 break-all"><code class="language-json block">{{ $jsonString }}</code></pre>
     </div>
 </div>
 
 @if($expandable && !$hasError)
     <!-- Fullscreen Modal -->
-    <div id="{{ $modalId }}" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm">
+    <div id="{{ $modalId }}" class="fixed inset-0 z-[9999] hidden bg-black/75 backdrop-blur-sm" style="position: fixed !important; z-index: 9999 !important;" onclick="if(event.target === this) closeJsonModal('{{ $modalId }}')">
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col relative" onclick="event.stopPropagation()">
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between p-4 border-b border-gray-700">
                     <div class="flex items-center space-x-2">

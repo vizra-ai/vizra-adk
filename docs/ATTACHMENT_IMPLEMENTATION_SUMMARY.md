@@ -7,6 +7,7 @@ This document summarizes the implementation of image and document attachment fun
 ## Problem
 
 The original issue was that when using the fluent API to attach images or documents:
+
 ```php
 $response = AssistantAgent::analyze('What\'s in this image?')
     ->withImage($image)
@@ -18,6 +19,7 @@ The agent would respond with "Please provide the image! I can't see it yet" beca
 ## Root Cause
 
 The issue occurred because:
+
 1. `AgentExecutor` created a context with images/documents
 2. `AgentManager::run()` created a new context, discarding the one from `AgentExecutor`
 3. Prism Image/Document objects couldn't be serialized for database storage
@@ -99,6 +101,7 @@ if ($image instanceof Image) {
 ## Provider Limitations
 
 During implementation, we discovered provider-specific limitations:
+
 - **OpenAI**: Supports images only (no documents)
 - **Anthropic**: Supports both images and documents
 - **Google Gemini**: Supports both images and documents
@@ -106,11 +109,13 @@ During implementation, we discovered provider-specific limitations:
 ## Test Coverage
 
 Created comprehensive tests covering:
+
 1. **Unit Tests** - Core functionality testing
 2. **Integration Tests** - End-to-end workflow testing
 3. **Provider Tests** - Provider-specific capability testing
 
 Key test scenarios:
+
 - Metadata storage and recreation
 - Database persistence across sessions
 - Array-to-object conversion
@@ -132,12 +137,12 @@ The attachment functionality now works seamlessly:
 
 ```php
 // Single image
-$response = Agent::ask('Analyze this image')
+$response = Agent::run('Analyze this image')
     ->withImage('/path/to/image.jpg')
     ->go();
 
 // Multiple attachments
-$response = Agent::ask('Compare these documents')
+$response = Agent::run('Compare these documents')
     ->withImage('/path/to/chart.png')
     ->withDocument('/path/to/report.pdf')
     ->withImageFromBase64($base64Data, 'image/png')
@@ -145,13 +150,13 @@ $response = Agent::ask('Compare these documents')
 
 // Works across sessions
 $sessionId = 'user-session-123';
-Agent::ask('First message')
+Agent::run('First message')
     ->withImage('/path/to/image.jpg')
     ->withSession($sessionId)
     ->go();
 
 // Image metadata persists for subsequent messages
-Agent::ask('Tell me more about the image')
+Agent::run('Tell me more about the image')
     ->withSession($sessionId)
     ->go();
 ```

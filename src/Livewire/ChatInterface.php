@@ -36,6 +36,10 @@ class ChatInterface extends Component
 
     public array $memoryData = [];
 
+    public array $longTermMemoryData = [];
+
+    public array $contextStateData = [];
+
     public array $agentInfo = [];
 
     public array $traceData = [];
@@ -127,6 +131,9 @@ class ChatInterface extends Component
         if (empty($this->selectedAgent) || empty($this->sessionId)) {
             $this->contextData = [];
             $this->memoryData = [];
+            $this->sessionData = [];
+            $this->longTermMemoryData = [];
+            $this->contextStateData = [];
 
             return;
         }
@@ -144,14 +151,45 @@ class ChatInterface extends Component
                 'session_id' => $context->getSessionId(),
                 'state' => $context->getAllState(),
                 'user_input' => $context->getUserInput(),
+                'messages_count' => count($this->chatHistory),
+                'state_keys' => array_keys($context->getAllState() ?? []),
             ];
 
             // Get session data
             $session = AgentSession::where('session_id', $this->sessionId)
                 ->where('agent_name', $this->selectedAgent)
+                ->with(['messages', 'memory'])
                 ->first();
 
             if ($session) {
+                // Build comprehensive session data (short-term)
+                $this->sessionData = [
+                    'session_id' => $session->session_id,
+                    'agent_name' => $session->agent_name,
+                    'user_id' => $session->user_id,
+                    'messages' => $session->messages->map(function ($msg) {
+                        return [
+                            'role' => $msg->role,
+                            'content' => $msg->content,
+                            'tool_calls' => $msg->tool_calls,
+                            'tool_results' => $msg->tool_results,
+                            'created_at' => $msg->created_at->toIso8601String(),
+                        ];
+                    })->toArray(),
+                    'state_data' => $session->state_data,
+                    'context_data' => $session->context_data,
+                    'created_at' => $session->created_at->toIso8601String(),
+                    'updated_at' => $session->updated_at->toIso8601String(),
+                    'message_count' => $session->messages->count(),
+                ];
+
+                // Extract state_data for separate Context State card
+                $stateData = $session->state_data ?? [];
+                // Remove execution_mode from display
+                unset($stateData['execution_mode']);
+                $this->contextStateData = $stateData;
+
+                // Keep old memoryData for backward compatibility
                 $this->memoryData = [
                     'id' => $session->id,
                     'created_at' => $session->created_at,
@@ -160,9 +198,23 @@ class ChatInterface extends Component
                     'state_data' => $session->state_data,
                 ];
 
-                // Get memory data
+                // Get memory data (long-term)
                 $memory = $session->memory;
                 if ($memory) {
+                    $this->longTermMemoryData = [
+                        'agent_name' => $memory->agent_name,
+                        'user_id' => $memory->user_id,
+                        'memory_summary' => $memory->memory_summary,
+                        'key_learnings' => $memory->key_learnings,
+                        'memory_data' => $memory->memory_data,
+                        'total_sessions' => $memory->total_sessions,
+                        'last_session_at' => $memory->last_session_at ? $memory->last_session_at->toIso8601String() : null,
+                        'memory_updated_at' => $memory->memory_updated_at ? $memory->memory_updated_at->toIso8601String() : null,
+                        'created_at' => $memory->created_at->toIso8601String(),
+                        'updated_at' => $memory->updated_at->toIso8601String(),
+                    ];
+
+                    // Keep for backward compatibility
                     $this->memoryData['memory'] = [
                         'id' => $memory->id,
                         'summary' => $memory->memory_summary,
@@ -171,11 +223,30 @@ class ChatInterface extends Component
                         'total_sessions' => $memory->total_sessions,
                         'last_session_at' => $memory->last_session_at,
                     ];
+                } else {
+                    $this->longTermMemoryData = [
+                        'agent_name' => $this->selectedAgent,
+                        'message' => 'No long-term memory data available yet',
+                    ];
                 }
+            } else {
+                $this->sessionData = [
+                    'session_id' => $this->sessionId,
+                    'agent_name' => $this->selectedAgent,
+                    'message' => 'No session data available',
+                ];
+                $this->longTermMemoryData = [
+                    'agent_name' => $this->selectedAgent,
+                    'message' => 'No long-term memory data available',
+                ];
+                $this->contextStateData = [];
             }
         } catch (\Exception $e) {
             $this->contextData = ['error' => $e->getMessage()];
             $this->memoryData = [];
+            $this->sessionData = ['error' => $e->getMessage()];
+            $this->longTermMemoryData = ['error' => $e->getMessage()];
+            $this->contextStateData = ['error' => $e->getMessage()];
         }
     }
 
@@ -220,6 +291,12 @@ class ChatInterface extends Component
         }
 
         $this->isLoading = false;
+        
+        // Ensure context data is refreshed even after errors
+        $this->loadContextData();
+        
+        // Dispatch event to scroll chat to bottom
+        $this->dispatch('chat-updated');
     }
 
     public function clearChat()
@@ -228,6 +305,9 @@ class ChatInterface extends Component
         $this->sessionId = 'chat-'.Str::random(8);
         $this->loadContextData();
         $this->loadTraceData();
+        
+        // Dispatch event to reset scroll position
+        $this->dispatch('chat-updated');
     }
 
     public function openLoadSessionModal()
@@ -256,6 +336,9 @@ class ChatInterface extends Component
         $this->loadContextData();
         $this->loadTraceData();
         $this->closeLoadSessionModal();
+        
+        // Dispatch event to scroll chat to bottom after loading session
+        $this->dispatch('chat-updated');
     }
 
     public function refreshData()
@@ -349,47 +432,58 @@ class ChatInterface extends Component
         $contextChanges = null;
         $extractedJson = null;
 
-        // Get actual context data from AgentSession and AgentMemory - this is the primary source
-        try {
-            // Get the actual session data
-            $session = AgentSession::where('session_id', $span->session_id)->first();
+        // First, check if we have context_state captured in the span's metadata
+        $metadata = $processData($span->metadata);
+        if (is_array($metadata) && isset($metadata['context_state'])) {
+            // Use the captured context state from the span metadata
+            $contextState = $metadata['context_state'];
+        } else {
+            // Fallback: Get actual context data from AgentSession (for older traces)
+            try {
+                // Get the actual session data
+                $session = AgentSession::where('session_id', $span->session_id)->first();
 
-            if ($session) {
-                // Show the actual state_data from the session
-                $stateData = $session->state_data;
-                if ($stateData) {
-                    // Ensure it's an array
-                    if (is_string($stateData)) {
-                        $stateData = json_decode($stateData, true);
+                if ($session) {
+                    // Show the actual state_data from the session
+                    $stateData = $session->state_data;
+                    if ($stateData) {
+                        // Ensure it's an array
+                        if (is_string($stateData)) {
+                            $stateData = json_decode($stateData, true);
+                        }
+                        if (is_array($stateData)) {
+                            $contextState = $stateData;
+                        }
                     }
-                    if (is_array($stateData)) {
-                        $contextState = $stateData;
-                    }
-                }
 
-                // Show context_data if it exists
-                $contextData = $session->context_data;
-                if ($contextData) {
-                    // Ensure it's an array
-                    if (is_string($contextData)) {
-                        $contextData = json_decode($contextData, true);
+                    // Show context_data if it exists
+                    $contextData = $session->context_data;
+                    if ($contextData) {
+                        // Ensure it's an array
+                        if (is_string($contextData)) {
+                            $contextData = json_decode($contextData, true);
+                        }
+                        if (is_array($contextData)) {
+                            $contextChanges = ['session_context' => $contextData];
+                        }
                     }
-                    if (is_array($contextData)) {
-                        $contextChanges = ['session_context' => $contextData];
-                    }
+                } else {
+                    // Debug: Show that no session was found
+                    $contextState = [
+                        '_debug' => [
+                            'session_id' => $span->session_id,
+                            'session_found' => 'no',
+                            'error' => 'No session found with this ID',
+                        ],
+                    ];
                 }
-            } else {
-                // Debug: Show that no session was found
-                $contextState = [
-                    '_debug' => [
-                        'session_id' => $span->session_id,
-                        'session_found' => 'no',
-                        'error' => 'No session found with this ID',
-                    ],
-                ];
+            } catch (\Exception $e) {
+                // Handle any errors in fallback
             }
+        }
 
-            // Get memory data for this session
+        // Get memory data for this session
+        try {
             $memories = \Vizra\VizraADK\Models\AgentMemory::where('session_id', $span->session_id)
                 ->orderBy('created_at', 'asc')
                 ->get();
@@ -472,6 +566,7 @@ class ChatInterface extends Component
             $this->agentInfo = [];
             $this->contextData = [];
             $this->memoryData = [];
+            $this->contextStateData = [];
             $this->traceData = [];
             $this->chatHistory = [];
         }

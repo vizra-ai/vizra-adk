@@ -119,6 +119,10 @@ it('handles images from arrays when loaded from database', function () {
         protected string $instructions = 'You are a test agent.';
 
         protected string $model = 'gpt-4o';
+        
+        // Enable conversation history for this test
+        protected bool $includeConversationHistory = true;
+        protected string $contextStrategy = 'full';
 
         public function prepareMessagesForPrism(AgentContext $context): array
         {

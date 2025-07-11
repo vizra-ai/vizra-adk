@@ -92,11 +92,6 @@
                             {{ str_replace('_', ' ', ucwords($span['type'], '_')) }}
                         </span>
 
-                        @if($span['type'] === 'agent_run' && !empty($span['metadata']['execution_mode']))
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-900/30 text-purple-300 border-0">
-                                {{ ucfirst($span['metadata']['execution_mode']) }} Mode
-                            </span>
-                        @endif
 
                         @if(!empty($span['start_time']))
                             <span class="text-gray-500 font-mono text-xs">{{ $span['start_time'] }}</span>
@@ -128,7 +123,8 @@
                             'textColor' => 'text-blue-200',
                             'titleColor' => 'text-blue-300',
                             'iconColor' => 'text-blue-400',
-                            'maxHeight' => 'max-h-20'
+                            'maxHeight' => 'max-h-20',
+                            'startCollapsed' => true
                         ])
                     @endif
 
@@ -142,7 +138,8 @@
                             'textColor' => 'text-green-200',
                             'titleColor' => 'text-green-300',
                             'iconColor' => 'text-green-400',
-                            'maxHeight' => 'max-h-20'
+                            'maxHeight' => 'max-h-20',
+                            'startCollapsed' => true
                         ])
                     @endif
 
@@ -156,11 +153,12 @@
                             'textColor' => 'text-red-200',
                             'titleColor' => 'text-red-300',
                             'iconColor' => 'text-red-400',
-                            'maxHeight' => 'max-h-20'
+                            'maxHeight' => 'max-h-20',
+                            'startCollapsed' => true
                         ])
                     @endif
 
-                    @if(!empty($span['context_state']))
+                    @if(isset($span['context_state']))
                         @include('vizra-adk::components.json-viewer', [
                             'data' => $span['context_state'],
                             'title' => 'Context State',
@@ -170,7 +168,8 @@
                             'textColor' => 'text-purple-200',
                             'titleColor' => 'text-purple-300',
                             'iconColor' => 'text-purple-400',
-                            'maxHeight' => 'max-h-32'
+                            'maxHeight' => 'max-h-32',
+                            'startCollapsed' => true
                         ])
                     @endif
 
@@ -184,7 +183,8 @@
                             'textColor' => 'text-amber-200',
                             'titleColor' => 'text-amber-300',
                             'iconColor' => 'text-amber-400',
-                            'maxHeight' => 'max-h-32'
+                            'maxHeight' => 'max-h-32',
+                            'startCollapsed' => true
                         ])
                     @endif
 
@@ -198,7 +198,8 @@
                             'textColor' => 'text-cyan-200',
                             'titleColor' => 'text-cyan-300',
                             'iconColor' => 'text-cyan-400',
-                            'maxHeight' => 'max-h-32'
+                            'maxHeight' => 'max-h-32',
+                            'startCollapsed' => true
                         ])
                     @endif
 
@@ -212,7 +213,8 @@
                             'textColor' => 'text-gray-200',
                             'titleColor' => 'text-gray-300',
                             'iconColor' => 'text-gray-400',
-                            'maxHeight' => 'max-h-20'
+                            'maxHeight' => 'max-h-20',
+                            'startCollapsed' => true
                         ])
                     @endif
                 </div>

@@ -105,10 +105,6 @@ class AgentManager
         // The StateManager's loadContext now takes agentName first.
         $context = $this->stateManager->loadContext($agentName, $sessionId, $input);
 
-        // Set default execution mode if not already set (when called directly without AgentExecutor)
-        if ($context->getState('execution_mode') === null) {
-            $context->setState('execution_mode', 'ask');
-        }
 
         Event::dispatch(new AgentExecutionStarting($context, $agentName, $input));
 

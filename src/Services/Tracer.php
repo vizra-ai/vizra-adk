@@ -67,8 +67,8 @@ class Tracer
             metadata: [
                 'session_id' => $context->getSessionId(),
                 'initial_state_keys' => array_keys($context->getAllState()),
-                'execution_mode' => $context->getState('execution_mode', 'ask'), // Default to 'ask' if not set
-            ]
+            ],
+            context: $context
         );
 
         return $this->currentTraceId;
@@ -82,7 +82,8 @@ class Tracer
         string $type,
         string $name,
         ?array $input = null,
-        ?array $metadata = null
+        ?array $metadata = null,
+        ?AgentContext $context = null
     ): string {
         if (! $this->isEnabled() || ! $this->currentTraceId) {
             return '';
@@ -91,6 +92,26 @@ class Tracer
         $spanId = Str::ulid()->toString();
         $parentSpanId = empty($this->spanStack) ? null : end($this->spanStack);
         $startTime = microtime(true);
+
+        // Capture context state if provided
+        if ($context !== null) {
+            $metadata = $metadata ?? [];
+            $contextState = $context->getAllState();
+            
+            // Remove internal tracking keys from captured state
+            unset($contextState['execution_mode']);
+            unset($contextState['llm_call_span_id']);
+            
+            // Remove tool call span IDs
+            foreach ($contextState as $key => $value) {
+                if (str_starts_with($key, 'tool_call_span_id_') || 
+                    str_starts_with($key, 'sub_agent_delegation_span_id_')) {
+                    unset($contextState[$key]);
+                }
+            }
+            
+            $metadata['context_state'] = $contextState;
+        }
 
         // Add debugging information for tool calls
         if ($type === 'tool_call') {

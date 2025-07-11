@@ -65,6 +65,35 @@
         .prose p:last-child {
             margin-bottom: 0;
         }
+
+        /* JSON viewer specific styles */
+        .json-content pre {
+            scrollbar-width: thin;
+            scrollbar-color: #374151 #1f2937;
+        }
+
+        .json-content pre::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .json-content pre::-webkit-scrollbar-track {
+            background: #1f2937;
+            border-radius: 3px;
+        }
+
+        .json-content pre::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 3px;
+        }
+
+        .json-content pre::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        .json-content pre::-webkit-scrollbar-corner {
+            background: #1f2937;
+        }
     </style>
 </head>
 <body class="font-inter antialiased bg-gray-950 text-white">
@@ -312,6 +341,9 @@
     <!-- Livewire Scripts -->
     @livewireScripts
 
+    <!-- Modal Container for JSON Viewer -->
+    <div id="json-modal-container"></div>
+
     <!-- JSON Viewer Scripts -->
     <script>
         // JSON Viewer functionality
@@ -389,24 +421,43 @@
             
             // Open JSON modal
             window.openJsonModal = function(modalId) {
+                console.log('Opening modal:', modalId);
                 const modal = document.getElementById(modalId);
                 if (modal) {
+                    console.log('Modal found:', modal);
+                    
+                    // Move modal to body to escape any parent constraints
+                    const modalContainer = document.getElementById('json-modal-container');
+                    if (modalContainer) {
+                        modalContainer.appendChild(modal);
+                    } else {
+                        document.body.appendChild(modal);
+                    }
+                    
+                    // Show the modal
                     modal.classList.remove('hidden');
+                    modal.style.display = 'block';
                     document.body.style.overflow = 'hidden';
                     
                     // Apply syntax highlighting if Prism is available
                     if (window.Prism) {
                         Prism.highlightAllUnder(modal);
                     }
+                } else {
+                    console.error('Modal not found:', modalId);
                 }
             };
             
             // Close JSON modal
             window.closeJsonModal = function(modalId) {
+                console.log('Closing modal:', modalId);
                 const modal = document.getElementById(modalId);
                 if (modal) {
                     modal.classList.add('hidden');
+                    modal.style.display = 'none';
                     document.body.style.overflow = 'auto';
+                } else {
+                    console.error('Modal not found for closing:', modalId);
                 }
             };
             
@@ -417,6 +468,7 @@
                     modals.forEach(modal => {
                         if (!modal.classList.contains('hidden')) {
                             modal.classList.add('hidden');
+                            modal.style.display = 'none';
                             document.body.style.overflow = 'auto';
                         }
                     });
@@ -425,6 +477,19 @@
             
             // Apply syntax highlighting if Prism is available
             document.addEventListener('DOMContentLoaded', function() {
+                if (window.Prism) {
+                    Prism.highlightAll();
+                }
+            });
+            
+            // Re-initialize after Livewire updates
+            document.addEventListener('livewire:load', function() {
+                console.log('Livewire loaded - JSON viewer ready');
+            });
+            
+            document.addEventListener('livewire:update', function() {
+                console.log('Livewire updated - JSON viewer ready');
+                // Re-apply syntax highlighting for new content
                 if (window.Prism) {
                     Prism.highlightAll();
                 }

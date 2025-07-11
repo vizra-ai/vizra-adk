@@ -9,6 +9,7 @@ This directory contains example agents that demonstrate how to use the Vizra ADK
 A practical agent that helps with date, time, and timezone-related questions.
 
 **Features:**
+
 - Get current time in any timezone
 - Calculate days between dates
 - Convert times between timezones
@@ -16,6 +17,7 @@ A practical agent that helps with date, time, and timezone-related questions.
 - Determine what day of the week a date falls on
 
 **Real-world use cases:**
+
 - Customer support: "When will my order arrive if shipped today?"
 - Scheduling: "What time is 3pm EST in London?"
 - Project planning: "How many days until the deadline?"
@@ -72,7 +74,7 @@ $response = Agent::named('datetime')
 ```php
 use Vizra\VizraADK\Examples\agents\DateTimeAgent;
 
-$response = DateTimeAgent::ask('Convert 3pm EST to London time')
+$response = DateTimeAgent::run('Convert 3pm EST to London time')
     ->execute();
 ```
 
@@ -89,11 +91,11 @@ class DateController extends Controller
     public function query(Request $request)
     {
         $question = $request->input('question');
-        
+
         $response = Agent::named('datetime')
             ->ask($question)
             ->execute();
-        
+
         return response()->json([
             'question' => $question,
             'answer' => $response

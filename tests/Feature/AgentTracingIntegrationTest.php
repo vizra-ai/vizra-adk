@@ -162,14 +162,14 @@ it('tracing works with disabled configuration', function () {
     expect($spans)->toBe(0);
 });
 
-it('traces capture execution mode from different entry points', function () {
+it('traces capture context state from different entry points', function () {
     // Enable tracing for this test
     config(['vizra-adk.tracing.enabled' => true]);
     app()->forgetInstance(Tracer::class);
 
     $tracer = app(Tracer::class);
 
-    // Test 1: Direct execution with default mode
+    // Test 1: Direct execution with no initial state
     $context1 = new AgentContext('direct-session');
     $context1->setUserInput('Direct execution');
 
@@ -182,12 +182,13 @@ it('traces capture execution mode from different entry points', function () {
         ->first();
 
     $metadata1 = json_decode($span1->metadata, true);
-    expect($metadata1['execution_mode'])->toBe('ask'); // Default
+    expect($metadata1['initial_state_keys'])->toBeArray()->toBeEmpty();
 
-    // Test 2: Execution with process mode
+    // Test 2: Execution with some state
     $context2 = new AgentContext('process-session');
     $context2->setUserInput('Process data');
-    $context2->setState('execution_mode', 'process');
+    $context2->setState('processing_type', 'batch');
+    $context2->setState('priority', 'high');
 
     $traceId2 = $tracer->startTrace($context2, 'process_agent');
     $tracer->endTrace();
@@ -198,12 +199,12 @@ it('traces capture execution mode from different entry points', function () {
         ->first();
 
     $metadata2 = json_decode($span2->metadata, true);
-    expect($metadata2['execution_mode'])->toBe('process');
+    expect($metadata2['initial_state_keys'])->toContain('processing_type');
+    expect($metadata2['initial_state_keys'])->toContain('priority');
 
-    // Test 3: Execution with trigger mode (like from AgentExecutor)
+    // Test 3: Execution with webhook context (like from AgentExecutor)
     $context3 = new AgentContext('trigger-session');
     $context3->setUserInput('Automated trigger');
-    $context3->setState('execution_mode', 'trigger');
     $context3->setState('user_id', 456);
     $context3->setState('trigger_source', 'webhook');
 
@@ -221,6 +222,7 @@ it('traces capture execution mode from different entry points', function () {
         ->first();
 
     $metadata3 = json_decode($span3->metadata, true);
-    expect($metadata3['execution_mode'])->toBe('trigger');
+    expect($metadata3['initial_state_keys'])->toContain('user_id');
+    expect($metadata3['initial_state_keys'])->toContain('trigger_source');
     expect($metadata3['session_id'])->toBe('trigger-session');
 });

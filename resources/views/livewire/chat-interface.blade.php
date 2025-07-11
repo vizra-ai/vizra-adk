@@ -1,5 +1,10 @@
 @push('scripts')
 <style>
+    /* Fixed height container for the chat interface */
+    .chat-interface-container {
+        height: calc(100vh - 80px); /* Subtract header height */
+    }
+
     .custom-scrollbar {
         scrollbar-width: thin;
         scrollbar-color: #374151 #111827;
@@ -7,6 +12,24 @@
 
     .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
+    }
+    
+    /* Custom select dropdown styling */
+    .custom-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+    
+    .custom-select:hover {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%233b82f6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    }
+    
+    .custom-select:focus {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%233b82f6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     }
 
     .custom-scrollbar::-webkit-scrollbar-track {
@@ -158,9 +181,23 @@
 </style>
 
 <script>
+// Auto-scroll chat to bottom function
+function scrollChatToBottom() {
+    const chatMessages = document.getElementById('chat-messages');
+    if (chatMessages) {
+        chatMessages.scrollTo({
+            top: chatMessages.scrollHeight,
+            behavior: 'smooth'
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, checking Livewire...');
     console.log('Livewire available:', typeof window.Livewire !== 'undefined');
+
+    // Initial scroll to bottom
+    scrollChatToBottom();
 
     // Test Livewire connectivity with newer syntax
     if (window.Livewire) {
@@ -169,10 +206,24 @@ document.addEventListener('DOMContentLoaded', function() {
         // Modern Livewire event listeners
         document.addEventListener('livewire:navigated', () => {
             console.log('Livewire navigated');
+            scrollChatToBottom();
         });
 
         document.addEventListener('livewire:init', () => {
             console.log('Livewire initialized');
+        });
+
+        // Listen for when Livewire updates the DOM
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            succeed(({ snapshot, effect }) => {
+                // Scroll to bottom after DOM updates
+                setTimeout(scrollChatToBottom, 50);
+            });
+        });
+
+        // Listen for custom chat-updated event
+        Livewire.on('chat-updated', () => {
+            setTimeout(scrollChatToBottom, 100);
         });
     }
 });
@@ -191,22 +242,22 @@ function testModalButton() {
 </script>
 @endpush
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col flex-1 w-full h-full">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col h-full w-full chat-interface-container">
         <!-- Minimal Header -->
-        <div class="text-center mb-8">
+        <div class="text-center mb-4 flex-shrink-0">
             <h1 class="text-2xl font-bold text-white mb-2">Chat Interface</h1>
             <p class="text-gray-400">Interactive conversations with your AI agents</p>
         </div>
 
         <!-- Agent Selection & Controls -->
-        <div class="flex items-center justify-between mb-6 bg-gray-900/50 rounded-2xl p-4 border border-gray-800/50 shadow-sm">
+        <div class="flex items-center justify-between mb-4 bg-gray-900/50 rounded-2xl p-4 border border-gray-800/50 shadow-sm flex-shrink-0">
             <div class="flex items-center space-x-4">
                 @if(count($registeredAgents) > 0)
                     <div class="flex items-center space-x-3">
                         <label class="text-sm font-medium text-gray-300">Agent:</label>
                         <select id="agent-select"
                                 wire:model.live="selectedAgent"
-                                class="px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium text-gray-300 min-w-[220px] transition-all duration-200">
+                                class="custom-select px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium text-gray-300 min-w-[220px] transition-all duration-200">
                             <option value="">Choose an agent...</option>
                             @foreach($registeredAgents as $name => $class)
                                 <option value="{{ $name }}">
@@ -244,12 +295,12 @@ function testModalButton() {
         </div>
 
         <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 overflow-hidden">
         <!-- Details Panel -->
-        <div class="flex flex-col h-full">
-            <div class="flex flex-col h-full overflow-hidden">
+        <div class="flex flex-col h-full min-h-0 overflow-hidden">
+            <div class="flex flex-col h-full min-h-0 overflow-hidden">
                     <!-- Tab Navigation -->
-                    <div class="bg-gray-900/50 rounded-xl p-4 mb-6 border border-gray-800/50">
+                    <div class="bg-gray-900/50 rounded-xl p-4 mb-4 border border-gray-800/50 flex-shrink-0">
                         <div class="flex items-center mb-3">
                             <div class="flex-shrink-0">
                                 <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -356,8 +407,8 @@ function testModalButton() {
                                                 <h4 class="text-sm font-medium text-white">Instructions</h4>
                                             </div>
                                         </div>
-                                        <div class="px-3 py-2">
-                                            <div class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed max-h-24 overflow-y-auto custom-scrollbar">{{ Str::limit($agentInfo['instructions'] ?? 'No instructions available', 200) }}</div>
+                                        <div class="px-3 py-2 h-[calc(100vh-563px)]">
+                                            <div class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed max-h-24 overflow-y-auto custom-scrollbar min-h-full">{{ Str::limit($agentInfo['instructions'] ?? 'No instructions available', 200) }}</div>
                                         </div>
                                     </div>
 
@@ -427,10 +478,9 @@ function testModalButton() {
                         <!-- Session/Memory Tab -->
                         @if($activeTab === 'session-memory')
                             @if($selectedAgent)
-                                <div class="flex-1 overflow-y-auto custom-scrollbar">
-                                    <div class="space-y-3 p-4">
+                                <div class="flex flex-col h-full overflow-hidden p-4">
                                     <!-- Compact Session Header -->
-                                    <div class="bg-gray-800/50 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-900/50 shadow-sm">
+                                    <div class="bg-gray-800/50 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-900/50 shadow-sm mb-3 flex-shrink-0">
                                         <div class="flex items-center justify-between">
                                             <div class="flex items-center space-x-3">
                                                 <div class="w-8 h-8 bg-purple-900/50 rounded-lg flex items-center justify-center">
@@ -462,7 +512,7 @@ function testModalButton() {
 
                                     @if(isset($contextData['error']))
                                         <!-- Error Alert -->
-                                        <div class="bg-red-900/20 border-l-4 border-red-400 p-4 rounded-r-lg">
+                                        <div class="bg-red-900/20 border-l-4 border-red-400 p-4 rounded-r-lg mb-3 flex-shrink-0">
                                             <div class="flex">
                                                 <div class="flex-shrink-0">
                                                     <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -479,124 +529,81 @@ function testModalButton() {
                                         </div>
                                     @endif
 
-                                    <!-- Compact Context Information -->
-                                    <div class="bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-700/50 shadow-sm">
-                                        <div class="px-4 py-3 border-b border-gray-700/50">
-                                            <div class="flex items-center">
-                                                <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                                </svg>
-                                                <h4 class="text-sm font-medium text-white">Context Information</h4>
-                                            </div>
-                                        </div>
-                                        <div class="px-4 py-3">
-                                            @if(isset($contextData['error']))
-                                                <div class="text-red-400 text-sm">{{ $contextData['error'] }}</div>
+                                    <!-- Three Row Grid Layout -->
+                                    <div class="flex flex-col gap-3 flex-1 min-h-0">
+                                        <!-- Context State Card -->
+                                        <div class="flex-1 min-h-0 overflow-hidden">
+                                            @if(!empty($contextStateData))
+                                                @include('vizra-adk::components.json-viewer', [
+                                                    'data' => $contextStateData,
+                                                    'title' => 'Context State',
+                                                    'icon' => '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>',
+                                                    'bgColor' => 'bg-purple-900/20',
+                                                    'borderColor' => 'border-purple-800/40',
+                                                    'textColor' => 'text-purple-200',
+                                                    'titleColor' => 'text-purple-300',
+                                                    'iconColor' => 'text-purple-400',
+                                                    'expandable' => true,
+                                                    'startCollapsed' => false,
+                                                    'copyable' => true,
+                                                    'collapsible' => true
+                                                ])
                                             @else
-                                                <div class="grid grid-cols-3 gap-4 text-sm">
-                                                    <div class="flex items-center space-x-2">
-                                                        <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                                                        </svg>
-                                                        <div>
-                                                            <div class="text-xs text-gray-500">Messages</div>
-                                                            <div class="font-semibold text-blue-400">{{ $contextData['messages_count'] ?? 0 }}</div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="flex items-center space-x-2">
-                                                        <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                                        </svg>
-                                                        <div>
-                                                            <div class="text-xs text-gray-500">State Keys</div>
-                                                            <div class="font-semibold text-green-400">{{ count($contextData['state_keys'] ?? []) }}</div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="flex items-center space-x-2">
-                                                        <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                        </svg>
-                                                        <div>
-                                                            <div class="text-xs text-gray-500">Session</div>
-                                                            <div class="text-xs font-mono text-purple-400 bg-purple-900/20 px-1 py-0.5 rounded">
-                                                                {{ Str::limit($contextData['session_id'] ?? 'N/A', 8) }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                <div class="bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-700/50 shadow-sm flex flex-col h-full overflow-hidden p-4">
+                                                    <div class="text-gray-400 text-sm">No context state data available</div>
                                                 </div>
+                                            @endif
+                                        </div>
 
-                                                @if(isset($contextData['state_keys']) && count($contextData['state_keys']) > 0)
-                                                    <div class="mt-3 pt-3 border-t border-gray-700/50">
-                                                        <div class="text-xs text-gray-500 mb-2">Active State Keys</div>
-                                                        <div class="flex flex-wrap gap-1">
-                                                            @foreach($contextData['state_keys'] as $key)
-                                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-900/50 text-blue-300">
-                                                                    {{ $key }}
-                                                                </span>
-                                                            @endforeach
-                                                        </div>
-                                                    </div>
-                                                @endif
+                                        <!-- Session Data Card -->
+                                        <div class="flex-1 min-h-0 overflow-hidden">
+                                            @if(!empty($sessionData))
+                                                @include('vizra-adk::components.json-viewer', [
+                                                    'data' => $sessionData,
+                                                    'title' => 'Session Data (Short-term)',
+                                                    'icon' => '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>',
+                                                    'bgColor' => 'bg-blue-900/20',
+                                                    'borderColor' => 'border-blue-800/40',
+                                                    'textColor' => 'text-blue-200',
+                                                    'titleColor' => 'text-blue-300',
+                                                    'iconColor' => 'text-blue-400',
+                                                    'expandable' => true,
+                                                    'startCollapsed' => false,
+                                                    'copyable' => true,
+                                                    'collapsible' => true
+                                                ])
+                                            @else
+                                                <div class="bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-700/50 shadow-sm flex flex-col h-full overflow-hidden p-4">
+                                                    <div class="text-gray-400 text-sm">No session data available</div>
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <!-- Memory Data Card -->
+                                        <div class="flex-1 min-h-0 overflow-hidden">
+                                            @if(!empty($longTermMemoryData))
+                                                @include('vizra-adk::components.json-viewer', [
+                                                    'data' => $longTermMemoryData,
+                                                    'title' => 'Memory Data (Long-term)',
+                                                    'icon' => '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>',
+                                                    'bgColor' => 'bg-green-900/20',
+                                                    'borderColor' => 'border-green-800/40',
+                                                    'textColor' => 'text-green-200',
+                                                    'titleColor' => 'text-green-300',
+                                                    'iconColor' => 'text-green-400',
+                                                    'expandable' => true,
+                                                    'startCollapsed' => false,
+                                                    'copyable' => true,
+                                                    'collapsible' => true
+                                                ])
+                                            @else
+                                                <div class="bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-700/50 shadow-sm flex flex-col h-full overflow-hidden p-4">
+                                                    <div class="text-gray-400 text-sm">No long-term memory data available</div>
+                                                </div>
                                             @endif
                                         </div>
                                     </div>
-
-                                    @if(isset($memoryData) && count($memoryData) > 0)
-                                        <!-- Compact Memory Store -->
-                                        <div class="bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-700/50 shadow-sm">
-                                            <div class="px-4 py-3 border-b border-gray-700/50">
-                                                <div class="flex items-center justify-between">
-                                                    <div class="flex items-center">
-                                                        <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                                                        </svg>
-                                                        <h4 class="text-sm font-medium text-white">Memory Store</h4>
-                                                    </div>
-                                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-900/50 text-purple-300">
-                                                        {{ count($memoryData) }} entries
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="px-4 py-3">
-                                                <div class="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
-                                                    @foreach($memoryData as $key => $value)
-                                                        <div class="group bg-gray-700/30 hover:bg-gray-700/50 transition-colors duration-200 px-3 py-2 rounded border border-gray-700/30">
-                                                            <div class="flex items-start justify-between">
-                                                                <div class="flex-1 min-w-0">
-                                                                    <div class="flex items-center space-x-2 mb-1">
-                                                                        <h5 class="text-sm font-medium text-white group-hover:text-purple-400 transition-colors duration-200">{{ $key }}</h5>
-                                                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium {{ is_array($value) ? 'bg-blue-900/50 text-blue-300' : 'bg-gray-700 text-gray-300' }}">
-                                                                            {{ is_array($value) ? 'Array' : 'String' }}
-                                                                        </span>
-                                                                    </div>
-                                                                    @if(is_array($value))
-                                                                        @include('vizra-adk::components.json-viewer', [
-                                                                            'data' => $value,
-                                                                            'bgColor' => 'bg-gray-900/50',
-                                                                            'borderColor' => 'border-gray-700/50',
-                                                                            'textColor' => 'text-gray-400',
-                                                                            'maxHeight' => 'max-h-12',
-                                                                            'expandable' => false,
-                                                                            'copyable' => false,
-                                                                            'collapsible' => false
-                                                                        ])
-                                                                    @else
-                                                                        <div class="text-xs text-gray-400 font-mono bg-gray-900/50 rounded px-2 py-1 border border-gray-700/50 max-h-12 overflow-y-auto">
-                                                                            {{ Str::limit($value, 100) }}
-                                                                        </div>
-                                                                    @endif
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endif
                                 </div>
-                            </div>
                             @else
                                 <div class="flex-1 overflow-y-auto custom-scrollbar">
                                     <div class="text-center py-12 px-6">
@@ -695,8 +702,8 @@ function testModalButton() {
             </div>
 
         <!-- Chat Area -->
-        <div class="flex flex-col h-full">
-            <div class="bg-gray-900/50 rounded-xl shadow-lg border border-gray-800/50 flex flex-col h-full overflow-hidden">
+        <div class="flex flex-col h-full min-h-0 overflow-hidden">
+            <div class="bg-gray-900/50 rounded-xl shadow-lg border border-gray-800/50 flex flex-col h-full min-h-0 overflow-hidden">
                 <!-- Chat Header -->
                 <div class="px-6 py-4 border-b border-gray-800/50 bg-gray-800/30 rounded-t-xl">
                     <div class="flex items-center justify-between">
