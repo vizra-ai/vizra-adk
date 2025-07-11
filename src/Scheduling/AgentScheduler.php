@@ -20,57 +20,57 @@ class AgentScheduler
     /**
      * Schedule an agent to run daily
      */
-    public function daily(string $agentClass, mixed $input = null, string $mode = 'process'): AgentScheduleBuilder
+    public function daily(string $agentClass, mixed $input = null): AgentScheduleBuilder
     {
-        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, $mode, 'daily');
+        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, 'daily');
     }
 
     /**
      * Schedule an agent to run hourly
      */
-    public function hourly(string $agentClass, mixed $input = null, string $mode = 'process'): AgentScheduleBuilder
+    public function hourly(string $agentClass, mixed $input = null): AgentScheduleBuilder
     {
-        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, $mode, 'hourly');
+        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, 'hourly');
     }
 
     /**
      * Schedule an agent to run weekly
      */
-    public function weekly(string $agentClass, mixed $input = null, string $mode = 'process'): AgentScheduleBuilder
+    public function weekly(string $agentClass, mixed $input = null): AgentScheduleBuilder
     {
-        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, $mode, 'weekly');
+        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, 'weekly');
     }
 
     /**
      * Schedule an agent to run monthly
      */
-    public function monthly(string $agentClass, mixed $input = null, string $mode = 'process'): AgentScheduleBuilder
+    public function monthly(string $agentClass, mixed $input = null): AgentScheduleBuilder
     {
-        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, $mode, 'monthly');
+        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, 'monthly');
     }
 
     /**
      * Schedule an agent with a custom cron expression
      */
-    public function cron(string $expression, string $agentClass, mixed $input = null, string $mode = 'process'): AgentScheduleBuilder
+    public function cron(string $expression, string $agentClass, mixed $input = null): AgentScheduleBuilder
     {
-        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, $mode, 'cron', $expression);
+        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, 'cron', $expression);
     }
 
     /**
      * Schedule an agent to run every N minutes
      */
-    public function everyMinutes(int $minutes, string $agentClass, mixed $input = null, string $mode = 'process'): AgentScheduleBuilder
+    public function everyMinutes(int $minutes, string $agentClass, mixed $input = null): AgentScheduleBuilder
     {
-        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, $mode, 'everyMinutes', $minutes);
+        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, 'everyMinutes', $minutes);
     }
 
     /**
      * Schedule an agent to run at a specific time
      */
-    public function at(string $time, string $agentClass, mixed $input = null, string $mode = 'process'): AgentScheduleBuilder
+    public function at(string $time, string $agentClass, mixed $input = null): AgentScheduleBuilder
     {
-        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, $mode, 'at', $time);
+        return new AgentScheduleBuilder($this->schedule, $agentClass, $input, 'at', $time);
     }
 }
 
@@ -84,8 +84,6 @@ class AgentScheduleBuilder
     protected string $agentClass;
 
     protected mixed $input;
-
-    protected string $mode;
 
     protected string $frequency;
 
@@ -107,14 +105,12 @@ class AgentScheduleBuilder
         Schedule $schedule,
         string $agentClass,
         mixed $input,
-        string $mode,
         string $frequency,
         mixed $frequencyParam = null
     ) {
         $this->schedule = $schedule;
         $this->agentClass = $agentClass;
         $this->input = $input;
-        $this->mode = $mode;
         $this->frequency = $frequency;
         $this->frequencyParam = $frequencyParam;
     }
@@ -189,19 +185,11 @@ class AgentScheduleBuilder
             try {
                 Log::info('Executing scheduled agent', [
                     'agent_class' => $this->agentClass,
-                    'mode' => $this->mode,
                     'scheduled_name' => $this->name,
                 ]);
 
                 // Prepare agent execution
-                $executor = match ($this->mode) {
-                    'trigger' => $this->agentClass::trigger($this->input),
-                    'analyze' => $this->agentClass::analyze($this->input),
-                    'process' => $this->agentClass::process($this->input),
-                    'monitor' => $this->agentClass::monitor($this->input),
-                    'generate' => $this->agentClass::generate($this->input),
-                    default => $this->agentClass::ask($this->input),
-                };
+                $executor = $this->agentClass::run($this->input);
 
                 // Add context
                 if (! empty($this->context)) {
@@ -222,7 +210,6 @@ class AgentScheduleBuilder
 
                 Log::info('Scheduled agent completed', [
                     'agent_class' => $this->agentClass,
-                    'mode' => $this->mode,
                     'scheduled_name' => $this->name,
                     'result_type' => gettype($result),
                 ]);
@@ -230,7 +217,6 @@ class AgentScheduleBuilder
             } catch (\Exception $e) {
                 Log::error('Scheduled agent failed', [
                     'agent_class' => $this->agentClass,
-                    'mode' => $this->mode,
                     'scheduled_name' => $this->name,
                     'error' => $e->getMessage(),
                 ]);

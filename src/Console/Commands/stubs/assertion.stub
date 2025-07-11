@@ -1,0 +1,37 @@
+<?php
+
+namespace {{ namespace }};
+
+use Vizra\VizraADK\Evaluations\Assertions\BaseAssertion;
+
+class {{ class }} extends BaseAssertion
+{
+    /**
+     * Assert that the response meets your custom criteria.
+     *
+     * @param string $response The LLM response to evaluate
+     * @param mixed ...$params Additional parameters for the assertion
+     * @return array
+     */
+    public function assert(string $response, ...$params): array
+    {
+        // Your assertion logic here
+        // Example:
+        // $expectedValue = $params[0] ?? '';
+        // $condition = /* your validation logic */;
+        
+        // return $this->result(
+        //     $condition,
+        //     'Your assertion message',
+        //     'expected value',
+        //     'actual value'
+        // );
+        
+        return $this->result(
+            false,
+            'Assertion not implemented',
+            'implementation',
+            'not implemented'
+        );
+    }
+}

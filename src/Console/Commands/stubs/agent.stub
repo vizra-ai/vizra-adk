@@ -13,24 +13,27 @@ class {{ class }} extends BaseLlmAgent
     protected string $description = 'Describe what this agent does.';
 
     /**
-     * System prompt / instructions for the LLM.
+     * Agent instructions hierarchy (first found wins):
+     * 1. Runtime: $agent->setPromptOverride('...')
+     * 2. Database: agent_prompt_versions table (if enabled)
+     * 3. File: resources/prompts/{{ agentName }}/default.blade.php
+     * 4. Fallback: This property
+     * 
+     * The prompt file has been created for you at:
+     * resources/prompts/{{ agentName }}/default.blade.php
      */
-    protected string $instructions = 'You are a helpful assistant. Your name is {{ agentName }}.';
-
+    protected string $instructions = 'You are {{ agentNameHuman }}. See resources/prompts/{{ agentName }}/default.blade.php for full instructions.';
+    
     protected string $model = '';
 
     protected array $tools = [
         // Example: YourTool::class,
     ];
 
-    /**
-     * Example of an overridable hook method.
-     * Modify the input messages array before it's sent to the LLM.
-     *
-     * @param array $inputMessages The array of messages prepared for the LLM.
-     * @param AgentContext $context The current agent context.
-     * @return array The modified messages array.
-     */
+    /*
+
+    Optional hook methods to override:
+
     public function beforeLlmCall(array $inputMessages, AgentContext $context): array
     {
         // $context->setState('custom_data_for_llm', 'some_value');
@@ -38,8 +41,21 @@ class {{ class }} extends BaseLlmAgent
         return parent::beforeLlmCall($inputMessages, $context);
     }
 
-    // Optional hook methods to override:
-    // public function afterLlmResponse(mixed $response, AgentContext $context): mixed { /* ... */ return parent::afterLlmResponse($response, $context); }
-    // public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array { /* ... */ return parent::beforeToolCall($toolName, $arguments, $context); }
-    // public function afterToolResult(string $toolName, string $result, AgentContext $context): string { /* ... */ return parent::afterToolResult($toolName, $result, $context); }
+    public function afterLlmResponse(mixed $response, AgentContext $context): mixed {
+
+         return parent::afterLlmResponse($response, $context);
+
+    }
+
+    public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array {
+
+        return parent::beforeToolCall($toolName, $arguments, $context);
+
+    }
+
+    public function afterToolResult(string $toolName, string $result, AgentContext $context): string {
+
+        return parent::afterToolResult($toolName, $result, $context);
+
+    } */
 }

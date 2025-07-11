@@ -187,7 +187,6 @@ class ParallelWorkflow extends BaseWorkflowAgent
             $job = new \Vizra\VizraADK\Jobs\AgentJob(
                 $step['agent'],
                 $this->prepareStepParams($step['params'], $input, $context),
-                'execute', // mode
                 $sessionId,
                 [] // context
             );
@@ -213,16 +212,6 @@ class ParallelWorkflow extends BaseWorkflowAgent
         $workflow->agents($agents);
 
         return $workflow;
-    }
-
-    /**
-     * Execute the workflow with simplified syntax
-     */
-    public function execute(mixed $input, ?AgentContext $context = null): mixed
-    {
-        $context = $context ?: new AgentContext('workflow-'.uniqid());
-
-        return $this->run($input, $context);
     }
 
     /**

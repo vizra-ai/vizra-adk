@@ -42,7 +42,7 @@ it('completes agent workflow', function () {
     $context = $stateManager->loadContext('integration-test-agent', $sessionId, 'Hello from integration test');
 
     // Execute the agent directly to add messages
-    $agent->run('Hello from integration test', $context);
+    $agent->execute('Hello from integration test', $context);
 
     // Save context manually when calling agent directly
     $stateManager->saveContext($context, 'integration-test-agent');
@@ -78,12 +78,12 @@ it('persists agent state', function () {
 
     // First interaction
     $context1 = $stateManager->loadContext('stateful-agent', null, 'Set counter to 5');
-    $response1 = $agent->run('Set counter to 5', $context1);
+    $response1 = $agent->execute('Set counter to 5', $context1);
     $stateManager->saveContext($context1, 'stateful-agent');
 
     // Second interaction with same session
     $context2 = $stateManager->loadContext('stateful-agent', $context1->getSessionId(), 'Increment counter');
-    $response2 = $agent->run('Increment counter', $context2);
+    $response2 = $agent->execute('Increment counter', $context2);
     $stateManager->saveContext($context2, 'stateful-agent');
 
     expect($context1->getState('counter'))->toBe(5);
@@ -105,8 +105,8 @@ it('handles multiple agents with different sessions', function () {
     $context1 = $stateManager->loadContext('agent-1', null, 'Agent 1 input');
     $context2 = $stateManager->loadContext('agent-2', null, 'Agent 2 input');
 
-    $response1 = $agent1->run('Agent 1 input', $context1);
-    $response2 = $agent2->run('Agent 2 input', $context2);
+    $response1 = $agent1->execute('Agent 1 input', $context1);
+    $response2 = $agent2->execute('Agent 2 input', $context2);
 
     expect($response1)->toContain('Integration response');
     expect($response2)->toContain('Stateful response');
@@ -141,7 +141,7 @@ class IntegrationTestAgent extends BaseLlmAgent
 
     protected string $instructions = 'You are a test agent for integration testing.';
 
-    public function run($input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         // For testing, simulate the LLM response behavior manually
         $context->setUserInput($input);
@@ -169,7 +169,7 @@ class StatefulTestAgent extends BaseLlmAgent
 
     protected string $instructions = 'You are a stateful test agent.';
 
-    public function run($input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         // Simulate adding the user message like BaseLlmAgent would
         $context->setUserInput($input);

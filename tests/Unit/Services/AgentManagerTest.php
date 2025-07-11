@@ -86,7 +86,7 @@ it('can run agent', function () {
         ->with('execution_mode', 'ask')
         ->once();
 
-    $mockAgent->shouldReceive('run')
+    $mockAgent->shouldReceive('execute')
         ->with($input, $mockContext)
         ->once()
         ->andReturn('test response');
@@ -155,7 +155,7 @@ class TestManagerAgent extends BaseAgent
 
     protected string $description = 'A test agent for manager testing';
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Manager test response: '.$input;
     }

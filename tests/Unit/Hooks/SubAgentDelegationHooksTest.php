@@ -71,7 +71,7 @@ describe('Sub-Agent Delegation Hooks', function () {
                 return [];
             }
 
-            public function run(mixed $input, AgentContext $context): mixed
+            public function execute(mixed $input, AgentContext $context): mixed
             {
                 return "Sub-agent response to: {$input}";
             }
@@ -205,7 +205,7 @@ describe('Sub-Agent Delegation Hooks', function () {
                         return [];
                     }
 
-                    public function run(mixed $input, AgentContext $context): mixed
+                    public function execute(mixed $input, AgentContext $context): mixed
                     {
                         return "Modified response to: {$input}";
                     }
@@ -290,7 +290,7 @@ describe('Sub-Agent Delegation Hooks', function () {
                         return [];
                     }
 
-                    public function run(mixed $input, AgentContext $context): mixed
+                    public function execute(mixed $input, AgentContext $context): mixed
                     {
                         return 'Simple response';
                     }
@@ -366,7 +366,7 @@ describe('Sub-Agent Delegation Hooks', function () {
                         return [];
                     }
 
-                    public function run(mixed $input, AgentContext $context): mixed
+                    public function execute(mixed $input, AgentContext $context): mixed
                     {
                         return 'Response';
                     }

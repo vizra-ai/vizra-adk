@@ -143,7 +143,7 @@ class DelegateToSubAgentTool implements ToolInterface
             ));
 
             // Run the sub-agent with the task input
-            $result = $subAgent->run($taskInput, $subAgentContext);
+            $result = $subAgent->execute($taskInput, $subAgentContext);
 
             // Call the afterSubAgentDelegation hook
             $processedResult = $this->parentAgent->afterSubAgentDelegation(
@@ -161,7 +161,6 @@ class DelegateToSubAgentTool implements ToolInterface
                 'result' => $processedResult,
                 'success' => true,
             ];
-
 
             return json_encode($response);
 

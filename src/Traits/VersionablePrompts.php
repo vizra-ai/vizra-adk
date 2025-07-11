@@ -100,11 +100,33 @@ trait VersionablePrompts
         // Check file versions
         $promptPath = $this->getPromptPath();
         if (File::exists($promptPath)) {
+            // Check for version directories
+            $directories = File::directories($promptPath);
+            foreach ($directories as $dir) {
+                $dirName = basename($dir);
+                if (preg_match('/^v\d+$/', $dirName)) {
+                    // Add version
+                    $versions[] = $dirName;
+
+                    // Add version/variant combinations
+                    $variantFiles = File::files($dir);
+                    foreach ($variantFiles as $file) {
+                        if ($file->getExtension() === 'md') {
+                            $variant = $file->getFilenameWithoutExtension();
+                            $versions[] = $dirName.'/'.$variant;
+                        }
+                    }
+                }
+            }
+
+            // Check for direct files (backward compatibility)
             $files = File::files($promptPath);
             foreach ($files as $file) {
-                $filename = $file->getFilenameWithoutExtension();
-                if ($filename !== 'default' && ! in_array($filename, $versions)) {
-                    $versions[] = $filename;
+                if ($file->getExtension() === 'md') {
+                    $filename = $file->getFilenameWithoutExtension();
+                    if (! in_array($filename, $versions) && $filename !== 'default') {
+                        $versions[] = $filename;
+                    }
                 }
             }
         }
@@ -146,15 +168,49 @@ trait VersionablePrompts
     {
         $promptPath = $this->getPromptPath();
 
-        // Try specific version first
+        // Handle version/variant format (e.g., "v2/formal", "v1/default")
+        if ($this->promptVersion && str_contains($this->promptVersion, '/')) {
+            [$version, $variant] = explode('/', $this->promptVersion, 2);
+            $versionFile = $promptPath.'/'.$version.'/'.$variant.'.md';
+            if (File::exists($versionFile)) {
+                return File::get($versionFile);
+            }
+        }
+
+        // Try specific version/variant first
         if ($this->promptVersion) {
+            // Check if it's a version directory (e.g., "v2" -> "v2/default.md")
+            $versionDefaultFile = $promptPath.'/'.$this->promptVersion.'/default.md';
+            if (File::exists($versionDefaultFile)) {
+                return File::get($versionDefaultFile);
+            }
+
+            // Check if it's a variant in the latest version
+            $latestVersion = $this->getLatestVersion();
+            if ($latestVersion) {
+                $variantFile = $promptPath.'/'.$latestVersion.'/'.$this->promptVersion.'.md';
+                if (File::exists($variantFile)) {
+                    return File::get($variantFile);
+                }
+            }
+
+            // Check if it's a direct file (backward compatibility)
             $versionFile = $promptPath.'/'.$this->promptVersion.'.md';
             if (File::exists($versionFile)) {
                 return File::get($versionFile);
             }
         }
 
-        // Try default file
+        // Try latest version default
+        $latestVersion = $this->getLatestVersion();
+        if ($latestVersion) {
+            $latestDefaultFile = $promptPath.'/'.$latestVersion.'/default.md';
+            if (File::exists($latestDefaultFile)) {
+                return File::get($latestDefaultFile);
+            }
+        }
+
+        // Try default file (backward compatibility)
         $defaultFile = $promptPath.'/default.md';
         if (File::exists($defaultFile)) {
             return File::get($defaultFile);
@@ -171,6 +227,38 @@ trait VersionablePrompts
         $basePath = config('vizra-adk.prompts.storage_path', resource_path('prompts'));
 
         return $basePath.'/'.$this->getName();
+    }
+
+    /**
+     * Get the latest version directory
+     */
+    protected function getLatestVersion(): ?string
+    {
+        $promptPath = $this->getPromptPath();
+
+        if (! File::exists($promptPath)) {
+            return null;
+        }
+
+        // Look for version directories (v1, v2, v3, etc.)
+        $directories = File::directories($promptPath);
+        $versionDirs = [];
+
+        foreach ($directories as $dir) {
+            $dirName = basename($dir);
+            if (preg_match('/^v(\d+)$/', $dirName, $matches)) {
+                $versionDirs[(int) $matches[1]] = $dirName;
+            }
+        }
+
+        if (empty($versionDirs)) {
+            return null;
+        }
+
+        // Sort by version number and get the highest
+        ksort($versionDirs);
+
+        return end($versionDirs);
     }
 
     /**

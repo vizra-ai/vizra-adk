@@ -329,16 +329,6 @@ class LoopWorkflow extends BaseWorkflowAgent
     }
 
     /**
-     * Execute the workflow with simplified syntax
-     */
-    public function execute(mixed $input, ?AgentContext $context = null): mixed
-    {
-        $context = $context ?: new AgentContext('workflow-'.uniqid());
-
-        return $this->run($input, $context);
-    }
-
-    /**
      * Determine if the loop completed normally (not due to hitting max iterations safety limit)
      */
     private function didCompleteNormally(): bool

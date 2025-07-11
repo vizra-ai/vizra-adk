@@ -130,16 +130,10 @@ class TestLlmAgent extends BaseLlmAgent
         return $this->loadedTools;
     }
 
-    // Override run method to avoid actual API calls in tests
-    public function run(mixed $input, AgentContext $context): mixed
+    // Override execute method to avoid actual API calls in tests
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         // Simple mock response for testing
         return 'Test response for: '.$input;
-    }
-
-    // Keep the execute method for backward compatibility
-    public function execute($input, AgentContext $context)
-    {
-        return $this->run($input, $context);
     }
 }

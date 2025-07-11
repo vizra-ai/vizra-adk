@@ -50,7 +50,7 @@ class TestCase extends Orchestra
         $app['config']->set('services.openai.key', 'test-key');
         $app['config']->set('services.anthropic.key', 'test-key');
         $app['config']->set('services.google.key', 'test-key');
-        
+
         // Configure Prism providers
         $app['config']->set('prism.providers.openai', [
             'api_key' => 'test-key',
@@ -58,12 +58,12 @@ class TestCase extends Orchestra
             'organization' => null,
             'project' => null,
         ]);
-        
+
         $app['config']->set('prism.providers.anthropic', [
             'api_key' => 'test-key',
             'version' => '2023-06-01',
         ]);
-        
+
         $app['config']->set('prism.providers.gemini', [
             'api_key' => 'test-key',
         ]);

@@ -44,7 +44,7 @@ class ChatInterface extends Component
     public bool $showLoadSessionModal = false;
 
     public string $loadSessionId = '';
-    
+
     // Track if agent was set from URL to prevent re-initialization
 
     public function mount()
@@ -62,16 +62,16 @@ class ChatInterface extends Component
     {
         // Store previous agent to check if we're switching
         $previousAgent = $this->selectedAgent;
-        
+
         // Update selected agent
         $this->selectedAgent = $agentName;
-        
+
         // Only reset chat if switching to a different agent
         if ($previousAgent !== $agentName) {
             $this->chatHistory = [];
             $this->sessionId = 'chat-'.Str::random(8);
         }
-        
+
         // Always load agent info, context, and traces
         $this->loadAgentInfo();
         $this->loadContextData();
@@ -82,6 +82,7 @@ class ChatInterface extends Component
     {
         if (empty($this->selectedAgent)) {
             $this->agentInfo = [];
+
             return;
         }
 
@@ -134,7 +135,7 @@ class ChatInterface extends Component
             // Load session and context data
             $stateManager = app(StateManager::class);
             $context = $stateManager->loadContext($this->selectedAgent, $this->sessionId);
-            
+
             // Skip loading conversation history - we'll manage it in the component
             // This prevents the chat from being overwritten
 
@@ -446,7 +447,7 @@ class ChatInterface extends Component
             'input_data' => $processData($span->input),
             'output_data' => $processData($span->output),
             'error_data' => $span->error_message ? ['message' => $span->error_message] : null,
-            'metadata' => $metadata,
+            'metadata' => $processData($span->metadata),
             'context_state' => $contextState,
             'context_changes' => $contextChanges,
             'extracted_json' => $extractedJson,
@@ -460,10 +461,10 @@ class ChatInterface extends Component
     {
         $this->activeTab = $tab;
     }
-    
+
     public function updatedSelectedAgent($value)
     {
-        if (!empty($value)) {
+        if (! empty($value)) {
             $this->selectAgent($value);
         } else {
             // Clear agent info when no agent is selected

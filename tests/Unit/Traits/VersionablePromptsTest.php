@@ -136,7 +136,7 @@ it('uses default prompt version from class property', function () {
     $agent = new class extends BaseLlmAgent
     {
         protected string $name = 'test_agent';
-        
+
         // Set default prompt version
         protected ?string $promptVersion = 'professional';
 

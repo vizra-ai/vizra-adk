@@ -370,7 +370,7 @@ class KnowledgeBaseAgent extends BaseLlmAgent
     /**
      * Override execute to include RAG context
      */
-    public function execute(string $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         // Generate RAG context
         $ragContext = $this->generateRagContext($input);

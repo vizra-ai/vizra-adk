@@ -14,10 +14,7 @@ abstract class AgentEventListener
      */
     protected string $agentClass;
 
-    /**
-     * The agent mode to use (trigger, analyze, process, etc.)
-     */
-    protected string $mode = 'trigger';
+    // Removed mode property - no longer needed with simplified API
 
     /**
      * Whether to execute asynchronously
@@ -71,15 +68,8 @@ abstract class AgentEventListener
      */
     protected function prepareAgentExecution($event)
     {
-        // Use the appropriate static method based on mode
-        $executor = match ($this->mode) {
-            'trigger' => $this->agentClass::trigger($event),
-            'analyze' => $this->agentClass::analyze($event),
-            'process' => $this->agentClass::process($event),
-            'monitor' => $this->agentClass::monitor($event),
-            'generate' => $this->agentClass::generate($event),
-            default => $this->agentClass::ask($event),
-        };
+        // Create agent executor
+        $executor = $this->agentClass::run($event);
 
         // Add context from the event
         $context = $this->buildContext($event);

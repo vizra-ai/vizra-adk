@@ -13,7 +13,7 @@ class TestAgent extends BaseLlmAgent
 
     protected string $model = 'gemini-1.5-flash';
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Test response: '.$input;
     }

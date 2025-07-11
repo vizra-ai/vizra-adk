@@ -444,7 +444,7 @@ abstract class BaseLlmAgent extends BaseAgent
         return $tools;
     }
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         // Store context for memory access
         $this->context = $context;
@@ -470,7 +470,7 @@ abstract class BaseLlmAgent extends BaseAgent
             // Check for Prism Image and Document objects in context from AgentExecutor
             $images = $context->getState('prism_images', []);
             $documents = $context->getState('prism_documents', []);
-            
+
             // If no direct images but we have metadata, recreate them
             if (empty($images) && $context->getState('prism_images_metadata')) {
                 $images = [];
@@ -482,7 +482,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     }
                 }
             }
-            
+
             // If no direct documents but we have metadata, recreate them
             if (empty($documents) && $context->getState('prism_documents_metadata')) {
                 $documents = [];
@@ -491,7 +491,7 @@ abstract class BaseLlmAgent extends BaseAgent
                         // Recreate the Document object from metadata based on dataFormat
                         if ($metadata['dataFormat'] === 'base64') {
                             $documents[] = Document::fromBase64(
-                                $metadata['data'], 
+                                $metadata['data'],
                                 $metadata['mimeType'],
                                 $metadata['documentTitle'] ?? null,
                                 $metadata['documentContext'] ?? null

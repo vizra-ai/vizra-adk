@@ -5,6 +5,7 @@ namespace Vizra\VizraADK\Tests\Feature;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\Facades\Workflow;
+use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Tests\TestCase;
 
 // Define test agents for the integration test
@@ -72,7 +73,8 @@ class ClassBasedWorkflowIntegrationTest extends TestCase
             ->then(ReportGeneratorAgent::class);
 
         // Execute the workflow
-        $result = $workflow->execute('Initial data');
+        $context = new AgentContext('test-workflow-'.uniqid());
+        $result = $workflow->execute('Initial data', $context);
 
         // Assert the result
         $this->assertIsArray($result);
@@ -130,7 +132,8 @@ class ClassBasedWorkflowIntegrationTest extends TestCase
             DataProcessorAgent::class,
         ]);
 
-        $result = $workflow->execute('Input');
+        $context = new AgentContext('test-parallel-'.uniqid());
+        $result = $workflow->execute('Input', $context);
 
         $this->assertIsArray($result);
         $this->assertEquals('parallel', $result['workflow_type']);
@@ -158,7 +161,8 @@ class ClassBasedWorkflowIntegrationTest extends TestCase
                 return ['source' => $results[DataCollectorAgent::class]['data']];
             });
 
-        $result = $workflow->execute('Start');
+        $context = new AgentContext('test-dynamic-'.uniqid());
+        $result = $workflow->execute('Start', $context);
 
         $this->assertEquals('Processed result', $result['final_result']);
     }
@@ -181,7 +185,8 @@ class ClassBasedWorkflowIntegrationTest extends TestCase
             ->then(DataCollectorAgent::class)
             ->then(DataProcessorAgent::class);
 
-        $result = $workflow->execute('Input');
+        $context = new AgentContext('test-step-results-'.uniqid());
+        $result = $workflow->execute('Input', $context);
 
         // Get step results using class names
         $collectorResult = $workflow->getStepResult(DataCollectorAgent::class);
@@ -219,7 +224,8 @@ class ClassBasedWorkflowIntegrationTest extends TestCase
         ];
 
         $workflow = Workflow::fromArray($definition);
-        $result = $workflow->execute('Start');
+        $context = new AgentContext('test-from-array-'.uniqid());
+        $result = $workflow->execute('Start', $context);
 
         $this->assertEquals('Processed', $result['final_result']);
     }

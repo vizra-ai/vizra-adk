@@ -102,44 +102,8 @@ class RunEvalCommand extends Command
             try {
                 $prompt = $evaluation->preparePrompt($row);
 
-                // Create agent builder to apply configuration
-                $agentBuilder = Agent::build($agentName);
-
-                // Apply prompt version if specified in CSV or evaluation config
-                $promptVersion = null;
-
-                // Check if CSV has a prompt version column
-                if ($evaluation->promptVersionColumn && isset($row[$evaluation->promptVersionColumn])) {
-                    $promptVersion = $row[$evaluation->promptVersionColumn];
-                }
-                // Otherwise use prompt version from evaluation config
-                elseif (isset($evaluation->agentConfig['prompt_version'])) {
-                    $promptVersion = $evaluation->agentConfig['prompt_version'];
-                }
-
-                if ($promptVersion) {
-                    $agentBuilder->withPromptVersion($promptVersion);
-                }
-
-                // Apply other agent configuration
-                if (! empty($evaluation->agentConfig)) {
-                    foreach ($evaluation->agentConfig as $key => $value) {
-                        if ($key === 'prompt_version') {
-                            continue;
-                        } // Already handled
-
-                        // Map common config keys to builder methods
-                        match ($key) {
-                            'temperature' => $agentBuilder->withTemperature($value),
-                            'max_tokens' => $agentBuilder->withMaxTokens($value),
-                            'model' => $agentBuilder->withModel($value),
-                            default => null
-                        };
-                    }
-                }
-
-                // Run the agent with the configuration
-                $llmResponse = $agentBuilder->ask($prompt)->setSession($sessionId)->go();
+                // Run the agent directly using the Agent facade
+                $llmResponse = Agent::run($agentName, $prompt, $sessionId);
 
                 $evaluationResult = $evaluation->evaluateRow($row, $llmResponse);
                 $results[] = $evaluationResult;

@@ -91,7 +91,7 @@ class AskMethodAgent extends BaseLlmAgent
     protected string $description = "Test agent for ask method";
     protected string $model = "gemini-1.5-flash";
     
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return "Received: " . $input;
     }
@@ -103,7 +103,7 @@ class AskMethodAgent extends BaseLlmAgent
         require_once app_path('TestAgents/AskMethodAgent.php');
 
         // Use the ask method directly
-        $executor = \App\TestAgents\AskMethodAgent::ask('Hello');
+        $executor = \App\TestAgents\AskMethodAgent::run('Hello');
         $this->assertInstanceOf(\Vizra\VizraADK\Execution\AgentExecutor::class, $executor);
     }
 
@@ -211,7 +211,7 @@ class NestedAgent extends BaseLlmAgent
     protected string $name = "nested_agent";
     protected string $description = "Agent in subdirectory";
     
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return "Nested response";
     }
@@ -250,7 +250,7 @@ class '.$className.' extends BaseLlmAgent
     protected string $description = "Test agent for auto-discovery";
     protected string $model = "gemini-1.5-flash";
     
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return "Response from '.$agentName.': " . $input;
     }

@@ -41,7 +41,7 @@ it('can add image to agent conversation through executor', function () {
     $imagePath = storage_path('app/tests/test-image.jpg');
 
     // Create executor with image
-    $executor = $testAgent::ask('What is in this image?')
+    $executor = $testAgent::run('What is in this image?')
         ->withImage($imagePath, 'image/jpeg')
         ->withSession('test-session');
 
@@ -67,7 +67,7 @@ it('can add multiple images to conversation', function () {
         protected string $model = 'gpt-4o';
     };
 
-    $executor = $testAgent::ask('Compare these images')
+    $executor = $testAgent::run('Compare these images')
         ->withImage(storage_path('app/tests/test-image.jpg'))
         ->withImageFromUrl('https://example.com/image.jpg')
         ->withImageFromBase64('base64data', 'image/png')
@@ -98,7 +98,7 @@ it('can add document to agent conversation', function () {
 
     $documentPath = storage_path('app/tests/test-document.pdf');
 
-    $executor = $testAgent::ask('Summarize this document')
+    $executor = $testAgent::run('Summarize this document')
         ->withDocument($documentPath, 'application/pdf')
         ->withSession('test-session');
 
@@ -123,7 +123,7 @@ it('can add multiple documents to conversation', function () {
         protected string $model = 'gpt-4o';
     };
 
-    $executor = $testAgent::ask('Compare these documents')
+    $executor = $testAgent::run('Compare these documents')
         ->withDocument(storage_path('app/tests/test-document.pdf'))
         ->withDocumentFromUrl('https://example.com/document.pdf')
         ->withDocumentFromBase64('base64data', 'application/pdf')
@@ -152,7 +152,7 @@ it('can combine images and documents', function () {
         protected string $model = 'gpt-4o';
     };
 
-    $executor = $testAgent::ask('Analyze these files')
+    $executor = $testAgent::run('Analyze these files')
         ->withImage(storage_path('app/tests/test-image.jpg'))
         ->withDocument(storage_path('app/tests/test-document.pdf'))
         ->withSession('test-session');
@@ -185,7 +185,7 @@ it('maintains fluent interface with other methods', function () {
         protected string $model = 'gpt-4o';
     };
 
-    $executor = $testAgent::ask('Analyze with custom settings')
+    $executor = $testAgent::run('Analyze with custom settings')
         ->withImage(storage_path('app/tests/test-image.jpg'))
         ->temperature(0.5)
         ->maxTokens(500)
@@ -234,7 +234,7 @@ it('passes prism images and documents through executor to context', function () 
 
         public static $capturedContext = null;
 
-        public function run(mixed $input, AgentContext $context): mixed
+        public function execute(mixed $input, AgentContext $context): mixed
         {
             // Capture the context for inspection
             self::$capturedContext = $context;
@@ -262,7 +262,7 @@ it('passes prism images and documents through executor to context', function () 
         ->register('test_context_agent', get_class($testAgent));
 
     // Execute with attachments
-    $result = $testAgent::ask('Test context passing')
+    $result = $testAgent::run('Test context passing')
         ->withImage(storage_path('app/tests/test-image.jpg'))
         ->withDocument(storage_path('app/tests/test-document.pdf'))
         ->withSession('test-session')
@@ -297,7 +297,7 @@ it('correctly adds attachments to user messages in conversation history', functi
 
         protected string $model = 'gpt-4o';
 
-        public function run(mixed $input, AgentContext $context): mixed
+        public function execute(mixed $input, AgentContext $context): mixed
         {
             // Get the images and documents from context
             $images = $context->getState('prism_images', []);
@@ -333,7 +333,7 @@ it('correctly adds attachments to user messages in conversation history', functi
     app(\Vizra\VizraADK\Services\AgentRegistry::class)
         ->register('test_history_agent', get_class($testAgent));
 
-    $result = $testAgent::ask('Test history')
+    $result = $testAgent::run('Test history')
         ->withImage(storage_path('app/tests/test-image.jpg'))
         ->withDocument(storage_path('app/tests/test-document.pdf'))
         ->withSession('test-session')

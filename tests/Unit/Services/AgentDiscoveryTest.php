@@ -230,7 +230,7 @@ class SubAgent extends BaseLlmAgent
     protected string $name = "sub_agent";
     protected string $description = "Agent in subdirectory";
     
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return "Response from sub agent";
     }
@@ -279,7 +279,7 @@ class '.$className.' extends '.$baseClassName.'
     protected string $name = "'.$agentName.'";
     protected string $description = "Test agent for discovery";
     
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return "Response from '.$agentName.'";
     }

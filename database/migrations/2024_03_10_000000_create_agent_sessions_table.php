@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('agent_name')->index();
             $table->json('state_data')->nullable();
             $table->timestamps();
-            
+
             // Composite unique constraint to allow multiple agents per session
             $table->unique(['session_id', 'agent_name']);
         });

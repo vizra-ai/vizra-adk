@@ -100,7 +100,7 @@ it('base llm agent retrieves attachments from context state', function () {
 
         protected string $model = 'gpt-4o';
 
-        public function run(mixed $input, AgentContext $context): mixed
+        public function execute(mixed $input, AgentContext $context): mixed
         {
             // Expose the part of run() that checks for attachments
             $images = $context->getState('prism_images', []);
@@ -128,7 +128,7 @@ it('base llm agent retrieves attachments from context state', function () {
     $context->setState('prism_documents', [$document]);
 
     // Run the agent
-    $result = $testAgent->run('Test input', $context);
+    $result = $testAgent->execute('Test input', $context);
 
     expect($result['role'])->toBe('user');
     expect($result['content'])->toBe('Test input');
@@ -174,8 +174,11 @@ it('prepareMessagesForPrism handles images as arrays from database', function ()
     $testAgent = new class extends BaseLlmAgent
     {
         protected string $name = 'test_agent';
+
         protected string $description = 'Test agent';
+
         protected string $instructions = 'Test instructions';
+
         protected string $model = 'gpt-4o';
 
         public function prepareMessagesForPrism(AgentContext $context): array
@@ -190,7 +193,7 @@ it('prepareMessagesForPrism handles images as arrays from database', function ()
         'role' => 'user',
         'content' => 'Test message',
         'images' => [
-            ['image' => 'base64data', 'mimeType' => 'image/png']
+            ['image' => 'base64data', 'mimeType' => 'image/png'],
         ],
     ]);
 
@@ -207,8 +210,8 @@ it('prepareMessagesForPrism handles images as arrays from database', function ()
     $additionalContent = $property->getValue($messages[0]);
 
     // Filter to only Image objects (there might be Text objects too)
-    $images = array_filter($additionalContent, fn($item) => $item instanceof Image);
-    
+    $images = array_filter($additionalContent, fn ($item) => $item instanceof Image);
+
     expect($images)->toHaveCount(1);
     expect(reset($images))->toBeInstanceOf(Image::class);
 });
@@ -217,8 +220,11 @@ it('prepareMessagesForPrism handles documents as arrays from database', function
     $testAgent = new class extends BaseLlmAgent
     {
         protected string $name = 'test_agent';
+
         protected string $description = 'Test agent';
+
         protected string $instructions = 'Test instructions';
+
         protected string $model = 'gemini-2.0-flash';
 
         public function prepareMessagesForPrism(AgentContext $context): array
@@ -238,8 +244,8 @@ it('prepareMessagesForPrism handles documents as arrays from database', function
                 'mimeType' => 'application/pdf',
                 'dataFormat' => 'base64',
                 'documentTitle' => 'Test Doc',
-                'documentContext' => 'Test context'
-            ]
+                'documentContext' => 'Test context',
+            ],
         ],
     ]);
 
@@ -256,8 +262,8 @@ it('prepareMessagesForPrism handles documents as arrays from database', function
     $additionalContent = $property->getValue($messages[0]);
 
     // Filter to only Document objects (there might be Text objects too)
-    $documents = array_filter($additionalContent, fn($item) => $item instanceof Document);
-    
+    $documents = array_filter($additionalContent, fn ($item) => $item instanceof Document);
+
     expect($documents)->toHaveCount(1);
     expect(reset($documents))->toBeInstanceOf(Document::class);
 });
@@ -266,15 +272,18 @@ it('agent recreates images from metadata when context has no direct images', fun
     $testAgent = new class extends BaseLlmAgent
     {
         protected string $name = 'test_agent';
+
         protected string $description = 'Test agent';
+
         protected string $instructions = 'Test instructions';
+
         protected string $model = 'gpt-4o';
 
-        public function run(mixed $input, AgentContext $context): mixed
+        public function execute(mixed $input, AgentContext $context): mixed
         {
             // Simulate the recreation logic from BaseLlmAgent
             $images = $context->getState('prism_images', []);
-            
+
             if (empty($images) && $context->getState('prism_images_metadata')) {
                 $images = [];
                 foreach ($context->getState('prism_images_metadata', []) as $metadata) {
@@ -283,20 +292,20 @@ it('agent recreates images from metadata when context has no direct images', fun
                     }
                 }
             }
-            
+
             return ['images_count' => count($images), 'first_is_image' => isset($images[0]) && $images[0] instanceof Image];
         }
     };
 
     $context = new AgentContext('test-session');
-    
+
     // Set only metadata, no direct images (simulating DB load)
     $context->setState('prism_images_metadata', [
-        ['type' => 'image', 'data' => 'base64data', 'mimeType' => 'image/png']
+        ['type' => 'image', 'data' => 'base64data', 'mimeType' => 'image/png'],
     ]);
 
-    $result = $testAgent->run('Test', $context);
-    
+    $result = $testAgent->execute('Test', $context);
+
     expect($result['images_count'])->toBe(1);
     expect($result['first_is_image'])->toBeTrue();
 });

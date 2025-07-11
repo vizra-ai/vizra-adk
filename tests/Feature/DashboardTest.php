@@ -22,5 +22,5 @@ it('shows quick start commands', function () {
         ->assertSee('php artisan vizra:make:agent MyAgent')
         ->assertSee('php artisan vizra:make:tool MyTool')
         ->assertSee('php artisan vizra:make:eval MyEvaluation')
-        ->assertSee('php artisan vizra:list');
+        ->assertSee('php artisan vizra:discover-agents');
 });

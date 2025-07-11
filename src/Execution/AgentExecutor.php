@@ -16,8 +16,6 @@ class AgentExecutor
 
     protected mixed $input;
 
-    protected string $mode;
-
     protected ?Model $user = null;
 
     protected ?string $sessionId = null;
@@ -46,11 +44,10 @@ class AgentExecutor
     /** @var array<Document> */
     protected array $documents = [];
 
-    public function __construct(string $agentClass, mixed $input, string $mode = 'ask')
+    public function __construct(string $agentClass, mixed $input)
     {
         $this->agentClass = $agentClass;
         $this->input = $input;
-        $this->mode = $mode;
     }
 
     /**
@@ -290,9 +287,6 @@ class AgentExecutor
         // Load or create agent context
         $agentContext = $stateManager->loadContext($agentName, $sessionId, $this->input);
 
-        // Add execution mode to context
-        $agentContext->setState('execution_mode', $this->mode);
-
         // Add user information to context
         if ($this->user) {
             $agentContext->setState('user_id', $this->user->getKey());
@@ -383,7 +377,6 @@ class AgentExecutor
         $job = new AgentJob(
             $this->agentClass,
             $this->input,
-            $this->mode,
             $this->resolveSessionId(),
             $this->buildJobContext()
         );
@@ -414,7 +407,6 @@ class AgentExecutor
             'job_id' => $job->getJobId(),
             'queue' => $this->queue ?: 'default',
             'agent' => $this->getAgentName(),
-            'mode' => $this->mode,
         ];
     }
 
@@ -424,7 +416,6 @@ class AgentExecutor
     protected function buildJobContext(): array
     {
         $context = [
-            'execution_mode' => $this->mode,
             'context_data' => $this->context,
             'parameters' => $this->parameters,
             'streaming' => $this->streaming,

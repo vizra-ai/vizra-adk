@@ -149,8 +149,8 @@ it('supports multiple agents coexisting', function () {
     $agent1 = $registry->getAgent('agent-1');
     $agent2 = $registry->getAgent('agent-2');
 
-    $response1 = $agent1->run('Test input 1', $context1);
-    $response2 = $agent2->run('Test input 2', $context2);
+    $response1 = $agent1->execute('Test input 1', $context1);
+    $response2 = $agent2->execute('Test input 2', $context2);
 
     // Verify independent operation
     expect($response1)->toContain('Agent 1');
@@ -167,7 +167,7 @@ class TestCoexistenceAgent1 extends BaseAgent
 
     protected string $description = 'First test agent for coexistence testing';
 
-    public function run($input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Agent 1 response: '.$input;
     }
@@ -179,7 +179,7 @@ class TestCoexistenceAgent2 extends BaseAgent
 
     protected string $description = 'Second test agent for coexistence testing';
 
-    public function run($input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Agent 2 response: '.$input;
     }

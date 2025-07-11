@@ -128,7 +128,7 @@ class TestBuilderAgent extends BaseLlmAgent
         // No tools for testing
     }
 
-    public function execute($input, AgentContext $context)
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Builder test response: '.$input;
     }

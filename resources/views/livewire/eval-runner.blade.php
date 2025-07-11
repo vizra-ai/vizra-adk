@@ -129,6 +129,44 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
+    /* Custom Scrollbar Styles */
+    /* For Webkit browsers (Chrome, Safari, Edge) */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: rgba(30, 41, 59, 0.5); /* slate-800 with opacity */
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(71, 85, 105, 0.8); /* slate-600 with opacity */
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(100, 116, 139, 0.9); /* slate-500 with opacity */
+    }
+
+    ::-webkit-scrollbar-thumb:active {
+        background: rgba(148, 163, 184, 0.9); /* slate-400 with opacity */
+    }
+
+    /* For Firefox */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(71, 85, 105, 0.8) rgba(30, 41, 59, 0.5);
+    }
+
+    /* Specific styling for the test results container */
+    .max-h-96.overflow-y-auto::-webkit-scrollbar-track,
+    .max-h-32.overflow-y-auto::-webkit-scrollbar-track {
+        margin: 4px 0;
+    }
+
     .success-glow {
         box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
     }

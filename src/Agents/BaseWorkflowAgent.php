@@ -232,7 +232,7 @@ abstract class BaseWorkflowAgent extends BaseAgent
      * Main execution method that orchestrates the workflow
      * Required by BaseAgent interface
      */
-    final public function run(mixed $input, AgentContext $context): mixed
+    final public function execute(mixed $input, AgentContext $context): mixed
     {
         $startTime = microtime(true);
         $result = null;
@@ -254,15 +254,5 @@ abstract class BaseWorkflowAgent extends BaseAgent
         }
 
         return $result;
-    }
-
-    /**
-     * Execute the workflow with optional context
-     */
-    public function execute(mixed $input, ?AgentContext $context = null): mixed
-    {
-        $context = $context ?: new AgentContext('workflow-'.uniqid());
-
-        return $this->run($input, $context);
     }
 }

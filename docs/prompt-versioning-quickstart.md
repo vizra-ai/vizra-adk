@@ -1,4 +1,4 @@
-# Prompt Versioning Quick Start
+# Dynamic Prompts Quick Start
 
 ## 1. Create Prompt Files
 

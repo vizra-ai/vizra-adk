@@ -175,7 +175,7 @@ it('increments delegation depth for sub-agent context', function () {
 
     // Create a mock sub-agent that can tell us about its context
     $mockSubAgent = $this->createMock(BaseLlmAgent::class);
-    $mockSubAgent->method('run')->willReturnCallback(function ($input, $subContext) {
+    $mockSubAgent->method('execute')->willReturnCallback(function ($input, $subContext) {
         // Verify the sub-agent context has incremented depth
         expect($subContext->getState('delegation_depth'))->toBe(3);
 
@@ -218,7 +218,7 @@ class TestDelegationParentAgent extends BaseLlmAgent
         TestSpecialistBAgent::class,
     ];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Parent processed: '.$input;
     }
@@ -238,7 +238,7 @@ class TestSpecialistAgentA extends BaseLlmAgent
 
     protected array $subAgents = [];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Specialist A handled: '.$input;
     }
@@ -258,7 +258,7 @@ class TestSpecialistBAgent extends BaseLlmAgent
 
     protected array $subAgents = [];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Specialist B handled: '.$input;
     }
@@ -280,7 +280,7 @@ class TestDelegationParentAgentWithError extends BaseLlmAgent
         TestErrorSubAgent::class,
     ];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Error parent: '.$input;
     }
@@ -300,7 +300,7 @@ class TestErrorSubAgent extends BaseLlmAgent
 
     protected array $subAgents = [];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         throw new \Exception('Simulated sub-agent error');
     }

@@ -240,7 +240,7 @@ class DocumentationAgent extends BaseLlmAgent
         return $this->vector()->getStatistics($this->getName());
     }
 
-    public function execute(string $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         // Mock implementation for testing
         $ragContext = $this->rag()->generateRagContext($this->getName(), $input);

@@ -182,7 +182,7 @@ class TestParentAgent extends BaseLlmAgent
         TestSubAgent2::class,
     ];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Parent response: '.$input;
     }
@@ -202,7 +202,7 @@ class TestSubAgent1 extends BaseLlmAgent
 
     protected array $subAgents = [];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Test response from sub1: '.$input;
     }
@@ -222,7 +222,7 @@ class TestSubAgent2 extends BaseLlmAgent
 
     protected array $subAgents = [];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Test response from sub2: '.$input;
     }
@@ -242,7 +242,7 @@ class TestSimpleAgent extends BaseLlmAgent
 
     protected array $subAgents = [];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Simple response: '.$input;
     }
@@ -264,7 +264,7 @@ class TestNestedParentAgent extends BaseLlmAgent
         TestNestedSubAgent::class,
     ];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Nested parent response: '.$input;
     }
@@ -286,7 +286,7 @@ class TestNestedSubAgent extends BaseLlmAgent
         TestDeepSubAgent::class,
     ];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Nested sub response: '.$input;
     }
@@ -306,7 +306,7 @@ class TestDeepSubAgent extends BaseLlmAgent
 
     protected array $subAgents = [];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Deep sub response: '.$input;
     }
@@ -331,7 +331,7 @@ class TestPropertyBasedAgent extends BaseLlmAgent
         TestSimpleAgent::class,
     ];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Property-based response: '.$input;
     }

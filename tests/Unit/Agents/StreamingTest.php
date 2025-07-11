@@ -65,21 +65,21 @@ describe('Streaming Configuration Chaining', function () {
 describe('Streaming Response Behavior', function () {
     it('returns stream object when streaming is enabled', function () {
         $this->agent->setStreaming(true);
-        $result = $this->agent->run('Tell me a story', $this->context);
+        $result = $this->agent->execute('Tell me a story', $this->context);
 
         expect($result)->toBeInstanceOf(MockStream::class);
     });
 
     it('returns string response when streaming is disabled', function () {
         $this->agent->setStreaming(false);
-        $result = $this->agent->run('Tell me a story', $this->context);
+        $result = $this->agent->execute('Tell me a story', $this->context);
 
         expect($result)->toBeString();
     });
 
     it('stream can be converted to string', function () {
         $this->agent->setStreaming(true);
-        $stream = $this->agent->run('Hello', $this->context);
+        $stream = $this->agent->execute('Hello', $this->context);
 
         expect($stream)->toBeInstanceOf(MockStream::class);
 
@@ -90,7 +90,7 @@ describe('Streaming Response Behavior', function () {
 
     it('stream can be iterated over chunks', function () {
         $this->agent->setStreaming(true);
-        $stream = $this->agent->run('Generate content', $this->context);
+        $stream = $this->agent->execute('Generate content', $this->context);
 
         expect($stream)->toBeInstanceOf(MockStream::class);
 
@@ -110,7 +110,7 @@ describe('Streaming Context Management', function () {
         $input = 'Stream me a response';
         $this->agent->setStreaming(true);
 
-        $this->agent->run($input, $this->context);
+        $this->agent->execute($input, $this->context);
 
         $messages = $this->context->getConversationHistory();
 
@@ -126,7 +126,7 @@ describe('Streaming Context Management', function () {
     it('does not add assistant message to context when streaming', function () {
         $this->agent->setStreaming(true);
 
-        $this->agent->run('Stream response', $this->context);
+        $this->agent->execute('Stream response', $this->context);
 
         $messages = $this->context->getConversationHistory();
         $assistantMessages = $messages->filter(fn ($msg) => $msg['role'] === 'assistant');
@@ -139,7 +139,7 @@ describe('Streaming Context Management', function () {
         $this->context->setState('test_key', 'test_value');
         $this->agent->setStreaming(true);
 
-        $this->agent->run('Test input', $this->context);
+        $this->agent->execute('Test input', $this->context);
 
         expect($this->context->getState('test_key'))->toBe('test_value');
     });
@@ -150,7 +150,7 @@ describe('Streaming Hook Behavior', function () {
         $agent = new StreamingHookTestAgent;
         $agent->setStreaming(true);
 
-        $agent->run('Test input', $this->context);
+        $agent->execute('Test input', $this->context);
 
         expect($agent->beforeLlmCallCalled)->toBeTrue();
     });
@@ -159,7 +159,7 @@ describe('Streaming Hook Behavior', function () {
         $agent = new StreamingHookTestAgent;
         $agent->setStreaming(true);
 
-        $agent->run('Test input', $this->context);
+        $agent->execute('Test input', $this->context);
 
         expect($agent->afterLlmResponseCalled)->toBeTrue();
         expect($agent->receivedStreamObject)->toBeTrue();
@@ -169,7 +169,7 @@ describe('Streaming Hook Behavior', function () {
         $agent = new StreamingHookTestAgent;
         $agent->setStreaming(true);
 
-        $agent->run('Test input', $this->context);
+        $agent->execute('Test input', $this->context);
 
         // Tool hooks should not be called since streaming bypasses tool execution
         expect($agent->beforeToolCallCalled)->toBeFalse();
@@ -182,7 +182,7 @@ describe('Streaming Error Handling', function () {
         $agent = new StreamingErrorTestAgent;
         $agent->setStreaming(true);
 
-        expect(fn () => $agent->run('Trigger error', $this->context))
+        expect(fn () => $agent->execute('Trigger error', $this->context))
             ->toThrow(\RuntimeException::class, 'LLM API call failed');
     });
 
@@ -191,7 +191,7 @@ describe('Streaming Error Handling', function () {
         $agent->setStreaming(true);
 
         try {
-            $agent->run('Trigger error', $this->context);
+            $agent->execute('Trigger error', $this->context);
         } catch (\RuntimeException $e) {
             // Context should still be accessible
             expect($this->context->getSessionId())->toBe('streaming-test-session');
@@ -206,7 +206,7 @@ describe('Streaming Performance Characteristics', function () {
         // Non-streaming mode
         $agent->setStreaming(false);
         $start = microtime(true);
-        $agent->run('Test', $this->context);
+        $agent->execute('Test', $this->context);
         $nonStreamingTime = microtime(true) - $start;
 
         // Reset context for clean test
@@ -215,7 +215,7 @@ describe('Streaming Performance Characteristics', function () {
         // Streaming mode
         $agent->setStreaming(true);
         $start = microtime(true);
-        $agent->run('Test', $this->context);
+        $agent->execute('Test', $this->context);
         $streamingTime = microtime(true) - $start;
 
         // Streaming should be faster due to bypassed processing
@@ -229,17 +229,17 @@ describe('Advanced Streaming Features', function () {
 
         // Enable streaming
         $this->agent->setStreaming(true);
-        $result1 = $this->agent->run('Test 1', $this->context);
+        $result1 = $this->agent->execute('Test 1', $this->context);
         expect($result1)->toBeInstanceOf(MockStream::class);
 
         // Disable streaming
         $this->agent->setStreaming(false);
-        $result2 = $this->agent->run('Test 2', $this->context);
+        $result2 = $this->agent->execute('Test 2', $this->context);
         expect($result2)->toBeString();
 
         // Re-enable streaming
         $this->agent->setStreaming(true);
-        $result3 = $this->agent->run('Test 3', $this->context);
+        $result3 = $this->agent->execute('Test 3', $this->context);
         expect($result3)->toBeInstanceOf(MockStream::class);
     });
 
@@ -261,8 +261,8 @@ describe('Advanced Streaming Features', function () {
         $context1 = new AgentContext('session-1');
         $context2 = new AgentContext('session-2');
 
-        $result1 = $this->agent->run('Hello from session 1', $context1);
-        $result2 = $this->agent->run('Hello from session 2', $context2);
+        $result1 = $this->agent->execute('Hello from session 1', $context1);
+        $result2 = $this->agent->execute('Hello from session 2', $context2);
 
         expect($result1)->toBeInstanceOf(MockStream::class);
         expect($result2)->toBeInstanceOf(MockStream::class);
@@ -275,8 +275,8 @@ describe('Advanced Streaming Features', function () {
     it('handles empty or null input gracefully when streaming', function () {
         $this->agent->setStreaming(true);
 
-        $result1 = $this->agent->run('', $this->context);
-        $result2 = $this->agent->run(null, $this->context);
+        $result1 = $this->agent->execute('', $this->context);
+        $result2 = $this->agent->execute(null, $this->context);
 
         expect($result1)->toBeInstanceOf(MockStream::class);
         expect($result2)->toBeInstanceOf(MockStream::class);
@@ -287,7 +287,7 @@ describe('Advanced Streaming Features', function () {
 
         $results = [];
         for ($i = 0; $i < 5; $i++) {
-            $results[] = $this->agent->run("Test message {$i}", $this->context);
+            $results[] = $this->agent->execute("Test message {$i}", $this->context);
         }
 
         foreach ($results as $result) {
@@ -310,7 +310,7 @@ describe('Streaming Integration Scenarios', function () {
 
         $responses = [];
         foreach ($chatMessages as $message) {
-            $stream = $this->agent->run($message, $this->context);
+            $stream = $this->agent->execute($message, $this->context);
 
             expect($stream)->toBeInstanceOf(MockStream::class);
 
@@ -339,8 +339,8 @@ describe('Streaming Integration Scenarios', function () {
         $context1 = new AgentContext('concurrent-session-1');
         $context2 = new AgentContext('concurrent-session-2');
 
-        $stream1 = $agent1->run('Concurrent request 1', $context1);
-        $stream2 = $agent2->run('Concurrent request 2', $context2);
+        $stream1 = $agent1->execute('Concurrent request 1', $context1);
+        $stream2 = $agent2->execute('Concurrent request 2', $context2);
 
         expect($stream1)->toBeInstanceOf(MockStream::class);
         expect($stream2)->toBeInstanceOf(MockStream::class);
@@ -359,8 +359,8 @@ describe('Streaming Integration Scenarios', function () {
         $context1->setState('user_preference', 'dark_mode');
         $context2->setState('user_preference', 'light_mode');
 
-        $this->agent->run('Test message', $context1);
-        $this->agent->run('Test message', $context2);
+        $this->agent->execute('Test message', $context1);
+        $this->agent->execute('Test message', $context2);
 
         expect($context1->getState('user_preference'))->toBe('dark_mode');
         expect($context2->getState('user_preference'))->toBe('light_mode');
@@ -374,7 +374,7 @@ describe('Streaming Edge Cases', function () {
         $startTime = microtime(true);
 
         for ($i = 0; $i < 10; $i++) {
-            $result = $this->agent->run("Rapid call {$i}", $this->context);
+            $result = $this->agent->execute("Rapid call {$i}", $this->context);
             expect($result)->toBeInstanceOf(MockStream::class);
         }
 
@@ -409,7 +409,7 @@ describe('Streaming Edge Cases', function () {
             ]);
         }
 
-        $result = $this->agent->run('Final streaming message', $this->context);
+        $result = $this->agent->execute('Final streaming message', $this->context);
 
         expect($result)->toBeInstanceOf(MockStream::class);
         expect($this->context->getConversationHistory()->count())->toBeGreaterThan(20);
@@ -425,7 +425,7 @@ describe('Streaming Edge Cases', function () {
             'metadata' => ['last_login' => time(), 'session_count' => 5],
         ]);
 
-        $result = $this->agent->run('Process with complex state', $this->context);
+        $result = $this->agent->execute('Process with complex state', $this->context);
 
         expect($result)->toBeInstanceOf(MockStream::class);
 
@@ -451,7 +451,7 @@ class StreamingTestAgent extends BaseLlmAgent
 
     protected array $tools = [];
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         $context->setUserInput($input);
         $context->addMessage(['role' => 'user', 'content' => $input ?: '']);
@@ -512,7 +512,7 @@ class StreamingHookTestAgent extends StreamingTestAgent
         return $result;
     }
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         $context->setUserInput($input);
         $messages = [['role' => 'user', 'content' => $input]];
@@ -536,19 +536,19 @@ class StreamingHookTestAgent extends StreamingTestAgent
 
 class StreamingErrorTestAgent extends StreamingTestAgent
 {
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         if ($this->getStreaming() && str_contains($input, 'error')) {
             throw new \RuntimeException('LLM API call failed: Mock streaming error');
         }
 
-        return parent::run($input, $context);
+        return parent::execute($input, $context);
     }
 }
 
 class StreamingPerformanceTestAgent extends StreamingTestAgent
 {
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         $context->setUserInput($input);
         $context->addMessage(['role' => 'user', 'content' => $input ?: '']);

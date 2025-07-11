@@ -101,7 +101,7 @@ class TestRegistryAgent extends BaseAgent
 
     protected string $description = 'A test agent for registry testing';
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Registry test response: '.$input;
     }

@@ -251,7 +251,7 @@ class AgentExecutorTest extends TestCase
 
         // Mock the context
         $mockContext = Mockery::mock(AgentContext::class);
-        $mockContext->shouldReceive('setState')->with('execution_mode', 'ask')->once();
+        // execution_mode is no longer set by AgentExecutor
         $mockContext->shouldReceive('setState')->with('user_id', 123)->once();
         $mockContext->shouldReceive('setState')->with('user_model', get_class($user))->once();
         $mockContext->shouldReceive('setState')->with('user_data', ['id' => 123, 'name' => 'John Doe'])->once();

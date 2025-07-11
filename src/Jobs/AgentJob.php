@@ -20,8 +20,6 @@ class AgentJob implements ShouldQueue
 
     protected mixed $input;
 
-    protected string $mode;
-
     protected string $sessionId;
 
     protected array $context;
@@ -44,13 +42,11 @@ class AgentJob implements ShouldQueue
     public function __construct(
         string $agentClass,
         mixed $input,
-        string $mode,
         string $sessionId,
         array $context = []
     ) {
         $this->agentClass = $agentClass;
         $this->input = $input;
-        $this->mode = $mode;
         $this->sessionId = $sessionId;
         $this->context = $context;
         $this->jobId = Str::uuid()->toString();
@@ -65,7 +61,6 @@ class AgentJob implements ShouldQueue
             Log::info('Starting agent job execution', [
                 'job_id' => $this->jobId,
                 'agent_class' => $this->agentClass,
-                'mode' => $this->mode,
                 'session_id' => $this->sessionId,
             ]);
 
@@ -130,10 +125,7 @@ class AgentJob implements ShouldQueue
      */
     protected function restoreContext($agentContext): void
     {
-        // Set execution mode
-        if (isset($this->context['execution_mode'])) {
-            $agentContext->setState('execution_mode', $this->context['execution_mode']);
-        }
+        // Removed execution mode setting - no longer needed
 
         // Restore user context
         if (isset($this->context['user'])) {
@@ -185,7 +177,6 @@ class AgentJob implements ShouldQueue
         $metaKey = "agent_job_meta:{$this->jobId}";
         cache()->put($metaKey, [
             'agent_class' => $this->agentClass,
-            'mode' => $this->mode,
             'session_id' => $this->sessionId,
             'completed_at' => now()->toISOString(),
             'result_type' => gettype($result),
@@ -201,13 +192,12 @@ class AgentJob implements ShouldQueue
         event('agent.job.completed', [
             'job_id' => $this->jobId,
             'agent_class' => $this->agentClass,
-            'mode' => $this->mode,
             'result' => $result,
         ]);
 
         // Dispatch agent-specific events
         $agentName = $this->getAgentName();
-        event("agent.{$agentName}.{$this->mode}.completed", [
+        event("agent.{$agentName}.completed", [
             'job_id' => $this->jobId,
             'result' => $result,
             'session_id' => $this->sessionId,
@@ -230,7 +220,6 @@ class AgentJob implements ShouldQueue
         Log::error('Agent job permanently failed', [
             'job_id' => $this->jobId,
             'agent_class' => $this->agentClass,
-            'mode' => $this->mode,
             'error' => $exception->getMessage(),
             'attempts' => $this->attempts(),
         ]);
@@ -239,7 +228,6 @@ class AgentJob implements ShouldQueue
         $failureKey = "agent_job_failure:{$this->jobId}";
         cache()->put($failureKey, [
             'agent_class' => $this->agentClass,
-            'mode' => $this->mode,
             'error' => $exception->getMessage(),
             'failed_at' => now()->toISOString(),
             'attempts' => $this->attempts(),
@@ -249,7 +237,6 @@ class AgentJob implements ShouldQueue
         event('agent.job.failed', [
             'job_id' => $this->jobId,
             'agent_class' => $this->agentClass,
-            'mode' => $this->mode,
             'error' => $exception->getMessage(),
         ]);
     }
@@ -261,7 +248,6 @@ class AgentJob implements ShouldQueue
     {
         return [
             'vizra:'.$this->getAgentName(),
-            'mode:'.$this->mode,
             'session:'.$this->sessionId,
         ];
     }

@@ -15,7 +15,7 @@ class TestEventDrivenAgent extends BaseAgent
 
     protected string $description = 'Test agent for event-driven functionality';
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         $mode = $context->getState('execution_mode', 'ask');
 
@@ -50,42 +50,42 @@ class EventDrivenAgentTest extends TestCase
 
     public function test_ask_mode_returns_agent_executor()
     {
-        $executor = TestEventDrivenAgent::ask('test input');
+        $executor = TestEventDrivenAgent::run('test input');
 
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
 
     public function test_trigger_mode_returns_agent_executor()
     {
-        $executor = TestEventDrivenAgent::trigger(['event' => 'test']);
+        $executor = TestEventDrivenAgent::run(['event' => 'test']);
 
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
 
     public function test_analyze_mode_returns_agent_executor()
     {
-        $executor = TestEventDrivenAgent::analyze(['data' => 'test']);
+        $executor = TestEventDrivenAgent::run(['data' => 'test']);
 
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
 
     public function test_process_mode_returns_agent_executor()
     {
-        $executor = TestEventDrivenAgent::process(['batch' => 'test']);
+        $executor = TestEventDrivenAgent::run(['batch' => 'test']);
 
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
 
     public function test_monitor_mode_returns_agent_executor()
     {
-        $executor = TestEventDrivenAgent::monitor(['metrics' => 'test']);
+        $executor = TestEventDrivenAgent::run(['metrics' => 'test']);
 
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
 
     public function test_generate_mode_returns_agent_executor()
     {
-        $executor = TestEventDrivenAgent::generate(['report' => 'test']);
+        $executor = TestEventDrivenAgent::run(['report' => 'test']);
 
         $this->assertInstanceOf(AgentExecutor::class, $executor);
     }
@@ -97,7 +97,7 @@ class EventDrivenAgentTest extends TestCase
         $user->shouldReceive('toArray')->andReturn(['id' => 123]);
 
         // Test that all modes support fluent chaining
-        $executor = TestEventDrivenAgent::trigger(['event' => 'test'])
+        $executor = TestEventDrivenAgent::run(['event' => 'test'])
             ->forUser($user)
             ->withContext(['test' => 'context'])
             ->async()
@@ -109,7 +109,7 @@ class EventDrivenAgentTest extends TestCase
 
     public function test_async_execution_configuration()
     {
-        $executor = TestEventDrivenAgent::process(['data' => 'test'])
+        $executor = TestEventDrivenAgent::run(['data' => 'test'])
             ->async()
             ->onQueue('test-queue')
             ->delay(60)
@@ -130,7 +130,7 @@ class EventDrivenAgentTest extends TestCase
         $mockStateManager = Mockery::mock(\Vizra\VizraADK\Services\StateManager::class);
 
         $mockContext = Mockery::mock(\Vizra\VizraADK\System\AgentContext::class);
-        $mockContext->shouldReceive('setState')->with('execution_mode', 'trigger')->once();
+        // execution_mode is no longer set by AgentExecutor
         $mockContext->shouldReceive('setState')->withAnyArgs()->zeroOrMoreTimes();
 
         $mockStateManager->shouldReceive('loadContext')
@@ -150,16 +150,16 @@ class EventDrivenAgentTest extends TestCase
         $this->app->instance(TestEventDrivenAgent::class, new TestEventDrivenAgent);
 
         // Execute and verify mode is set correctly
-        $result = TestEventDrivenAgent::trigger(['test' => 'data'])->go();
+        $result = TestEventDrivenAgent::run(['test' => 'data'])->go();
 
         $this->assertEquals('Test response', $result);
     }
 
     public function test_different_modes_create_different_executors()
     {
-        $askExecutor = TestEventDrivenAgent::ask('test');
-        $triggerExecutor = TestEventDrivenAgent::trigger(['event']);
-        $analyzeExecutor = TestEventDrivenAgent::analyze(['data']);
+        $askExecutor = TestEventDrivenAgent::run('test');
+        $triggerExecutor = TestEventDrivenAgent::run(['event']);
+        $analyzeExecutor = TestEventDrivenAgent::run(['data']);
 
         // All should be AgentExecutor instances but configured differently
         $this->assertInstanceOf(AgentExecutor::class, $askExecutor);
@@ -173,7 +173,7 @@ class EventDrivenAgentTest extends TestCase
 
     public function test_async_mode_configuration()
     {
-        $executor = TestEventDrivenAgent::process(['large_dataset'])
+        $executor = TestEventDrivenAgent::run(['large_dataset'])
             ->async(true)
             ->onQueue('data-processing')
             ->delay(30)
@@ -192,7 +192,7 @@ class EventDrivenAgentTest extends TestCase
         $user->shouldReceive('email')->andReturn('test@example.com');
         $user->shouldReceive('name')->andReturn('Test User');
 
-        $executor = TestEventDrivenAgent::analyze(['important_data'])
+        $executor = TestEventDrivenAgent::run(['important_data'])
             ->forUser($user)
             ->withContext(['analysis_type' => 'deep', 'priority' => 'high'])
             ->temperature(0.9)
@@ -203,12 +203,7 @@ class EventDrivenAgentTest extends TestCase
 
     public function test_mode_specific_static_methods_exist()
     {
-        $this->assertTrue(method_exists(TestEventDrivenAgent::class, 'ask'));
-        $this->assertTrue(method_exists(TestEventDrivenAgent::class, 'trigger'));
-        $this->assertTrue(method_exists(TestEventDrivenAgent::class, 'analyze'));
-        $this->assertTrue(method_exists(TestEventDrivenAgent::class, 'process'));
-        $this->assertTrue(method_exists(TestEventDrivenAgent::class, 'monitor'));
-        $this->assertTrue(method_exists(TestEventDrivenAgent::class, 'generate'));
+        $this->assertTrue(method_exists(TestEventDrivenAgent::class, 'run'));
     }
 
     public function test_mode_execution_with_different_inputs()
@@ -218,19 +213,19 @@ class EventDrivenAgentTest extends TestCase
         // Test ask mode
         $askContext = Mockery::mock(\Vizra\VizraADK\System\AgentContext::class);
         $askContext->shouldReceive('getState')->with('execution_mode', 'ask')->andReturn('ask');
-        $result = $agent->run('test input', $askContext);
+        $result = $agent->execute('test input', $askContext);
         $this->assertEquals('Asked: test input', $result);
 
         // Test trigger mode
         $triggerContext = Mockery::mock(\Vizra\VizraADK\System\AgentContext::class);
         $triggerContext->shouldReceive('getState')->with('execution_mode', 'ask')->andReturn('trigger');
-        $result = $agent->run(['event' => 'data'], $triggerContext);
+        $result = $agent->execute(['event' => 'data'], $triggerContext);
         $this->assertEquals('Triggered with: {"event":"data"}', $result);
 
         // Test analyze mode
         $analyzeContext = Mockery::mock(\Vizra\VizraADK\System\AgentContext::class);
         $analyzeContext->shouldReceive('getState')->with('execution_mode', 'ask')->andReturn('analyze');
-        $result = $agent->run(['data' => 'analyze'], $analyzeContext);
+        $result = $agent->execute(['data' => 'analyze'], $analyzeContext);
         $this->assertEquals('Analyzed: {"data":"analyze"}', $result);
     }
 }

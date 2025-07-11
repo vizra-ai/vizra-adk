@@ -114,10 +114,10 @@ class AgentManager
 
         $finalResponse = null;
         try {
-            $finalResponse = $agent->run($input, $context); // BaseLlmAgent::run handles its own history additions for input
+            $finalResponse = $agent->execute($input, $context); // BaseLlmAgent::execute handles its own history additions for input
 
             // The AgentResponseGenerated event should ideally be dispatched from within BaseLlmAgent
-            // after the final response is determined but before it's returned from its run method.
+            // after the final response is determined but before it's returned from its execute method.
             // This is handled by the modification in step 5 of this subtask.
             // Event::dispatch(new AgentResponseGenerated($context, $agentName, $finalResponse));
 

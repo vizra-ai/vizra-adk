@@ -2,6 +2,9 @@
 
 namespace Vizra\VizraADK\Evaluations;
 
+use InvalidArgumentException;
+use Vizra\VizraADK\Evaluations\Assertions\AssertionInterface;
+
 abstract class BaseEvaluation
 {
     /**
@@ -100,6 +103,51 @@ abstract class BaseEvaluation
         $this->assertionResults[] = $result;
 
         return $result;
+    }
+
+    /**
+     * Execute an assertion using an AssertionInterface instance.
+     *
+     * @param  AssertionInterface  $assertion  The assertion instance to execute
+     * @param  string  $response  The LLM response to evaluate
+     * @param  mixed  ...$params  Additional parameters for the assertion
+     */
+    protected function assertWith(AssertionInterface $assertion, string $response, ...$params): array
+    {
+        $result = $assertion->assert($response, ...$params);
+
+        // Record using the assertion class name
+        return $this->recordAssertion(
+            $assertion->getName(),
+            $result['status'] ?? false,
+            $result['message'] ?? 'Assertion executed',
+            $result['expected'] ?? null,
+            $result['actual'] ?? null
+        );
+    }
+
+    /**
+     * Execute an assertion using a class name.
+     *
+     * @param  string  $assertionClass  The fully qualified class name of the assertion
+     * @param  string  $response  The LLM response to evaluate
+     * @param  mixed  ...$params  Additional parameters for the assertion
+     *
+     * @throws InvalidArgumentException If the class doesn't exist or doesn't implement AssertionInterface
+     */
+    protected function assertCustom(string $assertionClass, string $response, ...$params): array
+    {
+        if (! class_exists($assertionClass)) {
+            throw new InvalidArgumentException("Assertion class '{$assertionClass}' not found");
+        }
+
+        $assertion = new $assertionClass;
+
+        if (! $assertion instanceof AssertionInterface) {
+            throw new InvalidArgumentException("Class '{$assertionClass}' must implement AssertionInterface");
+        }
+
+        return $this->assertWith($assertion, $response, ...$params);
     }
 
     // --- Concrete Assertion Methods ---

@@ -70,7 +70,7 @@ describe('TaskDelegated Event Integration', function () {
     it('dispatches task delegated event when delegation occurs', function () {
         // Create a mock sub-agent
         $subAgent = $this->mock(BaseLlmAgent::class, function ($mock) {
-            $mock->shouldReceive('run')->andReturn('Sub-agent response');
+            $mock->shouldReceive('execute')->andReturn('Sub-agent response');
         });
 
         // Create a mock parent agent
@@ -120,7 +120,7 @@ describe('TaskDelegated Event Integration', function () {
     it('includes correct delegation depth in the event', function () {
         // Create a mock sub-agent
         $subAgent = $this->mock(BaseLlmAgent::class, function ($mock) {
-            $mock->shouldReceive('run')->andReturn('Response');
+            $mock->shouldReceive('execute')->andReturn('Response');
         });
 
         // Create a mock parent agent
@@ -224,7 +224,7 @@ describe('TaskDelegated Event Integration', function () {
     it('creates correct sub-agent context in the event', function () {
         // Create a mock sub-agent
         $subAgent = $this->mock(BaseLlmAgent::class, function ($mock) {
-            $mock->shouldReceive('run')->andReturn('Response');
+            $mock->shouldReceive('execute')->andReturn('Response');
         });
 
         $parentAgent = $this->mock(BaseLlmAgent::class, function ($mock) use ($subAgent) {

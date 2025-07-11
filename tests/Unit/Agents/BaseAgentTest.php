@@ -12,7 +12,7 @@ class TestAgent extends BaseAgent
 
     protected string $description = 'A test agent for unit testing';
 
-    public function run(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): mixed
     {
         return 'Processed: '.($input ?? '');
     }
@@ -30,23 +30,23 @@ it('can get agent description', function () {
     expect($this->agent->getDescription())->toBe('A test agent for unit testing');
 });
 
-it('can run agent', function () {
+it('can execute agent', function () {
     $context = new AgentContext('test-session');
-    $result = $this->agent->run('test input', $context);
+    $result = $this->agent->execute('test input', $context);
 
     expect($result)->toBe('Processed: test input');
 });
 
 it('handles empty input', function () {
     $context = new AgentContext('test-session');
-    $result = $this->agent->run('', $context);
+    $result = $this->agent->execute('', $context);
 
     expect($result)->toBe('Processed: ');
 });
 
 it('handles null input', function () {
     $context = new AgentContext('test-session');
-    $result = $this->agent->run(null, $context);
+    $result = $this->agent->execute(null, $context);
 
     expect($result)->toBe('Processed: ');
 });

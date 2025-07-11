@@ -151,14 +151,4 @@ class SequentialWorkflow extends BaseWorkflowAgent
 
         return $workflow;
     }
-
-    /**
-     * Execute the workflow with simplified syntax
-     */
-    public function execute(mixed $input, ?AgentContext $context = null): mixed
-    {
-        $context = $context ?: new AgentContext('workflow-'.uniqid());
-
-        return $this->run($input, $context);
-    }
 }
