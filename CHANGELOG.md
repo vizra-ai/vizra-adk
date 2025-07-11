@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.13] - 2025-07-11
+
+Adds granular control over agent conversation history via new context strategy and filtering in BaseLlmAgent. Refactors Livewire ChatInterface to provide separate context state, session, and long-term memory data for improved UI display. Updates JSON viewer and chat interface Blade templates for better layout, scrolling, and modal handling. Renames attachment docs and updates README and example usage to use run() instead of ask()
+
 ## [0.0.12] - 2025-07-11
 
 
