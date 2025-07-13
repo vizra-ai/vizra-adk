@@ -104,8 +104,8 @@ fi
 
 # Prompt for release notes
 echo ""
-echo "Enter release notes (press Ctrl+D when done):"
-RELEASE_NOTES=$(cat)
+echo -e "${YELLOW}Enter release notes for this release:${NC}"
+read -p "> " RELEASE_NOTES
 
 # Run tests first
 echo ""
@@ -122,7 +122,7 @@ echo -e "${GREEN}✓ All tests passed${NC}"
 
 # Update composer.json version
 echo ""
-echo -e "${BLUE}Updating version in composer.json...${NC}"
+echo -e "${BLUE}Updating files...${NC}"
 if grep -q '"version"' "composer.json"; then
     update_version "composer.json" "\"version\": \"$CURRENT_VERSION\"" "\"version\": \"$NEW_VERSION\""
 else
@@ -137,7 +137,6 @@ else
 fi
 
 # Update CHANGELOG.md
-echo -e "${BLUE}Updating CHANGELOG.md...${NC}"
 TODAY=$(date +%Y-%m-%d)
 CHANGELOG_ENTRY="## [$NEW_VERSION] - $TODAY"
 
@@ -163,10 +162,11 @@ echo ""
 echo -e "${BLUE}Staging changes...${NC}"
 git add "composer.json" "CHANGELOG.md"
 
-# Show diff
+# Show what files were updated
 echo ""
-echo -e "${BLUE}Changes to be committed:${NC}"
-git diff --cached
+echo -e "${BLUE}Files updated:${NC}"
+echo -e "${GREEN}✓ composer.json - version updated to $NEW_VERSION${NC}"
+echo -e "${GREEN}✓ CHANGELOG.md - release notes added${NC}"
 
 # Confirm
 echo ""
