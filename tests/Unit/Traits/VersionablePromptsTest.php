@@ -30,14 +30,24 @@ it('can override prompt at runtime', function () {
 });
 
 it('falls back to class property when no version specified', function () {
-    $agent = new class extends BaseLlmAgent
+    $uniqueAgentName = 'test_fallback_agent_'.uniqid();
+    $agent = new class($uniqueAgentName) extends BaseLlmAgent
     {
-        protected string $name = 'test_agent';
-
+        public function __construct(private string $agentName)
+        {
+            parent::__construct();
+        }
+        
+        protected string $name = '';
         protected string $instructions = 'Default instructions';
+        
+        public function getName(): string
+        {
+            return $this->agentName;
+        }
     };
 
-    // The trait adds delegation info if sub-agents are available, so check the start
+    // Should use class property since no file exists
     expect($agent->getInstructions())->toContain('Default instructions');
 });
 
@@ -62,23 +72,33 @@ it('loads prompt from file when version is set', function () {
 });
 
 it('loads default.md when no specific version is set', function () {
-    // Create test prompt file
-    $promptPath = resource_path('prompts/test_agent');
+    // Create test prompt file with unique name
+    $uniqueAgentName = 'test_default_agent_'.uniqid();
+    $promptPath = resource_path('prompts/'.$uniqueAgentName);
     File::makeDirectory($promptPath, 0755, true, true);
     File::put($promptPath.'/default.md', 'Default file instructions');
 
-    $agent = new class extends BaseLlmAgent
+    $agent = new class($uniqueAgentName) extends BaseLlmAgent
     {
-        protected string $name = 'test_agent';
-
+        public function __construct(private string $agentName)
+        {
+            parent::__construct();
+        }
+        
+        protected string $name = '';
         protected string $instructions = 'Default class instructions';
+        
+        public function getName(): string
+        {
+            return $this->agentName;
+        }
     };
 
-    // The trait adds delegation info if sub-agents are available, so check the start  
+    // Should use file instructions over class instructions
     expect($agent->getInstructions())->toContain('Default file instructions');
 
     // Cleanup
-    File::deleteDirectory(resource_path('prompts/test_agent'));
+    File::deleteDirectory($promptPath);
 });
 
 it('returns available prompt versions', function () {
