@@ -104,8 +104,18 @@ fi
 
 # Prompt for release notes
 echo ""
-echo -e "${YELLOW}Enter release notes for this release:${NC}"
-read -p "> " RELEASE_NOTES
+echo -e "${YELLOW}Enter release notes for this release (end with a line containing only 'END'):${NC}"
+RELEASE_NOTES=""
+while IFS= read -r line; do
+    if [ "$line" = "END" ]; then
+        break
+    fi
+    if [ -z "$RELEASE_NOTES" ]; then
+        RELEASE_NOTES="$line"
+    else
+        RELEASE_NOTES="$RELEASE_NOTES"$'\n'"$line"
+    fi
+done
 
 # Run tests first
 echo ""
