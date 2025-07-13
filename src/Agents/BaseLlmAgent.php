@@ -74,6 +74,9 @@ abstract class BaseLlmAgent extends BaseAgent
     /** @var array<class-string<BaseLlmAgent>> */
     protected array $subAgents = [];
 
+    /** @var array<string> */
+    protected array $mcpServers = [];
+
     protected ?AgentMemory $memory = null;
 
     protected ?AgentContext $context = null;
@@ -1180,5 +1183,15 @@ abstract class BaseLlmAgent extends BaseAgent
     public function getLoadedTools(): array
     {
         return $this->loadedTools;
+    }
+
+    /**
+     * Get MCP servers configured for this agent
+     *
+     * @return array<string>
+     */
+    public function getMcpServers(): array
+    {
+        return $this->mcpServers;
     }
 }

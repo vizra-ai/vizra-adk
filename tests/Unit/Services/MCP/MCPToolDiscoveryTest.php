@@ -1,7 +1,6 @@
 <?php
 
 use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\Attributes\UseMCPServers;
 use Vizra\VizraADK\Services\MCP\MCPClientManager;
 use Vizra\VizraADK\Services\MCP\MCPToolDiscovery;
 use Vizra\VizraADK\Tools\MCP\MCPToolWrapper;
@@ -43,14 +42,16 @@ it('detects agents without MCP servers', function () {
 });
 
 it('discovers tools for agent with MCP servers', function () {
-    // Create agent with MCP attribute
-    $agentWithMCP = new #[UseMCPServers(['test_server'])] class extends BaseLlmAgent
+    // Create agent with MCP servers
+    $agentWithMCP = new class extends BaseLlmAgent
     {
         protected string $name = 'mcp_agent';
 
         protected string $description = 'MCP test agent';
 
         protected string $instructions = 'Test instructions';
+        
+        protected array $mcpServers = ['test_server'];
     };
 
     $this->mockManager->shouldReceive('isServerEnabled')
@@ -72,13 +73,15 @@ it('discovers tools for agent with MCP servers', function () {
 });
 
 it('skips disabled servers', function () {
-    $agentWithMCP = new #[UseMCPServers(['disabled_server'])] class extends BaseLlmAgent
+    $agentWithMCP = new class extends BaseLlmAgent
     {
         protected string $name = 'mcp_agent';
 
         protected string $description = 'MCP test agent';
 
         protected string $instructions = 'Test instructions';
+        
+        protected array $mcpServers = ['disabled_server'];
     };
 
     $this->mockManager->shouldReceive('isServerEnabled')
@@ -92,13 +95,15 @@ it('skips disabled servers', function () {
 });
 
 it('handles discovery errors gracefully', function () {
-    $agentWithMCP = new #[UseMCPServers(['error_server'])] class extends BaseLlmAgent
+    $agentWithMCP = new class extends BaseLlmAgent
     {
         protected string $name = 'mcp_agent';
 
         protected string $description = 'MCP test agent';
 
         protected string $instructions = 'Test instructions';
+        
+        protected array $mcpServers = ['error_server'];
     };
 
     $this->mockManager->shouldReceive('isServerEnabled')
@@ -125,13 +130,15 @@ it('provides agent MCP tools info', function () {
 });
 
 it('validates agent MCP servers', function () {
-    $agentWithMCP = new #[UseMCPServers(['test_server'])] class extends BaseLlmAgent
+    $agentWithMCP = new class extends BaseLlmAgent
     {
         protected string $name = 'mcp_agent';
 
         protected string $description = 'MCP test agent';
 
         protected string $instructions = 'Test instructions';
+        
+        protected array $mcpServers = ['test_server'];
     };
 
     $this->mockManager->shouldReceive('testConnection')
@@ -145,14 +152,16 @@ it('validates agent MCP servers', function () {
     expect($results['test_server']['success'])->toBeTrue();
 });
 
-it('extracts MCP servers from attribute correctly', function () {
-    $agentWithMCP = new #[UseMCPServers(['server1', 'server2'])] class extends BaseLlmAgent
+it('extracts MCP servers from property correctly', function () {
+    $agentWithMCP = new class extends BaseLlmAgent
     {
         protected string $name = 'mcp_agent';
 
         protected string $description = 'MCP test agent';
 
         protected string $instructions = 'Test instructions';
+        
+        protected array $mcpServers = ['server1', 'server2'];
     };
 
     $servers = $this->discovery->getMCPServersForAgent($agentWithMCP);

@@ -1,7 +1,6 @@
 <?php
 
 use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\Attributes\UseMCPServers;
 use Vizra\VizraADK\Services\MCP\MCPClientManager;
 use Vizra\VizraADK\Services\MCP\MCPToolDiscovery;
 
@@ -48,13 +47,15 @@ it('discovers enabled servers', function () {
 
 it('integrates with agent tool loading', function () {
     // Create a test agent with MCP servers
-    $agent = new #[UseMCPServers(['test_filesystem'])] class extends BaseLlmAgent
+    $agent = new class extends BaseLlmAgent
     {
         protected string $name = 'test_mcp_agent';
 
         protected string $description = 'Test MCP agent';
 
         protected string $instructions = 'Test agent with MCP';
+        
+        protected array $mcpServers = ['test_filesystem'];
     };
 
     // Test that tool discovery works
@@ -82,13 +83,15 @@ it('handles agent without MCP servers', function () {
 });
 
 it('provides comprehensive agent info', function () {
-    $agent = new #[UseMCPServers(['test_filesystem', 'test_disabled'])] class extends BaseLlmAgent
+    $agent = new class extends BaseLlmAgent
     {
         protected string $name = 'mixed_mcp_agent';
 
         protected string $description = 'Agent with mixed servers';
 
         protected string $instructions = 'Test agent';
+        
+        protected array $mcpServers = ['test_filesystem', 'test_disabled'];
     };
 
     $discovery = app(MCPToolDiscovery::class);

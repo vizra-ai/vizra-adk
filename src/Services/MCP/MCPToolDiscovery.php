@@ -3,9 +3,7 @@
 namespace Vizra\VizraADK\Services\MCP;
 
 use Illuminate\Support\Facades\Log;
-use ReflectionClass;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\Attributes\UseMCPServers;
 use Vizra\VizraADK\Tools\MCP\MCPToolWrapper;
 
 class MCPToolDiscovery
@@ -15,7 +13,7 @@ class MCPToolDiscovery
     ) {}
 
     /**
-     * Discover MCP tools for a specific agent based on its UseMCPServers attribute
+     * Discover MCP tools for a specific agent based on its mcpServers configuration
      */
     public function discoverToolsForAgent(BaseLlmAgent $agent): array
     {
@@ -65,20 +63,11 @@ class MCPToolDiscovery
     }
 
     /**
-     * Get MCP servers that an agent should use based on its attributes
+     * Get MCP servers that an agent should use based on its configuration
      */
     public function getMCPServersForAgent(BaseLlmAgent $agent): array
     {
-        $reflection = new ReflectionClass($agent);
-        $attributes = $reflection->getAttributes(UseMCPServers::class);
-
-        if (empty($attributes)) {
-            return [];
-        }
-
-        $useMCPServers = $attributes[0]->newInstance();
-
-        return $useMCPServers->getServers();
+        return $agent->getMcpServers();
     }
 
     /**

@@ -105,16 +105,27 @@ it('returns available prompt versions', function () {
 });
 
 it('priority order is correct: override > database > file > class', function () {
-    // Create test prompt file
-    $promptPath = resource_path('prompts/test_agent');
+    // Create test prompt file with unique name to avoid conflicts
+    $uniqueAgentName = 'test_priority_agent_'.uniqid();
+    $promptPath = resource_path('prompts/'.$uniqueAgentName);
     File::makeDirectory($promptPath, 0755, true, true);
+    
     File::put($promptPath.'/default.md', 'File instructions');
 
-    $agent = new class extends BaseLlmAgent
+    $agent = new class($uniqueAgentName) extends BaseLlmAgent
     {
-        protected string $name = 'test_agent';
-
+        public function __construct(private string $agentName)
+        {
+            parent::__construct();
+        }
+        
+        protected string $name = '';
         protected string $instructions = 'Class instructions';
+        
+        public function getName(): string
+        {
+            return $this->agentName;
+        }
     };
 
     // Test class property (lowest priority)
@@ -125,7 +136,7 @@ it('priority order is correct: override > database > file > class', function () 
     expect($agent->getInstructions())->toBe('Override instructions');
 
     // Cleanup
-    File::deleteDirectory(resource_path('prompts/test_agent'));
+    File::deleteDirectory($promptPath);
 });
 
 it('uses default prompt version from class property', function () {

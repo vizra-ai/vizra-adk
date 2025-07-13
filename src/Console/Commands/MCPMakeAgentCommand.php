@@ -99,9 +99,7 @@ class MCPMakeAgentCommand extends Command
 namespace {$namespace};
 
 use Vizra\\VizraADK\\Agents\\BaseLlmAgent;
-use Vizra\\VizraADK\\Attributes\\UseMCPServers;
 
-#[UseMCPServers([{$serversArray}])]
 class {$className} extends BaseLlmAgent
 {
     protected string \$name = '{$agentName}';
@@ -115,6 +113,8 @@ Available MCP servers: {$this->formatServersForInstructions($servers)}
 Use the available tools to help users with their requests. Always be helpful and provide accurate information.';
 
     protected string \$model = 'gemini-1.5-flash'; // Change to your preferred model
+    
+    protected array \$mcpServers = [{$serversArray}];
 }
 PHP;
     }
