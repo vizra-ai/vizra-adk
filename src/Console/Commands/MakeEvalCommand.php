@@ -5,6 +5,7 @@ namespace Vizra\VizraADK\Console\Commands;
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\InputArgument;
+use Illuminate\Support\Facades\File;
 
 class MakeEvalCommand extends GeneratorCommand
 {
@@ -86,5 +87,60 @@ class MakeEvalCommand extends GeneratorCommand
         }
 
         return $name;
+    }
+
+    public function handle()
+    {
+        // Create the evaluation class using parent's functionality
+        $result = parent::handle();
+
+        // If the evaluation class was created successfully, also create the CSV file
+        if ($result !== false) {
+            $this->createCsvFile();
+        }
+
+        return $result;
+    }
+
+    protected function createCsvFile(): void
+    {
+        $rawName = $this->argument('name');
+        
+        // Remove 'Evaluation' suffix if user typed it, for creating CSV file name
+        $evaluationName = Str::studly($rawName);
+        if (Str::endsWith($evaluationName, 'Evaluation')) {
+            $evaluationName = substr($evaluationName, 0, -10);
+        }
+
+        // Generate CSV file name in snake_case
+        $csvFileName = Str::snake($evaluationName);
+        
+        // Determine the data directory path
+        $evaluationsPath = app_path('Evaluations');
+        $dataPath = $evaluationsPath . '/data';
+        $csvFilePath = $dataPath . '/' . $csvFileName . '.csv';
+
+        // Create the data directory if it doesn't exist
+        if (!File::exists($dataPath)) {
+            File::makeDirectory($dataPath, 0755, true);
+        }
+
+        // Only create the CSV file if it doesn't already exist
+        if (!File::exists($csvFilePath)) {
+            $csvContent = $this->generateCsvContent();
+            File::put($csvFilePath, $csvContent);
+            
+            $this->info("Created CSV file: {$csvFilePath}");
+        } else {
+            $this->warn("CSV file already exists: {$csvFilePath}");
+        }
+    }
+
+    protected function generateCsvContent(): string
+    {
+        // Create CSV with standard headers for evaluation files
+        $headers = ['prompt', 'expected_response', 'description'];
+        
+        return implode(',', $headers) . "\n";
     }
 }

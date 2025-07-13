@@ -132,6 +132,11 @@ it('uses default prompt version from class property', function () {
     // Create test prompt files
     $promptPath = resource_path('prompts/test_agent');
     File::makeDirectory($promptPath, 0755, true, true);
+    
+    // Clean any existing templates that might interfere
+    File::delete($promptPath.'/default.blade.php');
+    File::delete($promptPath.'/professional.blade.php');
+    
     File::put($promptPath.'/default.md', 'Default instructions');
     File::put($promptPath.'/professional.md', 'Professional instructions');
 

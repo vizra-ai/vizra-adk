@@ -180,6 +180,17 @@ class EvalRunner extends Component
             $this->evaluationInstance = app($evaluation['class']);
             $this->resetResults();
             $this->currentStatus = 'Evaluation selected: '.$evaluation['name'].' (Class: '.$evaluation['class'].')';
+            
+            // Verify the CSV file exists
+            if ($this->evaluationInstance && !empty($this->evaluationInstance->csvPath)) {
+                $csvPath = base_path($this->evaluationInstance->csvPath);
+                if (!File::exists($csvPath)) {
+                    $this->currentStatus = 'Warning: CSV file not found at: ' . $csvPath;
+                } else {
+                    $testCount = count(file($csvPath)) - 1; // Subtract header row
+                    $this->currentStatus = "Ready to run {$testCount} test cases";
+                }
+            }
         } catch (Exception $e) {
             $this->currentStatus = 'Error loading evaluation: '.$e->getMessage();
             $this->selectedEvaluation = null;
@@ -195,9 +206,20 @@ class EvalRunner extends Component
         if (! $this->hasValidEvaluation()) {
             $instanceStatus = $this->evaluationInstance ? 'OK' : 'NULL';
             $selectedStatus = $this->selectedEvaluation ? $this->selectedEvaluation : 'NULL';
-            $this->currentStatus = "No evaluation selected. Instance: {$instanceStatus}, Selected: {$selectedStatus}";
-
-            return;
+            
+            // Try to recreate the instance and provide detailed error info
+            if ($this->selectedEvaluation) {
+                try {
+                    $this->evaluationInstance = app($this->selectedEvaluation);
+                    $this->currentStatus = "Recreated evaluation instance successfully for: {$this->selectedEvaluation}";
+                } catch (Exception $e) {
+                    $this->currentStatus = "Error recreating evaluation instance: " . $e->getMessage() . " (Class: {$this->selectedEvaluation})";
+                    return;
+                }
+            } else {
+                $this->currentStatus = "No evaluation selected. Instance: {$instanceStatus}, Selected: {$selectedStatus}";
+                return;
+            }
         }
 
         $this->isRunning = true;
@@ -504,6 +526,11 @@ class EvalRunner extends Component
             try {
                 $this->evaluationInstance = app($this->selectedEvaluation);
             } catch (Exception $e) {
+                // Log the error for debugging
+                \Log::error('Failed to recreate evaluation instance', [
+                    'class' => $this->selectedEvaluation,
+                    'error' => $e->getMessage()
+                ]);
                 return false;
             }
         }

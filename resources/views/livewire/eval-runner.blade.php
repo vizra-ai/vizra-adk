@@ -364,6 +364,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h2 class="text-2xl font-bold text-white mb-2">{{ $selectedEval['name'] }}</h2>
                     <p class="text-gray-400 mb-6">Ready to test <strong class="text-gray-300">{{ $selectedEval['agent_name'] }}</strong> with {{ $testCount }} test cases</p>
                     
+                    @if(!empty($currentStatus))
+                        <div class="mb-4 p-3 bg-blue-900/20 border border-blue-700/50 rounded-lg">
+                            <p class="text-blue-300 text-sm">{{ $currentStatus }}</p>
+                        </div>
+                    @endif
+                    
                     <!-- Big Action Button -->
                     <button wire:click="runEvaluation"
                             class="inline-flex items-center px-12 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-xl font-bold rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-200 mb-6">
