@@ -5,6 +5,7 @@ namespace Vizra\VizraADK\Traits;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\View;
 
 trait VersionablePrompts
 {
@@ -66,7 +67,7 @@ trait VersionablePrompts
     /**
      * Override the prompt entirely (useful for testing)
      */
-    public function setPromptOverride(string $prompt): self
+    public function setPromptOverride(?string $prompt): self
     {
         $this->promptOverride = $prompt;
 
@@ -111,8 +112,14 @@ trait VersionablePrompts
                     // Add version/variant combinations
                     $variantFiles = File::files($dir);
                     foreach ($variantFiles as $file) {
-                        if ($file->getExtension() === 'md') {
-                            $variant = $file->getFilenameWithoutExtension();
+                        $ext = $file->getExtension();
+                        if ($ext === 'md' || ($ext === 'php' && str_ends_with($file->getFilename(), '.blade.php'))) {
+                            $filename = $file->getFilename();
+                            if (str_ends_with($filename, '.blade.php')) {
+                                $variant = substr($filename, 0, -10); // Remove .blade.php
+                            } else {
+                                $variant = $file->getFilenameWithoutExtension();
+                            }
                             $versions[] = $dirName.'/'.$variant;
                         }
                     }
@@ -122,8 +129,14 @@ trait VersionablePrompts
             // Check for direct files (backward compatibility)
             $files = File::files($promptPath);
             foreach ($files as $file) {
-                if ($file->getExtension() === 'md') {
-                    $filename = $file->getFilenameWithoutExtension();
+                $ext = $file->getExtension();
+                if ($ext === 'md' || ($ext === 'php' && str_ends_with($file->getFilename(), '.blade.php'))) {
+                    $fullFilename = $file->getFilename();
+                    if (str_ends_with($fullFilename, '.blade.php')) {
+                        $filename = substr($fullFilename, 0, -10); // Remove .blade.php
+                    } else {
+                        $filename = $file->getFilenameWithoutExtension();
+                    }
                     if (! in_array($filename, $versions) && $filename !== 'default') {
                         $versions[] = $filename;
                     }
@@ -171,6 +184,14 @@ trait VersionablePrompts
         // Handle version/variant format (e.g., "v2/formal", "v1/default")
         if ($this->promptVersion && str_contains($this->promptVersion, '/')) {
             [$version, $variant] = explode('/', $this->promptVersion, 2);
+            
+            // Try Blade template first
+            $versionBladeFile = $promptPath.'/'.$version.'/'.$variant.'.blade.php';
+            if (File::exists($versionBladeFile)) {
+                return $this->renderBladePrompt($versionBladeFile);
+            }
+            
+            // Fall back to markdown
             $versionFile = $promptPath.'/'.$version.'/'.$variant.'.md';
             if (File::exists($versionFile)) {
                 return File::get($versionFile);
@@ -179,7 +200,12 @@ trait VersionablePrompts
 
         // Try specific version/variant first
         if ($this->promptVersion) {
-            // Check if it's a version directory (e.g., "v2" -> "v2/default.md")
+            // Check if it's a version directory (e.g., "v2" -> "v2/default")
+            $versionDefaultBladeFile = $promptPath.'/'.$this->promptVersion.'/default.blade.php';
+            if (File::exists($versionDefaultBladeFile)) {
+                return $this->renderBladePrompt($versionDefaultBladeFile);
+            }
+            
             $versionDefaultFile = $promptPath.'/'.$this->promptVersion.'/default.md';
             if (File::exists($versionDefaultFile)) {
                 return File::get($versionDefaultFile);
@@ -188,6 +214,11 @@ trait VersionablePrompts
             // Check if it's a variant in the latest version
             $latestVersion = $this->getLatestVersion();
             if ($latestVersion) {
+                $variantBladeFile = $promptPath.'/'.$latestVersion.'/'.$this->promptVersion.'.blade.php';
+                if (File::exists($variantBladeFile)) {
+                    return $this->renderBladePrompt($variantBladeFile);
+                }
+                
                 $variantFile = $promptPath.'/'.$latestVersion.'/'.$this->promptVersion.'.md';
                 if (File::exists($variantFile)) {
                     return File::get($variantFile);
@@ -195,6 +226,11 @@ trait VersionablePrompts
             }
 
             // Check if it's a direct file (backward compatibility)
+            $versionBladeFile = $promptPath.'/'.$this->promptVersion.'.blade.php';
+            if (File::exists($versionBladeFile)) {
+                return $this->renderBladePrompt($versionBladeFile);
+            }
+            
             $versionFile = $promptPath.'/'.$this->promptVersion.'.md';
             if (File::exists($versionFile)) {
                 return File::get($versionFile);
@@ -204,6 +240,11 @@ trait VersionablePrompts
         // Try latest version default
         $latestVersion = $this->getLatestVersion();
         if ($latestVersion) {
+            $latestDefaultBladeFile = $promptPath.'/'.$latestVersion.'/default.blade.php';
+            if (File::exists($latestDefaultBladeFile)) {
+                return $this->renderBladePrompt($latestDefaultBladeFile);
+            }
+            
             $latestDefaultFile = $promptPath.'/'.$latestVersion.'/default.md';
             if (File::exists($latestDefaultFile)) {
                 return File::get($latestDefaultFile);
@@ -211,6 +252,11 @@ trait VersionablePrompts
         }
 
         // Try default file (backward compatibility)
+        $defaultBladeFile = $promptPath.'/default.blade.php';
+        if (File::exists($defaultBladeFile)) {
+            return $this->renderBladePrompt($defaultBladeFile);
+        }
+        
         $defaultFile = $promptPath.'/default.md';
         if (File::exists($defaultFile)) {
             return File::get($defaultFile);
@@ -276,5 +322,96 @@ trait VersionablePrompts
             'session_id' => $sessionId,
             'created_at' => now(),
         ]);
+    }
+
+    /**
+     * Render a Blade template prompt with context
+     */
+    protected function renderBladePrompt(string $path): string
+    {
+        // Prepare the data for the Blade template
+        $data = [
+            'agent' => [
+                'name' => $this->getName(),
+                'description' => $this->getDescription(),
+            ],
+        ];
+
+        // Add user context if available
+        if (property_exists($this, 'context') && $this->context) {
+            $allState = $this->context->getAllState();
+            
+            // Add user-specific data
+            if (isset($allState['user_name'])) {
+                $data['user_name'] = $allState['user_name'];
+            }
+            if (isset($allState['user_email'])) {
+                $data['user_email'] = $allState['user_email'];
+            }
+            if (isset($allState['user_data'])) {
+                $data['user_data'] = $allState['user_data'];
+            }
+            
+            // Add all context state
+            $data = array_merge($data, $allState);
+        }
+
+        // Add tools information
+        if (property_exists($this, 'loadedTools') && !empty($this->loadedTools)) {
+            $data['tools'] = collect($this->loadedTools)->map(function ($tool) {
+                return $tool->definition();
+            });
+        }
+
+        // Add sub-agents information
+        if (property_exists($this, 'loadedSubAgents') && !empty($this->loadedSubAgents)) {
+            $data['subAgents'] = collect($this->loadedSubAgents)->map(function ($agent, $name) {
+                return [
+                    'name' => $name,
+                    'description' => $agent->getDescription(),
+                ];
+            });
+        }
+
+        // Check if the agent has a getPromptData method for custom data
+        if (method_exists($this, 'getPromptData')) {
+            $context = property_exists($this, 'context') ? $this->context : null;
+            
+            // Use reflection to check if the method parameter is nullable
+            $reflection = new \ReflectionMethod($this, 'getPromptData');
+            $parameters = $reflection->getParameters();
+            
+            if (!empty($parameters)) {
+                $firstParam = $parameters[0];
+                $paramType = $firstParam->getType();
+                
+                // If context is null and parameter doesn't allow null, skip calling the method
+                if ($context === null && $paramType && !$paramType->allowsNull()) {
+                    // Skip calling getPromptData if we don't have a context and it's required
+                } else {
+                    $customData = $this->getPromptData($context);
+                    if (is_array($customData)) {
+                        $data = array_merge($data, $customData);
+                    }
+                }
+            } else {
+                // No parameters, just call it
+                $customData = $this->getPromptData();
+                if (is_array($customData)) {
+                    $data = array_merge($data, $customData);
+                }
+            }
+        }
+
+        // Use Laravel's Blade compiler to render the template
+        $blade = app('blade.compiler');
+        $compiled = $blade->compileString(File::get($path));
+        
+        ob_start();
+        extract($data, EXTR_SKIP);
+        eval('?>' . $compiled);
+        $rendered = ob_get_clean();
+
+        return $rendered ?: '';
     }
 }

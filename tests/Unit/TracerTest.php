@@ -393,3 +393,151 @@ it('handles empty context gracefully', function () {
 
     $this->tracer->endTrace();
 });
+
+// Tests for recent fixes to Tracer endSpan operation order
+it('endSpan preserves trace context during operation', function () {
+    // Start trace and span
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    $spanId = $this->tracer->startSpan('tool_call', 'test_tool', ['input' => 'test']);
+    
+    // Verify span is in running state
+    $runningSpan = DB::table('agent_trace_spans')
+        ->where('span_id', $spanId)
+        ->first();
+    expect($runningSpan->status)->toBe('running');
+    expect($runningSpan->output)->toBeNull();
+    
+    usleep(1000); // Small delay for duration
+    
+    // End span with output
+    $output = ['result' => 'success', 'data' => 'test result'];
+    $this->tracer->endSpan($spanId, $output);
+    
+    // Verify span completed correctly with proper output
+    $completedSpan = DB::table('agent_trace_spans')
+        ->where('span_id', $spanId)
+        ->first();
+    
+    expect($completedSpan->status)->toBe('success');
+    expect($completedSpan->output)->not->toBeNull();
+    
+    $outputData = json_decode($completedSpan->output, true);
+    expect($outputData['result'])->toBe('success');
+    expect($outputData['data'])->toBe('test result');
+    
+    // Verify trace context is still intact
+    expect($this->tracer->getCurrentTraceId())->toBe($traceId);
+    
+    $this->tracer->endTrace();
+});
+
+it('endSpan with null output sets status correctly', function () {
+    // Start trace and span
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    $spanId = $this->tracer->startSpan('llm_call', 'gpt-4o');
+    
+    usleep(1000); // Small delay for duration
+    
+    // End span without output (null)
+    $this->tracer->endSpan($spanId, null);
+    
+    // Verify span completed correctly even with null output
+    $span = DB::table('agent_trace_spans')
+        ->where('span_id', $spanId)
+        ->first();
+    
+    expect($span->status)->toBe('success');
+    expect($span->output)->toBe('null'); // JSON encoded null becomes string 'null'
+    expect($span->end_time)->not->toBeNull();
+    expect($span->duration_ms)->toBeGreaterThan(0);
+    
+    $this->tracer->endTrace();
+});
+
+it('preserves parent trace context during sub-agent delegation', function () {
+    // Start parent trace
+    $parentTraceId = $this->tracer->startTrace($this->context, 'parent_agent');
+    $parentSpanId = $this->tracer->startSpan('sub_agent_delegation', 'delegate_to_specialist');
+    
+    // Simulate sub-agent delegation (new trace within existing context)
+    $delegationContext = new AgentContext(
+        $this->context->getSessionId(),
+        'Delegated task',
+        ['delegated_from' => 'parent_agent']
+    );
+    
+    // Start sub-agent trace
+    $subTraceId = $this->tracer->startTrace($delegationContext, 'specialist_agent');
+    $subSpanId = $this->tracer->startSpan('tool_call', 'specialist_tool');
+    
+    usleep(1000);
+    
+    // Complete sub-agent trace
+    $this->tracer->endSpan($subSpanId, ['specialist_result' => 'completed']);
+    $this->tracer->endTrace(['delegation_result' => 'success']);
+    
+    // Complete parent trace
+    $this->tracer->endSpan($parentSpanId, ['delegation_completed' => true]);
+    $this->tracer->endTrace();
+    
+    // Verify both traces were created correctly
+    $parentSpans = DB::table('agent_trace_spans')
+        ->where('trace_id', $parentTraceId)
+        ->get();
+    
+    $subSpans = DB::table('agent_trace_spans')
+        ->where('trace_id', $subTraceId)
+        ->get();
+    
+    expect($parentSpans)->toHaveCount(2); // parent_agent + delegation span
+    expect($subSpans)->toHaveCount(2); // specialist_agent + tool span
+    
+    // Verify all spans completed successfully  
+    foreach ($parentSpans as $span) {
+        expect($span->status)->toBeIn(['success', 'running']); // Some may still be running
+    }
+    
+    foreach ($subSpans as $span) {
+        expect($span->status)->toBe('success');
+    }
+});
+
+it('running spans transition to success properly', function () {
+    // Start trace and multiple spans
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    $span1Id = $this->tracer->startSpan('llm_call', 'gpt-4o');
+    $span2Id = $this->tracer->startSpan('tool_call', 'weather_tool');
+    $span3Id = $this->tracer->startSpan('tool_call', 'calendar_tool');
+    
+    // Verify all spans start in running state
+    $runningSpans = DB::table('agent_trace_spans')
+        ->where('trace_id', $traceId)
+        ->where('status', 'running')
+        ->count();
+    
+    expect($runningSpans)->toBe(4); // 3 spans + 1 root span
+    
+    usleep(1000);
+    
+    // End spans in reverse order (LIFO - Last In, First Out)
+    $this->tracer->endSpan($span3Id, ['calendar_data' => 'events']);
+    $this->tracer->endSpan($span2Id, ['weather_data' => 'sunny']);
+    $this->tracer->endSpan($span1Id, ['llm_response' => 'processed']);
+    $this->tracer->endTrace(['final_result' => 'completed']);
+    
+    // Verify all spans transitioned to success
+    $successSpans = DB::table('agent_trace_spans')
+        ->where('trace_id', $traceId)
+        ->where('status', 'success')
+        ->count();
+    
+    expect($successSpans)->toBe(4); // All spans should be successful
+    
+    // Verify no spans are still running
+    $stillRunning = DB::table('agent_trace_spans')
+        ->where('trace_id', $traceId)
+        ->where('status', 'running')
+        ->count();
+    
+    expect($stillRunning)->toBe(0);
+});

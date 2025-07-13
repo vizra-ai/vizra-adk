@@ -54,6 +54,26 @@ class Tracer
             return '';
         }
 
+        // Store the current trace context if we're starting a sub-agent trace
+        $parentTraceId = null;
+        $parentSessionId = null;
+        $parentSpanStack = [];
+        $parentSpanStartTimes = [];
+        
+        if ($this->currentTraceId !== null) {
+            // We're in a sub-agent execution, preserve parent context
+            $parentTraceId = $this->currentTraceId;
+            $parentSessionId = $this->currentSessionId;
+            $parentSpanStack = $this->spanStack;
+            $parentSpanStartTimes = $this->spanStartTimes;
+            
+            logger()->info('Preserving parent trace context', [
+                'parent_trace_id' => $parentTraceId,
+                'parent_session_id' => $parentSessionId,
+                'parent_span_count' => count($parentSpanStack),
+            ]);
+        }
+
         $this->currentTraceId = Str::ulid()->toString();
         $this->currentSessionId = $context->getSessionId();
         $this->spanStack = [];
@@ -67,9 +87,20 @@ class Tracer
             metadata: [
                 'session_id' => $context->getSessionId(),
                 'initial_state_keys' => array_keys($context->getAllState()),
+                'parent_trace_id' => $parentTraceId,
             ],
             context: $context
         );
+        
+        // Store parent context for restoration later
+        if ($parentTraceId) {
+            $context->setState('_parent_trace_context', [
+                'trace_id' => $parentTraceId,
+                'session_id' => $parentSessionId,
+                'span_stack' => $parentSpanStack,
+                'span_start_times' => $parentSpanStartTimes,
+            ]);
+        }
 
         return $this->currentTraceId;
     }
@@ -123,8 +154,11 @@ class Tracer
             ]);
         }
 
-        // Store start time for duration calculation
-        $this->spanStartTimes[$spanId] = $startTime;
+        // Store start time and trace ID for duration calculation
+        $this->spanStartTimes[$spanId] = [
+            'start_time' => $startTime,
+            'trace_id' => $this->currentTraceId
+        ];
 
         // Push span onto stack to track hierarchy
         $this->spanStack[] = $spanId;
@@ -193,9 +227,22 @@ class Tracer
 
             return;
         }
+        
+        // Get span data
+        $spanData = $this->spanStartTimes[$spanId];
+        $startTime = is_array($spanData) ? $spanData['start_time'] : $spanData; // Handle both old and new format
+        $traceId = is_array($spanData) ? $spanData['trace_id'] : $this->currentTraceId;
+        
+        // Debug log the output being saved
+        logger()->info('Ending span with output', [
+            'span_id' => $spanId,
+            'output' => $output,
+            'status' => $status,
+            'trace_id' => $traceId,
+            'current_trace_id' => $this->currentTraceId,
+        ]);
 
         $endTime = microtime(true);
-        $startTime = $this->spanStartTimes[$spanId];
         $durationMs = round(($endTime - $startTime) * 1000);
 
         // Log tool call span completion
@@ -213,21 +260,48 @@ class Tracer
             ]);
         }
 
-        // Remove from tracking
-        $this->removeSpanFromStack($spanId);
-        unset($this->spanStartTimes[$spanId]);
-
         try {
+            $encodedOutput = $this->safeJsonEncode($output);
+            
+            // Log what we're about to save
+            logger()->info('Updating span in database', [
+                'span_id' => $spanId,
+                'encoded_output' => $encodedOutput,
+                'output_length' => strlen($encodedOutput ?? ''),
+            ]);
+            
             // Update the database record
-            DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
+            // Use the trace_id from when the span was created, not the current trace
+            $updateData = [
+                'output' => $encodedOutput,
+                'status' => $status,
+                'end_time' => $endTime,
+                'duration_ms' => $durationMs,
+                'updated_at' => now(),
+            ];
+            
+            // Log the exact data being sent to database
+            logger()->info('Database update data', [
+                'span_id' => $spanId,
+                'trace_id' => $traceId,
+                'output_is_null' => $encodedOutput === null,
+                'output_value' => $encodedOutput,
+                'status' => $status,
+            ]);
+            
+            $affected = DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
                 ->where('span_id', $spanId)
-                ->update([
-                    'output' => $this->safeJsonEncode($output),
-                    'status' => $status,
-                    'end_time' => $endTime,
-                    'duration_ms' => $durationMs,
-                    'updated_at' => now(),
-                ]);
+                ->where('trace_id', $traceId)
+                ->update($updateData);
+                
+            logger()->info('Span update result', [
+                'span_id' => $spanId,
+                'affected_rows' => $affected,
+            ]);
+            
+            // Remove from tracking after successful update
+            $this->removeSpanFromStack($spanId);
+            unset($this->spanStartTimes[$spanId]);
         } catch (Throwable $e) {
             logger()->warning('Tracer failed to end span', [
                 'span_id' => $spanId,
@@ -248,12 +322,9 @@ class Tracer
         }
 
         $endTime = microtime(true);
-        $startTime = $this->spanStartTimes[$spanId] ?? $endTime;
+        $spanData = $this->spanStartTimes[$spanId] ?? null;
+        $startTime = is_array($spanData) ? $spanData['start_time'] : ($spanData ?? $endTime);
         $durationMs = round(($endTime - $startTime) * 1000);
-
-        // Remove from tracking
-        $this->removeSpanFromStack($spanId);
-        unset($this->spanStartTimes[$spanId]);
 
         try {
             // Update the database record with error information
@@ -266,6 +337,10 @@ class Tracer
                     'duration_ms' => $durationMs,
                     'updated_at' => now(),
                 ]);
+                
+            // Remove from tracking after update
+            $this->removeSpanFromStack($spanId);
+            unset($this->spanStartTimes[$spanId]);
         } catch (Throwable $e) {
             logger()->warning('Tracer failed to mark span as failed', [
                 'span_id' => $spanId,
@@ -308,6 +383,27 @@ class Tracer
         $this->currentSessionId = null;
         $this->spanStack = [];
         $this->spanStartTimes = [];
+    }
+    
+    /**
+     * Restore parent trace context after sub-agent execution
+     */
+    public function restoreParentContext(array $parentContext): void
+    {
+        if (! $this->isEnabled()) {
+            return;
+        }
+        
+        $this->currentTraceId = $parentContext['trace_id'];
+        $this->currentSessionId = $parentContext['session_id'];
+        $this->spanStack = $parentContext['span_stack'];
+        $this->spanStartTimes = $parentContext['span_start_times'];
+        
+        logger()->info('Restored parent trace context', [
+            'trace_id' => $this->currentTraceId,
+            'session_id' => $this->currentSessionId,
+            'span_count' => count($this->spanStack),
+        ]);
     }
 
     /**
@@ -555,6 +651,13 @@ class Tracer
      */
     protected function safeJsonEncode($data): ?string
     {
+        // Log what we're trying to encode
+        logger()->info('safeJsonEncode called', [
+            'data_type' => gettype($data),
+            'data_is_null' => $data === null,
+            'data_preview' => is_string($data) ? substr($data, 0, 100) : json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR),
+        ]);
+        
         if ($data === null) {
             return json_encode(null);
         }
@@ -606,6 +709,11 @@ class Tracer
                     'errorCode' => json_last_error(),
                 ]);
             }
+
+            logger()->info('safeJsonEncode result', [
+                'encoded_length' => strlen($encoded),
+                'encoded_preview' => substr($encoded, 0, 100),
+            ]);
 
             return $encoded;
 

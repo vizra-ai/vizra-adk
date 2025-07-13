@@ -43,6 +43,8 @@ class ChatInterface extends Component
     public array $agentInfo = [];
 
     public array $traceData = [];
+    
+    public bool $hasRunningTraces = false;
 
     // Modal properties
     public bool $showLoadSessionModal = false;
@@ -53,7 +55,7 @@ class ChatInterface extends Component
 
     public function mount()
     {
-        $this->sessionId = 'chat-'.Str::random(8);
+        $this->sessionId = $this->generateUniqueSessionId();
         $this->loadRegisteredAgents();
     }
 
@@ -73,7 +75,7 @@ class ChatInterface extends Component
         // Only reset chat if switching to a different agent
         if ($previousAgent !== $agentName) {
             $this->chatHistory = [];
-            $this->sessionId = 'chat-'.Str::random(8);
+            $this->sessionId = $this->generateUniqueSessionId();
         }
 
         // Always load agent info, context, and traces
@@ -95,8 +97,7 @@ class ChatInterface extends Component
             $agentClass = $this->registeredAgents[$this->selectedAgent] ?? null;
             if ($agentClass && class_exists($agentClass)) {
                 $agent = new $agentClass;
-                // Load tools first to ensure they're available
-                $agent->loadTools();
+                // Tools and sub-agents are loaded automatically in the constructor
                 $this->agentInfo = [
                     'name' => $agent->getName(),
                     'class' => $agentClass,
@@ -106,6 +107,16 @@ class ChatInterface extends Component
                             'name' => $tool->definition()['name'] ?? 'Unknown',
                             'description' => $tool->definition()['description'] ?? 'No description',
                             'class' => get_class($tool),
+                        ];
+                    })->toArray(),
+                    'subAgents' => collect($agent->getLoadedSubAgents())->map(function ($subAgent, $name) {
+                        $instructions = $subAgent->getInstructions() ?? 'No instructions available';
+                        // Get just the first line
+                        $firstLine = explode("\n", $instructions)[0];
+                        return [
+                            'name' => $name,
+                            'description' => $firstLine,
+                            'class' => get_class($subAgent),
                         ];
                     })->toArray(),
                 ];
@@ -267,6 +278,19 @@ class ChatInterface extends Component
             'timestamp' => now()->format('H:i:s'),
         ];
 
+        // Store the message for async processing
+        $this->dispatch('process-agent-response', userMessage: $userMessage);
+        
+        // Immediately show typing indicator by dispatching a Livewire update
+        $this->dispatch('chat-updated');
+    }
+    
+    public function processAgentResponse($userMessage)
+    {
+        if (empty($this->selectedAgent) || !$this->isLoading) {
+            return;
+        }
+
         try {
             // Call the agent
             $response = Agent::run($this->selectedAgent, $userMessage, $this->sessionId);
@@ -281,6 +305,9 @@ class ChatInterface extends Component
             // Refresh context data
             $this->loadContextData();
             $this->loadTraceData();
+            
+            // Mark that we have running traces to enable polling
+            $this->hasRunningTraces = true;
 
         } catch (\Exception $e) {
             $this->chatHistory[] = [
@@ -302,7 +329,7 @@ class ChatInterface extends Component
     public function clearChat()
     {
         $this->chatHistory = [];
-        $this->sessionId = 'chat-'.Str::random(8);
+        $this->sessionId = $this->generateUniqueSessionId();
         $this->loadContextData();
         $this->loadTraceData();
         
@@ -312,10 +339,10 @@ class ChatInterface extends Component
 
     public function openLoadSessionModal()
     {
-        \Log::info('openLoadSessionModal called at '.now());
+        logger()->info('openLoadSessionModal called at '.now());
         $this->showLoadSessionModal = true;
         $this->loadSessionId = '';
-        \Log::info('showLoadSessionModal set to: '.($this->showLoadSessionModal ? 'true' : 'false'));
+        logger()->info('showLoadSessionModal set to: '.($this->showLoadSessionModal ? 'true' : 'false'));
     }
 
     public function closeLoadSessionModal()
@@ -355,7 +382,7 @@ class ChatInterface extends Component
     {
         if (empty($this->sessionId)) {
             $this->traceData = [];
-
+            $this->hasRunningTraces = false;
             return;
         }
 
@@ -367,14 +394,20 @@ class ChatInterface extends Component
 
             if ($spans->isEmpty()) {
                 $this->traceData = [];
-
+                $this->hasRunningTraces = false;
                 return;
             }
+            
+            // Check if any spans are still running
+            $this->hasRunningTraces = $spans->contains(function ($span) {
+                return $span->status === 'running';
+            });
 
             // Build hierarchical structure
             $this->traceData = $this->buildTraceTree($spans);
         } catch (\Exception $e) {
             $this->traceData = ['error' => $e->getMessage()];
+            $this->hasRunningTraces = false;
         }
     }
 
@@ -579,10 +612,42 @@ class ChatInterface extends Component
         $this->loadContextData();
         $this->loadTraceData();
     }
+    
+    #[On('refresh-trace-data')]
+    public function refreshTraceData()
+    {
+        $this->loadTraceData();
+    }
 
     public function getMessageCharacterCount()
     {
         return strlen($this->message);
+    }
+
+    /**
+     * Generate a unique session ID that doesn't already exist in the database
+     */
+    private function generateUniqueSessionId(): string
+    {
+        $attempts = 0;
+        $maxAttempts = 10;
+        
+        do {
+            // Use ULID for better uniqueness (time-ordered + random)
+            $sessionId = 'chat-' . Str::ulid()->toString();
+            
+            // Check if this session ID already exists
+            $exists = AgentSession::where('session_id', $sessionId)->exists();
+            
+            if (!$exists) {
+                return $sessionId;
+            }
+            
+            $attempts++;
+        } while ($attempts < $maxAttempts);
+        
+        // Fallback: use timestamp + random for ultimate uniqueness
+        return 'chat-' . now()->timestamp . '-' . Str::random(8);
     }
 
     public function render()

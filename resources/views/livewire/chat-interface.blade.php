@@ -13,7 +13,7 @@
     .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
     }
-    
+
     /* Custom select dropdown styling */
     .custom-select {
         appearance: none;
@@ -23,11 +23,11 @@
         background-size: 1.5em 1.5em;
         padding-right: 2.5rem;
     }
-    
+
     .custom-select:hover {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%233b82f6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     }
-    
+
     .custom-select:focus {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%233b82f6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     }
@@ -195,6 +195,7 @@ function scrollChatToBottom() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, checking Livewire...');
     console.log('Livewire available:', typeof window.Livewire !== 'undefined');
+    
 
     // Initial scroll to bottom
     scrollChatToBottom();
@@ -225,6 +226,20 @@ document.addEventListener('DOMContentLoaded', function() {
         Livewire.on('chat-updated', () => {
             setTimeout(scrollChatToBottom, 100);
         });
+        
+        // Listen for process-agent-response event to trigger async processing
+        Livewire.on('process-agent-response', (event) => {
+            // Use setTimeout to make the processing truly asynchronous
+            setTimeout(() => {
+                // Get the Livewire component and call the method
+                const component = Livewire.find(document.querySelector('[wire\\:id]')?.getAttribute('wire:id'));
+                if (component) {
+                    component.call('processAgentResponse', event.userMessage);
+                }
+            }, 50); // Small delay to ensure DOM updates
+        });
+        
+        // Removed refresh-traces-delayed event listener - now using wire:poll
     }
 });
 
@@ -364,6 +379,14 @@ function testModalButton() {
                                                             <span class="font-medium">{{ count($agentInfo['tools']) }}</span> tools
                                                         </div>
                                                     @endif
+                                                    @if(isset($agentInfo['subAgents']) && count($agentInfo['subAgents']) > 0)
+                                                        <div class="flex items-center text-gray-400">
+                                                            <svg class="w-4 h-4 mr-1 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
+                                                            </svg>
+                                                            <span class="font-medium">{{ count($agentInfo['subAgents']) }}</span> sub-agents
+                                                        </div>
+                                                    @endif
                                                     <div class="flex items-center text-gray-400">
                                                         @if(isset($agentInfo['error']))
                                                             <svg class="w-4 h-4 mr-1 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -407,8 +430,8 @@ function testModalButton() {
                                                 <h4 class="text-sm font-medium text-white">Instructions</h4>
                                             </div>
                                         </div>
-                                        <div class="px-3 py-2 h-[calc(100vh-563px)]">
-                                            <div class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed max-h-24 overflow-y-auto custom-scrollbar min-h-full">{{ Str::limit($agentInfo['instructions'] ?? 'No instructions available', 200) }}</div>
+                                        <div class="px-3 py-2 h-[calc(100vh-563px)] max-h-[200px]">
+                                            <div class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed max-h-24 overflow-y-auto custom-scrollbar min-h-full">{{ $agentInfo['instructions'] ?? 'No instructions available' }}</div>
                                         </div>
                                     </div>
 
@@ -442,6 +465,44 @@ function testModalButton() {
                                                                 <div class="flex-1 min-w-0">
                                                                     <h5 class="text-xs font-semibold text-white group-hover:text-blue-400 transition-colors duration-200">{{ $tool['name'] }}</h5>
                                                                     <p class="text-xs text-gray-400 mt-0.5 leading-relaxed">{{ Str::limit($tool['description'], 80) }}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if(isset($agentInfo['subAgents']) && count($agentInfo['subAgents']) > 0)
+                                        <!-- Compact Available Sub-Agents -->
+                                        <div class="bg-gray-800/50 backdrop-blur-sm rounded-lg border border-gray-700/50 shadow-sm">
+                                            <div class="px-3 py-2 border-b border-gray-700/50">
+                                                <div class="flex items-center justify-between">
+                                                    <div class="flex items-center">
+                                                        <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                        </svg>
+                                                        <h4 class="text-sm font-medium text-white">Available Sub-Agents</h4>
+                                                    </div>
+                                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-900/50 text-indigo-300">
+                                                        {{ count($agentInfo['subAgents']) }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="px-3 py-2">
+                                                <div class="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
+                                                    @foreach($agentInfo['subAgents'] as $subAgent)
+                                                        <div class="group bg-gray-700/30 hover:bg-gray-700/50 transition-colors duration-200 px-3 py-2 rounded border border-gray-700/30">
+                                                            <div class="flex items-start space-x-2">
+                                                                <div class="w-4 h-4 bg-indigo-900/50 rounded flex items-center justify-center mt-0.5 flex-shrink-0">
+                                                                    <svg class="w-2 h-2 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                                    </svg>
+                                                                </div>
+                                                                <div class="flex-1 min-w-0">
+                                                                    <h5 class="text-xs font-semibold text-white group-hover:text-indigo-400 transition-colors duration-200">{{ $subAgent['name'] }}</h5>
+                                                                    <p class="text-xs text-gray-400 mt-0.5 leading-relaxed">{{ $subAgent['description'] }}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -621,7 +682,10 @@ function testModalButton() {
 
                         <!-- Traces Tab -->
                         @if($activeTab === 'traces')
-                            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                            <div class="flex-1 overflow-y-auto custom-scrollbar" 
+                                 @if($hasRunningTraces) wire:poll.1s="loadTraceData" @endif
+                                 x-data="{ expandedSpans: {} }"
+                                 wire:key="traces-container-{{ $sessionId }}">
                                 <div class="p-4">
                                 @if(isset($traceData['error']))
                                     <div class="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
@@ -865,30 +929,32 @@ function testModalButton() {
                                 @endforeach
 
                                 @if($isLoading)
-                                    <!-- Loading Indicator -->
-                                    <div class="flex justify-start">
+                                    <!-- Enhanced Typing Indicator with Debug -->
+                                    <div class="flex justify-start chat-message" id="typing-indicator">
                                         <div class="group flex space-x-3">
                                             <div class="flex-shrink-0">
-                                                <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
+                                                <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center shadow-md">
+                                                    <div class="flex items-center justify-center">
+                                                        <div class="w-4 h-4 relative">
+                                                            <div class="absolute inset-0 rounded-full border-2 border-white/30"></div>
+                                                            <div class="absolute inset-0 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="flex-1">
-                                                <div class="bg-gray-800 border border-gray-700 rounded-2xl rounded-bl-md px-5 py-3 shadow-sm">
+                                                <div class="bg-gray-800 border border-gray-700 rounded-2xl rounded-bl-md px-5 py-4 shadow-sm message-bubble">
                                                     <div class="flex items-center space-x-3">
                                                         <div class="flex space-x-1">
-                                                            <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-                                                            <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-                                                            <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                                                            <div class="w-2 h-2 bg-blue-400 rounded-full typing-dot"></div>
+                                                            <div class="w-2 h-2 bg-blue-400 rounded-full typing-dot"></div>
+                                                            <div class="w-2 h-2 bg-blue-400 rounded-full typing-dot"></div>
                                                         </div>
-                                                        <span class="text-sm text-gray-400 font-medium">{{ $selectedAgent }} is thinking...</span>
+                                                        <span class="text-sm text-gray-300 font-medium">typing...</span>
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center mt-1 space-x-1 text-xs text-gray-500">
-                                                    <svg class="w-3 h-3 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                                                    <svg class="w-3 h-3 animate-pulse text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                                                     </svg>
                                                     <span>Processing your request...</span>
@@ -897,6 +963,7 @@ function testModalButton() {
                                         </div>
                                     </div>
                                 @endif
+                                
                             @endif
                         @else
                             <!-- No Agent Selected State -->
@@ -942,20 +1009,12 @@ function testModalButton() {
                                 </div>
                             </div>
                             <button type="submit"
-                                    x-bind:disabled="!messageValue.trim()"
-                                    wire:loading.attr="disabled"
+                                    x-bind:disabled="!messageValue.trim() || $wire.isLoading"
                                     class="flex items-center justify-center px-4 py-3 h-[46px] bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg min-w-[80px]">
-                                @if($isLoading)
-                                    <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                @else
-                                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                    </svg>
-                                    <span class="font-medium">Send</span>
-                                @endif
+                                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
+                                <span class="font-medium">Send</span>
                             </button>
                         </form>
                     </div>

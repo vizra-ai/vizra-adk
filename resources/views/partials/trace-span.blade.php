@@ -47,7 +47,7 @@
 @endphp
 
 <!-- Compact Trace Span Item -->
-<div class="relative" style="margin-left: {{ $indent }}px;">
+<div class="relative" style="margin-left: {{ $indent }}px;" wire:key="span-{{ $span['span_id'] }}">
     <!-- Connection Lines for Tree Structure -->
     @if($level > 0)
         <div class="absolute left-0 top-0 bottom-0 w-4">
@@ -68,8 +68,8 @@
                 </div>
 
                 <!-- Inline Span Info -->
-                <div class="flex-1 min-w-0 flex items-center space-x-2.5">
-                    <!-- Name and Status -->
+                <div class="flex-1 min-w-0 flex items-center justify-between">
+                    <!-- Left side: Name and Status -->
                     <div class="flex items-center space-x-2 min-w-0 flex-1">
                         <span class="text-sm font-medium text-gray-100 truncate">{{ $span['name'] }}</span>
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium {{ $statusColor }} border-0 flex-shrink-0">
@@ -77,33 +77,21 @@
                         </span>
                     </div>
 
-                    <!-- Compact Metadata -->
+                    <!-- Right side: Metadata only -->
                     <div class="flex items-center space-x-2 text-xs text-gray-400 flex-shrink-0">
-                        @if(!empty($span['duration_ms']))
-                            <div class="flex items-center space-x-1 bg-gray-700/50 px-1.5 py-0.5 rounded">
-                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                <span class="font-medium">{{ $span['duration_ms'] }}ms</span>
-                            </div>
-                        @endif
-
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-700/50 text-gray-300 border-0">
                             {{ str_replace('_', ' ', ucwords($span['type'], '_')) }}
                         </span>
-
-
-                        @if(!empty($span['start_time']))
-                            <span class="text-gray-500 font-mono text-xs">{{ $span['start_time'] }}</span>
-                        @endif
                     </div>
                 </div>
 
                 <!-- Compact Expand Button -->
                 @if($hasDetails)
-                    <button onclick="toggleSpanDetails('{{ $span['span_id'] }}')"
+                    <button @click="expandedSpans['{{ $span['span_id'] }}'] = !expandedSpans['{{ $span['span_id'] }}']"
                             class="flex-shrink-0 p-1 rounded-md text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors duration-150 opacity-0 group-hover:opacity-100">
-                        <svg class="w-3.5 h-3.5 transform transition-transform duration-200" id="chevron-{{ $span['span_id'] }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-3.5 h-3.5 transform transition-transform duration-200" 
+                             :class="{ 'rotate-180': expandedSpans['{{ $span['span_id'] }}'] }" 
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
@@ -112,7 +100,35 @@
 
             <!-- Compact Expandable Details Section -->
             @if($hasDetails)
-                <div id="span-details-{{ $span['span_id'] }}" class="hidden mt-2 pt-2 border-t border-gray-600/50 space-y-2">
+                <div x-show="expandedSpans['{{ $span['span_id'] }}']" 
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 transform scale-95"
+                     x-transition:enter-end="opacity-100 transform scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 transform scale-100"
+                     x-transition:leave-end="opacity-0 transform scale-95"
+                     class="mt-2 pt-2 border-t border-gray-600/50 space-y-2"
+                     style="display: none;">
+                    
+                    <!-- Execution Summary -->
+                    @if(!empty($span['duration_ms']) || !empty($span['start_time']))
+                        <div class="flex items-center justify-between text-xs bg-gray-800/30 rounded px-2 py-1.5 border border-gray-700/40">
+                            <span class="text-gray-400 font-medium">Execution Summary</span>
+                            <div class="flex items-center space-x-3">
+                                @if(!empty($span['duration_ms']))
+                                    <div class="flex items-center space-x-1">
+                                        <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span class="text-gray-300 font-medium">{{ $span['duration_ms'] }}ms</span>
+                                    </div>
+                                @endif
+                                @if(!empty($span['start_time']))
+                                    <span class="text-gray-500 font-mono">{{ $span['start_time'] }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endif>
                     @if(!empty($span['input_data']))
                         @include('vizra-adk::components.json-viewer', [
                             'data' => $span['input_data'],

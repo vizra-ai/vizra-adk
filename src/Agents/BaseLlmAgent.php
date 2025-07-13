@@ -100,6 +100,12 @@ abstract class BaseLlmAgent extends BaseAgent
      * - 'smart': Use relevance-based filtering (future feature)
      */
     protected string $contextStrategy = 'none';
+    
+    /**
+     * Track active tool call spans to survive Prism's internal execution
+     * @var array<string, string>
+     */
+    private array $activeToolSpans = [];
 
     public function __construct()
     {
@@ -370,7 +376,10 @@ abstract class BaseLlmAgent extends BaseAgent
         // Include delegation tool if sub-agents are available
         $allTools = $this->loadedTools;
         if (! empty($this->loadedSubAgents)) {
-            $allTools[] = new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this);
+            $delegateTool = new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this);
+            $allTools[] = $delegateTool;
+            // Also store in loadedTools so hooks can find it
+            $this->loadedTools['delegate_to_sub_agent'] = $delegateTool;
         }
 
         foreach ($allTools as $tool) {
@@ -444,6 +453,13 @@ abstract class BaseLlmAgent extends BaseAgent
                         }
                     }
 
+                    // Log tool execution start
+                    logger()->info('Tool execution starting', [
+                        'tool_name' => $tool->definition()['name'],
+                        'agent' => $this->getName(),
+                        'arguments' => $arguments,
+                    ]);
+
                     // Dispatch event and call the beforeToolCall hook to enable tracing
                     Event::dispatch(new ToolCallInitiating($context, $this->getName(), $tool->definition()['name'], $arguments));
 
@@ -452,6 +468,14 @@ abstract class BaseLlmAgent extends BaseAgent
 
                     // Execute the tool with processed arguments
                     $result = $tool->execute($processedArgs, $context, $this->memory());
+
+                    // Log tool execution result
+                    logger()->info('Tool execution completed', [
+                        'tool_name' => $tool->definition()['name'],
+                        'agent' => $this->getName(),
+                        'result_length' => strlen($result),
+                        'result_preview' => substr($result, 0, 200),
+                    ]);
 
                     // Call the afterToolResult hook - this triggers the tracer to end the span
                     $processedResult = $this->afterToolResult($tool->definition()['name'], $result, $context);
@@ -573,6 +597,22 @@ abstract class BaseLlmAgent extends BaseAgent
             // Since Prism handles tool execution internally with maxSteps,
             // we don't need the manual tool execution loop
             $messages = $this->prepareMessagesForPrism($context);
+            
+            // Add the current user input message with any attachments
+            $additionalContent = [];
+            if (!empty($images)) {
+                $additionalContent = array_merge($additionalContent, $images);
+            }
+            if (!empty($documents)) {
+                $additionalContent = array_merge($additionalContent, $documents);
+            }
+            
+            // Create the user message for the current input
+            if (!empty($input) || !empty($additionalContent)) {
+                $currentMessage = new UserMessage($input ?: '', $additionalContent);
+                $messages[] = $currentMessage;
+            }
+            
             $messages = $this->beforeLlmCall($messages, $context);
 
             Event::dispatch(new LlmCallInitiating($context, $this->getName(), $messages));
@@ -648,13 +688,17 @@ abstract class BaseLlmAgent extends BaseAgent
 
             Event::dispatch(new AgentResponseGenerated($context, $this->getName(), $assistantResponseContent));
 
+            // Store the result
+            $result = $assistantResponseContent;
+            
             // End the trace with success
+            // Tool spans will still be able to end because we preserved their trace IDs
             $tracer->endTrace(
-                output: ['response' => $assistantResponseContent],
+                output: ['response' => $result],
                 status: 'success'
             );
-
-            return $assistantResponseContent;
+            
+            return $result;
 
         } catch (\Throwable $e) {
             // End the trace with error
@@ -978,6 +1022,9 @@ abstract class BaseLlmAgent extends BaseAgent
 
         // Store span ID in context for afterToolResult
         $context->setState("tool_call_span_id_{$toolName}", $spanId);
+        
+        // Also store in instance property as backup for Prism execution
+        $this->activeToolSpans[$toolName] = $spanId;
 
         // Log debugging information
         logger()->info('beforeToolCall hook executed', [
@@ -985,6 +1032,7 @@ abstract class BaseLlmAgent extends BaseAgent
             'span_id' => $spanId,
             'arguments' => $arguments,
             'agent' => $this->getName(),
+            'context_session_id' => $context->getSessionId(),
         ]);
 
         return $arguments;
@@ -997,6 +1045,15 @@ abstract class BaseLlmAgent extends BaseAgent
 
         // Get the span ID from context
         $spanId = $context->getState("tool_call_span_id_{$toolName}");
+        
+        // If not found in context, check instance property (for Prism execution)
+        if (!$spanId && isset($this->activeToolSpans[$toolName])) {
+            $spanId = $this->activeToolSpans[$toolName];
+            logger()->info('Retrieved span ID from instance property', [
+                'tool_name' => $toolName,
+                'span_id' => $spanId,
+            ]);
+        }
 
         // Log debugging information
         logger()->info('afterToolResult hook executed', [
@@ -1004,15 +1061,35 @@ abstract class BaseLlmAgent extends BaseAgent
             'span_id' => $spanId,
             'result_length' => strlen($result),
             'agent' => $this->getName(),
+            'context_session_id' => $context->getSessionId(),
+            'span_found' => $spanId !== null,
+            'from_context' => $context->getState("tool_call_span_id_{$toolName}") !== null,
+            'from_property' => isset($this->activeToolSpans[$toolName]),
         ]);
 
         if ($spanId) {
-            // End the tool call span
-            $tracer->endSpan(
-                spanId: $spanId,
-                output: ['result' => $result],
-                status: 'success'
-            );
+            try {
+                // End the tool call span
+                $tracer->endSpan(
+                    spanId: $spanId,
+                    output: ['result' => $result],
+                    status: 'success'
+                );
+                
+                logger()->info('Tool span ended successfully', [
+                    'tool_name' => $toolName,
+                    'span_id' => $spanId,
+                ]);
+            } catch (\Throwable $e) {
+                logger()->error('Failed to end tool span', [
+                    'tool_name' => $toolName,
+                    'span_id' => $spanId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+            
+            // Clean up the span from instance property
+            unset($this->activeToolSpans[$toolName]);
         } else {
             logger()->warning('Tool call span ID not found in context', [
                 'tool_name' => $toolName,

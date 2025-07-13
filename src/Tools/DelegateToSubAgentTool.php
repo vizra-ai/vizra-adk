@@ -142,8 +142,32 @@ class DelegateToSubAgentTool implements ToolInterface
                 $currentDepth + 1
             ));
 
+            // Store parent trace context before sub-agent execution
+            $tracer = app(\Vizra\VizraADK\Services\Tracer::class);
+            $parentTraceId = $tracer->getCurrentTraceId();
+            
+            logger()->info('Delegating to sub-agent', [
+                'parent_trace_id' => $parentTraceId,
+                'sub_agent' => $subAgentName,
+            ]);
+            
             // Run the sub-agent with the task input
             $result = $subAgent->execute($taskInput, $subAgentContext);
+            
+            // Restore parent trace context after sub-agent execution
+            if ($parentContext = $subAgentContext->getState('_parent_trace_context')) {
+                $tracer->restoreParentContext($parentContext);
+                logger()->info('Restored parent trace context after sub-agent execution', [
+                    'parent_trace_id' => $parentContext['trace_id'],
+                    'sub_agent' => $subAgentName,
+                ]);
+            }
+            
+            logger()->info('Sub-agent execution completed', [
+                'parent_trace_id' => $parentTraceId,
+                'current_trace_id' => $tracer->getCurrentTraceId(),
+                'sub_agent' => $subAgentName,
+            ]);
 
             // Call the afterSubAgentDelegation hook
             $processedResult = $this->parentAgent->afterSubAgentDelegation(
