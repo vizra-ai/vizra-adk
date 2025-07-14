@@ -5,8 +5,11 @@ namespace Vizra\VizraADK\Services;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 use RuntimeException;
 use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\Models\VectorMemory;
 use Vizra\VizraADK\Services\Drivers\MeilisearchVectorDriver;
 
@@ -27,15 +30,38 @@ class VectorMemoryManager
 
     /**
      * Add a document to vector memory.
+     *
+     * @param string $agentClass The agent class (e.g., ChiefDinnerAgent::class)
+     * @param string|array $contentOrArray Either a string content or array with all options
+     * @param array|null $metadata Optional metadata when using string content
+     * @return Collection
      */
-    public function addDocument(
-        string $agentName,
-        string $content,
-        array $metadata = [],
-        string $namespace = 'default',
-        ?string $source = null,
-        ?string $sourceId = null
-    ): Collection {
+    public function addDocument(string $agentClass, $contentOrArray, array $metadata = null): Collection
+    {
+        // Extract agent name from class
+        $agentName = $this->getAgentName($agentClass);
+        
+        // Parse parameters
+        if (is_string($contentOrArray)) {
+            $content = $contentOrArray;
+            $metadata = $metadata ?? [];
+            $namespace = 'default';
+            $source = null;
+            $sourceId = null;
+        } elseif (is_array($contentOrArray)) {
+            $content = $contentOrArray['content'] ?? throw new InvalidArgumentException('content is required');
+            $metadata = $contentOrArray['metadata'] ?? [];
+            $namespace = $contentOrArray['namespace'] ?? 'default';
+            $source = $contentOrArray['source'] ?? null;
+            $sourceId = $contentOrArray['source_id'] ?? null;
+        } else {
+            throw new InvalidArgumentException('Second parameter must be string or array');
+        }
+        
+        // Auto-generate source if not provided
+        $source = $source ?: class_basename($agentClass);
+        $sourceId = $sourceId ?: (string) Str::ulid();
+
         Log::info('Adding document to vector memory', [
             'agent_name' => $agentName,
             'content_length' => strlen($content),
@@ -49,13 +75,15 @@ class VectorMemoryManager
 
         foreach ($chunks as $index => $chunk) {
             $entry = $this->addChunk(
-                agentName: $agentName,
-                content: $chunk,
-                metadata: array_merge($metadata, ['chunk_index' => $index]),
-                namespace: $namespace,
-                source: $source,
-                sourceId: $sourceId,
-                chunkIndex: $index
+                agentClass: $agentClass,
+                contentOrArray: [
+                    'content' => $chunk,
+                    'metadata' => array_merge($metadata, ['chunk_index' => $index]),
+                    'namespace' => $namespace,
+                    'source' => $source,
+                    'source_id' => $sourceId,
+                    'chunk_index' => $index
+                ]
             );
 
             if ($entry) {
@@ -74,16 +102,39 @@ class VectorMemoryManager
 
     /**
      * Add a single text chunk to vector memory.
+     *
+     * @param string $agentClass The agent class
+     * @param string|array $contentOrArray Either a string content or array with all options
+     * @param array|null $metadata Optional metadata when using string content
+     * @return VectorMemory|null
      */
-    public function addChunk(
-        string $agentName,
-        string $content,
-        array $metadata = [],
-        string $namespace = 'default',
-        ?string $source = null,
-        ?string $sourceId = null,
-        int $chunkIndex = 0
-    ): ?VectorMemory {
+    public function addChunk(string $agentClass, $contentOrArray, array $metadata = null): ?VectorMemory
+    {
+        // Extract agent name from class
+        $agentName = $this->getAgentName($agentClass);
+        
+        // Parse parameters
+        if (is_string($contentOrArray)) {
+            $content = $contentOrArray;
+            $metadata = $metadata ?? [];
+            $namespace = 'default';
+            $source = null;
+            $sourceId = null;
+            $chunkIndex = 0;
+        } elseif (is_array($contentOrArray)) {
+            $content = $contentOrArray['content'] ?? throw new InvalidArgumentException('content is required');
+            $metadata = $contentOrArray['metadata'] ?? [];
+            $namespace = $contentOrArray['namespace'] ?? 'default';
+            $source = $contentOrArray['source'] ?? null;
+            $sourceId = $contentOrArray['source_id'] ?? null;
+            $chunkIndex = $contentOrArray['chunk_index'] ?? 0;
+        } else {
+            throw new InvalidArgumentException('Second parameter must be string or array');
+        }
+        
+        // Auto-generate source if not provided
+        $source = $source ?: class_basename($agentClass);
+        $sourceId = $sourceId ?: (string) Str::ulid();
         $content = trim($content);
 
         if (empty($content)) {
@@ -166,14 +217,31 @@ class VectorMemoryManager
 
     /**
      * Search for similar content in vector memory.
+     *
+     * @param string $agentClass The agent class
+     * @param string|array $queryOrArray Either a search query string or array with options
+     * @param int|null $limit Optional limit when using string query
+     * @return Collection
      */
-    public function search(
-        string $agentName,
-        string $query,
-        string $namespace = 'default',
-        int $limit = 5,
-        float $threshold = 0.7
-    ): Collection {
+    public function search(string $agentClass, $queryOrArray, int $limit = null): Collection
+    {
+        // Extract agent name from class
+        $agentName = $this->getAgentName($agentClass);
+        
+        // Parse parameters
+        if (is_string($queryOrArray)) {
+            $query = $queryOrArray;
+            $limit = $limit ?? 5;
+            $namespace = 'default';
+            $threshold = 0.7;
+        } elseif (is_array($queryOrArray)) {
+            $query = $queryOrArray['query'] ?? throw new InvalidArgumentException('query is required');
+            $limit = $queryOrArray['limit'] ?? 5;
+            $namespace = $queryOrArray['namespace'] ?? 'default';
+            $threshold = $queryOrArray['threshold'] ?? 0.7;
+        } else {
+            throw new InvalidArgumentException('Second parameter must be string or array');
+        }
         Log::debug('Searching vector memory', [
             'agent_name' => $agentName,
             'query_length' => strlen($query),
@@ -299,16 +367,29 @@ class VectorMemoryManager
 
     /**
      * Generate RAG context from search results.
+     *
+     * @param string $agentClass The agent class
+     * @param string|array $queryOrArray Either a query string or array with options
+     * @param array|null $options Optional options when using string query
+     * @return array
      */
-    public function generateRagContext(
-        string $agentName,
-        string $query,
-        string $namespace = 'default',
-        int $limit = 5,
-        float $threshold = 0.7
-    ): array {
-        $results = $this->search($agentName, $query, $namespace, $limit, $threshold);
+    public function generateRagContext(string $agentClass, $queryOrArray, array $options = null): array
+    {
+        // Parse parameters
+        if (is_string($queryOrArray)) {
+            $searchParams = ['query' => $queryOrArray];
+            if ($options) {
+                $searchParams = array_merge($searchParams, $options);
+            }
+        } else {
+            $searchParams = $queryOrArray;
+        }
+        
+        $results = $this->search($agentClass, $searchParams);
 
+        // Extract query from params
+        $query = is_string($queryOrArray) ? $queryOrArray : ($searchParams['query'] ?? '');
+        
         if ($results->isEmpty()) {
             return [
                 'context' => '',
@@ -368,9 +449,27 @@ class VectorMemoryManager
 
     /**
      * Delete memories by agent and namespace.
+     *
+     * @param string $agentClass The agent class
+     * @param string|array|null $namespaceOrArray Namespace string or array with options
+     * @return int Number of memories deleted
      */
-    public function deleteMemories(string $agentName, string $namespace = 'default'): int
+    public function deleteMemories(string $agentClass, $namespaceOrArray = null): int
     {
+        // Extract agent name from class
+        $agentName = $this->getAgentName($agentClass);
+        
+        // Parse parameters
+        if (is_null($namespaceOrArray)) {
+            $namespace = 'default';
+        } elseif (is_string($namespaceOrArray)) {
+            $namespace = $namespaceOrArray;
+        } elseif (is_array($namespaceOrArray)) {
+            $namespace = $namespaceOrArray['namespace'] ?? 'default';
+        } else {
+            throw new InvalidArgumentException('Second parameter must be string, array, or null');
+        }
+        
         $count = VectorMemory::forAgent($agentName)
             ->inNamespace($namespace)
             ->delete();
@@ -386,9 +485,28 @@ class VectorMemoryManager
 
     /**
      * Delete memories by source.
+     *
+     * @param string $agentClass The agent class
+     * @param string|array $sourceOrArray Source string or array with options
+     * @param string|null $namespace Optional namespace when using string source
+     * @return int Number of memories deleted
      */
-    public function deleteMemoriesBySource(string $agentName, string $source, string $namespace = 'default'): int
+    public function deleteMemoriesBySource(string $agentClass, $sourceOrArray, string $namespace = null): int
     {
+        // Extract agent name from class
+        $agentName = $this->getAgentName($agentClass);
+        
+        // Parse parameters
+        if (is_string($sourceOrArray)) {
+            $source = $sourceOrArray;
+            $namespace = $namespace ?? 'default';
+        } elseif (is_array($sourceOrArray)) {
+            $source = $sourceOrArray['source'] ?? throw new InvalidArgumentException('source is required');
+            $namespace = $sourceOrArray['namespace'] ?? 'default';
+        } else {
+            throw new InvalidArgumentException('Second parameter must be string or array');
+        }
+        
         $count = VectorMemory::forAgent($agentName)
             ->inNamespace($namespace)
             ->fromSource($source)
@@ -406,9 +524,27 @@ class VectorMemoryManager
 
     /**
      * Get memory statistics for an agent.
+     *
+     * @param string $agentClass The agent class
+     * @param string|array|null $namespaceOrArray Namespace string or array with options
+     * @return array
      */
-    public function getStatistics(string $agentName, string $namespace = 'default'): array
+    public function getStatistics(string $agentClass, $namespaceOrArray = null): array
     {
+        // Extract agent name from class
+        $agentName = $this->getAgentName($agentClass);
+        
+        // Parse parameters
+        if (is_null($namespaceOrArray)) {
+            $namespace = 'default';
+        } elseif (is_string($namespaceOrArray)) {
+            $namespace = $namespaceOrArray;
+        } elseif (is_array($namespaceOrArray)) {
+            $namespace = $namespaceOrArray['namespace'] ?? 'default';
+        } else {
+            throw new InvalidArgumentException('Second parameter must be string, array, or null');
+        }
+        
         $query = VectorMemory::forAgent($agentName)->inNamespace($namespace);
 
         return [
@@ -424,5 +560,25 @@ class VectorMemoryManager
                 ->pluck('count', 'source')
                 ->toArray(),
         ];
+    }
+
+    /**
+     * Extract agent name from agent class.
+     *
+     * @param string $agentClass
+     * @return string
+     */
+    protected function getAgentName(string $agentClass): string
+    {
+        // Try to instantiate the agent class and get its name
+        if (class_exists($agentClass) && is_subclass_of($agentClass, \Vizra\VizraADK\Agents\BaseAgent::class)) {
+            $agent = new $agentClass();
+            return $agent->getName();
+        }
+        
+        // Fallback to extracting from class name
+        $className = class_basename($agentClass);
+        // Convert ChiefDinnerAgent to chief_dinner_agent
+        return Str::snake(str_replace('Agent', '', $className)) . '_agent';
     }
 }

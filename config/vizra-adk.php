@@ -16,7 +16,7 @@ return [
      * - 'xai' or 'grok' - xAI (Grok models)
      * - 'voyageai' or 'voyage' - Voyage AI (Embeddings)
      */
-    'default_provider' => env('VIZRA_ADK_DEFAULT_PROVIDER', 'openai'),
+    'default_provider' => env('VIZRA_ADK_DEFAULT_PROVIDER', 'google'),
 
     /**
      * Default LLM model to use with Prism-PHP.
@@ -209,5 +209,101 @@ return [
          * Can be 'latest', 'default', or a specific version string.
          */
         'default_version' => env('VIZRA_ADK_PROMPTS_DEFAULT_VERSION', 'default'),
+    ],
+
+    /**
+     * Vector Memory & RAG Configuration
+     * Configure semantic search and document retrieval capabilities.
+     */
+    'vector_memory' => [
+        /**
+         * Enable vector memory functionality.
+         */
+        'enabled' => env('VIZRA_ADK_VECTOR_ENABLED', true),
+
+        /**
+         * Vector storage driver.
+         * Supported: 'pgvector', 'meilisearch', 'qdrant', 'in_memory'
+         */
+        'driver' => env('VIZRA_ADK_VECTOR_DRIVER', 'pgvector'),
+
+        /**
+         * Embedding provider for generating vectors.
+         * Supported: 'openai', 'cohere', 'ollama', 'gemini'
+         */
+        'embedding_provider' => env('VIZRA_ADK_EMBEDDING_PROVIDER', 'openai'),
+
+        /**
+         * Embedding models for each provider.
+         */
+        'embedding_models' => [
+            'openai' => env('VIZRA_ADK_OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small'),
+            'cohere' => env('VIZRA_ADK_COHERE_EMBEDDING_MODEL', 'embed-english-v3.0'),
+            'ollama' => env('VIZRA_ADK_OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text'),
+            'gemini' => env('VIZRA_ADK_GEMINI_EMBEDDING_MODEL', 'text-embedding-004'),
+        ],
+
+        /**
+         * Model dimensions for calculating similarity.
+         */
+        'dimensions' => [
+            // OpenAI models
+            'text-embedding-3-small' => 1536,
+            'text-embedding-3-large' => 3072,
+            'text-embedding-ada-002' => 1536,
+            // Cohere models
+            'embed-english-v3.0' => 1024,
+            'embed-multilingual-v3.0' => 1024,
+            // Ollama models
+            'nomic-embed-text' => 768,
+            'mxbai-embed-large' => 1024,
+            // Gemini models
+            'text-embedding-004' => 768,
+        ],
+
+        /**
+         * Driver-specific configurations.
+         */
+        'drivers' => [
+            'pgvector' => [
+                'connection' => env('VIZRA_ADK_PGVECTOR_CONNECTION', 'pgsql'),
+            ],
+
+            'meilisearch' => [
+                'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
+                'api_key' => env('MEILISEARCH_KEY'),
+                'index_prefix' => env('MEILISEARCH_PREFIX', 'agent_vectors_'),
+            ],
+
+            'qdrant' => [
+                'host' => env('QDRANT_HOST', 'localhost'),
+                'port' => env('QDRANT_PORT', 6333),
+                'api_key' => env('QDRANT_API_KEY'),
+            ],
+
+            'in_memory' => [
+                'storage_path' => env('VIZRA_ADK_MEMORY_STORAGE_PATH', storage_path('app/vector_memory.json')),
+            ],
+        ],
+
+        /**
+         * Document chunking configuration.
+         */
+        'chunking' => [
+            'strategy' => env('VIZRA_ADK_CHUNK_STRATEGY', 'sentence'), // 'sentence' or 'paragraph'
+            'chunk_size' => env('VIZRA_ADK_CHUNK_SIZE', 1000), // Characters per chunk
+            'overlap' => env('VIZRA_ADK_CHUNK_OVERLAP', 200), // Overlap between chunks
+            'separators' => ["\n\n", "\n", ". ", ", ", " "],
+            'keep_separators' => true,
+        ],
+
+        /**
+         * RAG (Retrieval-Augmented Generation) configuration.
+         */
+        'rag' => [
+            'context_template' => "Based on the following context:\n{context}\n\nAnswer this question: {query}",
+            'max_context_length' => env('VIZRA_ADK_RAG_MAX_CONTEXT', 4000),
+            'include_metadata' => env('VIZRA_ADK_RAG_INCLUDE_METADATA', true),
+        ],
     ],
 ];

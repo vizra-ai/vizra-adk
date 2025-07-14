@@ -60,6 +60,7 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_execute_with_unknown_action_returns_error()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $result = $this->tool->execute(['action' => 'invalid_action'], $this->mockContext, $this->mockMemory);
@@ -71,6 +72,7 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_execute_handles_exceptions_gracefully()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
         $this->mockVectorMemory->shouldReceive('addDocument')->andThrow(new \Exception('Test exception'));
 
@@ -89,6 +91,7 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_handle_store_success()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
         $this->mockContext->shouldReceive('getSessionId')->andReturn('session-123');
 
@@ -101,15 +104,20 @@ class VectorMemoryToolTest extends TestCase
             ->once()
             ->with(
                 'TestAgent',
-                'This is test content to store',
-                Mockery::on(function ($metadata) {
-                    return $metadata['stored_by_agent'] === 'TestAgent' &&
-                           $metadata['session_id'] === 'session-123' &&
-                           isset($metadata['stored_at']);
-                }),
-                'default',
-                'test-doc.txt',
-                'doc-123'
+                Mockery::on(function ($param) {
+                    return is_array($param) &&
+                           $param['content'] === 'This is test content to store' &&
+                           $param['namespace'] === 'default' &&
+                           $param['source'] === 'test-doc.txt' &&
+                           $param['source_id'] === 'doc-123' &&
+                           isset($param['metadata']['stored_by_agent']) &&
+                           $param['metadata']['stored_by_agent'] === 'TestAgent' &&
+                           isset($param['metadata']['session_id']) &&
+                           $param['metadata']['session_id'] === 'session-123' &&
+                           isset($param['metadata']['stored_at']) &&
+                           isset($param['metadata']['type']) &&
+                           $param['metadata']['type'] === 'test';
+                })
             )
             ->andReturn($mockMemories);
 
@@ -135,6 +143,7 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_handle_store_missing_content_returns_error()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $result = $this->tool->execute([
@@ -149,6 +158,7 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_handle_search_with_raw_results()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $result1 = new \stdClass;
@@ -173,7 +183,16 @@ class VectorMemoryToolTest extends TestCase
 
         $this->mockVectorMemory->shouldReceive('search')
             ->once()
-            ->with('TestAgent', 'test search query', 'default', 5, 0.7)
+            ->with(
+                'TestAgent',
+                Mockery::on(function ($param) {
+                    return is_array($param) &&
+                           $param['query'] === 'test search query' &&
+                           $param['namespace'] === 'default' &&
+                           $param['limit'] === 5 &&
+                           $param['threshold'] === 0.7;
+                })
+            )
             ->andReturn($mockResults);
 
         $result = $this->tool->execute([
@@ -204,6 +223,7 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_handle_search_with_rag_context()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $mockRagContext = [
@@ -214,7 +234,16 @@ class VectorMemoryToolTest extends TestCase
 
         $this->mockVectorMemory->shouldReceive('generateRagContext')
             ->once()
-            ->with('TestAgent', 'test search query', 'default', 3, 0.8)
+            ->with(
+                'TestAgent',
+                'test search query',
+                Mockery::on(function ($param) {
+                    return is_array($param) &&
+                           $param['namespace'] === 'default' &&
+                           $param['limit'] === 3 &&
+                           $param['threshold'] === 0.8;
+                })
+            )
             ->andReturn($mockRagContext);
 
         $result = $this->tool->execute([
@@ -240,6 +269,7 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_handle_search_missing_query_returns_error()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $result = $this->tool->execute([
@@ -254,11 +284,19 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_handle_delete_by_source()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $this->mockVectorMemory->shouldReceive('deleteMemoriesBySource')
             ->once()
-            ->with('TestAgent', 'test-doc.txt', 'default')
+            ->with(
+                'TestAgent',
+                Mockery::on(function ($param) {
+                    return is_array($param) &&
+                           $param['source'] === 'test-doc.txt' &&
+                           $param['namespace'] === 'default';
+                })
+            )
             ->andReturn(5);
 
         $result = $this->tool->execute([
@@ -279,6 +317,7 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_handle_delete_all_in_namespace()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $this->mockVectorMemory->shouldReceive('deleteMemories')
@@ -303,6 +342,7 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_handle_stats_returns_statistics()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $mockStats = [
@@ -334,6 +374,7 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_execute_uses_default_namespace_when_not_provided()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $this->mockVectorMemory->shouldReceive('getStatistics')
@@ -353,11 +394,12 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_execute_handles_unknown_agent_name()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn(null);
 
         $this->mockVectorMemory->shouldReceive('getStatistics')
             ->once()
-            ->with('unknown', 'default')
+            ->with('VizraADK\\GenericAgent', 'default')
             ->andReturn([]);
 
         $result = $this->tool->execute([
@@ -371,6 +413,7 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_store_with_default_parameters()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
         $this->mockContext->shouldReceive('getSessionId')->andReturn(null);
 
@@ -380,14 +423,16 @@ class VectorMemoryToolTest extends TestCase
             ->once()
             ->with(
                 'TestAgent',
-                'Simple content',
-                Mockery::on(function ($metadata) {
-                    return $metadata['stored_by_agent'] === 'TestAgent' &&
-                           ! isset($metadata['session_id']);
-                }),
-                'default',
-                null,
-                null
+                Mockery::on(function ($param) {
+                    return is_array($param) &&
+                           $param['content'] === 'Simple content' &&
+                           $param['namespace'] === 'default' &&
+                           ! isset($param['source']) &&
+                           ! isset($param['source_id']) &&
+                           isset($param['metadata']['stored_by_agent']) &&
+                           $param['metadata']['stored_by_agent'] === 'TestAgent' &&
+                           ! isset($param['metadata']['session_id']);
+                })
             )
             ->andReturn($mockMemories);
 
@@ -405,11 +450,21 @@ class VectorMemoryToolTest extends TestCase
 
     public function test_search_uses_default_parameters()
     {
+        $this->mockContext->shouldReceive('getState')->with('agent_class')->andReturn(null);
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
 
         $this->mockVectorMemory->shouldReceive('search')
             ->once()
-            ->with('TestAgent', 'simple query', 'default', 5, 0.7)
+            ->with(
+                'TestAgent',
+                Mockery::on(function ($param) {
+                    return is_array($param) &&
+                           $param['query'] === 'simple query' &&
+                           $param['namespace'] === 'default' &&
+                           $param['limit'] === 5 &&
+                           $param['threshold'] === 0.7;
+                })
+            )
             ->andReturn(collect());
 
         $result = $this->tool->execute([

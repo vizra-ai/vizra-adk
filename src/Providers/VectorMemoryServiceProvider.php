@@ -28,6 +28,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
                     'openai' => new OpenAIEmbeddingProvider,
                     'cohere' => new CohereEmbeddingProvider,
                     'ollama' => new OllamaEmbeddingProvider,
+                    'gemini', 'google' => new GeminiEmbeddingProvider,
                     default => throw new RuntimeException("Unsupported embedding provider: {$provider}"),
                 };
             } catch (\Exception $e) {
@@ -108,7 +109,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
         $driver = config('vizra-adk.vector_memory.driver');
 
         // Validate embedding provider
-        $supportedProviders = ['openai', 'cohere', 'ollama', 'gemini'];
+        $supportedProviders = ['openai', 'cohere', 'ollama', 'gemini', 'google'];
         if (! in_array($provider, $supportedProviders)) {
             throw new RuntimeException("Unsupported embedding provider: {$provider}. Supported: ".implode(', ', $supportedProviders));
         }
@@ -157,6 +158,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
                 break;
 
             case 'gemini':
+            case 'google':
                 if (! config('services.gemini.key') && ! env('GEMINI_API_KEY')) {
                     throw new RuntimeException('Gemini API key is required. Set GEMINI_API_KEY in your .env file.');
                 }

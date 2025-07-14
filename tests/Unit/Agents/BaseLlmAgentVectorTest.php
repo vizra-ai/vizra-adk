@@ -7,6 +7,7 @@ use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Vizra\VizraADK\Models\VectorMemory;
 use Vizra\VizraADK\Services\DocumentChunker;
 use Vizra\VizraADK\Services\VectorMemoryManager;
+use Vizra\VizraADK\Services\AgentVectorProxy;
 
 beforeEach(function () {
     // Set up mocks for VectorMemoryManager dependencies
@@ -34,27 +35,30 @@ beforeEach(function () {
  * Unit tests for vector() method
  */
 describe('vector() method', function () {
-    it('returns VectorMemoryManager instance', function () {
+    it('returns AgentVectorProxy instance', function () {
         $vector = $this->agent->testVector();
 
-        expect($vector)->toBeInstanceOf(VectorMemoryManager::class);
-        expect($vector)->toBe($this->vectorMemoryManager);
+        expect($vector)->toBeInstanceOf(AgentVectorProxy::class);
+        expect($vector->getAgentClass())->toBe(TestAgentWithVector::class);
     });
 
-    it('returns same instance on multiple calls', function () {
+    it('returns new proxy instances on multiple calls', function () {
         $first = $this->agent->testVector();
         $second = $this->agent->testVector();
         $third = $this->agent->testVector();
 
-        expect($first)->toBe($second);
-        expect($second)->toBe($third);
+        expect($first)->not->toBe($second);
+        expect($second)->not->toBe($third);
+        // But they should all wrap the same agent class
+        expect($first->getAgentClass())->toBe($second->getAgentClass());
+        expect($second->getAgentClass())->toBe($third->getAgentClass());
     });
 
-    it('is a protected method', function () {
+    it('is a public method', function () {
         $reflection = new ReflectionClass(BaseLlmAgent::class);
         $method = $reflection->getMethod('vector');
 
-        expect($method->isProtected())->toBeTrue();
+        expect($method->isPublic())->toBeTrue();
     });
 });
 
@@ -62,24 +66,25 @@ describe('vector() method', function () {
  * Unit tests for rag() method
  */
 describe('rag() method', function () {
-    it('returns VectorMemoryManager instance', function () {
+    it('returns AgentVectorProxy instance', function () {
         $rag = $this->agent->testRag();
 
-        expect($rag)->toBeInstanceOf(VectorMemoryManager::class);
+        expect($rag)->toBeInstanceOf(AgentVectorProxy::class);
     });
 
-    it('returns same instance as vector()', function () {
+    it('returns new proxy instance different from vector()', function () {
         $vector = $this->agent->testVector();
         $rag = $this->agent->testRag();
 
-        expect($rag)->toBe($vector);
+        expect($rag)->not->toBe($vector);
+        expect($rag->getAgentClass())->toBe($vector->getAgentClass());
     });
 
-    it('is a protected method', function () {
+    it('is a public method', function () {
         $reflection = new ReflectionClass(BaseLlmAgent::class);
         $method = $reflection->getMethod('rag');
 
-        expect($method->isProtected())->toBeTrue();
+        expect($method->isPublic())->toBeTrue();
     });
 });
 
@@ -301,20 +306,22 @@ it('supports real-world RAG workflow', function () {
     // Store knowledge
     foreach ($knowledge as $fact) {
         $this->agent->testVector()->addChunk(
-            $this->agent->getName(),
-            $fact,
-            ['type' => 'documentation'],
-            'knowledge'
+            [
+                'content' => $fact,
+                'metadata' => ['type' => 'documentation'],
+                'namespace' => 'knowledge'
+            ]
         );
     }
 
     // Search for information
     $query = 'What is the ORM in Laravel?';
     $context = $this->agent->testRag()->generateRagContext(
-        $this->agent->getName(),
         $query,
-        'knowledge',
-        3
+        [
+            'namespace' => 'knowledge',
+            'limit' => 3
+        ]
     );
 
     expect($context)->toBeArray();
@@ -335,43 +342,46 @@ class TestAgentWithVector extends BaseLlmAgent
 
     protected string $model = 'gpt-3.5-turbo';
 
-    public function testVector(): VectorMemoryManager
+    public function testVector(): AgentVectorProxy
     {
         return $this->vector();
     }
 
-    public function testRag(): VectorMemoryManager
+    public function testRag(): AgentVectorProxy
     {
         return $this->rag();
     }
 
     public function storeDocument(string $content, array $metadata = []): Collection
     {
-        return $this->vector()->addDocument($this->getName(), $content, $metadata);
+        return $this->vector()->addDocument($content, $metadata);
     }
 
     public function searchDocuments(string $query, int $limit = 5): Collection
     {
-        return $this->rag()->search($this->getName(), $query, 'default', $limit);
+        return $this->rag()->search($query, $limit);
     }
 
     public function generateContext(string $query, string $namespace = 'default'): array
     {
-        return $this->rag()->generateRagContext($this->getName(), $query, $namespace);
+        return $this->rag()->generateRagContext($query, ['namespace' => $namespace]);
     }
 
     public function storeInNamespace(string $namespace, string $content): ?VectorMemory
     {
-        return $this->vector()->addChunk($this->getName(), $content, [], $namespace);
+        return $this->vector()->addChunk([
+            'content' => $content,
+            'namespace' => $namespace
+        ]);
     }
 
     public function clearNamespace(string $namespace): int
     {
-        return $this->vector()->deleteMemories($this->getName(), $namespace);
+        return $this->vector()->deleteMemories($namespace);
     }
 
     public function getVectorStats(string $namespace = 'default'): array
     {
-        return $this->vector()->getStatistics($this->getName(), $namespace);
+        return $this->vector()->getStatistics($namespace);
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Collection;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\Services\DocumentChunker;
 use Vizra\VizraADK\Services\VectorMemoryManager;
 use Vizra\VizraADK\System\AgentContext;
@@ -241,22 +242,20 @@ class AgentVectorMemoryIntegrationTest extends TestCase
         $this->agent->addToKnowledgeBase('Python is a high-level programming language.', ['topic' => 'python']);
 
         // Search with high threshold
-        $highThresholdResults = $this->agent->rag()->search(
-            $this->agent->getName(),
-            'Tell me about PHP programming',
-            'knowledge_base',
-            10,
-            0.8 // High threshold
-        );
+        $highThresholdResults = $this->agent->rag()->search([
+            'query' => 'Tell me about PHP programming',
+            'namespace' => 'knowledge_base',
+            'limit' => 10,
+            'threshold' => 0.8
+        ]);
 
         // Search with low threshold
-        $lowThresholdResults = $this->agent->rag()->search(
-            $this->agent->getName(),
-            'Tell me about PHP programming',
-            'knowledge_base',
-            10,
-            0.3 // Low threshold
-        );
+        $lowThresholdResults = $this->agent->rag()->search([
+            'query' => 'Tell me about PHP programming',
+            'namespace' => 'knowledge_base',
+            'limit' => 10,
+            'threshold' => 0.3
+        ]);
 
         // High threshold should return fewer results
         $this->assertLessThan($lowThresholdResults->count(), $highThresholdResults->count());
@@ -332,12 +331,11 @@ class KnowledgeBaseAgent extends BaseLlmAgent
      */
     public function addToKnowledgeBase(string $content, array $metadata = []): Collection
     {
-        return $this->vector()->addDocument(
-            $this->getName(),
-            $content,
-            $metadata,
-            'knowledge_base'
-        );
+        return $this->vector()->addDocument([
+            'content' => $content,
+            'metadata' => $metadata,
+            'namespace' => 'knowledge_base'
+        ]);
     }
 
     /**
@@ -345,13 +343,12 @@ class KnowledgeBaseAgent extends BaseLlmAgent
      */
     public function queryKnowledgeBase(string $query, int $limit = 5): Collection
     {
-        return $this->rag()->search(
-            $this->getName(),
-            $query,
-            'knowledge_base',
-            $limit,
-            0.5
-        );
+        return $this->rag()->search([
+            'query' => $query,
+            'namespace' => 'knowledge_base',
+            'limit' => $limit,
+            'threshold' => 0.5
+        ]);
     }
 
     /**
@@ -359,12 +356,10 @@ class KnowledgeBaseAgent extends BaseLlmAgent
      */
     public function generateRagContext(string $query): array
     {
-        return $this->rag()->generateRagContext(
-            $this->getName(),
-            $query,
-            'knowledge_base',
-            5
-        );
+        return $this->rag()->generateRagContext($query, [
+            'namespace' => 'knowledge_base',
+            'limit' => 5
+        ]);
     }
 
     /**
@@ -418,24 +413,26 @@ class KnowledgeSearchTool implements ToolInterface
         ];
     }
 
-    public function execute(array $parameters): mixed
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
         $agent = app(KnowledgeBaseAgent::class);
         $results = $agent->queryKnowledgeBase(
-            $parameters['query'],
-            $parameters['limit'] ?? 3
+            $arguments['query'],
+            $arguments['limit'] ?? 3
         );
 
         if ($results->isEmpty()) {
-            return 'No relevant information found in the knowledge base.';
+            return json_encode(['message' => 'No relevant information found in the knowledge base.']);
         }
 
-        return $results->map(function ($result) {
+        $formattedResults = $results->map(function ($result) {
             return [
                 'content' => $result->content,
                 'similarity' => round($result->similarity, 2),
                 'source' => $result->source ?? 'knowledge_base',
             ];
         })->toArray();
+        
+        return json_encode(['results' => $formattedResults]);
     }
 }

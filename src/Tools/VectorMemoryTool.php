@@ -83,15 +83,16 @@ class VectorMemoryTool implements ToolInterface
     public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
         $action = $arguments['action'];
-        $agentName = $context->getState('agent_name') ?? 'unknown';
+        // Get agent class from context, fallback to a generic class if not available
+        $agentClass = $context->getState('agent_class') ?? $context->getState('agent_name') ?? 'VizraADK\\GenericAgent';
         $namespace = $arguments['namespace'] ?? 'default';
 
         try {
             return match ($action) {
-                'store' => $this->handleStore($agentName, $arguments, $context),
-                'search' => $this->handleSearch($agentName, $arguments, $context),
-                'delete' => $this->handleDelete($agentName, $arguments, $context),
-                'stats' => $this->handleStats($agentName, $arguments, $context),
+                'store' => $this->handleStore($agentClass, $arguments, $context),
+                'search' => $this->handleSearch($agentClass, $arguments, $context),
+                'delete' => $this->handleDelete($agentClass, $arguments, $context),
+                'stats' => $this->handleStats($agentClass, $arguments, $context),
                 default => json_encode([
                     'success' => false,
                     'error' => "Unknown action: {$action}. Use 'store', 'search', 'delete', or 'stats'.",
@@ -100,7 +101,7 @@ class VectorMemoryTool implements ToolInterface
         } catch (\Exception $e) {
             Log::error('VectorMemoryTool execution failed', [
                 'action' => $action,
-                'agent_name' => $agentName,
+                'agent_class' => $agentClass,
                 'error' => $e->getMessage(),
             ]);
 
@@ -111,7 +112,7 @@ class VectorMemoryTool implements ToolInterface
         }
     }
 
-    protected function handleStore(string $agentName, array $arguments, AgentContext $context): string
+    protected function handleStore(string $agentClass, array $arguments, AgentContext $context): string
     {
         if (empty($arguments['content'])) {
             return json_encode([
@@ -127,20 +128,23 @@ class VectorMemoryTool implements ToolInterface
         $sourceId = $arguments['source_id'] ?? null;
 
         // Add context metadata
-        $metadata['stored_by_agent'] = $agentName;
+        $metadata['stored_by_agent'] = $agentClass;
         $metadata['stored_at'] = now()->toISOString();
 
         if ($sessionId = $context->getSessionId()) {
             $metadata['session_id'] = $sessionId;
         }
 
+        // Use new API format
         $memories = $this->vectorMemory->addDocument(
-            agentName: $agentName,
-            content: $content,
-            metadata: $metadata,
-            namespace: $namespace,
-            source: $source,
-            sourceId: $sourceId
+            $agentClass,
+            [
+                'content' => $content,
+                'metadata' => $metadata,
+                'namespace' => $namespace,
+                'source' => $source,
+                'source_id' => $sourceId
+            ]
         );
 
         return json_encode([
@@ -154,7 +158,7 @@ class VectorMemoryTool implements ToolInterface
         ]);
     }
 
-    protected function handleSearch(string $agentName, array $arguments, AgentContext $context): string
+    protected function handleSearch(string $agentClass, array $arguments, AgentContext $context): string
     {
         if (empty($arguments['query'])) {
             return json_encode([
@@ -170,13 +174,15 @@ class VectorMemoryTool implements ToolInterface
         $generateRagContext = $arguments['generate_rag_context'] ?? false;
 
         if ($generateRagContext) {
-            // Generate formatted RAG context
+            // Generate formatted RAG context using new API
             $ragContext = $this->vectorMemory->generateRagContext(
-                agentName: $agentName,
-                query: $query,
-                namespace: $namespace,
-                limit: $limit,
-                threshold: $threshold
+                $agentClass,
+                $query,
+                [
+                    'namespace' => $namespace,
+                    'limit' => $limit,
+                    'threshold' => $threshold
+                ]
             );
 
             return json_encode([
@@ -190,13 +196,15 @@ class VectorMemoryTool implements ToolInterface
                 'message' => "Found {$ragContext['total_results']} relevant results",
             ]);
         } else {
-            // Return raw search results
+            // Return raw search results using new API
             $results = $this->vectorMemory->search(
-                agentName: $agentName,
-                query: $query,
-                namespace: $namespace,
-                limit: $limit,
-                threshold: $threshold
+                $agentClass,
+                [
+                    'query' => $query,
+                    'namespace' => $namespace,
+                    'limit' => $limit,
+                    'threshold' => $threshold
+                ]
             );
 
             return json_encode([
@@ -221,18 +229,24 @@ class VectorMemoryTool implements ToolInterface
         }
     }
 
-    protected function handleDelete(string $agentName, array $arguments, AgentContext $context): string
+    protected function handleDelete(string $agentClass, array $arguments, AgentContext $context): string
     {
         $namespace = $arguments['namespace'] ?? 'default';
         $source = $arguments['source'] ?? null;
 
         if ($source) {
-            // Delete by source
-            $count = $this->vectorMemory->deleteMemoriesBySource($agentName, $source, $namespace);
+            // Delete by source using new API
+            $count = $this->vectorMemory->deleteMemoriesBySource(
+                $agentClass,
+                [
+                    'source' => $source,
+                    'namespace' => $namespace
+                ]
+            );
             $message = "Deleted {$count} memories from source '{$source}'";
         } else {
-            // Delete all memories in namespace
-            $count = $this->vectorMemory->deleteMemories($agentName, $namespace);
+            // Delete all memories in namespace using new API
+            $count = $this->vectorMemory->deleteMemories($agentClass, $namespace);
             $message = "Deleted {$count} memories from namespace '{$namespace}'";
         }
 
@@ -246,10 +260,10 @@ class VectorMemoryTool implements ToolInterface
         ]);
     }
 
-    protected function handleStats(string $agentName, array $arguments, AgentContext $context): string
+    protected function handleStats(string $agentClass, array $arguments, AgentContext $context): string
     {
         $namespace = $arguments['namespace'] ?? 'default';
-        $stats = $this->vectorMemory->getStatistics($agentName, $namespace);
+        $stats = $this->vectorMemory->getStatistics($agentClass, $namespace);
 
         return json_encode([
             'success' => true,

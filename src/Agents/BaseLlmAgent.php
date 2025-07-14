@@ -23,7 +23,7 @@ use Vizra\VizraADK\Events\ToolCallInitiating;
 use Vizra\VizraADK\Exceptions\ToolExecutionException;
 use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\Services\Tracer;
-use Vizra\VizraADK\Services\VectorMemoryManager;
+use Vizra\VizraADK\Services\AgentVectorProxy;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Traits\VersionablePrompts;
 
@@ -919,25 +919,28 @@ abstract class BaseLlmAgent extends BaseAgent
     }
 
     /**
-     * Get the vector memory manager for this agent.
+     * Get the vector memory proxy for this agent.
      *
-     * This method provides convenient access to vector/RAG functionality,
-     * automatically using the current agent's name as the default collection.
+     * This method provides access to the vector memory functionality,
+     * automatically injecting this agent's class into all operations.
      *
      * Example usage:
      * ```php
-     * // Search for similar content
-     * $results = $this->vector()->search($this->getName(), 'query text');
+     * // Search for similar content - no need to pass agent class
+     * $results = $this->vector()->search('query text');
      *
-     * // Add a document to vector memory
-     * $this->vector()->addDocument($this->getName(), 'document content');
+     * // Add a document to vector memory - no need to pass agent class
+     * $this->vector()->addDocument('document content');
      * ```
      *
-     * @return VectorMemoryManager The vector memory manager instance
+     * @return AgentVectorProxy The vector memory proxy bound to this agent
      */
-    protected function vector(): VectorMemoryManager
+    public function vector(): AgentVectorProxy
     {
-        return app(VectorMemoryManager::class);
+        return new AgentVectorProxy(
+            static::class,
+            app(\Vizra\VizraADK\Services\VectorMemoryManager::class)
+        );
     }
 
     /**
@@ -948,16 +951,16 @@ abstract class BaseLlmAgent extends BaseAgent
      *
      * Example usage:
      * ```php
-     * // Search for relevant context
-     * $context = $this->rag()->search($this->getName(), 'user query');
+     * // Search for relevant context - no need to pass agent class
+     * $context = $this->rag()->search('user query');
      *
-     * // Store knowledge for later retrieval
-     * $this->rag()->addDocument($this->getName(), 'important information');
+     * // Store knowledge for later retrieval - no need to pass agent class
+     * $this->rag()->addDocument('important information');
      * ```
      *
-     * @return VectorMemoryManager The vector memory manager instance
+     * @return AgentVectorProxy The vector memory proxy bound to this agent
      */
-    protected function rag(): VectorMemoryManager
+    public function rag(): AgentVectorProxy
     {
         return $this->vector();
     }

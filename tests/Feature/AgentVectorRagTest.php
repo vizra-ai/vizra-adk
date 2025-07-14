@@ -125,25 +125,31 @@ describe('Agent Vector/RAG Features', function () {
         // Add documents directly with addChunk to avoid chunking
         $vectorManager = App::make(VectorMemoryManager::class);
         $vectorManager->addChunk(
-            $agent->getName(),
-            'First document about Laravel.',
-            ['type' => 'doc'],
-            'default',
-            'manual.pdf'
+            get_class($agent),
+            [
+                'content' => 'First document about Laravel.',
+                'metadata' => ['type' => 'doc'],
+                'namespace' => 'default',
+                'source' => 'manual.pdf'
+            ]
         );
         $vectorManager->addChunk(
-            $agent->getName(),
-            'Second document about PHP.',
-            ['type' => 'doc'],
-            'default',
-            'tutorial.md'
+            get_class($agent),
+            [
+                'content' => 'Second document about PHP.',
+                'metadata' => ['type' => 'doc'],
+                'namespace' => 'default',
+                'source' => 'tutorial.md'
+            ]
         );
         $vectorManager->addChunk(
-            $agent->getName(),
-            'Third document about Laravel.',
-            ['type' => 'doc'],
-            'default',
-            'manual.pdf'
+            get_class($agent),
+            [
+                'content' => 'Third document about Laravel.',
+                'metadata' => ['type' => 'doc'],
+                'namespace' => 'default',
+                'source' => 'manual.pdf'
+            ]
         );
 
         $stats = $agent->getKnowledgeStats();
@@ -217,33 +223,39 @@ class DocumentationAgent extends BaseLlmAgent
 
     public function learnFrom(string $content, array $metadata = []): void
     {
-        $this->vector()->addDocument($this->getName(), $content, $metadata);
+        $this->vector()->addDocument($content, $metadata);
     }
 
     public function learnInCategory(string $category, string $content): void
     {
-        $this->vector()->addChunk($this->getName(), $content, [], $category);
+        $this->vector()->addChunk([
+            'content' => $content,
+            'namespace' => $category
+        ]);
     }
 
     public function searchCategory(string $category, string $query): \Illuminate\Support\Collection
     {
-        return $this->rag()->search($this->getName(), $query, $category);
+        return $this->rag()->search([
+            'query' => $query,
+            'namespace' => $category
+        ]);
     }
 
     public function forgetCategory(string $category): int
     {
-        return $this->vector()->deleteMemories($this->getName(), $category);
+        return $this->vector()->deleteMemories($category);
     }
 
     public function getKnowledgeStats(): array
     {
-        return $this->vector()->getStatistics($this->getName());
+        return $this->vector()->getStatistics();
     }
 
     public function execute(mixed $input, AgentContext $context): mixed
     {
         // Mock implementation for testing
-        $ragContext = $this->rag()->generateRagContext($this->getName(), $input);
+        $ragContext = $this->rag()->generateRagContext($input);
 
         if (! empty($ragContext['context'])) {
             return 'Based on my knowledge: '.$ragContext['context'];
@@ -268,7 +280,7 @@ class SupportAgent extends BaseLlmAgent
 
     public function learnFrom(string $content): void
     {
-        $this->vector()->addChunk($this->getName(), $content);
+        $this->vector()->addChunk($content);
     }
 }
 
@@ -287,6 +299,6 @@ class SalesAgent extends BaseLlmAgent
 
     public function learnFrom(string $content): void
     {
-        $this->vector()->addChunk($this->getName(), $content);
+        $this->vector()->addChunk($content);
     }
 }

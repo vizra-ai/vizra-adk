@@ -10,6 +10,7 @@ use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Vizra\VizraADK\Models\VectorMemory;
 use Vizra\VizraADK\Services\DocumentChunker;
 use Vizra\VizraADK\Services\VectorMemoryManager;
+use Vizra\VizraADK\Services\AgentVectorProxy;
 use Vizra\VizraADK\Tests\TestCase;
 
 /**
@@ -53,14 +54,18 @@ class AgentVectorMemoryTest extends TestCase
     }
 
     /**
-     * Test that vector() method returns VectorMemoryManager instance
+     * Test that vector() method returns AgentVectorProxy instance
      */
-    public function test_vector_method_returns_vector_memory_manager_instance()
+    public function test_vector_method_returns_agent_vector_proxy_instance()
     {
-        $vectorManager = $this->agent->testVector();
+        $vectorProxy = $this->agent->testVector();
 
-        $this->assertInstanceOf(VectorMemoryManager::class, $vectorManager);
-        $this->assertSame($this->mockVectorMemoryManager, $vectorManager);
+        $this->assertInstanceOf(AgentVectorProxy::class, $vectorProxy);
+        // The proxy should wrap the correct agent class
+        $reflection = new \ReflectionClass($vectorProxy);
+        $property = $reflection->getProperty('agentClass');
+        $property->setAccessible(true);
+        $this->assertEquals(TestVectorAgent::class, $property->getValue($vectorProxy));
     }
 
     /**
@@ -71,23 +76,33 @@ class AgentVectorMemoryTest extends TestCase
         $vectorManager = $this->agent->testVector();
         $ragManager = $this->agent->testRag();
 
-        $this->assertInstanceOf(VectorMemoryManager::class, $ragManager);
-        $this->assertSame($vectorManager, $ragManager);
-        $this->assertSame($this->mockVectorMemoryManager, $ragManager);
+        $this->assertInstanceOf(AgentVectorProxy::class, $ragManager);
+        // Both methods should return new proxy instances, not the same object
+        $this->assertNotSame($vectorManager, $ragManager);
+        // But they should wrap the same manager
+        $this->assertEquals($vectorManager->getAgentClass(), $ragManager->getAgentClass());
     }
 
     /**
-     * Test that multiple calls to vector() return the same instance
+     * Test that multiple calls to vector() return new proxy instances
      */
-    public function test_multiple_vector_calls_return_same_instance()
+    public function test_multiple_vector_calls_return_new_proxy_instances()
     {
         $firstCall = $this->agent->testVector();
         $secondCall = $this->agent->testVector();
         $thirdCall = $this->agent->testVector();
 
-        $this->assertSame($firstCall, $secondCall);
-        $this->assertSame($secondCall, $thirdCall);
-        $this->assertSame($this->mockVectorMemoryManager, $firstCall);
+        // Each call creates a new proxy instance
+        $this->assertNotSame($firstCall, $secondCall);
+        $this->assertNotSame($secondCall, $thirdCall);
+        
+        // But they all wrap the same agent class
+        $reflection = new \ReflectionClass($firstCall);
+        $property = $reflection->getProperty('agentClass');
+        $property->setAccessible(true);
+        
+        $this->assertEquals($property->getValue($firstCall), $property->getValue($secondCall));
+        $this->assertEquals($property->getValue($secondCall), $property->getValue($thirdCall));
     }
 
     /**
@@ -334,17 +349,17 @@ class AgentVectorMemoryTest extends TestCase
     }
 
     /**
-     * Test that vector methods are protected and not accessible from outside
+     * Test that vector methods are public and accessible from outside
      */
-    public function test_vector_methods_are_protected()
+    public function test_vector_methods_are_public()
     {
         $reflection = new \ReflectionClass(BaseLlmAgent::class);
 
         $vectorMethod = $reflection->getMethod('vector');
-        $this->assertTrue($vectorMethod->isProtected());
+        $this->assertTrue($vectorMethod->isPublic());
 
         $ragMethod = $reflection->getMethod('rag');
-        $this->assertTrue($ragMethod->isProtected());
+        $this->assertTrue($ragMethod->isPublic());
     }
 
     /**
@@ -368,20 +383,22 @@ class AgentVectorMemoryTest extends TestCase
 
         foreach ($knowledgeBase as $knowledge) {
             $this->agent->getVector()->addChunk(
-                $this->agent->getName(),
-                $knowledge,
-                ['type' => 'framework_knowledge'],
-                'knowledge_base'
+                [
+                    'content' => $knowledge,
+                    'metadata' => ['type' => 'framework_knowledge'],
+                    'namespace' => 'knowledge_base'
+                ]
             );
         }
 
         // Act - Search for relevant information
         $query = 'How does Laravel handle requests?';
         $ragContext = $this->agent->getRag()->generateRagContext(
-            $this->agent->getName(),
             $query,
-            'knowledge_base',
-            3 // Top 3 results
+            [
+                'namespace' => 'knowledge_base',
+                'limit' => 3 // Top 3 results
+            ]
         );
 
         // Assert
@@ -416,7 +433,7 @@ class TestVectorAgent extends BaseLlmAgent
     /**
      * Public wrapper to test protected vector() method
      */
-    public function testVector(): VectorMemoryManager
+    public function testVector(): AgentVectorProxy
     {
         return $this->vector();
     }
@@ -424,7 +441,7 @@ class TestVectorAgent extends BaseLlmAgent
     /**
      * Public wrapper to test protected rag() method
      */
-    public function testRag(): VectorMemoryManager
+    public function testRag(): AgentVectorProxy
     {
         return $this->rag();
     }
@@ -432,7 +449,7 @@ class TestVectorAgent extends BaseLlmAgent
     /**
      * Public wrapper to test protected vector() method - alternative name
      */
-    public function getVector(): VectorMemoryManager
+    public function getVector(): AgentVectorProxy
     {
         return $this->vector();
     }
@@ -440,7 +457,7 @@ class TestVectorAgent extends BaseLlmAgent
     /**
      * Public wrapper to test protected rag() method - alternative name
      */
-    public function getRag(): VectorMemoryManager
+    public function getRag(): AgentVectorProxy
     {
         return $this->rag();
     }
@@ -450,11 +467,7 @@ class TestVectorAgent extends BaseLlmAgent
      */
     public function storeDocument(string $content, array $metadata = []): Collection
     {
-        return $this->vector()->addDocument(
-            $this->getName(),
-            $content,
-            $metadata
-        );
+        return $this->vector()->addDocument($content, $metadata);
     }
 
     /**
@@ -462,12 +475,7 @@ class TestVectorAgent extends BaseLlmAgent
      */
     public function searchDocuments(string $query, int $limit = 5): Collection
     {
-        return $this->rag()->search(
-            $this->getName(),
-            $query,
-            'default',
-            $limit
-        );
+        return $this->rag()->search($query, $limit);
     }
 
     /**
@@ -475,11 +483,7 @@ class TestVectorAgent extends BaseLlmAgent
      */
     public function generateContext(string $query, string $namespace = 'default'): array
     {
-        return $this->rag()->generateRagContext(
-            $this->getName(),
-            $query,
-            $namespace
-        );
+        return $this->rag()->generateRagContext($query, ['namespace' => $namespace]);
     }
 
     /**
@@ -487,12 +491,10 @@ class TestVectorAgent extends BaseLlmAgent
      */
     public function storeInNamespace(string $namespace, string $content): ?VectorMemory
     {
-        return $this->vector()->addChunk(
-            $this->getName(),
-            $content,
-            [],
-            $namespace
-        );
+        return $this->vector()->addChunk([
+            'content' => $content,
+            'namespace' => $namespace
+        ]);
     }
 
     /**
@@ -500,7 +502,7 @@ class TestVectorAgent extends BaseLlmAgent
      */
     public function clearNamespace(string $namespace): int
     {
-        return $this->vector()->deleteMemories($this->getName(), $namespace);
+        return $this->vector()->deleteMemories($namespace);
     }
 
     /**
@@ -508,6 +510,6 @@ class TestVectorAgent extends BaseLlmAgent
      */
     public function getVectorStats(string $namespace = 'default'): array
     {
-        return $this->vector()->getStatistics($this->getName(), $namespace);
+        return $this->vector()->getStatistics($namespace);
     }
 }

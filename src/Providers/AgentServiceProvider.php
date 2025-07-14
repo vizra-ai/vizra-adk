@@ -43,6 +43,9 @@ class AgentServiceProvider extends ServiceProvider
             'vizra-adk'
         );
 
+        // Register the VectorMemoryServiceProvider
+        $this->app->register(VectorMemoryServiceProvider::class);
+
         $this->app->singleton(AgentRegistry::class, function (Application $app) {
             return new AgentRegistry($app);
         });

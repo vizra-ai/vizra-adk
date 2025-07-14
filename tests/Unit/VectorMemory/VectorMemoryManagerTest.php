@@ -10,6 +10,7 @@ use Vizra\VizraADK\Models\VectorMemory;
 use Vizra\VizraADK\Services\DocumentChunker;
 use Vizra\VizraADK\Services\VectorMemoryManager;
 use Vizra\VizraADK\Tests\TestCase;
+use Vizra\VizraADK\Tests\Fixtures\TestAgent;
 
 class VectorMemoryManagerTest extends TestCase
 {
@@ -43,7 +44,8 @@ class VectorMemoryManagerTest extends TestCase
     public function test_can_add_document_with_chunking()
     {
         // Arrange
-        $agentName = 'test_agent';
+        $agentClass = TestAgent::class;
+        $agentName = 'test_agent'; // Expected agent name from class
         $content = 'This is a test document that will be chunked and stored.';
         $chunks = ['This is a test document', 'that will be chunked and stored.'];
         $mockEmbedding = array_fill(0, 384, 0.1);
@@ -57,12 +59,11 @@ class VectorMemoryManagerTest extends TestCase
             ->twice()
             ->andReturn([$mockEmbedding]);
 
-        // Act
+        // Act - Test simple string format
         $result = $this->vectorMemoryManager->addDocument(
-            agentName: $agentName,
-            content: $content,
-            metadata: ['source' => 'test'],
-            namespace: 'test_namespace'
+            $agentClass,
+            $content,
+            ['source' => 'test']
         );
 
         // Assert
@@ -72,13 +73,13 @@ class VectorMemoryManagerTest extends TestCase
         // Check database entries
         $this->assertDatabaseHas('agent_vector_memories', [
             'agent_name' => $agentName,
-            'namespace' => 'test_namespace',
+            'namespace' => 'default',
             'content' => $chunks[0],
         ]);
 
         $this->assertDatabaseHas('agent_vector_memories', [
             'agent_name' => $agentName,
-            'namespace' => 'test_namespace',
+            'namespace' => 'default',
             'content' => $chunks[1],
         ]);
     }
@@ -86,6 +87,7 @@ class VectorMemoryManagerTest extends TestCase
     public function test_can_add_single_chunk()
     {
         // Arrange
+        $agentClass = TestAgent::class;
         $agentName = 'test_agent';
         $content = 'Single chunk content';
         $mockEmbedding = array_fill(0, 384, 0.1);
@@ -95,12 +97,11 @@ class VectorMemoryManagerTest extends TestCase
             ->once()
             ->andReturn([$mockEmbedding]);
 
-        // Act
+        // Act - Test with metadata
         $result = $this->vectorMemoryManager->addChunk(
-            agentName: $agentName,
-            content: $content,
-            metadata: ['type' => 'test'],
-            namespace: 'default'
+            $agentClass,
+            $content,
+            ['type' => 'test']
         );
 
         // Assert
@@ -116,7 +117,7 @@ class VectorMemoryManagerTest extends TestCase
     public function test_prevents_duplicate_content()
     {
         // Arrange
-        $agentName = 'test_agent';
+        $agentClass = TestAgent::class;
         $content = 'Duplicate content';
         $mockEmbedding = array_fill(0, 384, 0.1);
 
@@ -126,14 +127,14 @@ class VectorMemoryManagerTest extends TestCase
 
         // Act - Add content first time
         $firstResult = $this->vectorMemoryManager->addChunk(
-            agentName: $agentName,
-            content: $content
+            $agentClass,
+            $content
         );
 
         // Act - Add same content second time
         $secondResult = $this->vectorMemoryManager->addChunk(
-            agentName: $agentName,
-            content: $content
+            $agentClass,
+            $content
         );
 
         // Assert
@@ -181,13 +182,15 @@ class VectorMemoryManagerTest extends TestCase
             ->once()
             ->andReturn([$queryEmbedding]);
 
-        // Act
+        // Act - Test with array format
         $results = $this->vectorMemoryManager->search(
-            agentName: $agentName,
-            query: $query,
-            namespace: $namespace,
-            limit: 5,
-            threshold: 0.5
+            TestAgent::class,
+            [
+                'query' => $query,
+                'namespace' => $namespace,
+                'limit' => 5,
+                'threshold' => 0.5
+            ]
         );
 
         // Assert
@@ -229,11 +232,11 @@ class VectorMemoryManagerTest extends TestCase
             ->once()
             ->andReturn([$queryEmbedding]);
 
-        // Act
+        // Act - Test simple string format
         $ragContext = $this->vectorMemoryManager->generateRagContext(
-            agentName: $agentName,
-            query: $query,
-            namespace: $namespace
+            TestAgent::class,
+            $query,
+            ['namespace' => $namespace]
         );
 
         // Assert
@@ -280,7 +283,7 @@ class VectorMemoryManagerTest extends TestCase
         ]);
 
         // Act
-        $deletedCount = $this->vectorMemoryManager->deleteMemories($agentName, $namespace);
+        $deletedCount = $this->vectorMemoryManager->deleteMemories(TestAgent::class, $namespace);
 
         // Assert
         $this->assertEquals(1, $deletedCount);
@@ -328,7 +331,7 @@ class VectorMemoryManagerTest extends TestCase
         ]);
 
         // Act
-        $deletedCount = $this->vectorMemoryManager->deleteMemoriesBySource($agentName, $source, $namespace);
+        $deletedCount = $this->vectorMemoryManager->deleteMemoriesBySource(TestAgent::class, $source, $namespace);
 
         // Assert
         $this->assertEquals(1, $deletedCount);
@@ -375,7 +378,7 @@ class VectorMemoryManagerTest extends TestCase
         ]);
 
         // Act
-        $stats = $this->vectorMemoryManager->getStatistics($agentName, $namespace);
+        $stats = $this->vectorMemoryManager->getStatistics(TestAgent::class, $namespace);
 
         // Assert
         $this->assertIsArray($stats);
@@ -396,7 +399,7 @@ class VectorMemoryManagerTest extends TestCase
         $emptyContent = '';
 
         // Act
-        $result = $this->vectorMemoryManager->addChunk($agentName, $emptyContent);
+        $result = $this->vectorMemoryManager->addChunk(TestAgent::class, $emptyContent);
 
         // Assert
         $this->assertNull($result);
@@ -421,5 +424,47 @@ class VectorMemoryManagerTest extends TestCase
     {
         Mockery::close();
         parent::tearDown();
+    }
+
+    public function test_simplified_api_patterns()
+    {
+        // Arrange
+        $agentClass = TestAgent::class;
+        $agentName = 'test_agent';
+        $content = 'Test content for simplified API';
+        $mockEmbedding = array_fill(0, 384, 0.1);
+
+        $this->mockEmbeddingProvider->shouldReceive('embed')
+            ->andReturn([$mockEmbedding]);
+
+        // Test 1: Simple string for addChunk
+        $result1 = $this->vectorMemoryManager->addChunk($agentClass, $content);
+        $this->assertInstanceOf(VectorMemory::class, $result1);
+        $this->assertEquals($content, $result1->content);
+        $this->assertEquals('default', $result1->namespace);
+
+        // Test 2: Array format for addChunk
+        $result2 = $this->vectorMemoryManager->addChunk($agentClass, [
+            'content' => 'Array format content',
+            'metadata' => ['type' => 'test'],
+            'namespace' => 'custom'
+        ]);
+        $this->assertInstanceOf(VectorMemory::class, $result2);
+        $this->assertEquals('Array format content', $result2->content);
+        $this->assertEquals('custom', $result2->namespace);
+        $this->assertEquals(['type' => 'test'], $result2->metadata);
+
+        // Test 3: Simple search with limit
+        $searchResults = $this->vectorMemoryManager->search($agentClass, 'test query', 3);
+        $this->assertInstanceOf(Collection::class, $searchResults);
+
+        // Test 4: DeleteMemories with null (default namespace)
+        $deleteCount = $this->vectorMemoryManager->deleteMemories($agentClass);
+        $this->assertIsInt($deleteCount);
+
+        // Test 5: GetStatistics with array format
+        $stats = $this->vectorMemoryManager->getStatistics($agentClass, ['namespace' => 'custom']);
+        $this->assertIsArray($stats);
+        $this->assertArrayHasKey('total_memories', $stats);
     }
 }

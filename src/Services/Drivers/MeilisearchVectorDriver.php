@@ -88,15 +88,45 @@ class MeilisearchVectorDriver
         $indexName = $this->getIndexName($agentName, $namespace);
 
         try {
-            // Use Meilisearch vector search
-            $searchParams = [
-                'vector' => $queryEmbedding,
-                'limit' => $limit,
-                'filter' => "agent_name = '{$agentName}' AND namespace = '{$namespace}'",
-                'showRankingScore' => true,
-            ];
+            // First, try to use native vector search if available
+            try {
+                $searchParams = [
+                    'vector' => $queryEmbedding,
+                    'limit' => $limit,
+                    'filter' => "agent_name = '{$agentName}' AND namespace = '{$namespace}'",
+                    'showRankingScore' => true,
+                ];
 
-            $response = $this->makeRequest('POST', "/indexes/{$indexName}/search", $searchParams);
+                $response = $this->makeRequest('POST', "/indexes/{$indexName}/search", $searchParams);
+            } catch (\Exception $e) {
+                // Fallback to retrieving all documents and calculating similarity in PHP
+                Log::info('Meilisearch native vector search not available, using fallback', [
+                    'error' => $e->getMessage()
+                ]);
+                
+                // Get all documents for this agent/namespace
+                $searchParams = [
+                    'filter' => "agent_name = '{$agentName}' AND namespace = '{$namespace}'",
+                    'limit' => 1000, // Get more documents to filter by similarity
+                ];
+                
+                $response = $this->makeRequest('POST', "/indexes/{$indexName}/search", $searchParams);
+                
+                // Calculate similarity for each document
+                $response['hits'] = collect($response['hits'] ?? [])
+                    ->map(function ($hit) use ($queryEmbedding) {
+                        if (isset($hit['embedding_vector']) && is_array($hit['embedding_vector'])) {
+                            $similarity = $this->cosineSimilarity($queryEmbedding, $hit['embedding_vector']);
+                            $hit['_rankingScore'] = $similarity;
+                        } else {
+                            $hit['_rankingScore'] = 0;
+                        }
+                        return $hit;
+                    })
+                    ->sortByDesc('_rankingScore')
+                    ->values()
+                    ->toArray();
+            }
 
             $results = collect($response['hits'] ?? [])
                 ->filter(function ($hit) use ($threshold) {
@@ -274,19 +304,12 @@ class MeilisearchVectorDriver
                 'sortableAttributes' => ['created_at', 'token_count'],
                 'distinctAttribute' => 'content_hash',
                 'rankingRules' => [
-                    'vector',
                     'words',
                     'typo',
                     'proximity',
                     'attribute',
                     'sort',
                     'exactness',
-                ],
-                'vectorSettings' => [
-                    'embedding_vector' => [
-                        'dimensions' => $dimensions,
-                        'metric' => 'cosine',
-                    ],
                 ],
             ]);
 
@@ -303,6 +326,35 @@ class MeilisearchVectorDriver
     protected function getIndexName(string $agentName, string $namespace): string
     {
         return $this->indexPrefix.strtolower($agentName).'_'.strtolower($namespace);
+    }
+
+    /**
+     * Calculate cosine similarity between two vectors.
+     */
+    protected function cosineSimilarity(array $a, array $b): float
+    {
+        if (count($a) !== count($b)) {
+            return 0.0;
+        }
+
+        $dotProduct = 0.0;
+        $normA = 0.0;
+        $normB = 0.0;
+
+        for ($i = 0; $i < count($a); $i++) {
+            $dotProduct += $a[$i] * $b[$i];
+            $normA += $a[$i] * $a[$i];
+            $normB += $b[$i] * $b[$i];
+        }
+
+        $normA = sqrt($normA);
+        $normB = sqrt($normB);
+
+        if ($normA == 0.0 || $normB == 0.0) {
+            return 0.0;
+        }
+
+        return $dotProduct / ($normA * $normB);
     }
 
     /**
