@@ -4,6 +4,7 @@ namespace Vizra\VizraADK\Evaluations;
 
 use InvalidArgumentException;
 use Vizra\VizraADK\Evaluations\Assertions\AssertionInterface;
+use Vizra\VizraADK\Evaluations\Builders\JudgeBuilder;
 
 abstract class BaseEvaluation
 {
@@ -85,7 +86,7 @@ abstract class BaseEvaluation
     /**
      * Helper method to add an assertion result to the internal log.
      */
-    protected function recordAssertion(string $method, bool $status, string $message, $expected = null, $actual = null): array
+    public function recordAssertion(string $method, bool $status, string $message, $expected = null, $actual = null): array
     {
         $result = [
             'assertion_method' => $method,
@@ -103,6 +104,17 @@ abstract class BaseEvaluation
         $this->assertionResults[] = $result;
 
         return $result;
+    }
+
+    /**
+     * Create a new judge builder for fluent assertion syntax
+     *
+     * @param string $response The response to judge
+     * @return JudgeBuilder
+     */
+    protected function judge(string $response): JudgeBuilder
+    {
+        return new JudgeBuilder($response, $this);
     }
 
     /**

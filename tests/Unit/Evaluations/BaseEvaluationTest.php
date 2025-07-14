@@ -1,6 +1,7 @@
 <?php
 
 use Vizra\VizraADK\Evaluations\BaseEvaluation;
+use Vizra\VizraADK\Evaluations\Builders\JudgeBuilder;
 
 beforeEach(function () {
     $this->evaluation = new TestEvaluation;
@@ -404,6 +405,16 @@ it('can handle assertResponseEndsWith failures', function () {
     expect($results[0]['status'])->toBe('fail');
 });
 
+// Test the new judge() fluent interface
+it('provides judge builder through judge() method', function () {
+    $response = 'Test response content';
+    
+    // Get the JudgeBuilder instance
+    $builder = $this->evaluation->testJudge($response);
+    
+    expect($builder)->toBeInstanceOf(JudgeBuilder::class);
+});
+
 // LLM judge assertion tests (with error handling)
 it('can test assertLlmJudge method handles errors gracefully', function () {
     $agentResponse = 'This is a test response for quality evaluation.';
@@ -678,6 +689,11 @@ class TestEvaluation extends BaseEvaluation
     public function testAssertLlmJudgeComparison(string $actualResponse, string $referenceResponse, string $comparisonCriteria, string $expectedWinner = 'actual', string $judgeAgentName = 'llm_judge', string $message = ''): void
     {
         $this->assertLlmJudgeComparison($actualResponse, $referenceResponse, $comparisonCriteria, $expectedWinner, $judgeAgentName, $message);
+    }
+    
+    public function testJudge(string $response): JudgeBuilder
+    {
+        return $this->judge($response);
     }
 }
 it('tests all 32 assertion methods are covered', function () {
