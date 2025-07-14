@@ -30,7 +30,9 @@ class AgentTraceCleanupCommand extends Command
             return self::FAILURE;
         }
 
-        $days = (int) $this->option('days') ?: config('vizra-adk.tracing.cleanup_days', 30);
+        $days = $this->option('days') !== null 
+            ? (int) $this->option('days') 
+            : config('vizra-adk.tracing.cleanup_days', 30);
         $isDryRun = $this->option('dry-run');
         $force = $this->option('force');
 
