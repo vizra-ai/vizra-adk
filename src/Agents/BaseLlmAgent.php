@@ -22,8 +22,8 @@ use Vizra\VizraADK\Events\ToolCallCompleted;
 use Vizra\VizraADK\Events\ToolCallInitiating;
 use Vizra\VizraADK\Exceptions\ToolExecutionException;
 use Vizra\VizraADK\Memory\AgentMemory;
-use Vizra\VizraADK\Services\Tracer;
 use Vizra\VizraADK\Services\AgentVectorProxy;
+use Vizra\VizraADK\Services\Tracer;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Traits\VersionablePrompts;
 
@@ -89,6 +89,13 @@ abstract class BaseLlmAgent extends BaseAgent
     protected bool $includeConversationHistory = false;
 
     /**
+     * Whether this agent should be shown in the chat UI.
+     * Default is true to show all agents.
+     * Set to false to hide from the chat interface.
+     */
+    protected bool $showInChatUi = true;
+
+    /**
      * Maximum number of historical messages to include when history is enabled.
      * Only applies when $includeConversationHistory is true.
      */
@@ -103,9 +110,10 @@ abstract class BaseLlmAgent extends BaseAgent
      * - 'smart': Use relevance-based filtering (future feature)
      */
     protected string $contextStrategy = 'none';
-    
+
     /**
      * Track active tool call spans to survive Prism's internal execution
+     *
      * @var array<string, string>
      */
     private array $activeToolSpans = [];
@@ -256,6 +264,18 @@ abstract class BaseLlmAgent extends BaseAgent
     public function setStreaming(bool $streaming): static
     {
         $this->streaming = $streaming;
+
+        return $this;
+    }
+
+    public function getShowInChatUi(): bool
+    {
+        return $this->showInChatUi;
+    }
+
+    public function setShowInChatUi(bool $showInChatUi): static
+    {
+        $this->showInChatUi = $showInChatUi;
 
         return $this;
     }
@@ -600,22 +620,22 @@ abstract class BaseLlmAgent extends BaseAgent
             // Since Prism handles tool execution internally with maxSteps,
             // we don't need the manual tool execution loop
             $messages = $this->prepareMessagesForPrism($context);
-            
+
             // Add the current user input message with any attachments
             $additionalContent = [];
-            if (!empty($images)) {
+            if (! empty($images)) {
                 $additionalContent = array_merge($additionalContent, $images);
             }
-            if (!empty($documents)) {
+            if (! empty($documents)) {
                 $additionalContent = array_merge($additionalContent, $documents);
             }
-            
+
             // Create the user message for the current input
-            if (!empty($input) || !empty($additionalContent)) {
+            if (! empty($input) || ! empty($additionalContent)) {
                 $currentMessage = new UserMessage($input ?: '', $additionalContent);
                 $messages[] = $currentMessage;
             }
-            
+
             $messages = $this->beforeLlmCall($messages, $context);
 
             Event::dispatch(new LlmCallInitiating($context, $this->getName(), $messages));
@@ -693,14 +713,14 @@ abstract class BaseLlmAgent extends BaseAgent
 
             // Store the result
             $result = $assistantResponseContent;
-            
+
             // End the trace with success
             // Tool spans will still be able to end because we preserved their trace IDs
             $tracer->endTrace(
                 output: ['response' => $result],
                 status: 'success'
             );
-            
+
             return $result;
 
         } catch (\Throwable $e) {
@@ -716,14 +736,14 @@ abstract class BaseLlmAgent extends BaseAgent
 
         // First, automatically include any user context state
         $allState = $context->getAllState();
-        
+
         // Filter out control parameters and internal state
         $userContext = $this->filterUserContext($allState);
-        
+
         // If there's any user context, add it as the first message
-        if (!empty($userContext)) {
+        if (! empty($userContext)) {
             $contextMessage = new UserMessage(
-                "Context:\n" . json_encode($userContext, JSON_PRETTY_PRINT)
+                "Context:\n".json_encode($userContext, JSON_PRETTY_PRINT)
             );
             $messages[] = $contextMessage;
         }
@@ -734,7 +754,7 @@ abstract class BaseLlmAgent extends BaseAgent
         $contextStrategy = $context->getState('context_strategy', $this->contextStrategy);
 
         // If context strategy is 'none' or history is disabled, return messages with context
-        if (!$includeHistory || $contextStrategy === 'none') {
+        if (! $includeHistory || $contextStrategy === 'none') {
             return $messages;
         }
 
@@ -814,37 +834,37 @@ abstract class BaseLlmAgent extends BaseAgent
     /**
      * Filter user context by removing framework control parameters.
      *
-     * @param array $state All context state
+     * @param  array  $state  All context state
      * @return array Filtered user context
      */
     protected function filterUserContext(array $state): array
     {
         // Remove exact matches for control params
         $filtered = array_diff_key($state, array_flip(self::CONTROL_PARAMS));
-        
+
         // Remove dynamic span IDs (they have patterns like tool_call_span_id_*)
         foreach ($filtered as $key => $value) {
-            if (str_starts_with($key, 'tool_call_span_id_') || 
+            if (str_starts_with($key, 'tool_call_span_id_') ||
                 str_starts_with($key, 'sub_agent_delegation_span_id_')) {
                 unset($filtered[$key]);
             }
         }
-        
+
         return $filtered;
     }
 
     /**
      * Get conversation history based on the selected strategy.
      *
-     * @param AgentContext $context The agent context
-     * @param string $strategy The context strategy ('recent', 'full', 'smart')
-     * @param int $limit Maximum number of messages for 'recent' strategy
+     * @param  AgentContext  $context  The agent context
+     * @param  string  $strategy  The context strategy ('recent', 'full', 'smart')
+     * @param  int  $limit  Maximum number of messages for 'recent' strategy
      * @return array The filtered conversation history
      */
     protected function getHistoryByStrategy(AgentContext $context, string $strategy, int $limit): array
     {
         $history = $context->getConversationHistory();
-        
+
         // Ensure history is an array
         if ($history instanceof \Illuminate\Support\Collection) {
             $history = $history->toArray();
@@ -857,6 +877,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 if (count($history) > $limit) {
                     return array_slice($history, -$limit);
                 }
+
                 return $history;
 
             case 'full':
@@ -869,6 +890,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 if (count($history) > $limit) {
                     return array_slice($history, -$limit);
                 }
+
                 return $history;
 
             default:
@@ -876,7 +898,6 @@ abstract class BaseLlmAgent extends BaseAgent
                 return [];
         }
     }
-
 
     public function beforeLlmCall(array $inputMessages, AgentContext $context): array
     {
@@ -1028,7 +1049,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
         // Store span ID in context for afterToolResult
         $context->setState("tool_call_span_id_{$toolName}", $spanId);
-        
+
         // Also store in instance property as backup for Prism execution
         $this->activeToolSpans[$toolName] = $spanId;
 
@@ -1051,9 +1072,9 @@ abstract class BaseLlmAgent extends BaseAgent
 
         // Get the span ID from context
         $spanId = $context->getState("tool_call_span_id_{$toolName}");
-        
+
         // If not found in context, check instance property (for Prism execution)
-        if (!$spanId && isset($this->activeToolSpans[$toolName])) {
+        if (! $spanId && isset($this->activeToolSpans[$toolName])) {
             $spanId = $this->activeToolSpans[$toolName];
             logger()->info('Retrieved span ID from instance property', [
                 'tool_name' => $toolName,
@@ -1081,7 +1102,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     output: ['result' => $result],
                     status: 'success'
                 );
-                
+
                 logger()->info('Tool span ended successfully', [
                     'tool_name' => $toolName,
                     'span_id' => $spanId,
@@ -1093,7 +1114,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     'error' => $e->getMessage(),
                 ]);
             }
-            
+
             // Clean up the span from instance property
             unset($this->activeToolSpans[$toolName]);
         } else {

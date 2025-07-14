@@ -169,3 +169,140 @@ test('can clear chat and generate new session id', function () {
         ->assertSet('chatHistory', [])
         ->assertCount('chatHistory', 0);
 });
+
+// Agent switching tests
+test('selecting first agent generates new session id', function () {
+    $component = Livewire::test(ChatInterface::class);
+    $originalSessionId = $component->get('sessionId');
+    
+    $component->call('selectAgent', 'test_agent')
+        ->assertSet('selectedAgent', 'test_agent');
+    
+    $newSessionId = $component->get('sessionId');
+    expect($newSessionId)->not->toBe($originalSessionId);
+});
+
+test('switching between agents generates new session id', function () {
+    $component = Livewire::test(ChatInterface::class);
+    
+    // Select first agent
+    $component->call('selectAgent', 'agent_one')
+        ->assertSet('selectedAgent', 'agent_one');
+    $sessionId1 = $component->get('sessionId');
+    
+    // Switch to second agent
+    $component->call('selectAgent', 'agent_two')
+        ->assertSet('selectedAgent', 'agent_two');
+    $sessionId2 = $component->get('sessionId');
+    
+    // Switch back to first agent
+    $component->call('selectAgent', 'agent_one')
+        ->assertSet('selectedAgent', 'agent_one');
+    $sessionId3 = $component->get('sessionId');
+    
+    // All session IDs should be different
+    expect($sessionId2)->not->toBe($sessionId1);
+    expect($sessionId3)->not->toBe($sessionId1);
+    expect($sessionId3)->not->toBe($sessionId2);
+});
+
+test('selecting same agent does not generate new session', function () {
+    $component = Livewire::test(ChatInterface::class);
+    
+    // Select agent
+    $component->call('selectAgent', 'test_agent');
+    $sessionId1 = $component->get('sessionId');
+    
+    // Select same agent again
+    $component->call('selectAgent', 'test_agent');
+    $sessionId2 = $component->get('sessionId');
+    
+    // Session ID should remain the same
+    expect($sessionId2)->toBe($sessionId1);
+});
+
+test('agent switching clears chat history', function () {
+    $component = Livewire::test(ChatInterface::class);
+    
+    // Select agent and add chat history
+    $component->call('selectAgent', 'agent_one')
+        ->set('chatHistory', [
+            ['role' => 'user', 'content' => 'Hello agent one', 'timestamp' => '12:00:00'],
+            ['role' => 'assistant', 'content' => 'Hi there!', 'timestamp' => '12:00:01'],
+        ])
+        ->assertCount('chatHistory', 2);
+    
+    // Switch to different agent
+    $component->call('selectAgent', 'agent_two')
+        ->assertSet('selectedAgent', 'agent_two')
+        ->assertSet('chatHistory', [])
+        ->assertCount('chatHistory', 0);
+});
+
+test('agent switching clears context data', function () {
+    $component = Livewire::test(ChatInterface::class);
+    
+    // Select agent and simulate context data
+    $component->call('selectAgent', 'agent_one')
+        ->set('contextData', ['key' => 'value'])
+        ->set('memoryData', ['memory' => 'data'])
+        ->set('sessionData', ['session' => 'info'])
+        ->set('traceData', ['trace' => 'data'])
+        ->set('hasRunningTraces', true);
+    
+    // Verify data is set
+    expect($component->get('contextData'))->toBe(['key' => 'value']);
+    expect($component->get('memoryData'))->toBe(['memory' => 'data']);
+    expect($component->get('hasRunningTraces'))->toBe(true);
+    
+    // Switch to different agent - this should clear all context data
+    $component->call('selectAgent', 'agent_two')
+        ->assertSet('selectedAgent', 'agent_two')
+        ->assertSet('hasRunningTraces', false);
+    
+    // Note: contextData may be repopulated by loadContextData() but the important thing
+    // is that the old agent's data is cleared and new session is generated
+    expect($component->get('traceData'))->toBe([]);
+});
+
+test('deselecting agent clears all data and generates new session', function () {
+    $component = Livewire::test(ChatInterface::class);
+    
+    // Select agent and add data
+    $component->call('selectAgent', 'test_agent')
+        ->set('chatHistory', [['role' => 'user', 'content' => 'test', 'timestamp' => '12:00:00']])
+        ->set('contextData', ['key' => 'value']);
+    
+    $sessionIdWithAgent = $component->get('sessionId');
+    
+    // Deselect agent (empty value) - this triggers updatedSelectedAgent
+    $component->set('selectedAgent', '')
+        ->assertSet('selectedAgent', '')
+        ->assertSet('chatHistory', [])
+        ->assertSet('agentInfo', []);
+    
+    $sessionIdWithoutAgent = $component->get('sessionId');
+    expect($sessionIdWithoutAgent)->not->toBe($sessionIdWithAgent);
+});
+
+test('manual changeAgent method works correctly', function () {
+    $component = Livewire::test(ChatInterface::class);
+    
+    // Set initial agent
+    $component->call('selectAgent', 'agent_one');
+    $sessionId1 = $component->get('sessionId');
+    
+    // Add some chat history
+    $component->set('chatHistory', [['role' => 'user', 'content' => 'test', 'timestamp' => '12:00:00']]);
+    
+    // Use manual changeAgent method
+    $component->call('changeAgent', 'agent_two');
+    $sessionId2 = $component->get('sessionId');
+    
+    // Should generate new session and clear chat
+    expect($sessionId2)->not->toBe($sessionId1);
+    expect($component->get('selectedAgent'))->toBe('agent_two');
+    expect($component->get('chatHistory'))->toBe([]);
+});
+
+

@@ -18,7 +18,6 @@ use Vizra\VizraADK\Console\Commands\MakeEvalCommand;
 use Vizra\VizraADK\Console\Commands\MakeToolCommand;
 use Vizra\VizraADK\Console\Commands\ManagePromptsCommand;
 use Vizra\VizraADK\Console\Commands\MCPListServersCommand;
-use Vizra\VizraADK\Console\Commands\MCPMakeAgentCommand;
 use Vizra\VizraADK\Console\Commands\RunEvalCommand;
 use Vizra\VizraADK\Livewire\Analytics;
 use Vizra\VizraADK\Livewire\ChatInterface;
@@ -131,7 +130,6 @@ class AgentServiceProvider extends ServiceProvider
                 DashboardCommand::class,
                 AgentDiscoverCommand::class,
                 MCPListServersCommand::class,
-                MCPMakeAgentCommand::class,
                 ManagePromptsCommand::class,
             ]);
         }

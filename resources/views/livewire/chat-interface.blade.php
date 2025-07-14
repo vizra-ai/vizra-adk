@@ -271,15 +271,19 @@ function testModalButton() {
                     <div class="flex items-center space-x-3">
                         <label class="text-sm font-medium text-gray-300">Agent:</label>
                         <select id="agent-select"
-                                wire:model.live="selectedAgent"
+                                wire:change="changeAgent($event.target.value)"
                                 class="custom-select px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium text-gray-300 min-w-[220px] transition-all duration-200">
                             <option value="">Choose an agent...</option>
                             @foreach($registeredAgents as $name => $class)
-                                <option value="{{ $name }}">
+                                <option value="{{ $name }}" @if($selectedAgent === $name) selected @endif>
                                     {{ $name }}
                                 </option>
                             @endforeach
                         </select>
+                        <!-- Debug info -->
+                        <span class="text-xs text-gray-500">
+                            Session: {{ substr($sessionId, -8) }}
+                        </span>
                     </div>
                 @else
                     <div class="flex items-center space-x-2 px-4 py-2.5 bg-amber-900/20 border border-amber-700/50 rounded-xl">
@@ -1102,6 +1106,36 @@ function testModalButton() {
                 if (chatMessages) {
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 }
+            });
+
+            // Debug agent selection changes
+            document.addEventListener('DOMContentLoaded', function() {
+                const agentSelect = document.getElementById('agent-select');
+                if (agentSelect) {
+                    agentSelect.addEventListener('change', function(e) {
+                        console.log('Agent select changed:', {
+                            oldValue: e.target.defaultValue,
+                            newValue: e.target.value,
+                            timestamp: new Date().toISOString()
+                        });
+                    });
+                }
+            });
+
+            // Listen for custom events
+            document.addEventListener('agent-changed', function(e) {
+                console.log('Agent changed event received:', e.detail);
+            });
+
+            document.addEventListener('chat-updated', function(e) {
+                console.log('Chat updated event received:', e.detail);
+                // Force scroll to bottom after chat update
+                setTimeout(() => {
+                    const chatMessages = document.getElementById('chat-messages');
+                    if (chatMessages) {
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                }, 100);
             });
 
             // Toggle span details in trace visualization

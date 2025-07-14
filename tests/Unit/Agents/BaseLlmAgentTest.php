@@ -80,6 +80,43 @@ it('executes with context', function () {
     expect($result)->toBeString();
 });
 
+// showInChatUi functionality tests
+it('has showInChatUi enabled by default', function () {
+    expect($this->agent->getShowInChatUi())->toBeTrue();
+});
+
+it('can disable showInChatUi', function () {
+    $this->agent->setShowInChatUi(false);
+    expect($this->agent->getShowInChatUi())->toBeFalse();
+});
+
+it('can enable showInChatUi', function () {
+    $this->agent->setShowInChatUi(false);
+    $this->agent->setShowInChatUi(true);
+    expect($this->agent->getShowInChatUi())->toBeTrue();
+});
+
+it('setShowInChatUi returns agent instance for fluent interface', function () {
+    $result = $this->agent->setShowInChatUi(false);
+    expect($result)->toBe($this->agent);
+});
+
+it('can chain showInChatUi configuration with other methods', function () {
+    $agent = $this->agent
+        ->setShowInChatUi(false)
+        ->setStreaming(true)
+        ->setTemperature(0.5);
+
+    expect($agent->getShowInChatUi())->toBeFalse();
+    expect($agent->getStreaming())->toBeTrue();
+    expect($agent->getTemperature())->toBe(0.5);
+});
+
+it('can create agent with showInChatUi disabled', function () {
+    $hiddenAgent = new HiddenTestAgent;
+    expect($hiddenAgent->getShowInChatUi())->toBeFalse();
+});
+
 /**
  * Test implementation of BaseLlmAgent for testing purposes
  */
@@ -135,5 +172,31 @@ class TestLlmAgent extends BaseLlmAgent
     {
         // Simple mock response for testing
         return 'Test response for: '.$input;
+    }
+}
+
+/**
+ * Test agent with showInChatUi disabled
+ */
+class HiddenTestAgent extends BaseLlmAgent
+{
+    protected string $name = 'hidden-test-agent';
+
+    protected string $description = 'A hidden test agent for unit testing';
+
+    protected string $instructions = 'Hidden test agent instructions';
+
+    protected string $model = 'gpt-3.5-turbo';
+
+    protected bool $showInChatUi = false;
+
+    public function getInstructions(): string
+    {
+        return $this->instructions;
+    }
+
+    public function execute(mixed $input, AgentContext $context): mixed
+    {
+        return 'Hidden test response for: '.$input;
     }
 }

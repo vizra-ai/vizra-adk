@@ -43,7 +43,7 @@ class ChatInterface extends Component
     public array $agentInfo = [];
 
     public array $traceData = [];
-    
+
     public bool $hasRunningTraces = false;
 
     // Modal properties
@@ -61,27 +61,88 @@ class ChatInterface extends Component
 
     public function loadRegisteredAgents()
     {
-        $this->registeredAgents = Agent::getAllRegisteredAgents();
+        $allAgents = Agent::getAllRegisteredAgents();
+
+        // Filter agents based on $showInChatUi property
+        $this->registeredAgents = array_filter($allAgents, function ($agentClass) {
+            if (class_exists($agentClass)) {
+                try {
+                    $agent = new $agentClass;
+
+                    return $agent->getShowInChatUi();
+                } catch (\Exception $e) {
+                    // If we can't instantiate the agent, include it by default
+                    return true;
+                }
+            }
+
+            return true;
+        });
     }
 
     public function selectAgent($agentName)
     {
         // Store previous agent to check if we're switching
         $previousAgent = $this->selectedAgent;
+        $previousSessionId = $this->sessionId;
+
+        logger()->info('selectAgent called', [
+            'previous_agent' => $previousAgent ?: 'none',
+            'new_agent' => $agentName,
+            'previous_session_id' => $previousSessionId,
+            'chat_history_count' => count($this->chatHistory),
+        ]);
 
         // Update selected agent
         $this->selectedAgent = $agentName;
 
-        // Only reset chat if switching to a different agent
+        // Always reset session when switching agents (including from empty to an agent)
+        // This ensures clean state and prevents context bleed between agents
         if ($previousAgent !== $agentName) {
+            logger()->info('Clearing data for agent switch', [
+                'from' => $previousAgent ?: 'none',
+                'to' => $agentName,
+            ]);
+            
+            // FORCE clear all chat and context data first
             $this->chatHistory = [];
-            $this->sessionId = $this->generateUniqueSessionId();
+            $this->contextData = [];
+            $this->memoryData = [];
+            $this->sessionData = [];
+            $this->longTermMemoryData = [];
+            $this->contextStateData = [];
+            $this->traceData = [];
+            $this->hasRunningTraces = false;
+            
+            // Generate new session ID with extra uniqueness
+            $newSessionId = $this->generateUniqueSessionId();
+            $this->sessionId = $newSessionId;
+            
+            // Log the agent switch for debugging
+            logger()->info('Agent switched successfully', [
+                'previous_agent' => $previousAgent ?: 'none',
+                'new_agent' => $agentName,
+                'old_session_id' => $previousSessionId,
+                'new_session_id' => $newSessionId,
+                'chat_history_cleared' => true,
+            ]);
+        } else {
+            logger()->info('Same agent selected, no session reset needed', [
+                'agent' => $agentName,
+                'session_id' => $this->sessionId,
+            ]);
         }
 
-        // Always load agent info, context, and traces
+        // Always load agent info, context, and traces with the new session
         $this->loadAgentInfo();
         $this->loadContextData();
         $this->loadTraceData();
+        
+        logger()->info('selectAgent completed', [
+            'agent' => $agentName,
+            'session_id' => $this->sessionId,
+            'chat_history_count_after' => count($this->chatHistory),
+        ]);
     }
 
     private function loadAgentInfo()
@@ -113,6 +174,7 @@ class ChatInterface extends Component
                         $instructions = $subAgent->getInstructions() ?? 'No instructions available';
                         // Get just the first line
                         $firstLine = explode("\n", $instructions)[0];
+
                         return [
                             'name' => $name,
                             'description' => $firstLine,
@@ -280,14 +342,14 @@ class ChatInterface extends Component
 
         // Store the message for async processing
         $this->dispatch('process-agent-response', userMessage: $userMessage);
-        
+
         // Immediately show typing indicator by dispatching a Livewire update
         $this->dispatch('chat-updated');
     }
-    
+
     public function processAgentResponse($userMessage)
     {
-        if (empty($this->selectedAgent) || !$this->isLoading) {
+        if (empty($this->selectedAgent) || ! $this->isLoading) {
             return;
         }
 
@@ -305,7 +367,7 @@ class ChatInterface extends Component
             // Refresh context data
             $this->loadContextData();
             $this->loadTraceData();
-            
+
             // Mark that we have running traces to enable polling
             $this->hasRunningTraces = true;
 
@@ -318,21 +380,42 @@ class ChatInterface extends Component
         }
 
         $this->isLoading = false;
-        
+
         // Ensure context data is refreshed even after errors
         $this->loadContextData();
-        
+
         // Dispatch event to scroll chat to bottom
         $this->dispatch('chat-updated');
     }
 
     public function clearChat()
     {
+        $oldSessionId = $this->sessionId;
+        
+        // Clear all chat and context data
         $this->chatHistory = [];
+        $this->contextData = [];
+        $this->memoryData = [];
+        $this->sessionData = [];
+        $this->longTermMemoryData = [];
+        $this->contextStateData = [];
+        $this->traceData = [];
+        $this->hasRunningTraces = false;
+        
+        // Generate new session ID
         $this->sessionId = $this->generateUniqueSessionId();
+        
+        // Log the chat clear for debugging
+        logger()->info('Chat cleared', [
+            'agent' => $this->selectedAgent,
+            'old_session_id' => $oldSessionId,
+            'new_session_id' => $this->sessionId,
+        ]);
+        
+        // Reload context data with new session
         $this->loadContextData();
         $this->loadTraceData();
-        
+
         // Dispatch event to reset scroll position
         $this->dispatch('chat-updated');
     }
@@ -363,7 +446,7 @@ class ChatInterface extends Component
         $this->loadContextData();
         $this->loadTraceData();
         $this->closeLoadSessionModal();
-        
+
         // Dispatch event to scroll chat to bottom after loading session
         $this->dispatch('chat-updated');
     }
@@ -383,6 +466,7 @@ class ChatInterface extends Component
         if (empty($this->sessionId)) {
             $this->traceData = [];
             $this->hasRunningTraces = false;
+
             return;
         }
 
@@ -395,9 +479,10 @@ class ChatInterface extends Component
             if ($spans->isEmpty()) {
                 $this->traceData = [];
                 $this->hasRunningTraces = false;
+
                 return;
             }
-            
+
             // Check if any spans are still running
             $this->hasRunningTraces = $spans->contains(function ($span) {
                 return $span->status === 'running';
@@ -591,18 +676,107 @@ class ChatInterface extends Component
 
     public function updatedSelectedAgent($value)
     {
+        logger()->info('updatedSelectedAgent called', [
+            'old_agent' => $this->selectedAgent ?? 'none',
+            'new_value' => $value ?? 'empty',
+            'session_id_before' => $this->sessionId,
+        ]);
+        
         if (! empty($value)) {
             $this->selectAgent($value);
         } else {
-            // Clear agent info when no agent is selected
+            // Clear all data when no agent is selected
             $this->selectedAgent = '';
             $this->agentInfo = [];
             $this->contextData = [];
             $this->memoryData = [];
+            $this->sessionData = [];
+            $this->longTermMemoryData = [];
             $this->contextStateData = [];
             $this->traceData = [];
             $this->chatHistory = [];
+            $this->hasRunningTraces = false;
+            
+            // Generate a new session ID even when deselecting to ensure clean state
+            $this->sessionId = $this->generateUniqueSessionId();
+            
+            logger()->info('Agent deselected', [
+                'new_session_id' => $this->sessionId,
+            ]);
         }
+        
+        // Force a re-render to ensure UI updates
+        $this->dispatch('chat-updated');
+    }
+    
+    /**
+     * Manual agent selection method that can be called from the UI
+     * This provides an alternative to the wire:model.live binding
+     */
+    public function changeAgent($agentName)
+    {
+        logger()->info('changeAgent called manually', [
+            'agent' => $agentName,
+            'current_agent' => $this->selectedAgent,
+            'current_session' => $this->sessionId,
+            'current_chat_count' => count($this->chatHistory),
+        ]);
+        
+        // COMPLETELY RESET THE COMPONENT STATE
+        if ($this->selectedAgent !== $agentName) {
+            logger()->info('Forcing complete component reset');
+            
+            // Step 1: Reset ALL component state to initial values
+            $this->reset([
+                'chatHistory',
+                'contextData', 
+                'memoryData',
+                'sessionData',
+                'longTermMemoryData',
+                'contextStateData',
+                'traceData',
+                'agentInfo'
+            ]);
+            
+            // Step 2: Force boolean and other primitive resets
+            $this->hasRunningTraces = false;
+            $this->isLoading = false;
+            $this->activeTab = 'agent-info';
+            
+            // Step 3: Generate completely new session
+            $oldSession = $this->sessionId;
+            $this->sessionId = $this->generateUniqueSessionId();
+            
+            // Step 4: Set the new agent
+            $this->selectedAgent = $agentName;
+            
+            logger()->info('Component state completely reset', [
+                'old_session' => $oldSession,
+                'new_session' => $this->sessionId,
+                'new_agent' => $agentName,
+                'chat_history_count' => count($this->chatHistory),
+                'context_data_empty' => empty($this->contextData),
+            ]);
+            
+            // Step 5: Load fresh data for new agent
+            $this->loadAgentInfo();
+            $this->loadContextData();
+            $this->loadTraceData();
+            
+        } else {
+            // Same agent selected, just set it
+            $this->selectedAgent = $agentName;
+        }
+        
+        // Force complete UI refresh
+        $this->dispatch('agent-changed', $agentName);
+        $this->dispatch('chat-updated');
+        
+        logger()->info('changeAgent completed', [
+            'final_agent' => $this->selectedAgent,
+            'final_session' => $this->sessionId,
+            'final_chat_count' => count($this->chatHistory),
+        ]);
     }
 
     #[On('setSessionId')]
@@ -612,7 +786,7 @@ class ChatInterface extends Component
         $this->loadContextData();
         $this->loadTraceData();
     }
-    
+
     #[On('refresh-trace-data')]
     public function refreshTraceData()
     {
@@ -631,23 +805,47 @@ class ChatInterface extends Component
     {
         $attempts = 0;
         $maxAttempts = 10;
-        
+
         do {
-            // Use ULID for better uniqueness (time-ordered + random)
-            $sessionId = 'chat-' . Str::ulid()->toString();
-            
-            // Check if this session ID already exists
-            $exists = AgentSession::where('session_id', $sessionId)->exists();
-            
-            if (!$exists) {
-                return $sessionId;
+            try {
+                // Use ULID for better uniqueness (time-ordered + random)
+                $sessionId = 'chat-'.Str::ulid()->toString();
+
+                // Check if this session ID already exists
+                $exists = AgentSession::where('session_id', $sessionId)->exists();
+
+                if (! $exists) {
+                    return $sessionId;
+                }
+
+                $attempts++;
+                
+                // Log if we're having collision issues
+                if ($attempts > 3) {
+                    logger()->warning('Session ID collision detected', [
+                        'attempt' => $attempts,
+                        'colliding_session_id' => $sessionId,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                logger()->error('Error generating session ID', [
+                    'attempt' => $attempts,
+                    'error' => $e->getMessage(),
+                ]);
+                $attempts++;
             }
-            
-            $attempts++;
         } while ($attempts < $maxAttempts);
+
+        // Fallback: use timestamp + microseconds + random for ultimate uniqueness
+        $microtime = microtime(true);
+        $fallbackSessionId = 'chat-'.now()->timestamp.'-'.str_replace('.', '', $microtime).'-'.Str::random(6);
         
-        // Fallback: use timestamp + random for ultimate uniqueness
-        return 'chat-' . now()->timestamp . '-' . Str::random(8);
+        logger()->warning('Using fallback session ID generation', [
+            'fallback_session_id' => $fallbackSessionId,
+            'max_attempts_reached' => $maxAttempts,
+        ]);
+        
+        return $fallbackSessionId;
     }
 
     public function render()
