@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.15] - 2025-07-14
+
+Enhances agent tracing to support sub-agent delegation with parent trace context preservation and restoration. Updates the chat interface UI to display sub-agent info, improves typing indicator and send button logic, and adds polling for running traces. Refactors prompt versioning to support Blade templates, and adds feature/browser tests for chat interface behaviors.
+
+Introduces JudgeBuilder to enable fluent, agent-based assertion syntax in evaluations. Updates BaseEvaluation to expose judge() and make recordAssertion public. Adds comprehensive unit tests for JudgeBuilder and its integration with BaseEvaluation. Removes obsolete MCPMakeAgentCommand.
+
+Corrects the logic for determining the 'days' value in AgentTraceCleanupCommand. Now, the command only uses the config default if the 'days' option is not provided, ensuring explicit zero values are respected.
+
+Qdrant and in-memory vector drivers have been removed from configuration, validation, and setup logic. Only 'pgvector' and 'meilisearch' are now supported for vector storage. Also, AgentTraceCommand now includes 'input', 'output', and 'metadata' in span output.
+
+Introduces AgentVectorProxy to simplify agent vector memory operations, making vector and RAG methods public and context-aware. Adds GeminiEmbeddingProvider for Google Gemini embeddings. Updates VectorMemoryManager and related tools/tests to use agent class instead of agent name, streamlining method signatures and usage. Enhances Meilisearch driver with fallback similarity calculation. Updates configuration for vector memory and RAG features.
+
+
 ## [0.0.14] - 2025-07-13
 
 Updates
