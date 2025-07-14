@@ -223,7 +223,7 @@ return [
 
         /**
          * Vector storage driver.
-         * Supported: 'pgvector', 'meilisearch', 'qdrant', 'in_memory'
+         * Supported: 'pgvector', 'meilisearch'
          */
         'driver' => env('VIZRA_ADK_VECTOR_DRIVER', 'pgvector'),
 
@@ -273,16 +273,6 @@ return [
                 'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
                 'api_key' => env('MEILISEARCH_KEY'),
                 'index_prefix' => env('MEILISEARCH_PREFIX', 'agent_vectors_'),
-            ],
-
-            'qdrant' => [
-                'host' => env('QDRANT_HOST', 'localhost'),
-                'port' => env('QDRANT_PORT', 6333),
-                'api_key' => env('QDRANT_API_KEY'),
-            ],
-
-            'in_memory' => [
-                'storage_path' => env('VIZRA_ADK_MEMORY_STORAGE_PATH', storage_path('app/vector_memory.json')),
             ],
         ],
 

@@ -115,7 +115,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
         }
 
         // Validate driver
-        $supportedDrivers = ['pgvector', 'meilisearch', 'qdrant', 'in_memory'];
+        $supportedDrivers = ['pgvector', 'meilisearch'];
         if (! in_array($driver, $supportedDrivers)) {
             throw new RuntimeException("Unsupported vector driver: {$driver}. Supported: ".implode(', ', $supportedDrivers));
         }
@@ -204,22 +204,6 @@ class VectorMemoryServiceProvider extends ServiceProvider
                 }
                 break;
 
-            case 'qdrant':
-                $host = config('vizra-adk.vector_memory.drivers.qdrant.host');
-                $port = config('vizra-adk.vector_memory.drivers.qdrant.port');
-
-                if (! $host || ! $port) {
-                    throw new RuntimeException('Qdrant driver requires host and port configuration.');
-                }
-                break;
-
-            case 'in_memory':
-                $storagePath = config('vizra-adk.vector_memory.drivers.in_memory.storage_path');
-
-                if ($storagePath && ! is_writable(dirname($storagePath))) {
-                    throw new RuntimeException("In-memory driver storage path is not writable: {$storagePath}");
-                }
-                break;
         }
     }
 }

@@ -220,6 +220,9 @@ class AgentTraceCommand extends Command
             'start_time' => $span->start_time,
             'end_time' => $span->end_time,
             'duration_ms' => $span->duration_ms,
+            'input' => $span->input,
+            'output' => $span->output,
+            'metadata' => $span->metadata,
             'children' => [],
         ];
 
