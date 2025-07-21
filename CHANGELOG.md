@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.16] - 2025-07-21
+
+Added support for pseudo-terminal (PTY) mode and improved environment handling in MCPClient. Updated configuration to allow custom npx path and app directory access. Improved client connection management in MCPClientManager to handle stale clients and added use_pty option to server configs.
+
 ## [0.0.15] - 2025-07-14
 
 Enhances agent tracing to support sub-agent delegation with parent trace context preservation and restoration. Updates the chat interface UI to display sub-agent info, improves typing indicator and send button logic, and adds polling for running traces. Refactors prompt versioning to support Blade templates, and adds feature/browser tests for chat interface behaviors.
