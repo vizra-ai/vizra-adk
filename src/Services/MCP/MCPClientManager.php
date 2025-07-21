@@ -24,10 +24,19 @@ class MCPClientManager
      */
     public function getClient(string $serverName): MCPClient
     {
-        if (! isset($this->clients[$serverName])) {
-            $this->clients[$serverName] = $this->createClient($serverName);
+        // If we have a cached client, check if it's still connected
+        if (isset($this->clients[$serverName])) {
+            try {
+                // Try to use the existing client
+                return $this->clients[$serverName];
+            } catch (\Exception $e) {
+                // If the client is not working, remove it from cache
+                unset($this->clients[$serverName]);
+            }
         }
 
+        // Create a new client
+        $this->clients[$serverName] = $this->createClient($serverName);
         return $this->clients[$serverName];
     }
 
@@ -316,7 +325,8 @@ class MCPClientManager
         return new MCPClient(
             command: $config['command'],
             args: $config['args'] ?? [],
-            timeout: $config['timeout'] ?? 30
+            timeout: $config['timeout'] ?? 30,
+            usePty: $config['use_pty'] ?? false
         );
     }
 

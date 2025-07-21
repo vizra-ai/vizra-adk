@@ -110,20 +110,21 @@ return [
      * - args: Arguments to pass to the server command
      * - enabled: Whether this server is enabled (default: true)
      * - timeout: Connection timeout in seconds (default: 30)
+     * - use_pty: Use pseudo-terminal for interactive processes (default: false)
      */
     'mcp_servers' => [
         'filesystem' => [
-            'command' => 'npx',
+            'command' => env('MCP_NPX_PATH', 'npx'),
             'args' => [
                 '@modelcontextprotocol/server-filesystem',
-                env('MCP_FILESYSTEM_PATH', storage_path('app')),
+                env('MCP_FILESYSTEM_PATH', app_path()), // Changed to allow access to app directory
             ],
             'enabled' => env('MCP_FILESYSTEM_ENABLED', false),
             'timeout' => 30,
         ],
 
         'github' => [
-            'command' => 'npx',
+            'command' => env('MCP_NPX_PATH', 'npx'),
             'args' => [
                 '@modelcontextprotocol/server-github',
                 '--token',
@@ -134,7 +135,7 @@ return [
         ],
 
         'postgres' => [
-            'command' => 'npx',
+            'command' => env('MCP_NPX_PATH', 'npx'),
             'args' => [
                 '@modelcontextprotocol/server-postgres',
                 '--connection-string',
@@ -145,7 +146,7 @@ return [
         ],
 
         'brave_search' => [
-            'command' => 'npx',
+            'command' => env('MCP_NPX_PATH', 'npx'),
             'args' => [
                 '@modelcontextprotocol/server-brave-search',
                 '--api-key',
@@ -156,7 +157,7 @@ return [
         ],
 
         'slack' => [
-            'command' => 'npx',
+            'command' => env('MCP_NPX_PATH', 'npx'),
             'args' => [
                 '@modelcontextprotocol/server-slack',
                 '--bot-token',

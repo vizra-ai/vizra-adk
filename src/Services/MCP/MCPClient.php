@@ -3,19 +3,23 @@
 namespace Vizra\VizraADK\Services\MCP;
 
 use Illuminate\Support\Facades\Process;
+use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process as SymfonyProcess;
 use Vizra\VizraADK\Exceptions\MCPException;
 
 class MCPClient
 {
     private ?SymfonyProcess $process = null;
+    
+    private ?InputStream $inputStream = null;
 
     private array $messageId = ['counter' => 0];
 
     public function __construct(
         private string $command,
         private array $args = [],
-        private int $timeout = 30
+        private int $timeout = 30,
+        private bool $usePty = false
     ) {}
 
     /**
@@ -28,15 +32,39 @@ class MCPClient
         }
 
         $fullCommand = array_merge([$this->command], $this->args);
-        $this->process = new SymfonyProcess($fullCommand);
+        
+        // Get current environment and ensure PATH is set
+        $env = array_merge($_ENV, $_SERVER);
+        if (!isset($env['PATH'])) {
+            $env['PATH'] = '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin';
+        }
+        
+        $this->process = new SymfonyProcess($fullCommand, null, $env);
         $this->process->setTimeout($this->timeout);
+        
+        // Enable PTY mode if requested (for interactive processes)
+        if ($this->usePty) {
+            $this->process->setPty(true);
+        }
+        
+        // Create and set the input stream for bidirectional communication
+        $this->inputStream = new InputStream();
+        $this->process->setInput($this->inputStream);
+        
         $this->process->start();
 
-        // Wait a moment for the process to initialize
-        usleep(100000); // 100ms
+        // Wait longer for the process to initialize
+        usleep(500000); // 500ms to give MCP server time to start
 
         if (! $this->process->isRunning()) {
-            throw new MCPException("Failed to start MCP server: {$this->command}");
+            $error = $this->process->getErrorOutput() ?: $this->process->getOutput();
+            $exitCode = $this->process->getExitCode();
+            
+            // Only throw if we have a non-zero exit code
+            // Some MCP servers output to stderr during normal startup
+            if ($exitCode !== null && $exitCode !== 0) {
+                throw new MCPException("Failed to start MCP server: {$this->command} (Exit code: {$exitCode}, Error: {$error})");
+            }
         }
 
         // Initialize the connection with MCP protocol
@@ -48,6 +76,11 @@ class MCPClient
      */
     public function disconnect(): void
     {
+        if ($this->inputStream) {
+            $this->inputStream->close();
+            $this->inputStream = null;
+        }
+        
         if ($this->process && $this->process->isRunning()) {
             $this->process->stop();
         }
@@ -75,7 +108,7 @@ class MCPClient
 
         $response = $this->sendRequest('tools/call', [
             'name' => $toolName,
-            'arguments' => $arguments,
+            'arguments' => empty($arguments) ? (object) [] : $arguments,
         ]);
 
         if (isset($response['content'])) {
@@ -170,7 +203,12 @@ class MCPClient
 
         $requestJson = json_encode($request)."\n";
 
-        $this->process->getInput()->write($requestJson);
+        // Write to the input stream
+        if (!$this->inputStream) {
+            throw new MCPException('Input stream is not initialized');
+        }
+        
+        $this->inputStream->write($requestJson);
 
         // Read response
         $response = $this->readResponse();
@@ -187,7 +225,8 @@ class MCPClient
      */
     private function initialize(): void
     {
-        $response = $this->sendRequest('initialize', [
+        // Send initialize request
+        $this->sendRequest('initialize', [
             'protocolVersion' => '2024-11-05',
             'capabilities' => [
                 'tools' => [],
@@ -206,7 +245,11 @@ class MCPClient
             'method' => 'notifications/initialized',
         ];
 
-        $this->process->getInput()->write(json_encode($notification)."\n");
+        if (!$this->inputStream) {
+            throw new MCPException('Input stream is not initialized');
+        }
+        
+        $this->inputStream->write(json_encode($notification)."\n");
     }
 
     /**
