@@ -69,7 +69,7 @@ it('can add multiple images to conversation', function () {
 
     $executor = $testAgent::run('Compare these images')
         ->withImage(storage_path('app/tests/test-image.jpg'))
-        ->withImageFromUrl('https://example.com/image.jpg')
+        ->withImageFromUrl('http://localhost/test-image.jpg')
         ->withImageFromBase64('base64data', 'image/png')
         ->withSession('test-session');
 
@@ -125,7 +125,7 @@ it('can add multiple documents to conversation', function () {
 
     $executor = $testAgent::run('Compare these documents')
         ->withDocument(storage_path('app/tests/test-document.pdf'))
-        ->withDocumentFromUrl('https://example.com/document.pdf')
+        ->withDocumentFromUrl('http://localhost/test-document.pdf')
         ->withDocumentFromBase64('base64data', 'application/pdf')
         ->withSession('test-session');
 
