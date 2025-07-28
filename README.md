@@ -133,18 +133,18 @@ For comprehensive documentation, tutorials, and API reference, visit:
 
 ## 🚀 Vizra Cloud Platform (Coming Soon!)
 
-Take your agents to production with **Vizra Cloud** - our managed hosting platform designed specifically for AI agents built with Vizra ADK.
+Take your agents to the next level with **Vizra Cloud** - our professional evaluation and trace analysis platform designed specifically for AI agents built with Vizra ADK.
 
 ### What's Coming:
 
-- **🌐 One-Click Deployment** - Deploy agents directly from GitHub
-- **⚡ Auto-Scaling** - Handle any load with automatic scaling
-- **🔒 Enterprise Security** - SOC2 compliant infrastructure
-- **📊 Analytics Dashboard** - Monitor usage, costs, and performance
-- **🤝 Team Collaboration** - Manage agents and deployments with your team
-- **🌍 Global Edge Network** - Low latency worldwide
-- **💾 Managed Vector Database** - Built-in memory storage
-- **🔧 Zero Configuration** - We handle the infrastructure
+- **📊 Cloud Evaluation Runs** - Run comprehensive evaluations at scale in the cloud
+- **🔍 Interactive Trace Visualization** - Debug and understand agent behavior with visual traces
+- **📈 Performance Analytics** - Track response times, token usage, and quality metrics
+- **🔄 Regression Detection** - Automatically catch when changes break existing functionality
+- **🤝 Team Collaboration** - Share evaluation results and insights with your team
+- **📜 Evaluation History** - Track agent performance over time and across versions
+- **🎯 CI/CD Integration** - Run evaluations automatically in your deployment pipeline
+- **💾 Centralized Results** - All evaluation data and traces in one searchable platform
 
 **[Join the waitlist at vizra.ai →](https://vizra.ai/cloud)**
 
