@@ -13,6 +13,7 @@ use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Messages\Support\Document;
 use Prism\Prism\ValueObjects\Messages\Support\Image;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
+use Prism\Prism\ValueObjects\ProviderTool;
 use Prism\Prism\ValueObjects\Usage;
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\Events\AgentResponseGenerated;
@@ -56,6 +57,8 @@ abstract class BaseLlmAgent extends BaseAgent
 
     protected ?float $temperature = null;
 
+    protected int $maxSteps = 5;
+
     protected ?int $maxTokens = null;
 
     protected ?float $topP = null;
@@ -67,6 +70,11 @@ abstract class BaseLlmAgent extends BaseAgent
 
     /** @var array<ToolInterface> */
     protected array $loadedTools = [];
+
+    /**
+     * @var array string[]
+     */
+    protected array $providerTools = [];
 
     /** @var array<string, BaseLlmAgent> */
     protected array $loadedSubAgents = [];
@@ -531,6 +539,14 @@ abstract class BaseLlmAgent extends BaseAgent
         return $tools;
     }
 
+    public function getProviderToolsForPrism(): array
+    {
+        return array_map(
+            fn (string $type) => new ProviderTool(type: $type),
+            $this->providerTools,
+        );
+    }
+
     public function execute(mixed $input, AgentContext $context): mixed
     {
         // Store context for memory access
@@ -653,11 +669,15 @@ abstract class BaseLlmAgent extends BaseAgent
                 // Add messages for conversation history
                 $prismRequest = $prismRequest->withMessages($messages);
 
+                if (! empty($this->providerTools)) {
+                    $prismRequest = $prismRequest->withProviderTools($this->getProviderToolsForPrism());
+                }
+
                 // Add tools if available
                 $allTools = array_merge($this->loadedTools, ! empty($this->loadedSubAgents) ? [new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this)] : []);
                 if (! empty($allTools)) {
                     $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
-                        ->withMaxSteps(5); // Prism will handle tool execution internally
+                        ->withMaxSteps($this->maxSteps); // Prism will handle tool execution internally
                 }
 
                 // Add generation parameters if set
@@ -675,10 +695,8 @@ abstract class BaseLlmAgent extends BaseAgent
 
                 // Execute the request - Prism handles all tool calls internally
                 if ($this->getStreaming()) {
-                    /** @var \Prism\Prism\Text\Stream $llmResponse */
                     $llmResponse = $prismRequest->asStream();
                 } else {
-                    /** @var Response $llmResponse */
                     $llmResponse = $prismRequest->asText();
                 }
 
@@ -863,12 +881,7 @@ abstract class BaseLlmAgent extends BaseAgent
      */
     protected function getHistoryByStrategy(AgentContext $context, string $strategy, int $limit): array
     {
-        $history = $context->getConversationHistory();
-
-        // Ensure history is an array
-        if ($history instanceof \Illuminate\Support\Collection) {
-            $history = $history->toArray();
-        }
+        $history = $context->getConversationHistory()->toArray();
 
         switch ($strategy) {
             case 'recent':
