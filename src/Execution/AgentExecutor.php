@@ -4,8 +4,8 @@ namespace Vizra\VizraADK\Execution;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Prism\Prism\ValueObjects\Messages\Support\Document;
-use Prism\Prism\ValueObjects\Messages\Support\Image;
+use Prism\Prism\ValueObjects\Media\Image;
+use Prism\Prism\ValueObjects\Media\Document;
 use Vizra\VizraADK\Jobs\AgentJob;
 use Vizra\VizraADK\Services\AgentManager;
 use Vizra\VizraADK\Services\StateManager;
