@@ -1,6 +1,7 @@
 <?php
 
 use Prism\Prism\Enums\Provider;
+use Prism\Prism\ValueObjects\ProviderTool;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\System\AgentContext;
 
@@ -36,6 +37,15 @@ it('can get max tokens', function () {
 it('can load tools', function () {
     $tools = $this->agent->getLoadedTools();
     expect($tools)->toBeArray();
+});
+
+it('can load provider tools as Prism provider tool object values', function () {
+    $providerTools = $this->agent->getProviderToolsForPrism();
+    expect($providerTools)->toBeArray();
+
+    collect($providerTools)->each(
+        fn ($tool) => expect($tool)->toBeInstanceOf(ProviderTool::class),
+    );
 });
 
 // Streaming functionality tests
@@ -133,6 +143,10 @@ class TestLlmAgent extends BaseLlmAgent
     protected ?float $temperature = 0.7;
 
     protected ?int $maxTokens = 1000;
+
+    protected array $providerTools = [
+        'web_search_preview',
+    ];
 
     public function getInstructions(): string
     {
