@@ -312,11 +312,11 @@ class AgentExecutor
             // Store image metadata instead of actual objects for serialization
             $imageMetadata = [];
             foreach ($this->images as $image) {
-                // The Image class has public properties: image (base64 data) and mimeType
+                // The Image class uses methods to access data
                 $imageMetadata[] = [
                     'type' => 'image',
-                    'data' => $image->image,  // This is the base64 encoded image data
-                    'mimeType' => $image->mimeType,
+                    'data' => $image->base64(),  // This is the base64 encoded image data
+                    'mimeType' => $image->mimeType(),
                 ];
             }
             $agentContext->setState('prism_images_metadata', $imageMetadata);
@@ -327,14 +327,14 @@ class AgentExecutor
             // Store document metadata for consistency
             $documentMetadata = [];
             foreach ($this->documents as $document) {
-                // Document class has: document (string|array), mimeType, dataFormat, documentTitle, documentContext
+                // Document class uses methods to access data
                 $documentMetadata[] = [
                     'type' => 'document',
-                    'data' => is_string($document->document) ? $document->document : json_encode($document->document),
-                    'mimeType' => $document->mimeType,
-                    'dataFormat' => $document->dataFormat,
-                    'documentTitle' => $document->documentTitle,
-                    'documentContext' => $document->documentContext,
+                    'data' => $document->base64(),
+                    'mimeType' => $document->mimeType(),
+                    'dataFormat' => 'base64',
+                    'documentTitle' => $document->documentTitle(),
+                    'documentContext' => null,
                 ];
             }
             $agentContext->setState('prism_documents_metadata', $documentMetadata);

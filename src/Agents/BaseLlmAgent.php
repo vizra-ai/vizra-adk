@@ -596,26 +596,22 @@ abstract class BaseLlmAgent extends BaseAgent
                             $documents[] = Document::fromBase64(
                                 $metadata['data'],
                                 $metadata['mimeType'],
-                                $metadata['documentTitle'] ?? null,
-                                $metadata['documentContext'] ?? null
+                                $metadata['documentTitle'] ?? null
                             );
                         } elseif ($metadata['dataFormat'] === 'text') {
                             $documents[] = Document::fromText(
                                 $metadata['data'],
-                                $metadata['documentTitle'] ?? null,
-                                $metadata['documentContext'] ?? null
+                                $metadata['documentTitle'] ?? null
                             );
                         } elseif ($metadata['dataFormat'] === 'content' && $data = json_decode($metadata['data'], true)) {
                             $documents[] = Document::fromChunks(
                                 $data,
-                                $metadata['documentTitle'] ?? null,
-                                $metadata['documentContext'] ?? null
+                                $metadata['documentTitle'] ?? null
                             );
                         } elseif ($metadata['dataFormat'] === 'url') {
                             $documents[] = Document::fromUrl(
                                 $metadata['data'],
-                                $metadata['documentTitle'] ?? null,
-                                $metadata['documentContext'] ?? null
+                                $metadata['documentTitle'] ?? null
                             );
                         }
                     }
