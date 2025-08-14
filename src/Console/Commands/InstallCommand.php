@@ -32,6 +32,7 @@ class InstallCommand extends Command
         $this->comment('Configure your LLM provider API keys in .env and in config/vizra-adk.php if needed.');
 
         $this->showDashboardInfo();
+        $this->askForGitHubStar();
     }
 
     protected function showDashboardInfo(): void
@@ -47,5 +48,38 @@ class InstallCommand extends Command
         $this->line('   <fg=cyan>php artisan vizra:dashboard</fg=cyan>          # Show dashboard URL');
         $this->line('   <fg=cyan>php artisan vizra:dashboard --open</fg=cyan>   # Open dashboard in browser');
         $this->line('   <fg=cyan>php artisan vizra:make:agent MyAgent</fg=cyan> # Create a new agent');
+    }
+
+    protected function askForGitHubStar(): void
+    {
+        $this->line('');
+        $this->line('');
+        $this->info('⭐ Want to show your support?');
+        $this->comment('Star us on GitHub to help the Vizra community grow!');
+        
+        if ($this->confirm('Would you like to star Vizra ADK on GitHub?', false)) {
+            $url = 'https://github.com/vizra-ai/vizra-adk';
+            
+            $this->info('Opening GitHub in your browser...');
+            
+            // Detect the operating system and open the URL accordingly
+            if (PHP_OS_FAMILY === 'Darwin') {
+                // macOS
+                exec("open '{$url}'");
+            } elseif (PHP_OS_FAMILY === 'Windows') {
+                // Windows
+                exec("start {$url}");
+            } else {
+                // Linux and others
+                exec("xdg-open '{$url}' 2>/dev/null || sensible-browser '{$url}' 2>/dev/null || x-www-browser '{$url}' 2>/dev/null");
+            }
+            
+            $this->line('');
+            $this->info('Thank you for your support! 🎉');
+        } else {
+            $this->line('');
+            $this->comment('No problem! You can always star us later at:');
+            $this->line("   <fg=cyan>https://github.com/vizra-ai/vizra-adk</fg=cyan>");
+        }
     }
 }
