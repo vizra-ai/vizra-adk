@@ -657,6 +657,21 @@ abstract class BaseLlmAgent extends BaseAgent
                 $prismRequest = Prism::text()
                     ->using($this->getProvider(), $this->getModel());
 
+                // Apply HTTP timeout configuration
+                $httpConfig = config('vizra-adk.http', []);
+                if (! empty($httpConfig)) {
+                    $clientOptions = [];
+                    if (isset($httpConfig['timeout'])) {
+                        $clientOptions['timeout'] = $httpConfig['timeout'];
+                    }
+                    if (isset($httpConfig['connect_timeout'])) {
+                        $clientOptions['connect_timeout'] = $httpConfig['connect_timeout'];
+                    }
+                    if (! empty($clientOptions)) {
+                        $prismRequest = $prismRequest->withClientOptions($clientOptions);
+                    }
+                }
+
                 // Add system prompt if available (now includes memory context)
                 if (! empty($this->getInstructions())) {
                     $prismRequest = $prismRequest->withSystemPrompt($this->getInstructionsWithMemory($context));

@@ -36,6 +36,15 @@ return [
     ],
 
     /**
+     * HTTP client configuration for LLM API calls.
+     * Controls timeout settings for API requests to prevent premature timeouts.
+     */
+    'http' => [
+        'timeout' => env('VIZRA_ADK_HTTP_TIMEOUT', 120),           // Total timeout in seconds (default: 2 minutes)
+        'connect_timeout' => env('VIZRA_ADK_HTTP_CONNECT_TIMEOUT', 10), // Connection timeout in seconds
+    ],
+
+    /**
      * Sub-agent delegation settings.
      * Controls behavior of agent hierarchies and delegation.
      */
