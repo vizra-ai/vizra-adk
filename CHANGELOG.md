@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.20] - 2025-08-14
+
+Add HTTP timeout config for LLM API requests
+Introduces 'http' configuration options in vizra-adk.php for controlling timeout and connection timeout for LLM API calls. BaseLlmAgent now applies these settings to Prism requests to prevent premature timeouts.
+
 ## [0.0.19] - 2025-08-14
 
 
