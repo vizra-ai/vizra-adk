@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.18] - 2025-08-14
+
+Provider Tool Support
+Added a providerTools property to BaseLlmAgent and a getProviderToolsForPrism() method to convert provider tool types to ProviderTool objects for use with Prism. [1] [2]
+Updated the agent execution flow to include provider tools in the Prism request if any are configured.
+Agent Configuration Improvements
+Made the maximum number of agent steps (maxSteps) configurable via a class property, instead of hardcoding the value. [1] [2]
+Conversation History Handling
+Simplified the retrieval of conversation history by always converting collections to arrays, improving reliability.
+Dependency Updates
+
+dd CLAUDE.md and GitHub star prompt to install command
+
 ## [0.0.17] - 2025-07-28
 
 
