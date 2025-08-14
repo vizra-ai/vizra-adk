@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\File;
 use Prism\Prism\Enums\Provider;
-use Prism\Prism\ValueObjects\Messages\Support\Image;
+use Prism\Prism\ValueObjects\Media\Image;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\Models\AgentSession;

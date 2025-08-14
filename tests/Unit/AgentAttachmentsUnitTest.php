@@ -1,7 +1,7 @@
 <?php
 
-use Prism\Prism\ValueObjects\Messages\Support\Document;
-use Prism\Prism\ValueObjects\Messages\Support\Image;
+use Prism\Prism\ValueObjects\Media\Document;
+use Prism\Prism\ValueObjects\Media\Image;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Execution\AgentExecutor;
@@ -56,7 +56,7 @@ it('base llm agent processes images and documents from context', function () {
         protected string $instructions = 'Test instructions';
 
         protected string $model = 'gpt-4o';
-        
+
         // Enable conversation history for this test
         protected bool $includeConversationHistory = true;
         protected string $contextStrategy = 'full';
@@ -184,7 +184,7 @@ it('prepareMessagesForPrism handles images as arrays from database', function ()
         protected string $instructions = 'Test instructions';
 
         protected string $model = 'gpt-4o';
-        
+
         // Enable conversation history for this test
         protected bool $includeConversationHistory = true;
         protected string $contextStrategy = 'full';
@@ -234,7 +234,7 @@ it('prepareMessagesForPrism handles documents as arrays from database', function
         protected string $instructions = 'Test instructions';
 
         protected string $model = 'gemini-2.0-flash';
-        
+
         // Enable conversation history for this test
         protected bool $includeConversationHistory = true;
         protected string $contextStrategy = 'full';
