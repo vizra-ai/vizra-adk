@@ -16,7 +16,7 @@
   <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-11.0%2B-FF2D20.svg" alt="Laravel"></a>
 </p>
 
-Vizra ADK is a comprehensive Laravel package for building autonomous AI agents that can reason, use tools, and maintain persistent memory. Create intelligent, inertactive agents that integrate seamlessly with your Laravel application.
+Vizra ADK is a comprehensive Laravel package for building autonomous AI agents that can reason, use tools, and maintain persistent memory. Create intelligent, interactive agents that integrate seamlessly with your Laravel application.
 
 ## ✨ Key Features
 
