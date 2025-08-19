@@ -14,3 +14,6 @@ __pycache__/
 /tests/Coverage
 .phpunit.result.cache
 copilot-instructions.md
+
+# Claude settings
+.claude/
