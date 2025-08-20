@@ -69,12 +69,14 @@ class VectorMemoryStore extends Command
 
         try {
             $memories = $vectorMemory->addDocument(
-                agentName: $agentName,
-                content: $content,
-                metadata: $metadata,
-                namespace: $namespace,
-                source: $source,
-                sourceId: $sourceId
+                agentClass: $agentName,
+                contentOrArray: [
+                    'content' => $content,
+                    'metadata' => $metadata,
+                    'namespace' => $namespace,
+                    'source' => $source,
+                    'source_id' => $sourceId
+                ]
             );
 
             $this->info("✅ Successfully stored {$memories->count()} chunks in vector memory");
