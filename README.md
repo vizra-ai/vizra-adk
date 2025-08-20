@@ -161,6 +161,31 @@ Take your agents to the next level with **Vizra Cloud** - our professional evalu
 - **[GitHub Issues](https://github.com/vizra-ai/vizra-adk/issues)** - Report bugs, request features
 - **[Twitter/X](https://twitter.com/aaronlumsden)** - Latest updates and tips
 
+## 💖 Sponsorship
+
+### Support Vizra ADK's Development
+
+Vizra ADK is an open-source project that takes significant time and effort to maintain and improve. If you find this package valuable for your projects, please consider sponsoring its development!
+
+**[🎯 Become a Sponsor on GitHub](https://github.com/sponsors/aaronlumsden)**
+
+### Why Sponsor?
+
+- 🚀 **Accelerate Development** - Your support helps us dedicate more time to new features
+- 📚 **Better Documentation** - Fund comprehensive tutorials and examples
+- 🛠️ **Priority Support** - Get faster responses to your issues and questions
+- ☁️ **Shape the Future** - Have a direct say in our roadmap and upcoming features
+- 💙 **Support Open Source** - Keep AI development tools accessible to everyone
+
+### Sponsor Benefits
+
+- **$5+/month** - 🎖️ Get a Sponsor badge on your GitHub profile
+- **$25+/month** - 📝 Your logo or name featured in our project README
+- **$100+/month** - 🌐 Logo placement on the Vizra website + 🚀 Access to pre-release builds
+- **$1,000+/month** - 💬 Direct support via your company chat app + All previous benefits
+
+Every contribution, no matter the size, makes a real difference in sustaining this project. Thank you for your support! 🙏
+
 ## 📄 License
 
 Vizra ADK is open-sourced software licensed under the [MIT license](https://github.com/vizra-ai/vizra-adk/blob/master/license.md).
@@ -182,5 +207,6 @@ Special thanks to:
 <p align="center">
 <strong>Ready to build intelligent AI agents?</strong><br>
 <a href="https://vizra.ai/docs">Get Started →</a> • 
-<a href="https://vizra.ai/cloud">Join Cloud Waitlist →</a>
+<a href="https://vizra.ai/cloud">Join Cloud Waitlist →</a> • 
+<a href="https://github.com/sponsors/aaronlumsden">Become a Sponsor →</a>
 </p>
