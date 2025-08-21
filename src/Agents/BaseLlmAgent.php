@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Event;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Tool;
 use Prism\Prism\Prism;
+use Prism\Prism\PrismManager;
 use Prism\Prism\Schema\StringSchema;
 use Prism\Prism\Text\Response;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
@@ -53,7 +54,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
     protected string $model = '';
 
-    protected ?Provider $provider = null;
+    protected ?string $provider = null;
 
     protected ?float $temperature = null;
 
@@ -133,25 +134,20 @@ abstract class BaseLlmAgent extends BaseAgent
         $this->loadSubAgents();
     }
 
-    protected function getProvider(): Provider
+    protected function getProvider(): string
     {
         if ($this->provider === null) {
             $defaultProvider = config('vizra-adk.default_provider', 'openai');
-            $this->provider = match ($defaultProvider) {
-                'openai' => Provider::OpenAI,
-                'anthropic' => Provider::Anthropic,
-                'gemini', 'google' => Provider::Gemini,
-                'deepseek' => Provider::DeepSeek,
-                'ollama' => Provider::Ollama,
-                'mistral' => Provider::Mistral,
-                'groq' => Provider::Groq,
-                'xai', 'grok' => Provider::XAI,
-                'voyageai', 'voyage' => Provider::VoyageAI,
-                default => Provider::OpenAI,
-            };
+            $this->provider = Provider::tryFrom($defaultProvider)?->value
+                ?? $this->resolveCustomProvider($defaultProvider);
         }
 
         return $this->provider;
+    }
+
+    protected function resolveCustomProvider(string $provider): string
+    {
+        return tap($provider, fn(string $provider) => resolve(PrismManager::class)->resolve($provider));
     }
 
     public function getModel(): string
@@ -161,23 +157,23 @@ abstract class BaseLlmAgent extends BaseAgent
         // Auto-detect provider based on model name if not explicitly set
         if ($this->provider === null) {
             if (str_contains($model, 'gemini') || str_contains($model, 'flash')) {
-                $this->provider = Provider::Gemini;
+                $this->provider = Provider::Gemini->value;
             } elseif (str_contains($model, 'claude')) {
-                $this->provider = Provider::Anthropic;
+                $this->provider = Provider::Anthropic->value;
             } elseif (str_contains($model, 'gpt') || str_contains($model, 'o1')) {
-                $this->provider = Provider::OpenAI;
+                $this->provider = Provider::OpenAI->value;
             } elseif (str_contains($model, 'deepseek')) {
-                $this->provider = Provider::DeepSeek;
+                $this->provider = Provider::DeepSeek->value;
             } elseif (str_contains($model, 'mistral') || str_contains($model, 'mixtral')) {
-                $this->provider = Provider::Mistral;
+                $this->provider = Provider::Mistral->value;
             } elseif (str_contains($model, 'llama') || str_contains($model, 'codellama') || str_contains($model, 'phi')) {
-                $this->provider = Provider::Ollama;
+                $this->provider = Provider::Ollama->value;
             } elseif (str_contains($model, 'groq')) {
-                $this->provider = Provider::Groq;
+                $this->provider = Provider::Groq->value;
             } elseif (str_contains($model, 'grok')) {
-                $this->provider = Provider::XAI;
+                $this->provider = Provider::XAI->value;
             } elseif (str_contains($model, 'voyage')) {
-                $this->provider = Provider::VoyageAI;
+                $this->provider = Provider::VoyageAI->value;
             }
         }
 
@@ -292,26 +288,11 @@ abstract class BaseLlmAgent extends BaseAgent
      * Set the provider for this agent.
      * Supports all Prism providers: OpenAI, Anthropic, Gemini, DeepSeek, Ollama, Mistral, Groq, XAI, VoyageAI
      *
-     * @param  Provider|string  $provider  The provider enum or string name
+     * @param Provider|string  $provider  The provider enum or string name
      */
     public function setProvider(Provider|string $provider): static
     {
-        if (is_string($provider)) {
-            $provider = match (strtolower($provider)) {
-                'openai' => Provider::OpenAI,
-                'anthropic' => Provider::Anthropic,
-                'gemini', 'google' => Provider::Gemini,
-                'deepseek' => Provider::DeepSeek,
-                'ollama' => Provider::Ollama,
-                'mistral' => Provider::Mistral,
-                'groq' => Provider::Groq,
-                'xai', 'grok' => Provider::XAI,
-                'voyageai', 'voyage' => Provider::VoyageAI,
-                default => throw new \InvalidArgumentException("Unknown provider: {$provider}")
-            };
-        }
-
-        $this->provider = $provider;
+        $this->provider = is_string($provider) ? $this->resolveCustomProvider($provider) : $provider->value;
 
         return $this;
     }
@@ -937,7 +918,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 'system_prompt' => $this->getInstructionsWithMemory($context),
             ],
             metadata: [
-                'provider' => $this->getProvider()->value,
+                'provider' => $this->getProvider(),
                 'temperature' => $this->getTemperature(),
                 'max_tokens' => $this->getMaxTokens(),
                 'top_p' => $this->getTopP(),
