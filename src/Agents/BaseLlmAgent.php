@@ -138,8 +138,18 @@ abstract class BaseLlmAgent extends BaseAgent
     {
         if ($this->provider === null) {
             $defaultProvider = config('vizra-adk.default_provider', 'openai');
-            $this->provider = Provider::tryFrom($defaultProvider)?->value
-                ?? $this->resolveCustomProvider($defaultProvider);
+            $this->provider = match ($defaultProvider) {
+                'openai' => Provider::OpenAI,
+                'anthropic' => Provider::Anthropic,
+                'gemini', 'google' => Provider::Gemini,
+                'deepseek' => Provider::DeepSeek,
+                'ollama' => Provider::Ollama,
+                'mistral' => Provider::Mistral,
+                'groq' => Provider::Groq,
+                'xai', 'grok' => Provider::XAI,
+                'voyageai', 'voyage' => Provider::VoyageAI,
+                default => $this->resolveCustomProvider($defaultProvider),
+            };
         }
 
         return $this->provider;
@@ -292,7 +302,22 @@ abstract class BaseLlmAgent extends BaseAgent
      */
     public function setProvider(Provider|string $provider): static
     {
-        $this->provider = is_string($provider) ? $this->resolveCustomProvider($provider) : $provider->value;
+        if (is_string($provider)) {
+            $provider = match (strtolower($provider)) {
+                'openai' => Provider::OpenAI,
+                'anthropic' => Provider::Anthropic,
+                'gemini', 'google' => Provider::Gemini,
+                'deepseek' => Provider::DeepSeek,
+                'ollama' => Provider::Ollama,
+                'mistral' => Provider::Mistral,
+                'groq' => Provider::Groq,
+                'xai', 'grok' => Provider::XAI,
+                'voyageai', 'voyage' => Provider::VoyageAI,
+                default => $this->resolveCustomProvider($provider)
+            };
+        }
+
+        $this->provider = $provider;
 
         return $this;
     }
