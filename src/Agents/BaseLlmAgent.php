@@ -317,7 +317,7 @@ abstract class BaseLlmAgent extends BaseAgent
             };
         }
 
-        $this->provider = $provider;
+        $this->provider = $provider instanceof Provider ? $provider->value : $provider;
 
         return $this;
     }
