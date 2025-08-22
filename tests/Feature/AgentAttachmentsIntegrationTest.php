@@ -393,7 +393,7 @@ it('handles provider-specific attachment support gracefully', function () {
 
         protected string $model = 'gpt-4o';
 
-        protected ?Provider $provider = Provider::OpenAI;
+        protected ?string $provider = Provider::OpenAI->value;
 
         public function execute(mixed $input, AgentContext $context): mixed
         {
@@ -423,7 +423,7 @@ it('handles provider-specific attachment support gracefully', function () {
 
         protected string $model = 'gemini-2.0-flash';
 
-        protected ?Provider $provider = Provider::Gemini;
+        protected ?string $provider = Provider::Gemini->value;
 
         public function execute(mixed $input, AgentContext $context): mixed
         {

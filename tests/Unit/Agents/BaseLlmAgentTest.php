@@ -1,12 +1,17 @@
 <?php
 
 use Prism\Prism\Enums\Provider;
+use Prism\Prism\PrismManager;
 use Prism\Prism\ValueObjects\ProviderTool;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\System\AgentContext;
 
 beforeEach(function () {
     $this->agent = new TestLlmAgent;
+
+    $this->app[PrismManager::class]->extend('mock', function () {
+        return new class extends \Prism\Prism\Providers\Provider {};
+    });
 });
 
 it('can get agent instructions', function () {
@@ -21,7 +26,7 @@ it('can get agent model', function () {
 
 it('can get provider', function () {
     $provider = $this->agent->getProvider();
-    expect($provider)->toBeInstanceOf(Provider::class);
+    expect($provider)->toBe(config('vizra-adk.default_provider'));
 });
 
 it('can get temperature', function () {
@@ -127,6 +132,15 @@ it('can create agent with showInChatUi disabled', function () {
     expect($hiddenAgent->getShowInChatUi())->toBeFalse();
 });
 
+it('can set custom provider', function () {
+    $this->agent->setProvider('mock');
+    expect($this->agent->getProvider())->toBe('mock');
+});
+
+it('throws exception for invalid provider', function () {
+    $this->agent->setProvider('invalid-provider');
+})->throws(\InvalidArgumentException::class, 'Provider [invalid-provider] is not supported.');
+
 /**
  * Test implementation of BaseLlmAgent for testing purposes
  */
@@ -158,7 +172,7 @@ class TestLlmAgent extends BaseLlmAgent
         return $this->model;
     }
 
-    public function getProvider(): Provider
+    public function getProvider(): string
     {
         return parent::getProvider();
     }
