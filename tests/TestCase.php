@@ -4,6 +4,7 @@ namespace Vizra\VizraADK\Tests;
 
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
+use Prism\Prism\PrismServiceProvider;
 use Vizra\VizraADK\Providers\AgentServiceProvider;
 
 class TestCase extends Orchestra
@@ -13,6 +14,7 @@ class TestCase extends Orchestra
         return [
             LivewireServiceProvider::class,
             AgentServiceProvider::class,
+            PrismServiceProvider::class,
         ];
     }
 

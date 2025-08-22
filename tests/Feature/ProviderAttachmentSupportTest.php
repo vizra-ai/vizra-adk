@@ -17,12 +17,12 @@ it('correctly identifies provider support for attachments', function () {
 
         protected string $model = 'gpt-4o';
 
-        protected ?Provider $provider = Provider::OpenAI;
+        protected ?string $provider = Provider::OpenAI->value;
 
         public function getProviderInfo(): array
         {
             return [
-                'provider' => $this->getProvider()->value,
+                'provider' => $this->getProvider(),
                 'model' => $this->getModel(),
                 'supports_images' => true,
                 'supports_documents' => false,
@@ -48,12 +48,12 @@ it('correctly identifies provider support for attachments', function () {
 
         protected string $model = 'claude-3-5-sonnet-latest';
 
-        protected ?Provider $provider = Provider::Anthropic;
+        protected ?string $provider = Provider::Anthropic->value;
 
         public function getProviderInfo(): array
         {
             return [
-                'provider' => $this->getProvider()->value,
+                'provider' => $this->getProvider(),
                 'model' => $this->getModel(),
                 'supports_images' => true,
                 'supports_documents' => true,
@@ -79,12 +79,12 @@ it('correctly identifies provider support for attachments', function () {
 
         protected string $model = 'gemini-2.0-flash';
 
-        protected ?Provider $provider = Provider::Gemini;
+        protected ?string $provider = Provider::Gemini->value;
 
         public function getProviderInfo(): array
         {
             return [
-                'provider' => $this->getProvider()->value,
+                'provider' => $this->getProvider(),
                 'model' => $this->getModel(),
                 'supports_images' => true,
                 'supports_documents' => true,
@@ -112,14 +112,14 @@ it('handles provider limitations gracefully', function () {
 
         protected string $model = 'gpt-4o';
 
-        protected ?Provider $provider = Provider::OpenAI;
+        protected ?string $provider = Provider::OpenAI->value;
 
         public function execute(mixed $input, AgentContext $context): mixed
         {
             // Simulate what happens when OpenAI receives documents
             $documents = $context->getState('prism_documents', []);
 
-            if (! empty($documents) && $this->getProvider() === Provider::OpenAI) {
+            if (! empty($documents) && $this->getProvider() === Provider::OpenAI->value) {
                 // In real scenario, this would throw an API error
                 // but for testing, we'll return a descriptive message
                 return 'OpenAI does not support document uploads';
@@ -162,7 +162,7 @@ it('suggests alternative providers for unsupported features', function () {
 
         public function suggestAlternativeForDocuments(): array
         {
-            if ($this->getProvider() === Provider::OpenAI) {
+            if ($this->getProvider() === Provider::OpenAI->value) {
                 return [
                     'current_provider' => 'OpenAI',
                     'limitation' => 'Documents not supported',
@@ -174,7 +174,7 @@ it('suggests alternative providers for unsupported features', function () {
                 ];
             }
 
-            return ['current_provider' => $this->getProvider()->value, 'limitation' => 'None'];
+            return ['current_provider' => $this->getProvider(), 'limitation' => 'None'];
         }
     };
 
@@ -203,7 +203,7 @@ it('validates model capabilities for attachments', function () {
 
         protected string $model = 'gpt-4o';
 
-        protected ?Provider $provider = Provider::OpenAI;
+        protected ?string $provider = Provider::OpenAI->value;
 
         public function supportsImages(): bool
         {
@@ -222,7 +222,7 @@ it('validates model capabilities for attachments', function () {
 
         protected string $model = 'gpt-3.5-turbo';
 
-        protected ?Provider $provider = Provider::OpenAI;
+        protected ?string $provider = Provider::OpenAI->value;
 
         public function supportsImages(): bool
         {
@@ -249,16 +249,16 @@ it('provides clear error messages for unsupported attachments', function () {
 
         protected string $model = 'gpt-4o';
 
-        protected ?Provider $provider = Provider::OpenAI;
+        protected ?string $provider = Provider::OpenAI->value;
 
         public function validateAttachments(array $images, array $documents): array
         {
             $errors = [];
 
-            if (! empty($documents) && $this->getProvider() === Provider::OpenAI) {
+            if (! empty($documents) && $this->getProvider() === Provider::OpenAI->value) {
                 $errors[] = sprintf(
                     'Provider %s does not support document uploads. Consider using Anthropic Claude or Google Gemini instead.',
-                    $this->getProvider()->value
+                    $this->getProvider()
                 );
             }
 
