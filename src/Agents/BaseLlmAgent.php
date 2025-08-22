@@ -8,6 +8,7 @@ use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Tool;
 use Prism\Prism\Prism;
 use Prism\Prism\Schema\StringSchema;
+use Prism\Prism\Text\PendingRequest;
 use Prism\Prism\Text\Response;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Media\Document;
@@ -131,6 +132,76 @@ abstract class BaseLlmAgent extends BaseAgent
         // Initialize tools and sub-agents right away so definitions are available
         $this->loadTools();
         $this->loadSubAgents();
+    }
+
+    /**
+     * @param array $definition
+     * @return \Prism\Prism\Tool
+     */
+    protected function createPrismTool(array $definition): \Prism\Prism\Tool
+    {
+        return Tool::as($definition['name'])
+            ->for($definition['description']);
+    }
+
+    /**
+     * @param AgentContext $context
+     * @param array $messages
+     * @return PendingRequest
+     */
+    protected function buildPrismRequest(AgentContext $context, array $messages): PendingRequest
+    {
+        $prismRequest = Prism::text()
+            ->using($this->getProvider(), $this->getModel());
+
+        // Apply HTTP timeout configuration
+        $httpConfig = config('vizra-adk.http', []);
+        if (!empty($httpConfig)) {
+            $clientOptions = [];
+            if (isset($httpConfig['timeout'])) {
+                $clientOptions['timeout'] = $httpConfig['timeout'];
+            }
+            if (isset($httpConfig['connect_timeout'])) {
+                $clientOptions['connect_timeout'] = $httpConfig['connect_timeout'];
+            }
+            if (!empty($clientOptions)) {
+                $prismRequest = $prismRequest->withClientOptions($clientOptions);
+            }
+        }
+
+        // Add system prompt if available (now includes memory context)
+        if (!empty($this->getInstructions())) {
+            $prismRequest = $prismRequest->withSystemPrompt($this->getInstructionsWithMemory($context));
+        }
+
+        // Add messages for conversation history
+        $prismRequest = $prismRequest->withMessages($messages);
+
+        if (!empty($this->providerTools)) {
+            $prismRequest = $prismRequest->withProviderTools($this->getProviderToolsForPrism());
+        }
+
+        // Add tools if available
+        $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this)] : []);
+        if (!empty($allTools)) {
+            $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
+                ->withMaxSteps($this->maxSteps); // Prism will handle tool execution internally
+        }
+
+        // Add generation parameters if set
+        if ($this->getTemperature() !== null) {
+            $prismRequest = $prismRequest->usingTemperature($this->getTemperature());
+        }
+
+        if ($this->getMaxTokens() !== null) {
+            $prismRequest = $prismRequest->withMaxTokens($this->getMaxTokens());
+        }
+
+        if ($this->getTopP() !== null) {
+            $prismRequest = $prismRequest->usingTopP($this->getTopP());
+        }
+
+        return $prismRequest;
     }
 
     protected function getProvider(): Provider
@@ -417,14 +488,13 @@ abstract class BaseLlmAgent extends BaseAgent
             $definition = $tool->definition();
 
             // Create Prism Tool using the correct facade API
-            $prismTool = Tool::as($definition['name'])
-                ->for($definition['description']);
+            $prismTool = $this->createPrismTool($definition);
 
             // Keep track of parameter order for the callback
             $parameterOrder = [];
 
             // Add parameters based on the definition
-            if (isset($definition['parameters']['properties']) && ! empty($definition['parameters']['properties'])) {
+            if (! empty($definition['parameters']['properties'])) {
                 foreach ($definition['parameters']['properties'] as $paramName => $paramDef) {
                     $description = $paramDef['description'] ?? '';
                     $parameterOrder[] = $paramName;
@@ -654,55 +724,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
             try {
                 // Build Prism request using the correct fluent API
-                $prismRequest = Prism::text()
-                    ->using($this->getProvider(), $this->getModel());
-
-                // Apply HTTP timeout configuration
-                $httpConfig = config('vizra-adk.http', []);
-                if (! empty($httpConfig)) {
-                    $clientOptions = [];
-                    if (isset($httpConfig['timeout'])) {
-                        $clientOptions['timeout'] = $httpConfig['timeout'];
-                    }
-                    if (isset($httpConfig['connect_timeout'])) {
-                        $clientOptions['connect_timeout'] = $httpConfig['connect_timeout'];
-                    }
-                    if (! empty($clientOptions)) {
-                        $prismRequest = $prismRequest->withClientOptions($clientOptions);
-                    }
-                }
-
-                // Add system prompt if available (now includes memory context)
-                if (! empty($this->getInstructions())) {
-                    $prismRequest = $prismRequest->withSystemPrompt($this->getInstructionsWithMemory($context));
-                }
-
-                // Add messages for conversation history
-                $prismRequest = $prismRequest->withMessages($messages);
-
-                if (! empty($this->providerTools)) {
-                    $prismRequest = $prismRequest->withProviderTools($this->getProviderToolsForPrism());
-                }
-
-                // Add tools if available
-                $allTools = array_merge($this->loadedTools, ! empty($this->loadedSubAgents) ? [new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this)] : []);
-                if (! empty($allTools)) {
-                    $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
-                        ->withMaxSteps($this->maxSteps); // Prism will handle tool execution internally
-                }
-
-                // Add generation parameters if set
-                if ($this->getTemperature() !== null) {
-                    $prismRequest = $prismRequest->usingTemperature($this->getTemperature());
-                }
-
-                if ($this->getMaxTokens() !== null) {
-                    $prismRequest = $prismRequest->withMaxTokens($this->getMaxTokens());
-                }
-
-                if ($this->getTopP() !== null) {
-                    $prismRequest = $prismRequest->usingTopP($this->getTopP());
-                }
+                $prismRequest = $this->buildPrismRequest($context, $messages);
 
                 // Execute the request - Prism handles all tool calls internally
                 if ($this->getStreaming()) {
