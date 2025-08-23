@@ -128,7 +128,7 @@
                                 @endif
                             </div>
                         </div>
-                    @endif>
+                    @endif
                     @if(!empty($span['input_data']))
                         @include('vizra-adk::components.json-viewer', [
                             'data' => $span['input_data'],
