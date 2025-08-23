@@ -245,6 +245,48 @@ class SubAgent extends BaseLlmAgent
         File::deleteDirectory($testDir);
     }
 
+    public function test_file_to_class_name_handles_windows_paths()
+    {
+        $discovery = new AgentDiscovery;
+        
+        // Create a mock SplFileInfo with Windows-style path
+        $file = $this->createMock(\SplFileInfo::class);
+        $file->method('getPathname')->willReturn('C:\\Users\\test\\app\\Agents\\TestAgent.php');
+        
+        $namespace = 'App\\Agents';
+        $directory = 'C:\\Users\\test\\app\\Agents';
+        
+        // Use reflection to test the protected method
+        $reflection = new \ReflectionClass($discovery);
+        $method = $reflection->getMethod('fileToClassName');
+        $method->setAccessible(true);
+        
+        $result = $method->invoke($discovery, $file, $namespace, $directory);
+        
+        $this->assertEquals('App\\Agents\\TestAgent', $result);
+    }
+
+    public function test_file_to_class_name_handles_unix_paths()
+    {
+        $discovery = new AgentDiscovery;
+        
+        // Create a mock SplFileInfo with Unix-style path
+        $file = $this->createMock(\SplFileInfo::class);
+        $file->method('getPathname')->willReturn('/var/www/app/Agents/TestAgent.php');
+        
+        $namespace = 'App\\Agents';
+        $directory = '/var/www/app/Agents';
+        
+        // Use reflection to test the protected method
+        $reflection = new \ReflectionClass($discovery);
+        $method = $reflection->getMethod('fileToClassName');
+        $method->setAccessible(true);
+        
+        $result = $method->invoke($discovery, $file, $namespace, $directory);
+        
+        $this->assertEquals('App\\Agents\\TestAgent', $result);
+    }
+
     protected function createTestAgent(string $dir, string $className, string $baseClass, string $agentName): void
     {
         $baseClassName = class_basename($baseClass);

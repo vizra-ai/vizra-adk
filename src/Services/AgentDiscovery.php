@@ -89,7 +89,7 @@ class AgentDiscovery
                 }
 
                 // Check again after loading
-                if (! class_exists($className)) {
+                if (!class_exists($className)) {
                     continue;
                 }
             }
@@ -138,7 +138,12 @@ class AgentDiscovery
      */
     protected function fileToClassName(\SplFileInfo $file, string $namespace, string $directory): ?string
     {
-        $relativePath = str_replace($directory.'/', '', $file->getPathname());
+        // Normalize paths to use forward slashes for cross-platform compatibility
+        $directory = rtrim(str_replace('\\', '/', $directory), '/');
+        $filePath = str_replace('\\', '/', $file->getPathname());
+
+        // Get relative path from directory to file
+        $relativePath = str_replace($directory . '/', '', $filePath);
         $relativePath = str_replace('.php', '', $relativePath);
         $relativePath = str_replace('/', '\\', $relativePath);
 
