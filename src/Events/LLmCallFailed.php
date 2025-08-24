@@ -2,14 +2,13 @@
 
 namespace Vizra\VizraADK\Events;
 
-use Generator;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Prism\Prism\Text\PendingRequest;
-use Prism\Prism\Text\Response;
+use Throwable;
 use Vizra\VizraADK\System\AgentContext;
 
-class LlmResponseReceived
+class LLmCallFailed
 {
     use Dispatchable, SerializesModels;
 
@@ -17,18 +16,15 @@ class LlmResponseReceived
 
     public string $agentName;
 
-    public Generator|Response $llmResponse;
+    public Throwable $exception;
 
-    public PendingRequest $request;
+    public ?PendingRequest $request = null;
 
-    /**
-     * Create a new event instance.
-     */
-    public function __construct(AgentContext $context, string $agentName, Generator|Response $llmResponse, PendingRequest $request)
+    public function __construct(AgentContext $context, string $agentName, Throwable $exception, ?PendingRequest $request = null)
     {
         $this->context = $context;
         $this->agentName = $agentName;
-        $this->llmResponse = $llmResponse;
+        $this->exception = $exception;
         $this->request = $request;
     }
 }

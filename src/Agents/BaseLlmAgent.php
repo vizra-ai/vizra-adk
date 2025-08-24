@@ -20,6 +20,7 @@ use Prism\Prism\ValueObjects\Usage;
 use Throwable;
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\Events\AgentResponseGenerated;
+use Vizra\VizraADK\Events\LLmCallFailed;
 use Vizra\VizraADK\Events\LlmCallInitiating; // Use the Tool facade instead of Tool class
 use Vizra\VizraADK\Events\LlmResponseReceived;
 use Vizra\VizraADK\Events\ToolCallCompleted;
@@ -740,6 +741,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 }
 
             } catch (Throwable $e) {
+                Event::dispatch(new LlmCallFailed($context, $this->getName(), $e, $prismRequest ?? null));
                 throw new \RuntimeException('LLM API call failed: '.$e->getMessage(), 0, $e);
             }
 
