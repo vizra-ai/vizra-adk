@@ -3,6 +3,7 @@
 namespace Vizra\VizraADK\Examples\agents;
 
 use Generator;
+use Prism\Prism\Text\PendingRequest;
 use Prism\Prism\Text\Response;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Examples\tools\CartManagerTool;
@@ -95,7 +96,7 @@ Only include fields that are new or updated. Always place JSON after your respon
     /**
      * After each LLM response, extract and update context from JSON
      */
-    public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
+    public function afterLlmResponse(Response|Generator $response, AgentContext $context, ?PendingRequest $request = null): mixed
     {
         if ($response instanceof Response) {
             $responseText = $response->text;
