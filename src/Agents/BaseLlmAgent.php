@@ -17,11 +17,14 @@ use Prism\Prism\ValueObjects\Media\Image;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
 use Prism\Prism\ValueObjects\ProviderTool;
 use Prism\Prism\ValueObjects\Usage;
+use Throwable;
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\Events\AgentResponseGenerated;
+use Vizra\VizraADK\Events\LLmCallFailed;
 use Vizra\VizraADK\Events\LlmCallInitiating; // Use the Tool facade instead of Tool class
 use Vizra\VizraADK\Events\LlmResponseReceived;
 use Vizra\VizraADK\Events\ToolCallCompleted;
+use Vizra\VizraADK\Events\ToolCallFailed;
 use Vizra\VizraADK\Events\ToolCallInitiating;
 use Vizra\VizraADK\Exceptions\ToolExecutionException;
 use Vizra\VizraADK\Memory\AgentMemory;
@@ -598,12 +601,10 @@ abstract class BaseLlmAgent extends BaseAgent
                     ]);
 
                     return $processedResult;
-                } catch (\Throwable $e) {
-                    // Get the span ID for this tool call to mark it as failed
-                    $spanId = $context->getState("tool_call_span_id_{$tool->definition()['name']}");
-                    if ($spanId) {
-                        app(Tracer::class)->failSpan($spanId, $e);
-                    }
+                } catch (Throwable $e) {
+                    $this->onToolException($tool->definition()['name'], $e, $context);
+
+                    Event::dispatch(new ToolCallFailed($context, $this->getName(), $tool->definition()['name'], $e));
 
                     throw new ToolExecutionException("Error executing tool '{$tool->definition()['name']}': ".$e->getMessage(), 0, $e);
                 }
@@ -739,11 +740,12 @@ abstract class BaseLlmAgent extends BaseAgent
                     $llmResponse = $prismRequest->asText();
                 }
 
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
+                Event::dispatch(new LlmCallFailed($context, $this->getName(), $e, $prismRequest ?? null));
                 throw new \RuntimeException('LLM API call failed: '.$e->getMessage(), 0, $e);
             }
 
-            Event::dispatch(new LlmResponseReceived($context, $this->getName(), $llmResponse));
+            Event::dispatch(new LlmResponseReceived($context, $this->getName(), $llmResponse, $prismRequest));
 
             // Handle streaming differently
             if ($this->getStreaming()) {
@@ -752,7 +754,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 return $llmResponse;
             }
 
-            $processedResponse = $this->afterLlmResponse($llmResponse, $context);
+            $processedResponse = $this->afterLlmResponse($llmResponse, $context, $prismRequest);
 
             if (! ($processedResponse instanceof Response)) {
                 throw new \RuntimeException('afterLlmResponse hook modified the response to an incompatible type.');
@@ -780,7 +782,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
             return $result;
 
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // End the trace with error
             $tracer->failTrace($e);
             throw $e;
@@ -1054,7 +1056,7 @@ abstract class BaseLlmAgent extends BaseAgent
         return $this->getName();
     }
 
-    public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
+    public function afterLlmResponse(Response|Generator $response, AgentContext $context, ?PendingRequest $request = null): mixed
     {
         /** @var Tracer $tracer */
         $tracer = app(Tracer::class);
@@ -1159,7 +1161,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     'tool_name' => $toolName,
                     'span_id' => $spanId,
                 ]);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 logger()->error('Failed to end tool span', [
                     'tool_name' => $toolName,
                     'span_id' => $spanId,
@@ -1177,6 +1179,16 @@ abstract class BaseLlmAgent extends BaseAgent
         }
 
         return $result;
+    }
+
+    public function onToolException(string $toolName, Throwable $e, AgentContext $context): void
+    {
+        // Get the span ID for this tool call to mark it as failed
+        $spanId = $context->getState("tool_call_span_id_{$toolName}");
+
+        if ($spanId) {
+            app(Tracer::class)->failSpan($spanId, $e);
+        }
     }
 
     /**
