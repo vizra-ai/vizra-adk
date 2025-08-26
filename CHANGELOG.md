@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.23] - 2025-08-26
+
+Add tests for fileToClassName with Windows and Unix paths
+
+Fix misplaced closing tag in trace-span partial
+
+Enhanced ⁠afterLLmResponse Hook
+- Added request parameter to the ⁠afterLLmResponse method 
+- Now receives both the original request and response objects 
+- Enables complete request-response pair logging for better debugging and monitoring
+
+New ⁠onToolException Hook
+- Introduced a new hook to handle exceptions during tool execution 
+- Provides centralized error handling for tool-related failures 
+- Allows for custom error recovery strategies and logging
+
+New Event Types
+
+⁠ToolCallFailed Event
+- Emitted when a tool call encounters an error 
+- Includes error details, tool name, and input parameters 
+- Enables tracking of tool reliability and failure patterns
+⁠LLmCallFailed Event
+- Emitted when an LLM API call fails 
+- Contains error information, request details, and failure context 
+- Facilitates monitoring of LLM service health and error rates
+
+Add OpenRouter provider support
+
+
 ## [0.0.22] - 2025-08-23
 
 encapsulate prims request creation as well as tool creation into their own methods
