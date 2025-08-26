@@ -15,6 +15,7 @@ return [
      * - 'groq' - Groq (Fast inference)
      * - 'xai' or 'grok' - xAI (Grok models)
      * - 'voyageai' or 'voyage' - Voyage AI (Embeddings)
+     * - 'openrouter' - OpenRouter (Access 100+ models through unified API)
      */
     'default_provider' => env('VIZRA_ADK_DEFAULT_PROVIDER', 'google'),
 
@@ -42,6 +43,37 @@ return [
     'http' => [
         'timeout' => env('VIZRA_ADK_HTTP_TIMEOUT', 120),           // Total timeout in seconds (default: 2 minutes)
         'connect_timeout' => env('VIZRA_ADK_HTTP_CONNECT_TIMEOUT', 10), // Connection timeout in seconds
+    ],
+
+    /**
+     * Provider-specific configurations.
+     * Configure API keys and settings for each LLM provider.
+     * 
+     * Note: Most providers are configured through Prism PHP's configuration.
+     * Set these environment variables in your .env file:
+     * - OPENAI_API_KEY
+     * - ANTHROPIC_API_KEY
+     * - GEMINI_API_KEY
+     * - DEEPSEEK_API_KEY
+     * - MISTRAL_API_KEY
+     * - GROQ_API_KEY
+     * - XAI_API_KEY
+     * - VOYAGEAI_API_KEY
+     * - OPENROUTER_API_KEY
+     * 
+     * For OpenRouter:
+     * - API Key: Get from https://openrouter.ai/settings
+     * - Base URL: https://openrouter.ai/api/v1 (handled by Prism)
+     * - Models: Use format "provider/model" (e.g., "openai/gpt-4", "anthropic/claude-3-opus")
+     */
+    'providers' => [
+        'openrouter' => [
+            'api_key' => env('OPENROUTER_API_KEY'),
+            'base_url' => 'https://openrouter.ai/api/v1',
+            // Optional: Set default headers for OpenRouter
+            'http_referer' => env('OPENROUTER_HTTP_REFERER', config('app.url')),
+            'app_name' => env('OPENROUTER_APP_NAME', config('app.name')),
+        ],
     ],
 
     /**

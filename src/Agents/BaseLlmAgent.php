@@ -222,6 +222,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 'groq' => Provider::Groq,
                 'xai', 'grok' => Provider::XAI,
                 'voyageai', 'voyage' => Provider::VoyageAI,
+                'openrouter' => Provider::OpenRouter,
                 default => $this->resolveCustomProvider($defaultProvider),
             };
         }
@@ -370,7 +371,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
     /**
      * Set the provider for this agent.
-     * Supports all Prism providers: OpenAI, Anthropic, Gemini, DeepSeek, Ollama, Mistral, Groq, XAI, VoyageAI
+     * Supports all Prism providers: OpenAI, Anthropic, Gemini, DeepSeek, Ollama, Mistral, Groq, XAI, VoyageAI, OpenRouter
      *
      * @param Provider|string  $provider  The provider enum or string name
      */
@@ -387,6 +388,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 'groq' => Provider::Groq,
                 'xai', 'grok' => Provider::XAI,
                 'voyageai', 'voyage' => Provider::VoyageAI,
+                'openrouter' => Provider::OpenRouter,
                 default => $this->resolveCustomProvider($provider)
             };
         }
