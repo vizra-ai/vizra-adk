@@ -79,26 +79,32 @@ class StateManager
                 ['state_data' => $context->getAllState()]
             );
 
-            // Efficiently update messages: delete existing for session and re-insert current history.
-            // Could be optimized further for very long histories (e.g., only insert new messages),
-            // but this is robust for MVP.
-            AgentMessage::where('agent_session_id', $agentSession->id)->delete();
+            // Get existing message count for this session to determine starting index
+            $existingMessageCount = AgentMessage::where('agent_session_id', $agentSession->id)->count();
+            
+            // Get all messages from the context
+            $allMessages = $context->getConversationHistory();
+            
+            // Only insert new messages (those beyond the existing count)
+            if ($allMessages->count() > $existingMessageCount) {
+                $newMessages = $allMessages->slice($existingMessageCount);
+                
+                $messagesToInsert = $newMessages->map(function ($message) use ($agentSession) {
+                    $content = $message['content'] ?? '';
 
-            $messagesToInsert = $context->getConversationHistory()->map(function ($message) use ($agentSession) {
-                $content = $message['content'] ?? '';
+                    // Don't pre-process content - let the model's JSON cast handle it
+                    return [
+                        'agent_session_id' => $agentSession->id,
+                        'role' => $message['role'],
+                        'content' => $content, // Let the model cast handle JSON encoding
+                        'tool_name' => $message['tool_name'] ?? null,
+                    ];
+                })->all();
 
-                // Don't pre-process content - let the model's JSON cast handle it
-                return [
-                    'agent_session_id' => $agentSession->id,
-                    'role' => $message['role'],
-                    'content' => $content, // Let the model cast handle JSON encoding
-                    'tool_name' => $message['tool_name'] ?? null,
-                ];
-            })->all();
-
-            // Use model creation instead of insert to ensure casting is applied
-            foreach ($messagesToInsert as $messageData) {
-                AgentMessage::create($messageData);
+                // Use model creation instead of insert to ensure casting is applied
+                foreach ($messagesToInsert as $messageData) {
+                    AgentMessage::create($messageData);
+                }
             }
         });
 

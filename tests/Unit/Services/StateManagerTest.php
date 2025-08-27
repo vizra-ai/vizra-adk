@@ -186,3 +186,132 @@ it('can save context with memory updates', function () {
     expect($memoryContextArray['key_learnings'])->toContain('New learning from conversation');
     expect($memoryContextArray['facts']['user_satisfaction'])->toBe('high');
 });
+
+it('persists all messages without deleting on multiple saves', function () {
+    $agentName = 'persist-test-agent';
+    $context = $this->stateManager->loadContext($agentName, null, 'test input');
+    
+    // Add initial messages
+    $context->addMessage(['role' => 'user', 'content' => 'Message 1']);
+    $context->addMessage(['role' => 'assistant', 'content' => 'Response 1']);
+    
+    // Save context first time
+    $this->stateManager->saveContext($context, $agentName, false);
+    
+    // Add more messages
+    $context->addMessage(['role' => 'user', 'content' => 'Message 2']);
+    $context->addMessage(['role' => 'assistant', 'content' => 'Response 2']);
+    
+    // Save context second time - should not delete existing messages
+    $this->stateManager->saveContext($context, $agentName, false);
+    
+    // Add even more messages
+    $context->addMessage(['role' => 'user', 'content' => 'Message 3']);
+    $context->addMessage(['role' => 'assistant', 'content' => 'Response 3']);
+    
+    // Save context third time
+    $this->stateManager->saveContext($context, $agentName, false);
+    
+    // Reload context and verify all messages are persisted
+    $reloadedContext = $this->stateManager->loadContext($agentName, $context->getSessionId());
+    $history = $reloadedContext->getConversationHistory();
+    
+    expect($history)->toHaveCount(6);
+    expect($history[0]['content'])->toBe('Message 1');
+    expect($history[1]['content'])->toBe('Response 1');
+    expect($history[2]['content'])->toBe('Message 2');
+    expect($history[3]['content'])->toBe('Response 2');
+    expect($history[4]['content'])->toBe('Message 3');
+    expect($history[5]['content'])->toBe('Response 3');
+});
+
+it('does not create duplicate messages on multiple saves', function () {
+    $agentName = 'no-duplicates-agent';
+    $context = $this->stateManager->loadContext($agentName, null, 'test input');
+    
+    // Add messages
+    $context->addMessage(['role' => 'user', 'content' => 'Hello']);
+    $context->addMessage(['role' => 'assistant', 'content' => 'Hi']);
+    
+    // Save multiple times without adding new messages
+    $this->stateManager->saveContext($context, $agentName, false);
+    $this->stateManager->saveContext($context, $agentName, false);
+    $this->stateManager->saveContext($context, $agentName, false);
+    
+    // Reload and verify no duplicates
+    $reloadedContext = $this->stateManager->loadContext($agentName, $context->getSessionId());
+    $history = $reloadedContext->getConversationHistory();
+    
+    expect($history)->toHaveCount(2);
+    expect($history[0]['content'])->toBe('Hello');
+    expect($history[1]['content'])->toBe('Hi');
+});
+
+it('persists long conversation history beyond typical historyLimit', function () {
+    $agentName = 'long-conversation-agent';
+    $context = $this->stateManager->loadContext($agentName, null, 'test input');
+    
+    // Add 100+ messages to simulate a long conversation
+    for ($i = 1; $i <= 105; $i++) {
+        $context->addMessage(['role' => 'user', 'content' => "User message {$i}"]);
+        $context->addMessage(['role' => 'assistant', 'content' => "Assistant response {$i}"]);
+        
+        // Save periodically to simulate real usage
+        if ($i % 20 === 0) {
+            $this->stateManager->saveContext($context, $agentName, false);
+        }
+    }
+    
+    // Final save
+    $this->stateManager->saveContext($context, $agentName, false);
+    
+    // Reload context and verify ALL messages are persisted
+    $reloadedContext = $this->stateManager->loadContext($agentName, $context->getSessionId());
+    $history = $reloadedContext->getConversationHistory();
+    
+    // Should have all 210 messages (105 user + 105 assistant)
+    expect($history)->toHaveCount(210);
+    
+    // Verify first few messages
+    expect($history[0]['content'])->toBe('User message 1');
+    expect($history[1]['content'])->toBe('Assistant response 1');
+    
+    // Verify middle messages
+    expect($history[100]['content'])->toBe('User message 51');
+    expect($history[101]['content'])->toBe('Assistant response 51');
+    
+    // Verify last messages
+    expect($history[208]['content'])->toBe('User message 105');
+    expect($history[209]['content'])->toBe('Assistant response 105');
+});
+
+it('correctly handles incremental message saving across multiple sessions', function () {
+    $agentName = 'incremental-save-agent';
+    $sessionId = (string) Str::uuid();
+    
+    // First context load and save
+    $context1 = $this->stateManager->loadContext($agentName, $sessionId, 'first input');
+    $context1->addMessage(['role' => 'user', 'content' => 'First message']);
+    $context1->addMessage(['role' => 'assistant', 'content' => 'First response']);
+    $this->stateManager->saveContext($context1, $agentName, false);
+    
+    // Second context load (simulating new request in same session)
+    $context2 = $this->stateManager->loadContext($agentName, $sessionId, 'second input');
+    expect($context2->getConversationHistory())->toHaveCount(2);
+    
+    // Add more messages
+    $context2->addMessage(['role' => 'user', 'content' => 'Second message']);
+    $context2->addMessage(['role' => 'assistant', 'content' => 'Second response']);
+    $this->stateManager->saveContext($context2, $agentName, false);
+    
+    // Third context load
+    $context3 = $this->stateManager->loadContext($agentName, $sessionId, 'third input');
+    expect($context3->getConversationHistory())->toHaveCount(4);
+    
+    // Verify all messages are in correct order
+    $history = $context3->getConversationHistory();
+    expect($history[0]['content'])->toBe('First message');
+    expect($history[1]['content'])->toBe('First response');
+    expect($history[2]['content'])->toBe('Second message');
+    expect($history[3]['content'])->toBe('Second response');
+});
