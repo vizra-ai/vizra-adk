@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.24] - 2025-08-27
+
+Optimize message persistence in StateManager
+Refactored StateManager to only insert new messages instead of deleting and reinserting all messages on each save. Added tests to verify message persistence, prevent duplicates, handle long histories, and ensure correct incremental saving across sessions.
+
 ## [0.0.23] - 2025-08-26
 
 Add tests for fileToClassName with Windows and Unix paths

@@ -1,6 +1,6 @@
 {
   "name": "vizra/vizra-adk",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "description": "Vizra Agent Development Kit - A comprehensive Laravel package for building intelligent AI agents.",
   "type": "laravel-package",
   "license": "MIT",
