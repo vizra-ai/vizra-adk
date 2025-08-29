@@ -42,6 +42,15 @@ class AgentServiceProvider extends ServiceProvider
             'vizra-adk'
         );
 
+        // Merge vizra-adk providers into prism config
+        $vizraProviders = config('vizra-adk.providers', []);
+        if (!empty($vizraProviders)) {
+            config(['prism.providers' => array_merge(
+                config('prism.providers', []),
+                $vizraProviders
+            )]);
+        }
+
         // Register the VectorMemoryServiceProvider
         $this->app->register(VectorMemoryServiceProvider::class);
 
