@@ -6,11 +6,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
+use Vizra\VizraADK\Contracts\VectorDriverInterface;
 use Vizra\VizraADK\Models\VectorMemory;
 use Vizra\VizraADK\Services\Drivers\MeilisearchVectorDriver;
-use Vizra\VizraADK\Tests\TestCase;
 
-class MeilisearchVectorDriverTest extends TestCase
+class MeilisearchVectorDriverTest extends VectorDriverContractTest
 {
     protected MeilisearchVectorDriver $driver;
 
@@ -20,16 +20,17 @@ class MeilisearchVectorDriverTest extends TestCase
 
     protected string $testIndexPrefix = 'test_vectors_';
 
-    protected function setUp(): void
+    protected function setUpDriver(): void
     {
-        parent::setUp();
-
         // Mock configuration
         Config::set('vizra-adk.vector_memory.drivers.meilisearch.host', $this->testHost);
         Config::set('vizra-adk.vector_memory.drivers.meilisearch.api_key', $this->testApiKey);
         Config::set('vizra-adk.vector_memory.drivers.meilisearch.index_prefix', $this->testIndexPrefix);
+    }
 
-        $this->driver = new MeilisearchVectorDriver;
+    protected function createDriver(): VectorDriverInterface
+    {
+        return new MeilisearchVectorDriver();
     }
 
     public function test_constructor_sets_configuration_correctly()

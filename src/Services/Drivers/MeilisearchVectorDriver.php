@@ -6,9 +6,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
+use Vizra\VizraADK\Contracts\VectorDriverInterface;
 use Vizra\VizraADK\Models\VectorMemory;
 
-class MeilisearchVectorDriver
+class MeilisearchVectorDriver implements VectorDriverInterface
 {
     protected string $host;
 

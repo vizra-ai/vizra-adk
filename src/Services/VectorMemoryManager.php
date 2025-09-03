@@ -9,9 +9,12 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RuntimeException;
 use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Contracts\VectorDriverInterface;
 use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\Models\VectorMemory;
 use Vizra\VizraADK\Services\Drivers\MeilisearchVectorDriver;
+use Vizra\VizraADK\Services\Drivers\PgVectorDriver;
+use Vizra\VizraADK\Services\Drivers\WeaviateVectorDriver;
 
 class VectorMemoryManager
 {
@@ -19,13 +22,32 @@ class VectorMemoryManager
 
     protected DocumentChunker $chunker;
 
-    protected string $driver;
+    protected string $driverName;
+
+    protected ?VectorDriverInterface $driver = null;
 
     public function __construct(EmbeddingProviderInterface $embeddingProvider, DocumentChunker $chunker)
     {
         $this->embeddingProvider = $embeddingProvider;
         $this->chunker = $chunker;
-        $this->driver = config('vizra-adk.vector_memory.driver', 'pgvector');
+        $this->driverName = config('vizra-adk.vector_memory.driver', 'pgvector');
+    }
+
+    /**
+     * Get the active vector driver instance.
+     */
+    protected function getDriver(): VectorDriverInterface
+    {
+        if ($this->driver === null) {
+            $this->driver = match ($this->driverName) {
+                'pgvector' => new PgVectorDriver(),
+                'meilisearch' => new MeilisearchVectorDriver(),
+                'weaviate' => new WeaviateVectorDriver(),
+                default => throw new RuntimeException("Unsupported vector driver: {$this->driverName}"),
+            };
+        }
+
+        return $this->driver;
     }
 
     /**
@@ -178,23 +200,14 @@ class VectorMemoryManager
                 'embedding_provider' => $this->embeddingProvider->getProviderName(),
                 'embedding_model' => $this->embeddingProvider->getModel(),
                 'embedding_dimensions' => $this->embeddingProvider->getDimensions(),
-                'embedding_vector' => $this->driver === 'pgvector' ? null : $embedding,
+                'embedding_vector' => $embedding,
                 'embedding_norm' => $norm,
                 'content_hash' => $contentHash,
                 'token_count' => VectorMemory::estimateTokenCount($content),
             ]);
 
-            // Handle driver-specific storage
-            if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
-                // For PostgreSQL with pgvector, update the vector column separately
-                DB::table('agent_vector_memories')
-                    ->where('id', $memory->id)
-                    ->update(['embedding' => '['.implode(',', $embedding).']']);
-            } elseif ($this->driver === 'meilisearch') {
-                // For Meilisearch, store in the vector database
-                $meilisearchDriver = new MeilisearchVectorDriver;
-                $meilisearchDriver->store($memory);
-            }
+            // Store using the selected driver
+            $this->getDriver()->store($memory);
 
             Log::debug('Added chunk to vector memory', [
                 'agent_name' => $agentName,
@@ -255,13 +268,8 @@ class VectorMemoryManager
             $queryEmbeddings = $this->embeddingProvider->embed($query);
             $queryEmbedding = $queryEmbeddings[0];
 
-            if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
-                return $this->searchWithPgVector($agentName, $queryEmbedding, $namespace, $limit, $threshold);
-            } elseif ($this->driver === 'meilisearch') {
-                return $this->searchWithMeilisearch($agentName, $queryEmbedding, $namespace, $limit, $threshold);
-            } else {
-                return $this->searchWithCosineSimilarity($agentName, $queryEmbedding, $namespace, $limit, $threshold);
-            }
+            // Use the selected driver for search
+            return $this->getDriver()->search($agentName, $queryEmbedding, $namespace, $limit, $threshold);
 
         } catch (\Exception $e) {
             Log::error('Vector memory search failed', [
@@ -273,97 +281,6 @@ class VectorMemoryManager
         }
     }
 
-    /**
-     * Search using PostgreSQL pgvector extension.
-     */
-    protected function searchWithPgVector(
-        string $agentName,
-        array $queryEmbedding,
-        string $namespace,
-        int $limit,
-        float $threshold
-    ): Collection {
-        $embeddingStr = '['.implode(',', $queryEmbedding).']';
-
-        $results = DB::select('
-            SELECT
-                id, agent_name, namespace, content, metadata, source, source_id,
-                embedding_provider, embedding_model, created_at,
-                1 - (embedding <=> ?) as similarity
-            FROM agent_vector_memories
-            WHERE agent_name = ?
-                AND namespace = ?
-                AND 1 - (embedding <=> ?) >= ?
-            ORDER BY embedding <=> ?
-            LIMIT ?
-        ', [$embeddingStr, $agentName, $namespace, $embeddingStr, $threshold, $embeddingStr, $limit]);
-
-        return collect($results)->map(function ($result) {
-            $result->metadata = json_decode($result->metadata, true);
-
-            return $result;
-        });
-    }
-
-    /**
-     * Search using in-memory cosine similarity calculation.
-     */
-    protected function searchWithCosineSimilarity(
-        string $agentName,
-        array $queryEmbedding,
-        string $namespace,
-        int $limit,
-        float $threshold
-    ): Collection {
-        $memories = VectorMemory::forAgent($agentName)
-            ->inNamespace($namespace)
-            ->get();
-
-        $results = $memories->map(function (VectorMemory $memory) use ($queryEmbedding) {
-            $similarity = $memory->cosineSimilarity($queryEmbedding);
-
-            return (object) [
-                'id' => $memory->id,
-                'agent_name' => $memory->agent_name,
-                'namespace' => $memory->namespace,
-                'content' => $memory->content,
-                'metadata' => $memory->metadata,
-                'source' => $memory->source,
-                'source_id' => $memory->source_id,
-                'embedding_provider' => $memory->embedding_provider,
-                'embedding_model' => $memory->embedding_model,
-                'created_at' => $memory->created_at,
-                'similarity' => $similarity,
-            ];
-        })
-            ->filter(fn ($result) => $result->similarity >= $threshold)
-            ->sortByDesc('similarity')
-            ->take($limit)
-            ->values();
-
-        return $results;
-    }
-
-    /**
-     * Search using Meilisearch vector database.
-     */
-    protected function searchWithMeilisearch(
-        string $agentName,
-        array $queryEmbedding,
-        string $namespace,
-        int $limit,
-        float $threshold
-    ): Collection {
-        $meilisearchDriver = new MeilisearchVectorDriver;
-
-        return $meilisearchDriver->search(
-            agentName: $agentName,
-            queryEmbedding: $queryEmbedding,
-            namespace: $namespace,
-            limit: $limit,
-            threshold: $threshold
-        );
-    }
 
     /**
      * Generate RAG context from search results.
@@ -470,17 +387,7 @@ class VectorMemoryManager
             throw new InvalidArgumentException('Second parameter must be string, array, or null');
         }
         
-        $count = VectorMemory::forAgent($agentName)
-            ->inNamespace($namespace)
-            ->delete();
-
-        Log::info('Deleted vector memories', [
-            'agent_name' => $agentName,
-            'namespace' => $namespace,
-            'count' => $count,
-        ]);
-
-        return $count;
+        return $this->getDriver()->delete($agentName, $namespace);
     }
 
     /**
@@ -507,19 +414,7 @@ class VectorMemoryManager
             throw new InvalidArgumentException('Second parameter must be string or array');
         }
         
-        $count = VectorMemory::forAgent($agentName)
-            ->inNamespace($namespace)
-            ->fromSource($source)
-            ->delete();
-
-        Log::info('Deleted vector memories by source', [
-            'agent_name' => $agentName,
-            'namespace' => $namespace,
-            'source' => $source,
-            'count' => $count,
-        ]);
-
-        return $count;
+        return $this->getDriver()->delete($agentName, $namespace, $source);
     }
 
     /**
@@ -545,21 +440,7 @@ class VectorMemoryManager
             throw new InvalidArgumentException('Second parameter must be string, array, or null');
         }
         
-        $query = VectorMemory::forAgent($agentName)->inNamespace($namespace);
-
-        return [
-            'total_memories' => $query->count(),
-            'total_tokens' => $query->sum('token_count'),
-            'providers' => $query->select('embedding_provider', DB::raw('count(*) as count'))
-                ->groupBy('embedding_provider')
-                ->pluck('count', 'embedding_provider')
-                ->toArray(),
-            'sources' => $query->whereNotNull('source')
-                ->select('source', DB::raw('count(*) as count'))
-                ->groupBy('source')
-                ->pluck('count', 'source')
-                ->toArray(),
-        ];
+        return $this->getDriver()->getStatistics($agentName, $namespace);
     }
 
     /**

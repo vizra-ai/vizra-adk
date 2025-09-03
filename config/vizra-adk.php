@@ -265,7 +265,7 @@ return [
 
         /**
          * Vector storage driver.
-         * Supported: 'pgvector', 'meilisearch'
+         * Supported: 'pgvector', 'meilisearch', 'weaviate'
          */
         'driver' => env('VIZRA_ADK_VECTOR_DRIVER', 'pgvector'),
 
@@ -315,6 +315,12 @@ return [
                 'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
                 'api_key' => env('MEILISEARCH_KEY'),
                 'index_prefix' => env('MEILISEARCH_PREFIX', 'agent_vectors_'),
+            ],
+
+            'weaviate' => [
+                'host' => env('WEAVIATE_HOST', 'http://localhost:8080'),
+                'api_key' => env('WEAVIATE_API_KEY'),
+                'class_prefix' => env('WEAVIATE_CLASS_PREFIX', 'Agent'),
             ],
         ],
 
