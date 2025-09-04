@@ -6,6 +6,60 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.27] - 2025-09-04
+
+Fix provider enum handling in BaseLlmAgent
+
+
+## [0.0.27] - 2025-09-04
+
+### Fixed
+- **OpenRouter Authentication Error**: Fixed issue where using `Provider::OpenRouter` enum directly in agent class properties caused authentication failures. The `getProvider()` method now properly handles both Provider enum instances and string values, allowing developers to use either approach.
+
+### Changed
+- Enhanced provider handling in `BaseLlmAgent` to support both string values (e.g., `'openrouter'`) and Provider enum instances (e.g., `Provider::OpenRouter`)
+
+## [0.0.26] - 2025-09-04
+
+🚀 Enhanced Streaming Response Handling
+
+  - Improved streaming functionality: Added intelligent buffering system that
+  captures the complete response text while streaming
+  - Context persistence: Streaming responses now properly update the agent
+  context with the complete assistant message after streaming completes
+  - Event dispatching: Added AgentResponseGenerated event firing for streaming
+  responses
+  - Trace completion: Proper trace span closure for streaming operations with
+  success/error status
+
+  📚 Laravel Boost Integration
+
+  - New Boost guidelines system: Added comprehensive ADK documentation as Laravel
+   Boost guidelines
+  - Guidelines included:
+    - Agent creation guide
+    - Best practices documentation
+    - Evaluation framework guide
+    - Memory usage patterns
+    - Sub-agents implementation
+    - Tool creation guide
+    - Troubleshooting guide
+    - Workflow patterns documentation
+  - New command: Added BoostInstallCommand for installing ADK guidelines into
+  Laravel Boost
+
+  🔧 Bug Fixes
+
+  - Fixed Prism PHP version constraint: Corrected composer.json version format
+  from ^0.84 to ^0.84.0 for proper dependency resolution
+
+  Files Modified
+
+  - composer.json - Fixed Prism PHP version constraint
+  - src/Agents/BaseLlmAgent.php - Enhanced streaming response handling
+  - src/Providers/AgentServiceProvider.php - Added Boost command registration
+  - src/Console/Commands/BoostInstallCommand.php - New Boost installation command
+
 ## [0.0.25] - 2025-08-29
 
 Merge vizra-adk providers into prism config

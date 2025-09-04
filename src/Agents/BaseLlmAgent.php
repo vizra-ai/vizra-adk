@@ -210,6 +210,12 @@ abstract class BaseLlmAgent extends BaseAgent
 
     protected function getProvider(): string
     {
+        // Handle if provider is already a Provider enum instance
+        // This supports agents that set the provider property directly as an enum
+        if ($this->provider instanceof Provider) {
+            return $this->provider->value;
+        }
+        
         if ($this->provider === null) {
             $defaultProvider = config('vizra-adk.default_provider', 'openai');
             $this->provider = match ($defaultProvider) {
@@ -751,9 +757,60 @@ abstract class BaseLlmAgent extends BaseAgent
 
             // Handle streaming differently
             if ($this->getStreaming()) {
-                // For streaming, return the stream directly
-                // The consumer is responsible for handling the stream
-                return $llmResponse;
+                // Wrap the stream to buffer final text, update context, end trace, and persist
+                $agentName = $this->getName();
+                $tracerRef = $tracer; // capture for generator scope
+                $wrapped = (function () use ($llmResponse, $context, $agentName, $tracerRef) {
+                    $buffer = '';
+                    try {
+                        foreach ($llmResponse as $chunk) {
+                            // Try to extract text from known chunk shapes
+                            $text = '';
+                            if (is_string($chunk)) {
+                                $text = $chunk;
+                            } elseif (is_object($chunk)) {
+                                if (method_exists($chunk, '__toString')) {
+                                    $text = (string) $chunk;
+                                } elseif (property_exists($chunk, 'text')) {
+                                    $text = $chunk->text;
+                                } elseif (method_exists($chunk, 'text')) {
+                                    $text = $chunk->text();
+                                }
+                            }
+
+                            if ($text !== '') {
+                                $buffer .= $text;
+                            }
+
+                            // Yield the original chunk to the consumer (controller/Livewire/UI)
+                            yield $chunk;
+                        }
+
+                        // After stream completes, add assistant message to context
+                        $context->addMessage([
+                            'role' => 'assistant',
+                            'content' => $buffer ?: '',
+                        ]);
+
+                        // Fire response event for listeners
+                        Event::dispatch(new AgentResponseGenerated($context, $agentName, $buffer));
+
+                        // End the trace with success
+                        $tracerRef->endTrace(
+                            output: ['response' => $buffer],
+                            status: 'success'
+                        );
+
+                        // Persist updated context (append assistant message)
+                        app(\Vizra\VizraADK\Services\StateManager::class)->saveContext($context, $agentName);
+                    } catch (\Throwable $e) {
+                        // Mark trace failed and rethrow to consumer
+                        $tracerRef->failTrace($e);
+                        throw $e;
+                    }
+                })();
+
+                return $wrapped;
             }
 
             $processedResponse = $this->afterLlmResponse($llmResponse, $context, $prismRequest);
