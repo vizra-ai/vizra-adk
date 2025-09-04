@@ -210,6 +210,12 @@ abstract class BaseLlmAgent extends BaseAgent
 
     protected function getProvider(): string
     {
+        // Handle if provider is already a Provider enum instance
+        // This supports agents that set the provider property directly as an enum
+        if ($this->provider instanceof Provider) {
+            return $this->provider->value;
+        }
+        
         if ($this->provider === null) {
             $defaultProvider = config('vizra-adk.default_provider', 'openai');
             $this->provider = match ($defaultProvider) {
