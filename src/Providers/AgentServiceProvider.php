@@ -10,6 +10,7 @@ use Vizra\VizraADK\Console\Commands\AgentChatCommand;
 use Vizra\VizraADK\Console\Commands\AgentDiscoverCommand;
 use Vizra\VizraADK\Console\Commands\AgentTraceCleanupCommand;
 use Vizra\VizraADK\Console\Commands\AgentTraceCommand;
+use Vizra\VizraADK\Console\Commands\BoostInstallCommand;
 use Vizra\VizraADK\Console\Commands\DashboardCommand;
 use Vizra\VizraADK\Console\Commands\InstallCommand;
 use Vizra\VizraADK\Console\Commands\MakeAgentCommand;
@@ -140,6 +141,7 @@ class AgentServiceProvider extends ServiceProvider
                 AgentDiscoverCommand::class,
                 MCPListServersCommand::class,
                 ManagePromptsCommand::class,
+                BoostInstallCommand::class,
             ]);
         }
 
