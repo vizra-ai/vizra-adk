@@ -382,7 +382,8 @@ class WeaviateVectorDriver implements VectorDriverInterface
                 'description' => "Vector memories for {$className}",
                 'vectorizer' => 'none', // We provide our own vectors
                 'properties' => [
-                    ['name' => 'memory_id', 'dataType' => ['int'], 'description' => 'Memory ID'],
+                    // Use string for ULID-based memory IDs
+                    ['name' => 'memory_id', 'dataType' => ['string'], 'description' => 'Memory ID'],
                     ['name' => 'agent_name', 'dataType' => ['string'], 'description' => 'Agent name'],
                     ['name' => 'namespace', 'dataType' => ['string'], 'description' => 'Namespace'],
                     ['name' => 'content', 'dataType' => ['text'], 'description' => 'Content text'],
