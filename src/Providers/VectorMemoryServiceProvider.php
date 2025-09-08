@@ -115,7 +115,7 @@ class VectorMemoryServiceProvider extends ServiceProvider
         }
 
         // Validate driver
-        $supportedDrivers = ['pgvector', 'meilisearch'];
+        $supportedDrivers = ['pgvector', 'meilisearch', 'weaviate'];
         if (! in_array($driver, $supportedDrivers)) {
             throw new RuntimeException("Unsupported vector driver: {$driver}. Supported: ".implode(', ', $supportedDrivers));
         }
@@ -201,6 +201,28 @@ class VectorMemoryServiceProvider extends ServiceProvider
 
                 if (! $dbConfig || $dbConfig['driver'] !== 'pgsql') {
                     throw new RuntimeException("pgvector driver requires a PostgreSQL database connection. Check connection: {$connection}");
+                }
+                break;
+
+            case 'weaviate':
+                $host = config('vizra-adk.vector_memory.drivers.weaviate.host');
+                if (! $host) {
+                    throw new RuntimeException('Weaviate driver requires host configuration (WEAVIATE_HOST).');
+                }
+
+                // Optional: ping Weaviate meta in production
+                if (app()->environment('production')) {
+                    try {
+                        $response = \Illuminate\Support\Facades\Http::timeout(5)->get(rtrim($host, '/').'/v1/meta');
+                        if (! $response->successful()) {
+                            Log::warning('Weaviate service not available', ['host' => $host]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to connect to Weaviate', [
+                            'host' => $host,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
                 }
                 break;
 
