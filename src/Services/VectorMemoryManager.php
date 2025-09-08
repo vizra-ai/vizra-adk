@@ -188,8 +188,11 @@ class VectorMemoryManager
             // Calculate norm
             $norm = VectorMemory::calculateNorm($embedding);
 
-            // Create memory entry
-            $memory = VectorMemory::create([
+            // Determine storage behavior based on DB driver
+            $dbDriver = DB::connection()->getDriverName();
+
+            // Base payload (common columns)
+            $payload = [
                 'agent_name' => $agentName,
                 'namespace' => $namespace,
                 'content' => $content,
@@ -200,11 +203,21 @@ class VectorMemoryManager
                 'embedding_provider' => $this->embeddingProvider->getProviderName(),
                 'embedding_model' => $this->embeddingProvider->getModel(),
                 'embedding_dimensions' => $this->embeddingProvider->getDimensions(),
-                'embedding_vector' => $embedding,
                 'embedding_norm' => $norm,
                 'content_hash' => $contentHash,
                 'token_count' => VectorMemory::estimateTokenCount($content),
-            ]);
+            ];
+
+            // Persist JSON vector column when not using pgvector driver
+            if ($this->driverName !== 'pgvector') {
+                $payload['embedding_vector'] = $embedding;
+            }
+
+            // Create memory entry
+            $memory = VectorMemory::create($payload);
+
+            // Always keep the in-memory embedding available for drivers (pgvector/weaviate/meilisearch)
+            $memory->setAttribute('embedding_vector', $embedding);
 
             // Store using the selected driver
             $this->getDriver()->store($memory);
