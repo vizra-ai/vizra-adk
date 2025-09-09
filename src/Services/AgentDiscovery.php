@@ -111,17 +111,17 @@ class AgentDiscovery
     protected function namespaceToPath(string $namespace): string
     {
         // Convert namespace to path
-        $relativePath = str_replace('\\', '/', $namespace);
+        $relativePath = str_replace('\\', DIRECTORY_SEPARATOR, $namespace);
 
         // Check common locations
         if (str_starts_with($namespace, 'App\\')) {
             if (function_exists('app_path')) {
-                return app_path(str_replace('App/', '', $relativePath));
+                return app_path(str_replace('App'.DIRECTORY_SEPARATOR, '', $relativePath));
             }
             // Fallback for non-Laravel environments
             $basePath = dirname(dirname(dirname(dirname(dirname(__DIR__)))));
 
-            return $basePath.'/app/'.str_replace('App/', '', $relativePath);
+            return $basePath.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.str_replace('App/', '', $relativePath);
         }
 
         // Default to base path
