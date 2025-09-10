@@ -12,7 +12,7 @@ use Vizra\VizraADK\Services\Drivers\MeilisearchVectorDriver;
 
 class MeilisearchVectorDriverTest extends VectorDriverContractTest
 {
-    protected MeilisearchVectorDriver $driver;
+    protected VectorDriverInterface $driver;
 
     protected string $testHost = 'http://test-meilisearch:7700';
 
