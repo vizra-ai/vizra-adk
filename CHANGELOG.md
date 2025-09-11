@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.28] - 2025-09-11
+
+Update namespace conversion to use DIRECTORY_SEPARATOR for cross-platfor
+
+Support array config for provider tools in BaseLlmAgent
+
 ## [0.0.27] - 2025-09-04
 
 Fix provider enum handling in BaseLlmAgent
