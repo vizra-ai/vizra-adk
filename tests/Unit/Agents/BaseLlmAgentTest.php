@@ -53,6 +53,127 @@ it('can load provider tools as Prism provider tool object values', function () {
     );
 });
 
+it('handles provider tools with array configuration for Anthropic', function () {
+    // Create a test agent with Anthropic provider tools using array format
+    $agent = new class extends BaseLlmAgent {
+        protected string $name = 'anthropic-test-agent';
+        protected string $description = 'Test agent with Anthropic provider tools';
+        protected string $instructions = 'Test instructions';
+        protected string $model = 'claude-3-opus-20240229';
+        protected array $providerTools = [
+            ['type' => 'code_execution_20250522', 'name' => 'code_execution'],
+            ['type' => 'web_search_20250305', 'name' => 'web_search'],
+            ['type' => 'text_editor_20250124', 'name' => 'text_editor', 'options' => ['max_length' => 1000]],
+        ];
+        
+        public function execute(mixed $input, AgentContext $context): mixed {
+            return 'test';
+        }
+    };
+    
+    $providerTools = $agent->getProviderToolsForPrism();
+    
+    // Check that each tool has the correct type and name
+    expect($providerTools)->toHaveCount(3);
+    
+    // Check code_execution tool
+    expect($providerTools[0]->type)->toBe('code_execution_20250522');
+    expect($providerTools[0]->name)->toBe('code_execution');
+    
+    // Check web_search tool
+    expect($providerTools[1]->type)->toBe('web_search_20250305');
+    expect($providerTools[1]->name)->toBe('web_search');
+    
+    // Check text_editor tool with options
+    expect($providerTools[2]->type)->toBe('text_editor_20250124');
+    expect($providerTools[2]->name)->toBe('text_editor');
+    expect($providerTools[2]->options)->toBe(['max_length' => 1000]);
+});
+
+it('handles provider tools with string format', function () {
+    // Create a test agent with simple string provider tools
+    $agent = new class extends BaseLlmAgent {
+        protected string $name = 'string-provider-test-agent';
+        protected string $description = 'Test agent with string provider tools';
+        protected string $instructions = 'Test instructions';
+        protected string $model = 'gpt-4';
+        protected array $providerTools = [
+            'custom_tool',
+            'another_tool_20250101',
+        ];
+        
+        public function execute(mixed $input, AgentContext $context): mixed {
+            return 'test';
+        }
+    };
+    
+    $providerTools = $agent->getProviderToolsForPrism();
+    
+    expect($providerTools)->toHaveCount(2);
+    
+    // String tools should only have type, no name
+    expect($providerTools[0]->type)->toBe('custom_tool');
+    expect($providerTools[0]->name)->toBeNull();
+    
+    expect($providerTools[1]->type)->toBe('another_tool_20250101');
+    expect($providerTools[1]->name)->toBeNull();
+});
+
+it('handles mixed provider tools formats', function () {
+    // Create a test agent with mixed string and array provider tools
+    $agent = new class extends BaseLlmAgent {
+        protected string $name = 'mixed-provider-test-agent';
+        protected string $description = 'Test agent with mixed provider tools';
+        protected string $instructions = 'Test instructions';
+        protected string $model = 'claude-3-opus-20240229';
+        protected array $providerTools = [
+            'simple_tool_12345',  // String format
+            ['type' => 'code_execution_20250522', 'name' => 'code_execution'],  // Array format
+            ['type' => 'custom_tool', 'name' => 'my_custom', 'options' => ['timeout' => 30]],  // Array with options
+        ];
+        
+        public function execute(mixed $input, AgentContext $context): mixed {
+            return 'test';
+        }
+    };
+    
+    $providerTools = $agent->getProviderToolsForPrism();
+    
+    expect($providerTools)->toHaveCount(3);
+    
+    // String format - no name
+    expect($providerTools[0]->type)->toBe('simple_tool_12345');
+    expect($providerTools[0]->name)->toBeNull();
+    
+    // Array format with name
+    expect($providerTools[1]->type)->toBe('code_execution_20250522');
+    expect($providerTools[1]->name)->toBe('code_execution');
+    
+    // Array format with name and options
+    expect($providerTools[2]->type)->toBe('custom_tool');
+    expect($providerTools[2]->name)->toBe('my_custom');
+    expect($providerTools[2]->options)->toBe(['timeout' => 30]);
+});
+
+it('throws exception for invalid provider tool array', function () {
+    $agent = new class extends BaseLlmAgent {
+        protected string $name = 'invalid-provider-test-agent';
+        protected string $description = 'Test agent with invalid provider tool';
+        protected string $instructions = 'Test instructions';
+        protected string $model = 'gpt-4';
+        protected array $providerTools = [
+            ['name' => 'missing_type'],  // Missing required 'type' key
+        ];
+        
+        public function execute(mixed $input, AgentContext $context): mixed {
+            return 'test';
+        }
+    };
+    
+    expect(fn() => $agent->getProviderToolsForPrism())
+        ->toThrow(\InvalidArgumentException::class, 'Provider tool array must have a "type" key');
+});
+
 // Streaming functionality tests
 it('has streaming disabled by default', function () {
     expect($this->agent->getStreaming())->toBeFalse();

@@ -77,7 +77,12 @@ abstract class BaseLlmAgent extends BaseAgent
     protected array $loadedTools = [];
 
     /**
-     * @var array string[]
+     * Provider tools configuration.
+     * Can be either:
+     * - Simple strings: ['some_tool_12345']
+     * - Arrays with config: [['type' => 'code_execution_20250522', 'name' => 'code_execution']]
+     * 
+     * @var array<string|array>
      */
     protected array $providerTools = [];
 
@@ -626,10 +631,24 @@ abstract class BaseLlmAgent extends BaseAgent
 
     public function getProviderToolsForPrism(): array
     {
-        return array_map(
-            fn (string $type) => new ProviderTool(type: $type),
-            $this->providerTools,
-        );
+        return array_map(function (string|array $tool) {
+            // If it's already an array with configuration, use it directly
+            if (is_array($tool)) {
+                $type = $tool['type'] ?? throw new \InvalidArgumentException('Provider tool array must have a "type" key');
+                $name = $tool['name'] ?? null;
+                $options = $tool['options'] ?? [];
+                
+                return new ProviderTool(
+                    type: $type,
+                    name: $name,
+                    options: $options
+                );
+            }
+            
+            // For string format, just pass it through
+            // If a provider needs a name, the user should use the array format
+            return new ProviderTool(type: $tool);
+        }, $this->providerTools);
     }
 
     public function execute(mixed $input, AgentContext $context): mixed
