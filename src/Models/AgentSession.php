@@ -30,11 +30,14 @@ class AgentSession extends Model
         'user_id',
         'agent_memory_id',
         'agent_name',
+        'title',
+        'metadata',
         'state_data',
     ];
 
     protected $casts = [
         'state_data' => 'array',
+        'metadata' => 'array',
     ];
 
     /**
