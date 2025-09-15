@@ -130,6 +130,13 @@ abstract class BaseLlmAgent extends BaseAgent
     protected string $contextStrategy = 'none';
 
     /**
+     * Enable OpenAI Responses API for stateful conversations.
+     * When true, automatically manages response IDs for conversation continuity.
+     * This allows OpenAI to maintain conversation state server-side.
+     */
+    protected bool $useStatefulResponses = false;
+
+    /**
      * Track active tool call spans to survive Prism's internal execution
      *
      * @var array<string, string>
@@ -208,6 +215,19 @@ abstract class BaseLlmAgent extends BaseAgent
 
         if ($this->getTopP() !== null) {
             $prismRequest = $prismRequest->usingTopP($this->getTopP());
+        }
+
+        // Add previous response ID for stateful conversations
+        if ($this->useStatefulResponses) {
+            $previousResponseId = $context->getState("response_id_{$this->getName()}");
+            if ($previousResponseId) {
+                // Merge with existing provider options to avoid overwriting
+                $existingOptions = $prismRequest->providerOptions() ?: [];
+                $prismRequest = $prismRequest->withProviderOptions(array_merge(
+                    $existingOptions,
+                    ['previous_response_id' => $previousResponseId]
+                ));
+            }
         }
 
         return $prismRequest;
@@ -1157,6 +1177,12 @@ abstract class BaseLlmAgent extends BaseAgent
                 ],
                 status: 'success'
             );
+        }
+
+        // Capture OpenAI response ID for stateful conversations
+        if ($this->useStatefulResponses && $response instanceof Response && $response->meta?->id) {
+            // Namespace by agent to support agent switching
+            $context->setState("response_id_{$this->getName()}", $response->meta->id);
         }
 
         return $response;
