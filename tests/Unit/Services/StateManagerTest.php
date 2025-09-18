@@ -131,6 +131,26 @@ it('context includes conversation history', function () {
     expect($history[0]['content'])->toBe('Previous message');
 });
 
+it('includes message metadata such as id and feedback', function () {
+    $agentName = 'metadata-agent';
+    $context = $this->stateManager->loadContext($agentName, null, 'test input');
+
+    $context->addMessage([
+        'role' => 'assistant',
+        'content' => 'Initial reply',
+        'feedback' => 'dislike',
+    ]);
+
+    $this->stateManager->saveContext($context, $agentName, false);
+
+    $reloaded = $this->stateManager->loadContext($agentName, $context->getSessionId());
+    $history = $reloaded->getConversationHistory();
+
+    expect($history)->toHaveCount(1);
+    expect($history[0]['id'])->toBeInt();
+    expect($history[0]['feedback'])->toBe('dislike');
+});
+
 it('includes memory context when loading context', function () {
     $agentName = 'memory-context-test';
     $sessionId = (string) Str::uuid();

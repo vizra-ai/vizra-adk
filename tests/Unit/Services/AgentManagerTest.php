@@ -1,14 +1,21 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vizra\VizraADK\Agents\BaseAgent;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Models\AgentMessage;
+use Vizra\VizraADK\Models\AgentSession;
 use Vizra\VizraADK\Services\AgentBuilder;
 use Vizra\VizraADK\Services\AgentManager;
 use Vizra\VizraADK\Services\AgentRegistry;
 use Vizra\VizraADK\Services\StateManager;
 use Vizra\VizraADK\System\AgentContext;
 
+uses(RefreshDatabase::class);
+
 beforeEach(function () {
+    $this->loadMigrationsFrom(__DIR__.'/../../../database/migrations');
+
     $this->mockRegistry = Mockery::mock(AgentRegistry::class);
     $this->mockBuilder = Mockery::mock(AgentBuilder::class);
     $this->mockStateManager = Mockery::mock(StateManager::class);
@@ -135,6 +142,56 @@ it('can get all registered agents', function () {
 
     expect($result)->toBe($expectedAgents);
 });
+
+it('can set feedback on assistant message', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'test-agent-feedback',
+    ]);
+
+    $message = AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'assistant',
+        'content' => 'Assistant reply',
+    ]);
+
+    $updated = $this->manager->setMessageFeedback($message->id, 'like');
+
+    expect($updated->feedback)->toBe('like');
+
+    $message->refresh();
+    expect($message->feedback)->toBe('like');
+
+    $cleared = $this->manager->setMessageFeedback($message->id, null);
+    expect($cleared->feedback)->toBeNull();
+});
+
+it('throws when setting feedback on non-assistant message', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'test-agent-feedback',
+    ]);
+
+    $message = AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'user',
+        'content' => 'User input',
+    ]);
+
+    $this->manager->setMessageFeedback($message->id, 'like');
+})->throws(InvalidArgumentException::class, 'Feedback can only be applied to assistant messages.');
+
+it('throws when feedback value is invalid', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'test-agent-feedback',
+    ]);
+
+    $message = AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'assistant',
+        'content' => 'Assistant reply',
+    ]);
+
+    $this->manager->setMessageFeedback($message->id, 'unsupported');
+})->throws(InvalidArgumentException::class, "Feedback must be null, 'like', or 'dislike'. 'unsupported' given.");
 
 /**
  * Test agent for manager testing

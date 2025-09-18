@@ -42,9 +42,11 @@ class StateManager
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(fn ($msg) => [
+                'id' => $msg->id,
                 'role' => $msg->role,
                 'content' => $msg->content, // Laravel's JSON cast already handles the conversion
                 'tool_name' => $msg->tool_name,
+                'feedback' => $msg->feedback,
             ]);
 
         $context = new AgentContext(
@@ -98,6 +100,7 @@ class StateManager
                         'role' => $message['role'],
                         'content' => $content, // Let the model cast handle JSON encoding
                         'tool_name' => $message['tool_name'] ?? null,
+                        'feedback' => $message['feedback'] ?? null,
                     ];
                 })->all();
 
