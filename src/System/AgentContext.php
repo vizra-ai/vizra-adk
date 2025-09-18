@@ -3,6 +3,7 @@
 namespace Vizra\VizraADK\System;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * Class AgentContext
@@ -17,6 +18,12 @@ class AgentContext
     protected array $state = [];
 
     protected Collection $conversationHistory; // Collection of AgentMessage arrays or objects
+
+    protected ?string $activeTurnUuid = null;
+
+    protected int $currentVariantIndex = 0;
+
+    protected int $nextVariantIndex = 0;
 
     /**
      * AgentContext constructor.
@@ -35,7 +42,8 @@ class AgentContext
         $this->sessionId = $sessionId;
         $this->userInput = $userInput;
         $this->state = $initialState;
-        $this->conversationHistory = $conversationHistory ?? new Collection;
+        $this->conversationHistory = new Collection;
+        $this->setConversationHistory($conversationHistory ?? new Collection);
     }
 
     /**
@@ -116,7 +124,8 @@ class AgentContext
      */
     public function addMessage(array $message): void
     {
-        $this->conversationHistory->push($message);
+        $normalized = $this->prepareMessage($message);
+        $this->conversationHistory->push($normalized);
     }
 
     /**
@@ -124,6 +133,103 @@ class AgentContext
      */
     public function setConversationHistory(Collection $history): void
     {
-        $this->conversationHistory = $history;
+        $this->resetTurnTracking();
+
+        $normalized = $history->map(function ($message) {
+            if ($message instanceof Collection) {
+                $message = $message->toArray();
+            }
+
+            return $this->prepareMessage((array) $message);
+        });
+
+        $this->conversationHistory = new Collection($normalized->all());
+    }
+
+    /**
+     * Get the UUID representing the current conversation turn.
+     */
+    public function getActiveTurnUuid(): ?string
+    {
+        return $this->activeTurnUuid;
+    }
+
+    /**
+     * Get the next assistant variant index for the active turn.
+     */
+    public function getNextVariantIndex(): int
+    {
+        return $this->nextVariantIndex;
+    }
+
+    /**
+     * Prepare the context to continue an existing turn at a specific variant index.
+     */
+    public function useTurn(string $turnUuid, int $nextVariantIndex = 0): void
+    {
+        $this->activeTurnUuid = $turnUuid;
+        $this->currentVariantIndex = $nextVariantIndex;
+        $this->nextVariantIndex = $nextVariantIndex;
+    }
+
+    /**
+     * Normalize message metadata prior to storage.
+     */
+    protected function prepareMessage(array $message): array
+    {
+        $role = $message['role'] ?? null;
+
+        if ($role === 'user') {
+            $turnUuid = $message['turn_uuid'] ?? (string) Str::uuid();
+            $message['turn_uuid'] = $turnUuid;
+
+            $variantIndex = $message['variant_index'] ?? 0;
+            $message['variant_index'] = $variantIndex;
+
+            $this->activeTurnUuid = $turnUuid;
+            $this->currentVariantIndex = $variantIndex;
+            $this->nextVariantIndex = max($variantIndex, 0);
+
+            return $message;
+        }
+
+        if (! isset($message['turn_uuid'])) {
+            if ($this->activeTurnUuid === null) {
+                $this->activeTurnUuid = (string) Str::uuid();
+            }
+
+            $message['turn_uuid'] = $this->activeTurnUuid;
+        } elseif ($message['turn_uuid'] !== $this->activeTurnUuid) {
+            $this->activeTurnUuid = $message['turn_uuid'];
+            $this->currentVariantIndex = 0;
+            $this->nextVariantIndex = 0;
+        }
+
+        if ($role === 'assistant') {
+            if (! isset($message['variant_index'])) {
+                $message['variant_index'] = $this->nextVariantIndex;
+            }
+
+            $this->currentVariantIndex = $message['variant_index'];
+            $this->nextVariantIndex = max($message['variant_index'] + 1, $this->nextVariantIndex);
+        } else {
+            if (! isset($message['variant_index'])) {
+                $message['variant_index'] = $this->currentVariantIndex;
+            } else {
+                $this->currentVariantIndex = $message['variant_index'];
+            }
+        }
+
+        return $message;
+    }
+
+    /**
+     * Reset internal tracking for turn metadata.
+     */
+    protected function resetTurnTracking(): void
+    {
+        $this->activeTurnUuid = null;
+        $this->currentVariantIndex = 0;
+        $this->nextVariantIndex = 0;
     }
 }

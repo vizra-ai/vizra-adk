@@ -109,6 +109,53 @@ it('can run agent', function () {
     expect($result)->toBe('test response');
 });
 
+it('can regenerate agent turn', function () {
+    $agentName = 'test-agent';
+    $sessionId = 'session-id';
+    $turnUuid = 'turn-uuid';
+
+    $mockAgent = Mockery::mock(BaseLlmAgent::class);
+    $mockContext = Mockery::mock(AgentContext::class);
+    $mockUserMessage = (object) ['content' => 'Original prompt'];
+
+    $this->mockRegistry
+        ->shouldReceive('resolveAgentName')
+        ->with($agentName)
+        ->once()
+        ->andReturn($agentName);
+
+    $this->mockRegistry
+        ->shouldReceive('getAgent')
+        ->with($agentName)
+        ->once()
+        ->andReturn($mockAgent);
+
+    $this->mockStateManager
+        ->shouldReceive('prepareRegeneration')
+        ->with($agentName, $sessionId, $turnUuid, null)
+        ->once()
+        ->andReturn([
+            'context' => $mockContext,
+            'user_message' => $mockUserMessage,
+            'next_variant_index' => 1,
+        ]);
+
+    $mockAgent
+        ->shouldReceive('execute')
+        ->with('Original prompt', $mockContext)
+        ->once()
+        ->andReturn('regenerated response');
+
+    $this->mockStateManager
+        ->shouldReceive('saveContext')
+        ->with($mockContext, $agentName)
+        ->once();
+
+    $result = $this->manager->regenerate($agentName, $sessionId, $turnUuid);
+
+    expect($result)->toBe('regenerated response');
+});
+
 it('can check if agent is registered', function () {
     $agentName = 'test-agent';
 

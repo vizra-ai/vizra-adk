@@ -133,6 +133,49 @@ class AgentManager
     }
 
     /**
+     * Regenerate an agent's response for a specific conversation turn.
+     */
+    public function regenerate(
+        string $agentNameOrClass,
+        string $sessionId,
+        string $turnUuid,
+        ?int $userId = null
+    ): mixed {
+        $agentName = $this->registry->resolveAgentName($agentNameOrClass);
+        $agent = $this->named($agentName);
+
+        if (! ($agent instanceof BaseLlmAgent)) {
+            throw new AgentConfigurationException("Agent '{$agentName}' is not an LLM agent and cannot be regenerated via this method in MVP.");
+        }
+
+        $prepared = $this->stateManager->prepareRegeneration($agentName, $sessionId, $turnUuid, $userId);
+        $context = $prepared['context'];
+        $userMessage = $prepared['user_message'];
+
+        $input = $userMessage->content;
+        if (is_array($input)) {
+            $input = $input['content'] ?? $input['text'] ?? json_encode($input);
+        }
+
+        Event::dispatch(new AgentExecutionStarting($context, $agentName, $input));
+
+        $finalResponse = null;
+
+        try {
+            $finalResponse = $agent->execute($input, $context);
+        } catch (\Throwable $e) {
+            Event::dispatch(new AgentExecutionFinished($context, $agentName));
+            throw $e;
+        } finally {
+            $this->stateManager->saveContext($context, $agentName);
+        }
+
+        Event::dispatch(new AgentExecutionFinished($context, $agentName));
+
+        return $finalResponse;
+    }
+
+    /**
      * Check if an agent is registered.
      */
     public function hasAgent(string $name): bool

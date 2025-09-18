@@ -27,8 +27,9 @@ it('can create agent context with full data', function () {
     expect($context->getSessionId())->toBe($sessionId);
     expect($context->getUserInput())->toBe($userInput);
     expect($context->getAllState())->toBe($initialState);
-    expect($context->getConversationHistory())->toBe($history);
     expect($context->getConversationHistory())->toHaveCount(2);
+    expect($context->getConversationHistory()->first()['content'])->toBe('Previous message');
+    expect($context->getConversationHistory()->first())->toHaveKey('turn_uuid');
 });
 
 it('can get and set state values', function () {
@@ -63,6 +64,7 @@ it('can manage conversation history', function () {
     expect($history[0]['content'])->toBe('Hello');
     expect($history[1]['role'])->toBe('assistant');
     expect($history[1]['content'])->toBe('Hi there!');
+    expect($history[0]['turn_uuid'])->toBe($history[1]['turn_uuid']);
 });
 
 it('can add tool messages to history', function () {
@@ -149,4 +151,31 @@ it('returns null when no user messages exist in history', function () {
     $userMessages = $history->filter(fn ($message) => $message['role'] === 'user');
 
     expect($userMessages->isEmpty())->toBeTrue();
+});
+
+it('tracks variant indices per turn', function () {
+    $context = new AgentContext('test-session');
+
+    $context->addMessage(['role' => 'user', 'content' => 'Prompt']);
+    $context->addMessage(['role' => 'assistant', 'content' => 'First response']);
+    $context->addMessage(['role' => 'assistant', 'content' => 'Second response']);
+
+    $history = $context->getConversationHistory();
+
+    expect($history[1]['variant_index'])->toBe(0)
+        ->and($history[2]['variant_index'])->toBe(1)
+        ->and($context->getNextVariantIndex())->toBe(2);
+});
+
+it('reuses existing turn metadata when instructed', function () {
+    $context = new AgentContext('test-session');
+    $context->addMessage(['role' => 'user', 'content' => 'Original prompt']);
+    $turnUuid = $context->getConversationHistory()->first()['turn_uuid'];
+
+    $context->useTurn($turnUuid, 2);
+    $context->addMessage(['role' => 'assistant', 'content' => 'Regenerated']);
+
+    $history = $context->getConversationHistory();
+    expect($history->last()['turn_uuid'])->toBe($turnUuid)
+        ->and($history->last()['variant_index'])->toBe(2);
 });

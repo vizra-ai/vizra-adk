@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Vizra\VizraADK\Models\AgentMessage;
 use Vizra\VizraADK\Models\AgentSession;
 
@@ -20,6 +21,7 @@ it('can create agent message', function () {
         'agent_session_id' => $session->id,
         'role' => 'user',
         'content' => 'Hello, world!',
+        'turn_uuid' => (string) Str::uuid(),
     ]);
 
     expect($message)->toBeInstanceOf(AgentMessage::class)
@@ -43,6 +45,7 @@ it('content is cast to json', function () {
         'role' => 'tool_call',
         'content' => $complexContent,
         'tool_name' => 'get_weather',
+        'turn_uuid' => (string) Str::uuid(),
     ]);
 
     expect($message->content)->toBeArray()
@@ -59,6 +62,7 @@ it('can store string content', function () {
         'agent_session_id' => $session->id,
         'role' => 'assistant',
         'content' => 'This is a simple text response',
+        'turn_uuid' => (string) Str::uuid(),
     ]);
 
     expect($message->content)->toBe('This is a simple text response');
@@ -74,6 +78,7 @@ it('can associate tool name', function () {
         'role' => 'tool_result',
         'content' => ['result' => 'Weather is sunny'],
         'tool_name' => 'get_weather',
+        'turn_uuid' => (string) Str::uuid(),
     ]);
 
     expect($message->tool_name)->toBe('get_weather')
@@ -89,6 +94,7 @@ it('belongs to session relationship', function () {
         'agent_session_id' => $session->id,
         'role' => 'user',
         'content' => 'Test message',
+        'turn_uuid' => (string) Str::uuid(),
     ]);
 
     expect($message->session)->toBeInstanceOf(AgentSession::class)
@@ -108,6 +114,7 @@ it('can store different role types', function () {
             'agent_session_id' => $session->id,
             'role' => $role,
             'content' => "Content for $role",
+            'turn_uuid' => (string) Str::uuid(),
         ]);
 
         expect($message->role)->toBe($role);
@@ -123,6 +130,7 @@ it('timestamps are managed', function () {
         'agent_session_id' => $session->id,
         'role' => 'user',
         'content' => 'Test message',
+        'turn_uuid' => (string) Str::uuid(),
     ]);
 
     expect($message->created_at)->not->toBeNull()
@@ -138,18 +146,21 @@ it('can query messages by role', function () {
         'agent_session_id' => $session->id,
         'role' => 'user',
         'content' => 'User message 1',
+        'turn_uuid' => (string) Str::uuid(),
     ]);
 
     AgentMessage::create([
         'agent_session_id' => $session->id,
         'role' => 'assistant',
         'content' => 'Assistant response',
+        'turn_uuid' => (string) Str::uuid(),
     ]);
 
     AgentMessage::create([
         'agent_session_id' => $session->id,
         'role' => 'user',
         'content' => 'User message 2',
+        'turn_uuid' => (string) Str::uuid(),
     ]);
 
     $userMessages = AgentMessage::where('role', 'user')->get();
@@ -168,7 +179,98 @@ it('can handle null tool name', function () {
         'agent_session_id' => $session->id,
         'role' => 'user',
         'content' => 'Regular message without tool',
+        'turn_uuid' => (string) Str::uuid(),
     ]);
 
     expect($message->tool_name)->toBeNull();
 });
+
+it('links assistant variants back to the originating user message', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'test-agent',
+    ]);
+
+    $turnUuid = (string) Str::uuid();
+
+    $userMessage = AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'user',
+        'content' => 'User prompt',
+        'turn_uuid' => $turnUuid,
+    ]);
+
+    $firstVariant = AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'assistant',
+        'content' => 'First reply',
+        'turn_uuid' => $turnUuid,
+        'user_message_id' => $userMessage->id,
+        'variant_index' => 0,
+    ]);
+
+    $secondVariant = AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'assistant',
+        'content' => 'Second reply',
+        'turn_uuid' => $turnUuid,
+        'user_message_id' => $userMessage->id,
+        'variant_index' => 1,
+    ]);
+
+    expect($firstVariant->userMessage->id)->toBe($userMessage->id)
+        ->and($userMessage->assistantVariants)->toHaveCount(2)
+        ->and($userMessage->assistantVariants->first()->id)->toBe($firstVariant->id)
+        ->and($userMessage->assistantVariants->last()->id)->toBe($secondVariant->id);
+});
+
+it('scopes messages by turn ordered by variant', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'test-agent',
+    ]);
+
+    $turnUuid = (string) Str::uuid();
+
+    $userMessage = AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'user',
+        'content' => 'Prompt',
+        'turn_uuid' => $turnUuid,
+    ]);
+
+    AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'assistant',
+        'content' => 'Variant A',
+        'turn_uuid' => $turnUuid,
+        'user_message_id' => $userMessage->id,
+        'variant_index' => 0,
+    ]);
+
+    AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'assistant',
+        'content' => 'Variant B',
+        'turn_uuid' => $turnUuid,
+        'user_message_id' => $userMessage->id,
+        'variant_index' => 2,
+    ]);
+
+    AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'assistant',
+        'content' => 'Variant C',
+        'turn_uuid' => $turnUuid,
+        'user_message_id' => $userMessage->id,
+        'variant_index' => 1,
+    ]);
+
+    $variants = AgentMessage::forTurn($turnUuid)->get();
+
+    expect($variants)->toHaveCount(4)
+        ->and($variants->first()['role'])->toBe('user');
+
+    $assistantVariants = $variants->where('role', 'assistant')->values();
+
+    expect($assistantVariants->pluck('variant_index')->toArray())->toBe([0, 1, 2]);
+});
+

@@ -751,7 +751,15 @@ abstract class BaseLlmAgent extends BaseAgent
                 $userMessage['documents'] = $documents;
             }
 
-            $context->addMessage($userMessage);
+            $regeneratingTurn = $context->getState('regenerating_turn_uuid');
+            if (! $regeneratingTurn) {
+                $context->addMessage($userMessage);
+            } else {
+                $context->useTurn(
+                    $regeneratingTurn,
+                    $context->getState('regenerating_variant_index', $context->getNextVariantIndex())
+                );
+            }
 
             // Since Prism handles tool execution internally with maxSteps,
             // we don't need the manual tool execution loop
@@ -831,6 +839,9 @@ abstract class BaseLlmAgent extends BaseAgent
                             'content' => $buffer ?: '',
                         ]);
 
+                        $context->setState('regenerating_turn_uuid', null);
+                        $context->setState('regenerating_variant_index', null);
+
                         // Fire response event for listeners
                         Event::dispatch(new AgentResponseGenerated($context, $agentName, $buffer));
 
@@ -865,6 +876,9 @@ abstract class BaseLlmAgent extends BaseAgent
                 'role' => 'assistant',
                 'content' => $assistantResponseContent ?: '',
             ]);
+
+            $context->setState('regenerating_turn_uuid', null);
+            $context->setState('regenerating_variant_index', null);
 
             Event::dispatch(new AgentResponseGenerated($context, $this->getName(), $assistantResponseContent));
 
@@ -1020,7 +1034,9 @@ abstract class BaseLlmAgent extends BaseAgent
      */
     protected function getHistoryByStrategy(AgentContext $context, string $strategy, int $limit): array
     {
-        $history = $context->getConversationHistory()->toArray();
+        $history = $this->collapseHistoryToLatestVariants(
+            $context->getConversationHistory()->toArray()
+        );
 
         switch ($strategy) {
             case 'recent':
@@ -1049,6 +1065,86 @@ abstract class BaseLlmAgent extends BaseAgent
                 // Default to empty array for unknown strategies
                 return [];
         }
+    }
+
+    /**
+     * Collapse conversation history so only the latest assistant variant per turn is used.
+     */
+    protected function collapseHistoryToLatestVariants(array $history): array
+    {
+        $turnMap = [];
+
+        foreach ($history as $message) {
+            $turnUuid = $message['turn_uuid'] ?? null;
+
+            if (! $turnUuid) {
+                continue;
+            }
+
+            if (! isset($turnMap[$turnUuid])) {
+                $turnMap[$turnUuid] = [
+                    'user' => null,
+                    'variants' => [],
+                ];
+            }
+
+            $role = $message['role'] ?? null;
+            $hidden = $message['hidden_from_prompt'] ?? false;
+
+            if ($role === 'user') {
+                $turnMap[$turnUuid]['user'] = $message;
+                continue;
+            }
+
+            if ($hidden) {
+                continue;
+            }
+
+            $variantIndex = $message['variant_index'] ?? 0;
+            $turnMap[$turnUuid]['variants'][$variantIndex][] = $message;
+        }
+
+        $collapsed = [];
+        $processedTurns = [];
+
+        foreach ($history as $message) {
+            $turnUuid = $message['turn_uuid'] ?? null;
+            $hidden = $message['hidden_from_prompt'] ?? false;
+
+            if (! $turnUuid) {
+                if (! $hidden) {
+                    $collapsed[] = $message;
+                }
+                continue;
+            }
+
+            if (isset($processedTurns[$turnUuid])) {
+                continue;
+            }
+
+            $processedTurns[$turnUuid] = true;
+            $bundle = $turnMap[$turnUuid] ?? null;
+
+            if (! $bundle) {
+                continue;
+            }
+
+            if ($bundle['user'] && ! ($bundle['user']['hidden_from_prompt'] ?? false)) {
+                $collapsed[] = $bundle['user'];
+            }
+
+            if (! empty($bundle['variants'])) {
+                $latestVariantIndex = max(array_keys($bundle['variants']));
+
+                foreach ($bundle['variants'][$latestVariantIndex] as $variantMessage) {
+                    if (! ($variantMessage['hidden_from_prompt'] ?? false)) {
+                        $collapsed[] = $variantMessage;
+                    }
+                }
+            }
+        }
+
+        return $collapsed;
     }
 
     public function beforeLlmCall(array $inputMessages, AgentContext $context): array

@@ -119,6 +119,7 @@ it('context includes conversation history', function () {
     AgentMessage::create([
         'agent_session_id' => $session->id,
         'role' => 'user',
+        'turn_uuid' => (string) Str::uuid(),
         'content' => 'Previous message',
         'tool_name' => null,
     ]);
@@ -314,4 +315,63 @@ it('correctly handles incremental message saving across multiple sessions', func
     expect($history[1]['content'])->toBe('First response');
     expect($history[2]['content'])->toBe('Second message');
     expect($history[3]['content'])->toBe('Second response');
+});
+
+it('prepares regeneration state and hides previous variants', function () {
+    $agentName = 'regeneration-agent';
+    $sessionId = (string) Str::uuid();
+    $turnUuid = (string) Str::uuid();
+
+    $session = AgentSession::create([
+        'session_id' => $sessionId,
+        'agent_name' => $agentName,
+    ]);
+
+    $userMessage = AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'user',
+        'content' => 'Prompt to regenerate',
+        'turn_uuid' => $turnUuid,
+    ]);
+
+    AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'assistant',
+        'content' => 'First reply',
+        'turn_uuid' => $turnUuid,
+        'user_message_id' => $userMessage->id,
+        'variant_index' => 0,
+    ]);
+
+    AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'tool',
+        'content' => ['result' => 'tool traces'],
+        'turn_uuid' => $turnUuid,
+        'user_message_id' => $userMessage->id,
+        'variant_index' => 0,
+    ]);
+
+    AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'assistant',
+        'content' => 'Latest reply',
+        'turn_uuid' => $turnUuid,
+        'user_message_id' => $userMessage->id,
+        'variant_index' => 1,
+    ]);
+
+    $prepared = $this->stateManager->prepareRegeneration($agentName, $sessionId, $turnUuid);
+    $preparedContext = $prepared['context'];
+
+    expect($prepared['next_variant_index'])->toBe(2)
+        ->and($preparedContext->getState('regenerating_turn_uuid'))->toBe($turnUuid)
+        ->and($preparedContext->getNextVariantIndex())->toBe(2);
+
+    $hiddenFlags = $preparedContext->getConversationHistory()
+        ->filter(fn ($message) => ($message['turn_uuid'] ?? null) === $turnUuid && ($message['role'] ?? null) !== 'user')
+        ->pluck('hidden_from_prompt')
+        ->all();
+
+    expect(array_unique($hiddenFlags))->toBe([true]);
 });
