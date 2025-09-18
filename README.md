@@ -78,6 +78,19 @@ $response = CustomerSupportAgent::run('I need help with my order')
     ->go();
 ```
 
+### Recording Message Feedback
+
+Agent conversations now track whether an assistant reply was liked or disliked. When you have the message identifier (available from the persisted conversation history), call the facade helper to update or clear the feedback state:
+
+```php
+use Vizra\VizraADK\Facades\Agent;
+
+Agent::setMessageFeedback($assistantMessageId, 'like');    // or 'dislike'
+Agent::setMessageFeedback($assistantMessageId, null);      // clear feedback
+```
+
+Only assistant-role messages accept feedback. The reaction is stored in the `agent_messages.feedback` column and is included in `StateManager` conversation history entries alongside each message `id`.
+
 ## 🛠️ Creating Tools
 
 Tools extend your agent's capabilities:

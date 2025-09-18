@@ -80,6 +80,26 @@ it('can associate tool name', function () {
         ->and($message->role)->toBe('tool_result');
 });
 
+it('can store feedback state', function () {
+    $session = AgentSession::create([
+        'agent_name' => 'test-agent',
+    ]);
+
+    $message = AgentMessage::create([
+        'agent_session_id' => $session->id,
+        'role' => 'assistant',
+        'content' => 'Assistant message',
+        'feedback' => 'like',
+    ]);
+
+    expect($message->feedback)->toBe('like');
+
+    $message->feedback = null;
+    $message->save();
+
+    expect($message->refresh()->feedback)->toBeNull();
+});
+
 it('belongs to session relationship', function () {
     $session = AgentSession::create([
         'agent_name' => 'test-agent',

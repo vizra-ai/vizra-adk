@@ -14,6 +14,7 @@ use Vizra\VizraADK\Services\AgentBuilder; // For type hinting
  * @method static mixed run(string $agentNameOrClass, mixed $input, ?string $sessionId = null)
  * @method static array getAllRegisteredAgents()
  * @method static bool hasAgent(string $name)
+ * @method static \Vizra\VizraADK\Models\AgentMessage setMessageFeedback(int $messageId, ?string $feedback)
  *
  * @see \Vizra\VizraADK\Services\AgentManager // The underlying class facade will point to
  */

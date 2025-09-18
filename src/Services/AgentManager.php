@@ -4,12 +4,14 @@ namespace Vizra\VizraADK\Services;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Event;
+use InvalidArgumentException;
 use Vizra\VizraADK\Agents\BaseAgent;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Events\AgentExecutionFinished; // For AgentResponseGenerated
 use Vizra\VizraADK\Events\AgentExecutionStarting; // For AgentResponseGenerated
 use Vizra\VizraADK\Events\AgentResponseGenerated;
 use Vizra\VizraADK\Exceptions\AgentConfigurationException;
+use Vizra\VizraADK\Models\AgentMessage;
 
 class AgentManager
 {
@@ -146,5 +148,31 @@ class AgentManager
     public function getAllRegisteredAgents(): array
     {
         return $this->registry->getAllRegisteredAgents();
+    }
+
+    /**
+     * Persist feedback for the specified assistant message.
+     */
+    public function setMessageFeedback(int $messageId, ?string $feedback): AgentMessage
+    {
+        $allowed = ['like', 'dislike'];
+
+        if ($feedback !== null && ! in_array($feedback, $allowed, true)) {
+            throw new InvalidArgumentException(
+                sprintf("Feedback must be null, 'like', or 'dislike'. '%s' given.", (string) $feedback)
+            );
+        }
+
+        /** @var AgentMessage $message */
+        $message = AgentMessage::findOrFail($messageId);
+
+        if ($message->role !== 'assistant') {
+            throw new InvalidArgumentException('Feedback can only be applied to assistant messages.');
+        }
+
+        $message->feedback = $feedback;
+        $message->save();
+
+        return $message;
     }
 }

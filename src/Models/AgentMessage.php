@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $role (user, assistant, tool_call, tool_result)
  * @property string|array $content (text, or JSON for tool call/result)
  * @property string|null $tool_name
+ * @property string|null $feedback (like, dislike, or null for no feedback)
  * @property AgentSession $session
  */
 class AgentMessage extends Model
@@ -25,6 +26,7 @@ class AgentMessage extends Model
         'role',
         'content',
         'tool_name',
+        'feedback',
     ];
 
     protected $casts = [
