@@ -68,7 +68,7 @@ class AgentJob implements ShouldQueue
             $agentName = $this->getAgentName();
 
             // Load or create agent context
-            $agentContext = $stateManager->loadContext($agentName, $this->sessionId, $this->input);
+            $agentContext = $stateManager->loadContext($agentName, $this->sessionId, $this->input, $this->context['user']['id'] ?? null);
 
             // Restore context from job data
             $this->restoreContext($agentContext);
