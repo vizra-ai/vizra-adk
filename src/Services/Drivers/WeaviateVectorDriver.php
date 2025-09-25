@@ -5,6 +5,7 @@ namespace Vizra\VizraADK\Services\Drivers;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Vizra\VizraADK\Contracts\VectorDriverInterface;
 use Vizra\VizraADK\Models\VectorMemory;
@@ -75,7 +76,7 @@ class WeaviateVectorDriver implements VectorDriverInterface
                 'class' => $className,
                 'memory_id' => $memory->id,
             ]);
-            throw new RuntimeException('Failed to store in Weaviate: '.$e->getMessage());
+            throw new RuntimeException('Failed to store in Weaviate: ' . $e->getMessage());
         }
     }
 
@@ -84,7 +85,7 @@ class WeaviateVectorDriver implements VectorDriverInterface
      */
     public function search(
         string $agentName,
-        array $queryEmbedding,
+        array  $queryEmbedding,
         string $namespace = 'default',
         int $limit = 5,
         float $threshold = 0.7
@@ -150,7 +151,7 @@ class WeaviateVectorDriver implements VectorDriverInterface
                     $distance = $hit['_additional']['distance'] ?? 1.0;
                     $similarity = 1.0 - $distance; // Convert distance back to similarity
 
-                    return (object) [
+                    return (object)[
                         'id' => $hit['memory_id'],
                         'agent_name' => $hit['agent_name'],
                         'namespace' => $hit['namespace'],
@@ -164,7 +165,7 @@ class WeaviateVectorDriver implements VectorDriverInterface
                         'similarity' => $similarity,
                     ];
                 })
-                ->filter(fn ($result) => $result->similarity >= $threshold);
+                ->filter(fn($result) => $result->similarity >= $threshold);
 
             Log::debug('Weaviate vector search completed', [
                 'class' => $className,
@@ -180,7 +181,7 @@ class WeaviateVectorDriver implements VectorDriverInterface
                 'class' => $className,
                 'agent_name' => $agentName,
             ]);
-            throw new RuntimeException('Weaviate search failed: '.$e->getMessage());
+            throw new RuntimeException('Weaviate search failed: ' . $e->getMessage());
         }
     }
 
@@ -254,7 +255,7 @@ class WeaviateVectorDriver implements VectorDriverInterface
                 'class' => $className,
                 'agent_name' => $agentName,
             ]);
-            throw new RuntimeException('Weaviate deletion failed: '.$e->getMessage());
+            throw new RuntimeException('Weaviate deletion failed: ' . $e->getMessage());
         }
     }
 
@@ -422,9 +423,13 @@ class WeaviateVectorDriver implements VectorDriverInterface
      */
     protected function getClassName(string $agentName, string $namespace): string
     {
-        $agentPart = str_replace('_', '', ucwords($agentName, '_'));
-        $namespacePart = str_replace('_', '', ucwords($namespace, '_'));
-        return $this->classPrefix . $agentPart . $namespacePart;
+        $parts = array_filter([
+            $this->classPrefix,
+            $agentName,
+            $namespace,
+        ]);
+
+        return Str::studly(implode('_', $parts));
     }
 
     /**
