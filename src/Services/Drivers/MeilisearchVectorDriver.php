@@ -16,11 +16,17 @@ class MeilisearchVectorDriver
 
     protected string $indexPrefix;
 
+    protected string $embedder;
+
+    protected float $semanticRatio;
+
     public function __construct()
     {
         $this->host = config('vizra-adk.vector_memory.drivers.meilisearch.host', 'http://localhost:7700');
         $this->apiKey = config('vizra-adk.vector_memory.drivers.meilisearch.api_key');
         $this->indexPrefix = config('vizra-adk.vector_memory.drivers.meilisearch.index_prefix', 'agent_vectors_');
+        $this->embedder = config('vizra-adk.vector_memory.drivers.meilisearch.embedder', 'default');
+        $this->semanticRatio = config('vizra-adk.vector_memory.drivers.meilisearch.semantic_ratio', 1.0);
     }
 
     /**
@@ -92,6 +98,10 @@ class MeilisearchVectorDriver
             try {
                 $searchParams = [
                     'vector' => $queryEmbedding,
+                    'hybrid' => [
+                        'embedder' => $this->embedder,
+                        'semanticRatio' => $this->semanticRatio,
+                    ],
                     'limit' => $limit,
                     'filter' => "agent_name = '{$agentName}' AND namespace = '{$namespace}'",
                     'showRankingScore' => true,
