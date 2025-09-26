@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.30] - 2025-09-26
+
+Add embedder and semanticRatio to Meilisearch driver
+Introduces 'embedder' and 'semantic_ratio' configuration options for the Meilisearch vector driver. These are now included in search requests as part of the 'hybrid' parameter, and corresponding test coverage has been added.
+
+Make MCPClient timeout configurable and add tests
+Changed MCPClient to use a dynamic timeout based on configuration, replacing the fixed maxAttempts value. Added unit tests to verify correct timeout handling and calculation for various scenarios.
+
+Make web route prefix configurable
+Replaces the hardcoded 'vizra' route prefix with a value from the 'vizra-adk.routes.web.prefix' config, defaulting to 'vizra'. This allows customization of the route prefix via configuration.
+
 ## [0.0.29] - 2025-09-15
 
 Add support for OpenAI stateful responses
