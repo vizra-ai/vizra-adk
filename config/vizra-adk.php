@@ -315,6 +315,8 @@ return [
                 'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
                 'api_key' => env('MEILISEARCH_KEY'),
                 'index_prefix' => env('MEILISEARCH_PREFIX', 'agent_vectors_'),
+                'embedder' => env('MEILISEARCH_EMBEDDER', 'default'),
+                'semantic_ratio' => env('MEILISEARCH_SEMANTIC_RATIO', 1.0),
             ],
         ],
 

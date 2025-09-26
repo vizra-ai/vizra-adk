@@ -173,6 +173,9 @@ class MeilisearchVectorDriverTest extends TestCase
             return $request->url() === $this->testHost.'/indexes/test_vectors_testagent_default/search' &&
                    $request->method() === 'POST' &&
                    isset($body['vector']) &&
+                   isset($body['hybrid']) &&
+                   isset($body['hybrid']['embedder']) &&
+                   isset($body['hybrid']['semanticRatio']) &&
                    $body['limit'] === 5 &&
                    $body['showRankingScore'] === true;
         });
