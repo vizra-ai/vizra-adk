@@ -196,7 +196,7 @@ class AgentServiceProvider extends ServiceProvider
         // Load web routes
         if (config('vizra-adk.routes.web.enabled', true)) {
             Route::group([
-                'prefix' => 'vizra',
+                'prefix' => config('vizra-adk.routes.web.prefix', 'vizra'),
                 'middleware' => config('vizra-adk.routes.web.middleware', ['web']),
                 'as' => 'vizra.',
             ], function () {
