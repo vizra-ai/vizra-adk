@@ -95,7 +95,7 @@ it('can run agent', function () {
 
     $this->mockStateManager
         ->shouldReceive('loadContext')
-        ->with($agentName, $sessionId, $input)
+        ->with($agentName, $sessionId, $input, null)
         ->once()
         ->andReturn($mockContext);
 
