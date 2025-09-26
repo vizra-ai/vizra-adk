@@ -259,7 +259,7 @@ class MCPClient
     {
         $output = '';
         $attempts = 0;
-        $maxAttempts = 50; // 5 seconds max wait
+        $maxAttempts = $this->timeout * 10; // Dynamic timeout based on configuration (100ms intervals)
 
         while ($attempts < $maxAttempts) {
             $output .= $this->process->getIncrementalOutput();
