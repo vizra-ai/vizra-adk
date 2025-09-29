@@ -742,17 +742,6 @@ abstract class BaseLlmAgent extends BaseAgent
                 }
             }
 
-            // Add user message with attachments if present
-            $userMessage = ['role' => 'user', 'content' => $input ?: ''];
-            if (! empty($images)) {
-                $userMessage['images'] = $images;
-            }
-            if (! empty($documents)) {
-                $userMessage['documents'] = $documents;
-            }
-
-            $context->addMessage($userMessage);
-
             // Since Prism handles tool execution internally with maxSteps,
             // we don't need the manual tool execution loop
             $messages = $this->prepareMessagesForPrism($context);
