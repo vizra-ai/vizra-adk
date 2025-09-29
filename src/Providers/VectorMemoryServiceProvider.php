@@ -4,6 +4,7 @@ namespace Vizra\VizraADK\Providers;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
+use Vizra\VizraADK\Traits\HasLogging;
 use RuntimeException;
 use Vizra\VizraADK\Console\Commands\VectorMemorySearch;
 use Vizra\VizraADK\Console\Commands\VectorMemoryStats;
@@ -14,11 +15,17 @@ use Vizra\VizraADK\Services\VectorMemoryManager;
 
 class VectorMemoryServiceProvider extends ServiceProvider
 {
+    use HasLogging;
     /**
      * Register services.
      */
     public function register(): void
     {
+        // Check if package is globally disabled
+        if (! config('vizra-adk.enabled', true)) {
+            return;
+        }
+
         // Register the embedding provider based on configuration
         $this->app->singleton(EmbeddingProviderInterface::class, function ($app) {
             $provider = config('vizra-adk.vector_memory.embedding_provider', 'openai');
@@ -33,10 +40,10 @@ class VectorMemoryServiceProvider extends ServiceProvider
                 };
             } catch (\Exception $e) {
                 // Log the error but provide a fallback
-                Log::warning('Failed to initialize embedding provider', [
+                $this->logWarning('Failed to initialize embedding provider', [
                     'provider' => $provider,
                     'error' => $e->getMessage(),
-                ]);
+                ], 'vector_memory');
                 throw $e;
             }
         });
@@ -69,6 +76,11 @@ class VectorMemoryServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Check if package is globally enabled
+        if (! config('vizra-adk.enabled', true)) {
+            return;
+        }
+
         // Check if vector memory is enabled
         if (! config('vizra-adk.vector_memory.enabled', true)) {
             return;
@@ -86,16 +98,16 @@ class VectorMemoryServiceProvider extends ServiceProvider
                 $provider = config('vizra-adk.vector_memory.embedding_provider');
                 $model = config("vizra-adk.vector_memory.embedding_models.{$provider}");
 
-                Log::info('Vector Memory initialized', [
+                $this->logInfo('Vector Memory initialized', [
                     'provider' => $provider,
                     'model' => $model,
                     'driver' => config('vizra-adk.vector_memory.driver'),
-                ]);
+                ], 'vector_memory');
             } catch (\Exception $e) {
                 // Log the error but don't fail the application boot
-                Log::warning('Vector Memory configuration validation failed', [
+                $this->logWarning('Vector Memory configuration validation failed', [
                     'error' => $e->getMessage(),
-                ]);
+                ], 'vector_memory');
             }
         }
     }
@@ -150,9 +162,9 @@ class VectorMemoryServiceProvider extends ServiceProvider
                 if (app()->environment('production')) {
                     $ollamaProvider = new OllamaEmbeddingProvider;
                     if (! $ollamaProvider->isAvailable()) {
-                        Log::warning('Ollama service not available', [
+                        $this->logWarning('Ollama service not available', [
                             'url' => config('services.ollama.url', env('OLLAMA_URL', 'http://localhost:11434')),
-                        ]);
+                        ], 'vector_memory');
                     }
                 }
                 break;
@@ -184,13 +196,13 @@ class VectorMemoryServiceProvider extends ServiceProvider
                     try {
                         $response = \Illuminate\Support\Facades\Http::timeout(5)->get($host.'/health');
                         if (! $response->successful()) {
-                            Log::warning('Meilisearch service not available', ['host' => $host]);
+                            $this->logWarning('Meilisearch service not available', ['host' => $host], 'vector_memory');
                         }
                     } catch (\Exception $e) {
-                        Log::warning('Failed to connect to Meilisearch', [
+                        $this->logWarning('Failed to connect to Meilisearch', [
                             'host' => $host,
                             'error' => $e->getMessage(),
-                        ]);
+                        ], 'vector_memory');
                     }
                 }
                 break;

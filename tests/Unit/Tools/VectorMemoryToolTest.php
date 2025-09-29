@@ -2,7 +2,6 @@
 
 namespace Vizra\VizraADK\Tests\Unit\Tools;
 
-use Illuminate\Support\Facades\Log;
 use Mockery;
 use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\Services\VectorMemoryManager;
@@ -76,7 +75,8 @@ class VectorMemoryToolTest extends TestCase
         $this->mockContext->shouldReceive('getState')->with('agent_name')->andReturn('TestAgent');
         $this->mockVectorMemory->shouldReceive('addDocument')->andThrow(new \Exception('Test exception'));
 
-        Log::shouldReceive('error')->once();
+        // The VectorMemoryTool now uses HasLogging trait which checks config before logging
+        // So we don't need to mock Log anymore
 
         $result = $this->tool->execute([
             'action' => 'store',

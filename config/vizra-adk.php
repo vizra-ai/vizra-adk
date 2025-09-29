@@ -2,6 +2,42 @@
 
 return [
     /**
+     * Master switch to enable/disable the Vizra ADK package.
+     * When false, the package will not initialize or perform any operations.
+     */
+    'enabled' => env('VIZRA_ADK_ENABLED', true),
+
+    /**
+     * Logging configuration for the package.
+     * Control how the package logs information, warnings, and errors.
+     */
+    'logging' => [
+        /**
+         * Enable or disable logging across the entire package.
+         * When false, no logs will be written by any Vizra ADK component.
+         */
+        'enabled' => env('VIZRA_ADK_LOGGING_ENABLED', true),
+
+        /**
+         * Log level threshold. Only messages of this level or higher will be logged.
+         * Options: 'debug', 'info', 'warning', 'error', 'critical', 'none'
+         */
+        'level' => env('VIZRA_ADK_LOGGING_LEVEL', 'warning'),
+
+        /**
+         * Specific component logging controls.
+         * Fine-grained control over which components can log.
+         */
+        'components' => [
+            'vector_memory' => env('VIZRA_ADK_LOG_VECTOR_MEMORY', false),
+            'agents' => env('VIZRA_ADK_LOG_AGENTS', true),
+            'tools' => env('VIZRA_ADK_LOG_TOOLS', true),
+            'mcp' => env('VIZRA_ADK_LOG_MCP', true),
+            'traces' => env('VIZRA_ADK_LOG_TRACES', false),
+        ],
+    ],
+
+    /**
      * Default LLM provider to use with Prism-PHP.
      * This can be overridden by specific agent configurations.
      *

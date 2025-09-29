@@ -2,14 +2,16 @@
 
 namespace Vizra\VizraADK\Tools;
 
-use Illuminate\Support\Facades\Log;
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\Services\VectorMemoryManager;
 use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Traits\HasLogging;
 
 class VectorMemoryTool implements ToolInterface
 {
+    use HasLogging;
+
     protected VectorMemoryManager $vectorMemory;
 
     public function __construct(VectorMemoryManager $vectorMemory)
@@ -99,11 +101,11 @@ class VectorMemoryTool implements ToolInterface
                 ]),
             };
         } catch (\Exception $e) {
-            Log::error('VectorMemoryTool execution failed', [
+            $this->logError('VectorMemoryTool execution failed', [
                 'action' => $action,
                 'agent_class' => $agentClass,
                 'error' => $e->getMessage(),
-            ]);
+            ], 'vector_memory');
 
             return json_encode([
                 'success' => false,

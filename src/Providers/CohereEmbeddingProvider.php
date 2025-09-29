@@ -3,12 +3,13 @@
 namespace Vizra\VizraADK\Providers;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Traits\HasLogging;
 
 class CohereEmbeddingProvider implements EmbeddingProviderInterface
 {
+    use HasLogging;
     protected string $apiKey;
 
     protected string $model;
@@ -64,10 +65,10 @@ class CohereEmbeddingProvider implements EmbeddingProviderInterface
             ]);
 
             if (! $response->successful()) {
-                Log::error('Cohere embedding API error', [
+                $this->logError('Cohere embedding API error', [
                     'status' => $response->status(),
                     'response' => $response->body(),
-                ]);
+                ], 'vector_memory');
                 throw new RuntimeException('Cohere embedding API request failed: '.$response->body());
             }
 
@@ -81,20 +82,20 @@ class CohereEmbeddingProvider implements EmbeddingProviderInterface
 
             // Log usage for cost tracking
             if (isset($data['meta']['billed_units'])) {
-                Log::info('Cohere embedding usage', [
+                $this->logInfo('Cohere embedding usage', [
                     'model' => $this->model,
                     'input_tokens' => $data['meta']['billed_units']['input_tokens'] ?? 0,
-                ]);
+                ], 'vector_memory');
             }
 
             return $embeddings;
 
         } catch (\Exception $e) {
-            Log::error('Cohere embedding generation failed', [
+            $this->logError('Cohere embedding generation failed', [
                 'error' => $e->getMessage(),
                 'model' => $this->model,
                 'input_count' => count($inputs),
-            ]);
+            ], 'vector_memory');
             throw new RuntimeException('Failed to generate Cohere embeddings: '.$e->getMessage());
         }
     }
