@@ -285,7 +285,7 @@ class AgentExecutor
         $agentName = $this->getAgentName();
 
         // Load or create agent context
-        $agentContext = $stateManager->loadContext($agentName, $sessionId, $this->input);
+        $agentContext = $stateManager->loadContext($agentName, $sessionId, $this->input, $this->user?->getKey());
 
         // Add user information to context
         if ($this->user) {
