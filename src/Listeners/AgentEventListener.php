@@ -2,13 +2,14 @@
 
 namespace Vizra\VizraADK\Listeners;
 
-use Illuminate\Support\Facades\Log;
+use Vizra\VizraADK\Traits\HasLogging;
 
 /**
  * Base class for creating event listeners that trigger agents
  */
 abstract class AgentEventListener
 {
+    use HasLogging;
     /**
      * The agent class to trigger
      */
@@ -51,12 +52,12 @@ abstract class AgentEventListener
             $this->handleResult($result, $event);
 
         } catch (\Exception $e) {
-            Log::error('Agent event listener failed', [
+            $this->logError('Agent event listener failed', [
                 'listener' => static::class,
                 'agent_class' => $this->agentClass,
                 'event' => get_class($event),
                 'error' => $e->getMessage(),
-            ]);
+            ], 'agents');
 
             // Allow subclasses to handle failures
             $this->handleFailure($e, $event);
@@ -127,12 +128,12 @@ abstract class AgentEventListener
     protected function handleResult($result, $event): void
     {
         // Default: log the result
-        Log::info('Agent triggered by event', [
+        $this->logInfo('Agent triggered by event', [
             'listener' => static::class,
             'agent_class' => $this->agentClass,
             'event' => get_class($event),
             'result_type' => gettype($result),
-        ]);
+        ], 'agents');
     }
 
     /**

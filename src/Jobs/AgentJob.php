@@ -7,14 +7,14 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Vizra\VizraADK\Services\AgentManager;
 use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\Traits\HasLogging;
 
 class AgentJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, HasLogging;
 
     protected string $agentClass;
 
@@ -58,17 +58,17 @@ class AgentJob implements ShouldQueue
     public function handle(AgentManager $agentManager, StateManager $stateManager): void
     {
         try {
-            Log::info('Starting agent job execution', [
+            $this->logInfo('Starting agent job execution', [
                 'job_id' => $this->jobId,
                 'agent_class' => $this->agentClass,
                 'session_id' => $this->sessionId,
-            ]);
+            ], 'agents');
 
             // Get agent name
             $agentName = $this->getAgentName();
 
             // Load or create agent context
-            $agentContext = $stateManager->loadContext($agentName, $this->sessionId, $this->input);
+            $agentContext = $stateManager->loadContext($agentName, $this->sessionId, $this->input, $this->context['user']['id'] ?? null);
 
             // Restore context from job data
             $this->restoreContext($agentContext);
@@ -77,12 +77,12 @@ class AgentJob implements ShouldQueue
             $result = $agentManager->run($agentName, $this->input, $this->sessionId);
 
             // Log successful completion
-            Log::info('Agent job completed successfully', [
+            $this->logInfo('Agent job completed successfully', [
                 'job_id' => $this->jobId,
                 'agent_class' => $this->agentClass,
                 'result_type' => gettype($result),
                 'result_length' => is_string($result) ? strlen($result) : null,
-            ]);
+            ], 'agents');
 
             // Store result in cache for retrieval (optional)
             $this->storeResult($result);
@@ -91,12 +91,12 @@ class AgentJob implements ShouldQueue
             $this->dispatchCompletionEvents($result);
 
         } catch (\Exception $e) {
-            Log::error('Agent job failed', [
+            $this->logError('Agent job failed', [
                 'job_id' => $this->jobId,
                 'agent_class' => $this->agentClass,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-            ]);
+            ], 'agents');
 
             // Re-throw to trigger Laravel's retry mechanism
             throw $e;
@@ -217,12 +217,12 @@ class AgentJob implements ShouldQueue
      */
     public function failed(\Throwable $exception): void
     {
-        Log::error('Agent job permanently failed', [
+        $this->logError('Agent job permanently failed', [
             'job_id' => $this->jobId,
             'agent_class' => $this->agentClass,
             'error' => $exception->getMessage(),
             'attempts' => $this->attempts(),
-        ]);
+        ], 'agents');
 
         // Store failure information
         $failureKey = "agent_job_failure:{$this->jobId}";

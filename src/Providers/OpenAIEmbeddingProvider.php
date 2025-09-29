@@ -6,9 +6,11 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Traits\HasLogging;
 
 class OpenAIEmbeddingProvider implements EmbeddingProviderInterface
 {
+    use HasLogging;
     protected string $apiKey;
 
     protected string $model;
@@ -62,10 +64,10 @@ class OpenAIEmbeddingProvider implements EmbeddingProviderInterface
             ]);
 
             if (! $response->successful()) {
-                Log::error('OpenAI embedding API error', [
+                $this->logError('OpenAI embedding API error', [
                     'status' => $response->status(),
                     'response' => $response->body(),
-                ]);
+                ], 'vector_memory');
                 throw new RuntimeException('OpenAI embedding API request failed: '.$response->body());
             }
 
@@ -86,21 +88,21 @@ class OpenAIEmbeddingProvider implements EmbeddingProviderInterface
 
             // Log usage for cost tracking
             if (isset($data['usage'])) {
-                Log::info('OpenAI embedding usage', [
+                $this->logInfo('OpenAI embedding usage', [
                     'model' => $this->model,
                     'prompt_tokens' => $data['usage']['prompt_tokens'] ?? 0,
                     'total_tokens' => $data['usage']['total_tokens'] ?? 0,
-                ]);
+                ], 'vector_memory');
             }
 
             return $embeddings;
 
         } catch (\Exception $e) {
-            Log::error('OpenAI embedding generation failed', [
+            $this->logError('OpenAI embedding generation failed', [
                 'error' => $e->getMessage(),
                 'model' => $this->model,
                 'input_count' => count($inputs),
-            ]);
+            ], 'vector_memory');
             throw new RuntimeException('Failed to generate OpenAI embeddings: '.$e->getMessage());
         }
     }

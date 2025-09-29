@@ -4,12 +4,13 @@ namespace Vizra\VizraADK\Services\Drivers;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Vizra\VizraADK\Models\VectorMemory;
+use Vizra\VizraADK\Traits\HasLogging;
 
 class MeilisearchVectorDriver
 {
+    use HasLogging;
     protected string $host;
 
     protected ?string $apiKey;
@@ -63,20 +64,20 @@ class MeilisearchVectorDriver
 
             $response = $this->makeRequest('POST', "/indexes/{$indexName}/documents", [$document]);
 
-            Log::debug('Stored document in Meilisearch', [
+            $this->logDebug('Stored document in Meilisearch', [
                 'index' => $indexName,
                 'document_id' => $memory->id,
                 'task_uid' => $response['taskUid'] ?? null,
-            ]);
+            ], 'vector_memory');
 
             return true;
 
         } catch (\Exception $e) {
-            Log::error('Failed to store document in Meilisearch', [
+            $this->logError('Failed to store document in Meilisearch', [
                 'error' => $e->getMessage(),
                 'index' => $indexName,
                 'document_id' => $memory->id,
-            ]);
+            ], 'vector_memory');
             throw new RuntimeException('Failed to store in Meilisearch: '.$e->getMessage());
         }
     }
@@ -110,9 +111,9 @@ class MeilisearchVectorDriver
                 $response = $this->makeRequest('POST', "/indexes/{$indexName}/search", $searchParams);
             } catch (\Exception $e) {
                 // Fallback to retrieving all documents and calculating similarity in PHP
-                Log::info('Meilisearch native vector search not available, using fallback', [
+                $this->logInfo('Meilisearch native vector search not available, using fallback', [
                     'error' => $e->getMessage()
-                ]);
+                ], 'vector_memory');
                 
                 // Get all documents for this agent/namespace
                 $searchParams = [
@@ -163,20 +164,20 @@ class MeilisearchVectorDriver
                 })
                 ->take($limit);
 
-            Log::debug('Meilisearch vector search completed', [
+            $this->logDebug('Meilisearch vector search completed', [
                 'index' => $indexName,
                 'results_count' => $results->count(),
                 'query_dimensions' => count($queryEmbedding),
-            ]);
+            ], 'vector_memory');
 
             return $results;
 
         } catch (\Exception $e) {
-            Log::error('Meilisearch vector search failed', [
+            $this->logError('Meilisearch vector search failed', [
                 'error' => $e->getMessage(),
                 'index' => $indexName,
                 'agent_name' => $agentName,
-            ]);
+            ], 'vector_memory');
             throw new RuntimeException('Meilisearch search failed: '.$e->getMessage());
         }
     }
@@ -207,20 +208,20 @@ class MeilisearchVectorDriver
             // Wait for task completion to get actual count
             $deletedCount = $this->waitForTask($taskUid);
 
-            Log::info('Deleted documents from Meilisearch', [
+            $this->logInfo('Deleted documents from Meilisearch', [
                 'index' => $indexName,
                 'filter' => $filter,
                 'deleted_count' => $deletedCount,
-            ]);
+            ], 'vector_memory');
 
             return $deletedCount;
 
         } catch (\Exception $e) {
-            Log::error('Failed to delete from Meilisearch', [
+            $this->logError('Failed to delete from Meilisearch', [
                 'error' => $e->getMessage(),
                 'index' => $indexName,
                 'agent_name' => $agentName,
-            ]);
+            ], 'vector_memory');
             throw new RuntimeException('Meilisearch deletion failed: '.$e->getMessage());
         }
     }
@@ -270,11 +271,11 @@ class MeilisearchVectorDriver
             ];
 
         } catch (\Exception $e) {
-            Log::error('Failed to get Meilisearch statistics', [
+            $this->logError('Failed to get Meilisearch statistics', [
                 'error' => $e->getMessage(),
                 'index' => $indexName,
                 'agent_name' => $agentName,
-            ]);
+            ], 'vector_memory');
 
             return [
                 'total_memories' => 0,
@@ -323,10 +324,10 @@ class MeilisearchVectorDriver
                 ],
             ]);
 
-            Log::info('Created and configured Meilisearch index', [
+            $this->logInfo('Created and configured Meilisearch index', [
                 'index' => $indexName,
                 'dimensions' => $dimensions,
-            ]);
+            ], 'vector_memory');
         }
     }
 

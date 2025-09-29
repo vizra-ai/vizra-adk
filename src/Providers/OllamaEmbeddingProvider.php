@@ -3,12 +3,13 @@
 namespace Vizra\VizraADK\Providers;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Traits\HasLogging;
 
 class OllamaEmbeddingProvider implements EmbeddingProviderInterface
 {
+    use HasLogging;
     protected string $baseUrl;
 
     protected string $model;
@@ -44,11 +45,11 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
                 ]);
 
                 if (! $response->successful()) {
-                    Log::error('Ollama embedding API error', [
+                    $this->logError('Ollama embedding API error', [
                         'status' => $response->status(),
                         'response' => $response->body(),
                         'url' => $this->baseUrl,
-                    ]);
+                    ], 'vector_memory');
                     throw new RuntimeException('Ollama embedding API request failed: '.$response->body());
                 }
 
@@ -61,12 +62,12 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
                 $embeddings[] = $data['embedding'];
 
             } catch (\Exception $e) {
-                Log::error('Ollama embedding generation failed', [
+                $this->logError('Ollama embedding generation failed', [
                     'error' => $e->getMessage(),
                     'model' => $this->model,
                     'text_length' => strlen($text),
                     'url' => $this->baseUrl,
-                ]);
+                ], 'vector_memory');
                 throw new RuntimeException('Failed to generate Ollama embeddings: '.$e->getMessage());
             }
         }
@@ -143,10 +144,10 @@ class OllamaEmbeddingProvider implements EmbeddingProviderInterface
             return false;
 
         } catch (\Exception $e) {
-            Log::warning('Failed to check Ollama model availability', [
+            $this->logWarning('Failed to check Ollama model availability', [
                 'error' => $e->getMessage(),
                 'model' => $this->model,
-            ]);
+            ], 'vector_memory');
 
             return false;
         }

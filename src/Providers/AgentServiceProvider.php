@@ -43,6 +43,11 @@ class AgentServiceProvider extends ServiceProvider
             'vizra-adk'
         );
 
+        // Check if the package is globally disabled
+        if (! config('vizra-adk.enabled', true)) {
+            return;
+        }
+
         // Merge vizra-adk providers into prism config
         $vizraProviders = config('vizra-adk.providers', []);
         if (!empty($vizraProviders)) {
@@ -52,7 +57,7 @@ class AgentServiceProvider extends ServiceProvider
             )]);
         }
 
-        // Register the VectorMemoryServiceProvider
+        // Register the VectorMemoryServiceProvider only if package is enabled
         $this->app->register(VectorMemoryServiceProvider::class);
 
         $this->app->singleton(AgentRegistry::class, function (Application $app) {
@@ -118,6 +123,11 @@ class AgentServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Check if the package is globally disabled
+        if (! config('vizra-adk.enabled', true)) {
+            return;
+        }
+
         $this->publishes([
             __DIR__.'/../../config/vizra-adk.php' => config_path('vizra-adk.php'),
         ], 'vizra-adk-config');
@@ -153,6 +163,11 @@ class AgentServiceProvider extends ServiceProvider
 
     protected function discoverAgents(): void
     {
+        // Skip agent discovery if package is disabled
+        if (! config('vizra-adk.enabled', true)) {
+            return;
+        }
+
         /** @var AgentDiscovery $discovery */
         $discovery = $this->app->make(AgentDiscovery::class);
         $agents = $discovery->discover();
@@ -167,6 +182,11 @@ class AgentServiceProvider extends ServiceProvider
 
     protected function registerLivewireComponents(): void
     {
+        // Skip Livewire registration if package is disabled
+        if (! config('vizra-adk.enabled', true)) {
+            return;
+        }
+
         if (class_exists(Livewire::class)) {
             Livewire::component('vizra-adk-dashboard', Dashboard::class);
             Livewire::component('vizra-adk-chat-interface', ChatInterface::class);
@@ -177,12 +197,22 @@ class AgentServiceProvider extends ServiceProvider
 
     protected function loadViews(): void
     {
+        // Skip view loading if package is disabled
+        if (! config('vizra-adk.enabled', true)) {
+            return;
+        }
+
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'vizra-adk');
 
     }
 
     protected function loadRoutes(): void
     {
+        // Skip route loading if package is disabled
+        if (! config('vizra-adk.enabled', true)) {
+            return;
+        }
+
         // Load API routes
         if (config('vizra-adk.routes.enabled', true)) {
             Route::group([

@@ -3,12 +3,13 @@
 namespace Vizra\VizraADK\Providers;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
+use Vizra\VizraADK\Traits\HasLogging;
 
 class GeminiEmbeddingProvider implements EmbeddingProviderInterface
 {
+    use HasLogging;
     protected string $apiKey;
 
     protected string $model;
@@ -69,10 +70,10 @@ class GeminiEmbeddingProvider implements EmbeddingProviderInterface
                 ]);
 
                 if (! $response->successful()) {
-                    Log::error('Gemini embedding API error', [
+                    $this->logError('Gemini embedding API error', [
                         'status' => $response->status(),
                         'response' => $response->body(),
-                    ]);
+                    ], 'vector_memory');
                     throw new RuntimeException('Gemini embedding API request failed: '.$response->body());
                 }
 
@@ -86,20 +87,20 @@ class GeminiEmbeddingProvider implements EmbeddingProviderInterface
             }
 
             // Log usage for monitoring
-            Log::info('Gemini embedding usage', [
+            $this->logInfo('Gemini embedding usage', [
                 'model' => $this->model,
                 'input_count' => count($inputs),
                 'total_characters' => array_sum(array_map('strlen', $inputs)),
-            ]);
+            ], 'vector_memory');
 
             return $embeddings;
 
         } catch (\Exception $e) {
-            Log::error('Gemini embedding generation failed', [
+            $this->logError('Gemini embedding generation failed', [
                 'error' => $e->getMessage(),
                 'model' => $this->model,
                 'input_count' => count($inputs),
-            ]);
+            ], 'vector_memory');
             throw new RuntimeException('Failed to generate Gemini embeddings: '.$e->getMessage());
         }
     }

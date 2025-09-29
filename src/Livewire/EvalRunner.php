@@ -11,10 +11,11 @@ use Livewire\WithFileUploads;
 use Vizra\VizraADK\Evaluations\BaseEvaluation;
 use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\Services\AgentRegistry;
+use Vizra\VizraADK\Traits\HasLogging;
 
 class EvalRunner extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, HasLogging;
 
     // Evaluation discovery and selection
     public array $availableEvaluations = [];
@@ -66,7 +67,7 @@ class EvalRunner extends Component
         $this->discoverEvaluations();
 
         // Debug: Log the number of discovered evaluations
-        \Log::info('EvalRunner: Discovered '.count($this->availableEvaluations).' evaluations');
+        $this->logInfo('EvalRunner: Discovered '.count($this->availableEvaluations).' evaluations', [], 'agents');
     }
 
     public function refreshEvaluations()
@@ -527,10 +528,10 @@ class EvalRunner extends Component
                 $this->evaluationInstance = app($this->selectedEvaluation);
             } catch (Exception $e) {
                 // Log the error for debugging
-                \Log::error('Failed to recreate evaluation instance', [
+                $this->logError('Failed to recreate evaluation instance', [
                     'class' => $this->selectedEvaluation,
                     'error' => $e->getMessage()
-                ]);
+                ], 'agents');
                 return false;
             }
         }

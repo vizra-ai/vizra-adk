@@ -3,13 +3,14 @@
 namespace Vizra\VizraADK\Scheduling;
 
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Support\Facades\Log;
+use Vizra\VizraADK\Traits\HasLogging;
 
 /**
  * Helper class for scheduling agent tasks
  */
 class AgentScheduler
 {
+    use HasLogging;
     protected Schedule $schedule;
 
     public function __construct(Schedule $schedule)
@@ -79,6 +80,7 @@ class AgentScheduler
  */
 class AgentScheduleBuilder
 {
+    use HasLogging;
     protected Schedule $schedule;
 
     protected string $agentClass;
@@ -183,10 +185,10 @@ class AgentScheduleBuilder
     {
         $callback = function () {
             try {
-                Log::info('Executing scheduled agent', [
+                $this->logInfo('Executing scheduled agent', [
                     'agent_class' => $this->agentClass,
                     'scheduled_name' => $this->name,
-                ]);
+                ], 'agents');
 
                 // Prepare agent execution
                 $executor = $this->agentClass::run($this->input);
@@ -208,18 +210,18 @@ class AgentScheduleBuilder
                 // Execute
                 $result = $executor->go();
 
-                Log::info('Scheduled agent completed', [
+                $this->logInfo('Scheduled agent completed', [
                     'agent_class' => $this->agentClass,
                     'scheduled_name' => $this->name,
                     'result_type' => gettype($result),
-                ]);
+                ], 'agents');
 
             } catch (\Exception $e) {
-                Log::error('Scheduled agent failed', [
+                $this->logError('Scheduled agent failed', [
                     'agent_class' => $this->agentClass,
                     'scheduled_name' => $this->name,
                     'error' => $e->getMessage(),
-                ]);
+                ], 'agents');
 
                 throw $e;
             }

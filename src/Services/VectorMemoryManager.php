@@ -4,7 +4,6 @@ namespace Vizra\VizraADK\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RuntimeException;
@@ -12,9 +11,12 @@ use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\Models\VectorMemory;
 use Vizra\VizraADK\Services\Drivers\MeilisearchVectorDriver;
+use Vizra\VizraADK\Traits\HasLogging;
 
 class VectorMemoryManager
 {
+    use HasLogging;
+
     protected EmbeddingProviderInterface $embeddingProvider;
 
     protected DocumentChunker $chunker;
@@ -62,12 +64,12 @@ class VectorMemoryManager
         $source = $source ?: class_basename($agentClass);
         $sourceId = $sourceId ?: (string) Str::ulid();
 
-        Log::info('Adding document to vector memory', [
+        $this->logInfo('Adding document to vector memory', [
             'agent_name' => $agentName,
             'content_length' => strlen($content),
             'namespace' => $namespace,
             'source' => $source,
-        ]);
+        ], 'vector_memory');
 
         // Chunk the document
         $chunks = $this->chunker->chunk($content);
@@ -91,11 +93,11 @@ class VectorMemoryManager
             }
         }
 
-        Log::info('Document added to vector memory', [
+        $this->logInfo('Document added to vector memory', [
             'agent_name' => $agentName,
             'chunks_created' => $memoryEntries->count(),
             'namespace' => $namespace,
-        ]);
+        ], 'vector_memory');
 
         return $memoryEntries;
     }
@@ -150,10 +152,10 @@ class VectorMemoryManager
             ->first();
 
         if ($existing) {
-            Log::debug('Content already exists in vector memory', [
+            $this->logDebug('Content already exists in vector memory', [
                 'agent_name' => $agentName,
                 'content_hash' => $contentHash,
-            ]);
+            ], 'vector_memory');
 
             return $existing;
         }
@@ -196,21 +198,21 @@ class VectorMemoryManager
                 $meilisearchDriver->store($memory);
             }
 
-            Log::debug('Added chunk to vector memory', [
+            $this->logDebug('Added chunk to vector memory', [
                 'agent_name' => $agentName,
                 'memory_id' => $memory->id,
                 'content_length' => strlen($content),
                 'dimensions' => count($embedding),
-            ]);
+            ], 'vector_memory');
 
             return $memory;
 
         } catch (\Exception $e) {
-            Log::error('Failed to add chunk to vector memory', [
+            $this->logError('Failed to add chunk to vector memory', [
                 'agent_name' => $agentName,
                 'error' => $e->getMessage(),
                 'content_length' => strlen($content),
-            ]);
+            ], 'vector_memory');
             throw new RuntimeException('Failed to add content to vector memory: '.$e->getMessage());
         }
     }
@@ -242,13 +244,13 @@ class VectorMemoryManager
         } else {
             throw new InvalidArgumentException('Second parameter must be string or array');
         }
-        Log::debug('Searching vector memory', [
+        $this->logDebug('Searching vector memory', [
             'agent_name' => $agentName,
             'query_length' => strlen($query),
             'namespace' => $namespace,
             'limit' => $limit,
             'threshold' => $threshold,
-        ]);
+        ], 'vector_memory');
 
         try {
             // Generate embedding for the query
@@ -264,11 +266,11 @@ class VectorMemoryManager
             }
 
         } catch (\Exception $e) {
-            Log::error('Vector memory search failed', [
+            $this->logError('Vector memory search failed', [
                 'agent_name' => $agentName,
                 'error' => $e->getMessage(),
                 'query_length' => strlen($query),
-            ]);
+            ], 'vector_memory');
             throw new RuntimeException('Vector memory search failed: '.$e->getMessage());
         }
     }
@@ -474,11 +476,11 @@ class VectorMemoryManager
             ->inNamespace($namespace)
             ->delete();
 
-        Log::info('Deleted vector memories', [
+        $this->logInfo('Deleted vector memories', [
             'agent_name' => $agentName,
             'namespace' => $namespace,
             'count' => $count,
-        ]);
+        ], 'vector_memory');
 
         return $count;
     }
@@ -512,12 +514,12 @@ class VectorMemoryManager
             ->fromSource($source)
             ->delete();
 
-        Log::info('Deleted vector memories by source', [
+        $this->logInfo('Deleted vector memories by source', [
             'agent_name' => $agentName,
             'namespace' => $namespace,
             'source' => $source,
             'count' => $count,
-        ]);
+        ], 'vector_memory');
 
         return $count;
     }

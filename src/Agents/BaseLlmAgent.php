@@ -32,10 +32,12 @@ use Vizra\VizraADK\Services\AgentVectorProxy;
 use Vizra\VizraADK\Services\Tracer;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Traits\VersionablePrompts;
+use Vizra\VizraADK\Traits\HasLogging;
 
 abstract class BaseLlmAgent extends BaseAgent
 {
     use VersionablePrompts;
+    use HasLogging;
 
     /**
      * Framework control parameters that should not be included in context messages.
@@ -462,10 +464,10 @@ abstract class BaseLlmAgent extends BaseAgent
                 }
             } catch (\Exception $e) {
                 // Log the error but don't fail the agent loading
-                \Illuminate\Support\Facades\Log::warning('Failed to load MCP tools for agent {agent}: {error}', [
+                $this->logWarning('Failed to load MCP tools for agent {agent}: {error}', [
                     'agent' => $this->getName(),
                     'error' => $e->getMessage(),
-                ]);
+                ], 'mcp');
             }
         }
     }
@@ -741,17 +743,6 @@ abstract class BaseLlmAgent extends BaseAgent
                     }
                 }
             }
-
-            // Add user message with attachments if present
-            $userMessage = ['role' => 'user', 'content' => $input ?: ''];
-            if (! empty($images)) {
-                $userMessage['images'] = $images;
-            }
-            if (! empty($documents)) {
-                $userMessage['documents'] = $documents;
-            }
-
-            $context->addMessage($userMessage);
 
             // Since Prism handles tool execution internally with maxSteps,
             // we don't need the manual tool execution loop
