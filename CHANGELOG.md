@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.31] - 2025-09-29
+
+ Fixed issue where user ID wasn't assigned to session creation
+
+Add configurable logging and global enable/disable support
+Introduces a HasLogging trait for unified, configurable logging across the package, with support for log levels and component-specific toggles. Adds a global 'enabled' flag to the config to allow disabling the entire package, and updates all relevant services, providers, and tools to respect these settings. Includes comprehensive tests for package disabling and logging behavior.
+
+Remove duplicate user message addition in BaseLlmAgent
+Eliminates redundant addition of the user message with attachments in BaseLlmAgent, preventing duplicate user messages during execution. Adds unit tests to verify correct message deduplication and proper handling of conversation history and input.
+
+
 ## [0.0.30] - 2025-09-26
 
 Add embedder and semanticRatio to Meilisearch driver
