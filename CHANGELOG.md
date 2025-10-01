@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.32] - 2025-10-01
+
+Persist user messages with images and documents
+Adds user messages, including images and documents, to the context for persistence after message preparation. This ensures that all relevant user input is retained for future reference.
+
 ## [0.0.31] - 2025-09-29
 
  Fixed issue where user ID wasn't assigned to session creation
