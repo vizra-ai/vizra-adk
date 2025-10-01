@@ -761,6 +761,16 @@ abstract class BaseLlmAgent extends BaseAgent
             if (! empty($input) || ! empty($additionalContent)) {
                 $currentMessage = new UserMessage($input ?: '', $additionalContent);
                 $messages[] = $currentMessage;
+
+                // Also add to context for persistence (after prepareMessagesForPrism to avoid duplicates in LLM request)
+                $userMessageArray = ['role' => 'user', 'content' => $input ?: ''];
+                if (! empty($images)) {
+                    $userMessageArray['images'] = $images;
+                }
+                if (! empty($documents)) {
+                    $userMessageArray['documents'] = $documents;
+                }
+                $context->addMessage($userMessageArray);
             }
 
             $messages = $this->beforeLlmCall($messages, $context);
