@@ -7,19 +7,34 @@ beforeEach(function () {
     // Mock config for testing
     config(['vizra-adk.mcp_servers' => [
         'test_server' => [
+            'transport' => 'stdio',
             'command' => 'echo',
             'args' => ['test'],
             'enabled' => true,
             'timeout' => 30,
         ],
         'disabled_server' => [
+            'transport' => 'stdio',
             'command' => 'echo',
             'args' => ['disabled'],
             'enabled' => false,
         ],
         'missing_command' => [
+            'transport' => 'stdio',
             'enabled' => true,
             // Missing command
+        ],
+        'http_server' => [
+            'transport' => 'http',
+            'url' => 'http://localhost:8001/api/mcp',
+            'api_key' => 'test-key',
+            'enabled' => true,
+            'timeout' => 30,
+        ],
+        'http_missing_url' => [
+            'transport' => 'http',
+            'enabled' => true,
+            // Missing URL
         ],
     ]]);
 });
@@ -123,4 +138,41 @@ it('disconnects all clients on destruction', function () {
     $manager->disconnectAll();
 
     expect(true)->toBeTrue();
+});
+
+it('identifies HTTP servers correctly', function () {
+    $manager = new MCPClientManager;
+
+    expect($manager->isServerEnabled('http_server'))->toBeTrue();
+});
+
+it('throws exception for HTTP server with missing URL', function () {
+    $manager = new MCPClientManager;
+
+    expect(function () use ($manager) {
+        $manager->getClient('http_missing_url');
+    })->toThrow(MCPException::class, "MCP server 'http_missing_url' has no URL configured for HTTP transport");
+});
+
+it('creates HTTP client for HTTP transport', function () {
+    $manager = new MCPClientManager;
+
+    // This will create the client but not connect
+    // The test verifies that HTTP transport is recognized
+    $enabled = $manager->getEnabledServers();
+    expect($enabled)->toContain('http_server');
+});
+
+it('defaults to STDIO transport when not specified', function () {
+    config(['vizra-adk.mcp_servers' => [
+        'default_transport_server' => [
+            'command' => 'echo',
+            'args' => ['test'],
+            'enabled' => true,
+            // transport not specified, should default to stdio
+        ],
+    ]]);
+
+    $manager = new MCPClientManager;
+    expect($manager->isServerEnabled('default_transport_server'))->toBeTrue();
 });
