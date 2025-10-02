@@ -4,6 +4,8 @@ namespace Vizra\VizraADK\Services\MCP;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Vizra\VizraADK\Contracts\MCPClientInterface;
+use Vizra\VizraADK\Enums\MCPTransport;
 use Vizra\VizraADK\Exceptions\MCPException;
 
 class MCPClientManager
@@ -22,7 +24,7 @@ class MCPClientManager
     /**
      * Get an MCP client for the specified server
      */
-    public function getClient(string $serverName): MCPClient
+    public function getClient(string $serverName): MCPClientInterface
     {
         // If we have a cached client, check if it's still connected
         if (isset($this->clients[$serverName])) {
@@ -306,7 +308,7 @@ class MCPClientManager
     /**
      * Create a new MCP client for the specified server
      */
-    private function createClient(string $serverName): MCPClient
+    private function createClient(string $serverName): MCPClientInterface
     {
         if (! isset($this->serverConfigs[$serverName])) {
             throw new MCPException("MCP server '{$serverName}' is not configured");
@@ -318,15 +320,46 @@ class MCPClientManager
             throw new MCPException("MCP server '{$serverName}' is disabled");
         }
 
+        // Determine transport type (default to STDIO for backwards compatibility)
+        $transport = MCPTransport::from($config['transport'] ?? 'stdio');
+
+        return match ($transport) {
+            MCPTransport::STDIO => $this->createStdioClient($config, $serverName),
+            MCPTransport::HTTP => $this->createHttpClient($config, $serverName),
+        };
+    }
+
+    /**
+     * Create a STDIO transport client
+     */
+    private function createStdioClient(array $config, string $serverName): MCPStdioClient
+    {
         if (empty($config['command'])) {
             throw new MCPException("MCP server '{$serverName}' has no command configured");
         }
 
-        return new MCPClient(
+        return new MCPStdioClient(
             command: $config['command'],
             args: $config['args'] ?? [],
             timeout: $config['timeout'] ?? 30,
             usePty: $config['use_pty'] ?? false
+        );
+    }
+
+    /**
+     * Create an HTTP transport client
+     */
+    private function createHttpClient(array $config, string $serverName): MCPHttpClient
+    {
+        if (empty($config['url'])) {
+            throw new MCPException("MCP server '{$serverName}' has no URL configured for HTTP transport");
+        }
+
+        return new MCPHttpClient(
+            url: $config['url'],
+            apiKey: $config['api_key'] ?? null,
+            timeout: $config['timeout'] ?? 30,
+            headers: $config['headers'] ?? []
         );
     }
 

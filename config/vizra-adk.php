@@ -182,15 +182,30 @@ return [
      * Model Context Protocol (MCP) Configuration
      * Define MCP servers that agents can connect to for enhanced capabilities.
      *
-     * Each server configuration includes:
+     * Supported transports:
+     * - 'stdio': Subprocess communication via stdin/stdout (default)
+     * - 'http': Remote HTTP/SSE server communication
+     *
+     * STDIO Transport Configuration:
+     * - transport: 'stdio' (optional, default)
      * - command: The command to start the MCP server
      * - args: Arguments to pass to the server command
      * - enabled: Whether this server is enabled (default: true)
      * - timeout: Connection timeout in seconds (default: 30)
      * - use_pty: Use pseudo-terminal for interactive processes (default: false)
+     *
+     * HTTP Transport Configuration:
+     * - transport: 'http'
+     * - url: The HTTP endpoint URL for the MCP server
+     * - api_key: Optional API key for authentication
+     * - enabled: Whether this server is enabled (default: true)
+     * - timeout: Request timeout in seconds (default: 30)
+     * - headers: Optional additional HTTP headers (default: [])
      */
     'mcp_servers' => [
+        // STDIO transport example - local MCP server via subprocess
         'filesystem' => [
+            'transport' => 'stdio', // Optional, default is 'stdio'
             'command' => env('MCP_NPX_PATH', 'npx'),
             'args' => [
                 '@modelcontextprotocol/server-filesystem',
@@ -200,7 +215,9 @@ return [
             'timeout' => 30,
         ],
 
+        // STDIO transport example - GitHub MCP server
         'github' => [
+            'transport' => 'stdio',
             'command' => env('MCP_NPX_PATH', 'npx'),
             'args' => [
                 '@modelcontextprotocol/server-github',
@@ -209,6 +226,19 @@ return [
             ],
             'enabled' => env('MCP_GITHUB_ENABLED', false) && ! empty(env('GITHUB_TOKEN')),
             'timeout' => 45,
+        ],
+
+        // HTTP transport example - remote MCP server via HTTP/SSE
+        'github_http' => [
+            'transport' => 'http',
+            'url' => env('MCP_GITHUB_HTTP_URL', 'http://localhost:8001/api/mcp'),
+            'api_key' => env('MCP_GITHUB_HTTP_API_KEY'),
+            'enabled' => env('MCP_GITHUB_HTTP_ENABLED', false),
+            'timeout' => 45,
+            'headers' => [
+                // Optional additional headers
+                // 'X-Custom-Header' => 'value',
+            ],
         ],
 
         'postgres' => [

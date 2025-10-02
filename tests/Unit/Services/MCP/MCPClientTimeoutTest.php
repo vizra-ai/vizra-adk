@@ -4,6 +4,7 @@ namespace Vizra\VizraADK\Tests\Unit\Services\MCP;
 
 use Vizra\VizraADK\Tests\TestCase;
 use Vizra\VizraADK\Services\MCP\MCPClient;
+use Vizra\VizraADK\Services\MCP\MCPStdioClient;
 use Vizra\VizraADK\Exceptions\MCPException;
 
 class MCPClientTimeoutTest extends TestCase
@@ -19,7 +20,8 @@ class MCPClientTimeoutTest extends TestCase
         $longTimeout = new MCPClient('echo', ['test'], 120);
 
         // Use reflection to verify timeout is set correctly
-        $reflection = new \ReflectionClass($shortTimeout);
+        // MCPClient extends MCPStdioClient, so we need to get properties from parent class
+        $reflection = new \ReflectionClass(MCPStdioClient::class);
         $timeoutProperty = $reflection->getProperty('timeout');
         $timeoutProperty->setAccessible(true);
 
@@ -37,7 +39,7 @@ class MCPClientTimeoutTest extends TestCase
         $client = new MCPClient('echo', ['test'], 10);
 
         // Use reflection to verify internal timeout calculation
-        $reflection = new \ReflectionClass($client);
+        $reflection = new \ReflectionClass(MCPStdioClient::class);
         $timeoutProperty = $reflection->getProperty('timeout');
         $timeoutProperty->setAccessible(true);
 
@@ -61,7 +63,7 @@ class MCPClientTimeoutTest extends TestCase
         $client = new MCPClient('echo', ['test']);
 
         // Use reflection to check the default timeout
-        $reflection = new \ReflectionClass($client);
+        $reflection = new \ReflectionClass(MCPStdioClient::class);
         $timeoutProperty = $reflection->getProperty('timeout');
         $timeoutProperty->setAccessible(true);
 
@@ -83,7 +85,7 @@ class MCPClientTimeoutTest extends TestCase
         // Test with 120 second timeout (as mentioned in the issue)
         $client = new MCPClient('echo', ['test'], 120);
 
-        $reflection = new \ReflectionClass($client);
+        $reflection = new \ReflectionClass(MCPStdioClient::class);
         $timeoutProperty = $reflection->getProperty('timeout');
         $timeoutProperty->setAccessible(true);
 
