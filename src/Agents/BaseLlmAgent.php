@@ -683,6 +683,11 @@ abstract class BaseLlmAgent extends BaseAgent
             $this->setPromptVersion($context->getState('prompt_version'));
         }
 
+        // Check for streaming in context
+        if ($context->getState('streaming') !== null) {
+            $this->setStreaming((bool) $context->getState('streaming'));
+        }
+
         // Initialize memory for this agent if not already done
         if ($this->memory === null) {
             $this->memory = new AgentMemory($this);
