@@ -6,6 +6,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.34] - 2025-10-03
+
+Add streaming state check in BaseLlmAgent
+BaseLlmAgent now checks for a 'streaming' state in the context and sets the streaming property accordingly. This allows agents to be configured for streaming behavior based on context state.
+
+END\
+NED
+
+## [0.0.33] - 2025-10-02
+
+Add HTTP transport support for MCP clients
+Introduces MCPHttpClient for HTTP/SSE transport and refactors MCPClientManager to support both STDIO and HTTP transports via MCPTransport enum. MCPClient is now deprecated in favor of MCPStdioClient, and a common MCPClientInterface is added. Configuration and tests are updated to support and verify HTTP transport functionality.
+
+## [0.0.32] - 2025-10-01
+
+Persist user messages with images and documents
+Adds user messages, including images and documents, to the context for persistence after message preparation. This ensures that all relevant user input is retained for future reference.
+
+## [0.0.31] - 2025-09-29
+
+ Fixed issue where user ID wasn't assigned to session creation
+
+Add configurable logging and global enable/disable support
+Introduces a HasLogging trait for unified, configurable logging across the package, with support for log levels and component-specific toggles. Adds a global 'enabled' flag to the config to allow disabling the entire package, and updates all relevant services, providers, and tools to respect these settings. Includes comprehensive tests for package disabling and logging behavior.
+
+Remove duplicate user message addition in BaseLlmAgent
+Eliminates redundant addition of the user message with attachments in BaseLlmAgent, preventing duplicate user messages during execution. Adds unit tests to verify correct message deduplication and proper handling of conversation history and input.
+
+
+## [0.0.30] - 2025-09-26
+
+Add embedder and semanticRatio to Meilisearch driver
+Introduces 'embedder' and 'semantic_ratio' configuration options for the Meilisearch vector driver. These are now included in search requests as part of the 'hybrid' parameter, and corresponding test coverage has been added.
+
+Make MCPClient timeout configurable and add tests
+Changed MCPClient to use a dynamic timeout based on configuration, replacing the fixed maxAttempts value. Added unit tests to verify correct timeout handling and calculation for various scenarios.
+
+Make web route prefix configurable
+Replaces the hardcoded 'vizra' route prefix with a value from the 'vizra-adk.routes.web.prefix' config, defaulting to 'vizra'. This allows customization of the route prefix via configuration.
+
 ## [0.0.29] - 2025-09-15
 
 Add support for OpenAI stateful responses
