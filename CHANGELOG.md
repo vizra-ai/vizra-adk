@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.34] - 2025-10-03
+
+Add streaming state check in BaseLlmAgent
+BaseLlmAgent now checks for a 'streaming' state in the context and sets the streaming property accordingly. This allows agents to be configured for streaming behavior based on context state.
+
+END\
+NED
+
 ## [0.0.33] - 2025-10-02
 
 Add HTTP transport support for MCP clients
