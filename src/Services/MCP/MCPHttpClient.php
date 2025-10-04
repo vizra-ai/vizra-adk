@@ -195,7 +195,8 @@ class MCPHttpClient implements MCPClientInterface
                 );
             }
 
-            $data = $response->json();
+            // Parse response - handle both plain JSON and SSE format
+            $data = $this->parseResponse($response->body());
 
             if (! is_array($data)) {
                 throw new MCPException('Invalid JSON-RPC response format');
@@ -239,13 +240,67 @@ class MCPHttpClient implements MCPClientInterface
     }
 
     /**
+     * Parse response body - handles both plain JSON and SSE format
+     */
+    private function parseResponse(string $body): array
+    {
+        // Check if response is SSE format (starts with "event:" or "data:")
+        if (str_starts_with(trim($body), 'event:') || str_starts_with(trim($body), 'data:')) {
+            return $this->parseSSEResponse($body);
+        }
+
+        // Plain JSON response
+        $data = json_decode($body, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new MCPException('Failed to parse JSON response: '.json_last_error_msg());
+        }
+
+        return $data;
+    }
+
+    /**
+     * Parse Server-Sent Events (SSE) response format
+     */
+    private function parseSSEResponse(string $body): array
+    {
+        $lines = explode("\n", $body);
+        $data = null;
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+
+            // Skip empty lines
+            if (empty($line)) {
+                continue;
+            }
+
+            // Parse SSE format: "data: {json}"
+            if (str_starts_with($line, 'data:')) {
+                $jsonString = trim(substr($line, 5)); // Remove "data:" prefix
+                $data = json_decode($jsonString, true);
+
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    break; // We found valid data, stop processing
+                }
+                // Continue to next line if JSON parsing failed
+            }
+        }
+
+        if ($data === null) {
+            throw new MCPException('No valid data found in SSE response');
+        }
+
+        return $data;
+    }
+
+    /**
      * Build HTTP headers for the request
      */
     private function buildHeaders(): array
     {
         $headers = array_merge([
             'Content-Type' => 'application/json',
-            'Accept' => 'application/json',
+            'Accept' => 'application/json, text/event-stream',
         ], $this->headers);
 
         if ($this->apiKey) {
