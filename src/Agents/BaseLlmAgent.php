@@ -83,7 +83,7 @@ abstract class BaseLlmAgent extends BaseAgent
      * Can be either:
      * - Simple strings: ['some_tool_12345']
      * - Arrays with config: [['type' => 'code_execution_20250522', 'name' => 'code_execution']]
-     * 
+     *
      * @var array<string|array>
      */
     protected array $providerTools = [];
@@ -242,7 +242,7 @@ abstract class BaseLlmAgent extends BaseAgent
         if ($this->provider instanceof Provider) {
             return $this->provider->value;
         }
-        
+
         if ($this->provider === null) {
             $defaultProvider = config('vizra-adk.default_provider', 'openai');
             $this->provider = match ($defaultProvider) {
@@ -659,14 +659,14 @@ abstract class BaseLlmAgent extends BaseAgent
                 $type = $tool['type'] ?? throw new \InvalidArgumentException('Provider tool array must have a "type" key');
                 $name = $tool['name'] ?? null;
                 $options = $tool['options'] ?? [];
-                
+
                 return new ProviderTool(
                     type: $type,
                     name: $name,
                     options: $options
                 );
             }
-            
+
             // For string format, just pass it through
             // If a provider needs a name, the user should use the array format
             return new ProviderTool(type: $tool);
@@ -805,7 +805,8 @@ abstract class BaseLlmAgent extends BaseAgent
                 // Wrap the stream to buffer final text, update context, end trace, and persist
                 $agentName = $this->getName();
                 $tracerRef = $tracer; // capture for generator scope
-                $wrapped = (function () use ($llmResponse, $context, $agentName, $tracerRef) {
+                $prismRequestRef = $prismRequest; // capture for afterLlmResponse hook
+                $wrapped = (function () use ($llmResponse, $context, $agentName, $tracerRef, $prismRequestRef) {
                     $buffer = '';
                     try {
                         foreach ($llmResponse as $chunk) {
@@ -839,6 +840,16 @@ abstract class BaseLlmAgent extends BaseAgent
 
                         // Fire response event for listeners
                         Event::dispatch(new AgentResponseGenerated($context, $agentName, $buffer));
+
+                        // Call afterLlmResponse hook for streaming responses
+                        try {
+                            $this->afterLlmResponse($llmResponse, $context, $prismRequestRef ?? null);
+                        } catch (\Throwable $e) {
+                            logger()->error('afterLlmResponse hook failed in streaming mode', [
+                                'agent' => $agentName,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
 
                         // End the trace with success
                         $tracerRef->endTrace(
@@ -916,13 +927,21 @@ abstract class BaseLlmAgent extends BaseAgent
         $historyDepth = $context->getState('history_depth', $this->historyLimit);
         $contextStrategy = $context->getState('context_strategy', $this->contextStrategy);
 
-        // If context strategy is 'none' or history is disabled, return messages with context
+
+
+        // If context strategy is 'none' or history is disabled, return messages with context.
         if (! $includeHistory || $contextStrategy === 'none') {
+            logger()->warning('prepareMessagesForPrism: History disabled, returning early', [
+                'agent' => $this->getName(),
+                'includeHistory' => $includeHistory,
+                'contextStrategy' => $contextStrategy,
+            ]);
             return $messages;
         }
 
         // Get conversation history based on strategy
         $conversationHistory = $this->getHistoryByStrategy($context, $contextStrategy, $historyDepth);
+
 
         // Convert conversation history to Prism Message objects
         foreach ($conversationHistory as $message) {
