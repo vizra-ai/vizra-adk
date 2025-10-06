@@ -18,12 +18,17 @@ class MCPHttpClient implements MCPClientInterface
 
     private ?array $serverInfo = null;
 
+    private ?string $sessionId = null;
+
     public function __construct(
         private string $url,
         private ?string $apiKey = null,
         private int $timeout = 30,
         private array $headers = []
-    ) {}
+    ) {
+        // Session ID will be provided by server during initialization
+        $this->sessionId = null;
+    }
 
     /**
      * Connect to the MCP server (initialize)
@@ -35,7 +40,7 @@ class MCPHttpClient implements MCPClientInterface
         }
 
         try {
-            // Send initialize request
+            // Send initialize request WITHOUT session ID (session starts after initialization)
             $response = $this->sendRequest('initialize', [
                 'protocolVersion' => '2024-11-05',
                 'capabilities' => [
@@ -47,7 +52,7 @@ class MCPHttpClient implements MCPClientInterface
                     'name' => 'vizra-adk',
                     'version' => '1.0.0',
                 ],
-            ]);
+            ], false); // Don't include session ID for initialize
 
             $this->serverInfo = $response;
             $this->connected = true;
@@ -169,7 +174,7 @@ class MCPHttpClient implements MCPClientInterface
     /**
      * Send a JSON-RPC request to the HTTP server
      */
-    private function sendRequest(string $method, array $params = []): array
+    private function sendRequest(string $method, array $params = [], bool $includeSessionId = true): array
     {
         $messageId = ++$this->messageId;
 
@@ -185,7 +190,7 @@ class MCPHttpClient implements MCPClientInterface
 
         try {
             $httpClient = Http::timeout($this->timeout)
-                ->withHeaders($this->buildHeaders());
+                ->withHeaders($this->buildHeaders($includeSessionId));
 
             $response = $httpClient->post($this->url, $request);
 
@@ -193,6 +198,12 @@ class MCPHttpClient implements MCPClientInterface
                 throw new MCPException(
                     "HTTP request failed with status {$response->status()}: {$response->body()}"
                 );
+            }
+
+            // Capture session ID from response headers if present
+            $headerSessionId = $response->header('Mcp-Session-Id');
+            if ($headerSessionId) {
+                $this->sessionId = $headerSessionId;
             }
 
             // Parse response - handle both plain JSON and SSE format
@@ -296,12 +307,17 @@ class MCPHttpClient implements MCPClientInterface
     /**
      * Build HTTP headers for the request
      */
-    private function buildHeaders(): array
+    private function buildHeaders(bool $includeSessionId = true): array
     {
         $headers = array_merge([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json, text/event-stream',
         ], $this->headers);
+
+        // Only include session ID after initialization
+        if ($includeSessionId && $this->sessionId) {
+            $headers['Mcp-Session-Id'] = $this->sessionId;
+        }
 
         if ($this->apiKey) {
             $headers['Authorization'] = "Bearer {$this->apiKey}";
