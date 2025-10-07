@@ -32,6 +32,45 @@ class AgentMessage extends Model
     ];
 
     /**
+     * Set the content attribute, preventing double-encoding of already JSON-encoded strings.
+     * This handles cases where AI providers return JSON-encoded tool results.
+     *
+     * @param  mixed  $value
+     * @return void
+     */
+    public function setContentAttribute($value): void
+    {
+        // If value is already a JSON string (from AI provider), store it as-is
+        // to prevent double-encoding by Laravel's JSON cast
+        if (is_string($value) && $this->isJson($value)) {
+            // Decode once, then let the JSON cast handle it normally
+            $this->attributes['content'] = json_encode(json_decode($value, true));
+        } else {
+            // For arrays/objects, let the JSON cast handle it normally
+            $this->attributes['content'] = is_array($value) || is_object($value)
+                ? json_encode($value)
+                : $value;
+        }
+    }
+
+    /**
+     * Check if a string is valid JSON
+     *
+     * @param  string  $string
+     * @return bool
+     */
+    protected function isJson(string $string): bool
+    {
+        if (empty($string)) {
+            return false;
+        }
+
+        json_decode($string);
+
+        return json_last_error() === JSON_ERROR_NONE;
+    }
+
+    /**
      * Get the session this message belongs to.
      */
     public function session(): BelongsTo
