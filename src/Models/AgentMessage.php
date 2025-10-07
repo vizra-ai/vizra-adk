@@ -40,16 +40,16 @@ class AgentMessage extends Model
      */
     public function setContentAttribute($value): void
     {
-        // If value is already a JSON string (from AI provider), store it as-is
+        // If value is already a JSON string (from AI provider), decode it once
         // to prevent double-encoding by Laravel's JSON cast
         if (is_string($value) && $this->isJson($value)) {
-            // Decode once, then let the JSON cast handle it normally
-            $this->attributes['content'] = json_encode(json_decode($value, true));
+            // Decode the JSON string, then let Laravel's JSON cast re-encode it
+            $decoded = json_decode($value, true);
+            $this->attributes['content'] = json_encode($decoded);
         } else {
-            // For arrays/objects, let the JSON cast handle it normally
-            $this->attributes['content'] = is_array($value) || is_object($value)
-                ? json_encode($value)
-                : $value;
+            // For everything else (plain strings, arrays, objects),
+            // let Laravel's JSON cast handle it normally by encoding
+            $this->attributes['content'] = json_encode($value);
         }
     }
 
