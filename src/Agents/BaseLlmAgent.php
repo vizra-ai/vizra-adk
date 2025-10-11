@@ -11,9 +11,9 @@ use Prism\Prism\PrismManager;
 use Prism\Prism\Schema\StringSchema;
 use Prism\Prism\Text\PendingRequest;
 use Prism\Prism\Text\Response;
-use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Media\Document;
 use Prism\Prism\ValueObjects\Media\Image;
+use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
 use Prism\Prism\ValueObjects\ProviderTool;
 use Prism\Prism\ValueObjects\Usage;
@@ -31,13 +31,13 @@ use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\Services\AgentVectorProxy;
 use Vizra\VizraADK\Services\Tracer;
 use Vizra\VizraADK\System\AgentContext;
-use Vizra\VizraADK\Traits\VersionablePrompts;
 use Vizra\VizraADK\Traits\HasLogging;
+use Vizra\VizraADK\Traits\VersionablePrompts;
 
 abstract class BaseLlmAgent extends BaseAgent
 {
-    use VersionablePrompts;
     use HasLogging;
+    use VersionablePrompts;
 
     /**
      * Framework control parameters that should not be included in context messages.
@@ -153,7 +153,7 @@ abstract class BaseLlmAgent extends BaseAgent
     }
 
     /**
-     * @param array $definition
+     * @param  array  $definition
      * @return \Prism\Prism\Tool
      */
     protected function createPrismTool(array $definition): \Prism\Prism\Tool
@@ -163,8 +163,8 @@ abstract class BaseLlmAgent extends BaseAgent
     }
 
     /**
-     * @param AgentContext $context
-     * @param array $messages
+     * @param  AgentContext  $context
+     * @param  array  $messages
      * @return PendingRequest
      */
     protected function buildPrismRequest(AgentContext $context, array $messages): PendingRequest
@@ -174,7 +174,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
         // Apply HTTP timeout configuration
         $httpConfig = config('vizra-adk.http', []);
-        if (!empty($httpConfig)) {
+        if (! empty($httpConfig)) {
             $clientOptions = [];
             if (isset($httpConfig['timeout'])) {
                 $clientOptions['timeout'] = $httpConfig['timeout'];
@@ -182,26 +182,26 @@ abstract class BaseLlmAgent extends BaseAgent
             if (isset($httpConfig['connect_timeout'])) {
                 $clientOptions['connect_timeout'] = $httpConfig['connect_timeout'];
             }
-            if (!empty($clientOptions)) {
+            if (! empty($clientOptions)) {
                 $prismRequest = $prismRequest->withClientOptions($clientOptions);
             }
         }
 
         // Add system prompt if available (now includes memory context)
-        if (!empty($this->getInstructions())) {
+        if (! empty($this->getInstructions())) {
             $prismRequest = $prismRequest->withSystemPrompt($this->getInstructionsWithMemory($context));
         }
 
         // Add messages for conversation history
         $prismRequest = $prismRequest->withMessages($messages);
 
-        if (!empty($this->providerTools)) {
+        if (! empty($this->providerTools)) {
             $prismRequest = $prismRequest->withProviderTools($this->getProviderToolsForPrism());
         }
 
         // Add tools if available
-        $allTools = array_merge($this->loadedTools, !empty($this->loadedSubAgents) ? [new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this)] : []);
-        if (!empty($allTools)) {
+        $allTools = array_merge($this->loadedTools, ! empty($this->loadedSubAgents) ? [new \Vizra\VizraADK\Tools\DelegateToSubAgentTool($this)] : []);
+        if (! empty($allTools)) {
             $prismRequest = $prismRequest->withTools($this->getToolsForPrism($context))
                 ->withMaxSteps($this->maxSteps); // Prism will handle tool execution internally
         }
@@ -265,7 +265,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
     protected function resolveCustomProvider(string $provider): string
     {
-        return tap($provider, fn(string $provider) => resolve(PrismManager::class)->resolve($provider));
+        return tap($provider, fn (string $provider) => resolve(PrismManager::class)->resolve($provider));
     }
 
     public function getModel(): string
@@ -316,10 +316,10 @@ abstract class BaseLlmAgent extends BaseAgent
                 ? json_encode($memoryContext, JSON_PRETTY_PRINT)
                 : (string) $memoryContext;
 
-            $memoryInfo = "\n\nMEMORY CONTEXT:\n".
-                "Based on your previous interactions, here's what you should remember:\n\n".
-                $memoryContextString."\n\n".
-                'Use this information to provide more personalized and contextual responses. '.
+            $memoryInfo = "\n\nMEMORY CONTEXT:\n" .
+                "Based on your previous interactions, here's what you should remember:\n\n" .
+                $memoryContextString . "\n\n" .
+                'Use this information to provide more personalized and contextual responses. ' .
                 'Build upon previous conversations and maintain continuity in your interactions.';
 
             $instructions .= $memoryInfo;
@@ -406,9 +406,9 @@ abstract class BaseLlmAgent extends BaseAgent
      * Set the provider for this agent.
      * Supports all Prism providers: OpenAI, Anthropic, Gemini, DeepSeek, Ollama, Mistral, Groq, XAI, VoyageAI, OpenRouter
      *
-     * @param Provider|string  $provider  The provider enum or string name
+     * @param  Provider|string  $provider  The provider enum or string name
      */
-    public function setProvider(Provider|string $provider): static
+    public function setProvider(Provider | string $provider): static
     {
         if (is_string($provider)) {
             $provider = match (strtolower($provider)) {
@@ -546,16 +546,20 @@ abstract class BaseLlmAgent extends BaseAgent
                     switch ($paramDef['type'] ?? 'string') {
                         case 'string':
                             $prismTool = $prismTool->withStringParameter($paramName, $description);
+
                             break;
                         case 'number':
                         case 'integer':
                             $prismTool = $prismTool->withNumberParameter($paramName, $description);
+
                             break;
                         case 'boolean':
                             $prismTool = $prismTool->withBooleanParameter($paramName, $description);
+
                             break;
                         case 'array':
                             $prismTool = $prismTool->withArrayParameter($paramName, $description, new StringSchema('item', 'Array item'));
+
                             break;
                         default:
                             $prismTool = $prismTool->withStringParameter($paramName, $description);
@@ -628,7 +632,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     // Dispatch completed event
                     Event::dispatch(new ToolCallCompleted($context, $this->getName(), $tool->definition()['name'], $processedResult));
 
-                    // Add tool execution to conversation history
+                    // Add tool execution result to conversation history
                     $context->addMessage([
                         'role' => 'tool',
                         'tool_name' => $tool->definition()['name'],
@@ -641,7 +645,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
                     Event::dispatch(new ToolCallFailed($context, $this->getName(), $tool->definition()['name'], $e));
 
-                    throw new ToolExecutionException("Error executing tool '{$tool->definition()['name']}': ".$e->getMessage(), 0, $e);
+                    throw new ToolExecutionException("Error executing tool '{$tool->definition()['name']}': " . $e->getMessage(), 0, $e);
                 }
             });
 
@@ -653,7 +657,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
     public function getProviderToolsForPrism(): array
     {
-        return array_map(function (string|array $tool) {
+        return array_map(function (string | array $tool) {
             // If it's already an array with configuration, use it directly
             if (is_array($tool)) {
                 $type = $tool['type'] ?? throw new \InvalidArgumentException('Provider tool array must have a "type" key');
@@ -677,6 +681,9 @@ abstract class BaseLlmAgent extends BaseAgent
     {
         // Store context for memory access
         $this->context = $context;
+
+        // Set agent name in context for tools and memory management
+        $context->setState('agent_name', $this->getName());
 
         // Check for prompt version in context
         if ($context->getState('prompt_version') !== null) {
@@ -795,7 +802,8 @@ abstract class BaseLlmAgent extends BaseAgent
 
             } catch (Throwable $e) {
                 Event::dispatch(new LlmCallFailed($context, $this->getName(), $e, $prismRequest ?? null));
-                throw new \RuntimeException('LLM API call failed: '.$e->getMessage(), 0, $e);
+
+                throw new \RuntimeException('LLM API call failed: ' . $e->getMessage(), 0, $e);
             }
 
             Event::dispatch(new LlmResponseReceived($context, $this->getName(), $llmResponse, $prismRequest));
@@ -808,6 +816,7 @@ abstract class BaseLlmAgent extends BaseAgent
                 $prismRequestRef = $prismRequest; // capture for afterLlmResponse hook
                 $wrapped = (function () use ($llmResponse, $context, $agentName, $tracerRef, $prismRequestRef) {
                     $buffer = '';
+
                     try {
                         foreach ($llmResponse as $chunk) {
                             // Try to extract text from known chunk shapes
@@ -862,6 +871,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     } catch (\Throwable $e) {
                         // Mark trace failed and rethrow to consumer
                         $tracerRef->failTrace($e);
+
                         throw $e;
                     }
                 })();
@@ -900,6 +910,7 @@ abstract class BaseLlmAgent extends BaseAgent
         } catch (Throwable $e) {
             // End the trace with error
             $tracer->failTrace($e);
+
             throw $e;
         }
     }
@@ -917,7 +928,7 @@ abstract class BaseLlmAgent extends BaseAgent
         // If there's any user context, add it as the first message
         if (! empty($userContext)) {
             $contextMessage = new UserMessage(
-                "Context:\n".json_encode($userContext, JSON_PRETTY_PRINT)
+                "Context:\n" . json_encode($userContext, JSON_PRETTY_PRINT)
             );
             $messages[] = $contextMessage;
         }
@@ -927,8 +938,6 @@ abstract class BaseLlmAgent extends BaseAgent
         $historyDepth = $context->getState('history_depth', $this->historyLimit);
         $contextStrategy = $context->getState('context_strategy', $this->contextStrategy);
 
-
-
         // If context strategy is 'none' or history is disabled, return messages with context.
         if (! $includeHistory || $contextStrategy === 'none') {
             logger()->warning('prepareMessagesForPrism: History disabled, returning early', [
@@ -936,12 +945,12 @@ abstract class BaseLlmAgent extends BaseAgent
                 'includeHistory' => $includeHistory,
                 'contextStrategy' => $contextStrategy,
             ]);
+
             return $messages;
         }
 
         // Get conversation history based on strategy
         $conversationHistory = $this->getHistoryByStrategy($context, $contextStrategy, $historyDepth);
-
 
         // Convert conversation history to Prism Message objects
         foreach ($conversationHistory as $message) {
@@ -991,6 +1000,7 @@ abstract class BaseLlmAgent extends BaseAgent
                         // Create UserMessage with content and additional content
                         $messages[] = new UserMessage($content, $additionalContent);
                     }
+
                     break;
 
                 case 'assistant':
@@ -1001,6 +1011,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     if (! empty(trim($content))) {
                         $messages[] = new AssistantMessage($content);
                     }
+
                     break;
 
                 case 'tool':
@@ -1179,7 +1190,7 @@ abstract class BaseLlmAgent extends BaseAgent
         return $this->getName();
     }
 
-    public function afterLlmResponse(Response|Generator $response, AgentContext $context, ?PendingRequest $request = null): mixed
+    public function afterLlmResponse(Response | Generator $response, AgentContext $context, ?PendingRequest $request = null): mixed
     {
         /** @var Tracer $tracer */
         $tracer = app(Tracer::class);

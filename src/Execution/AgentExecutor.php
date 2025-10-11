@@ -445,21 +445,46 @@ class AgentExecutor
 
     /**
      * Get the agent name from the class
+     *
+     * For dynamic agents (multi-tenancy, runtime registration), we resolve from the registry
+     * to ensure proper instantiation with required context before calling getName().
      */
     protected function getAgentName(): string
     {
+        // If agent_name was explicitly provided in context, use it (highest priority)
+        if (isset($this->context['agent_name']) && !empty($this->context['agent_name'])) {
+            return $this->context['agent_name'];
+        }
+
         try {
-            // Try to instantiate the agent to get its name
+            // Try to resolve from agent registry first (handles dynamic agents)
+            $agentManager = app(AgentManager::class);
+            $allAgents = $agentManager->getAllRegisteredAgents();
+
+            foreach ($allAgents as $registeredName => $registeredClass) {
+                if ($registeredClass === $this->agentClass) {
+                    try {
+                        $agent = \Vizra\VizraADK\Facades\Agent::named($registeredName);
+                        if (method_exists($agent, 'getName')) {
+                            return $agent->getName();
+                        }
+                    } catch (\Exception $e) {
+                        // Continue to fallback if registry resolution fails
+                    }
+                }
+            }
+
+            // Fallback: Direct instantiation for simple agents
             $agent = app($this->agentClass);
 
             if (method_exists($agent, 'getName')) {
                 return $agent->getName();
             }
         } catch (\Exception $e) {
-            // If agent instantiation fails, fall back to class name transformation
+            // If all else fails, use class name transformation
         }
 
-        // Fallback to class name transformation
+        // Final fallback to class name transformation
         $className = class_basename($this->agentClass);
 
         return Str::snake(str_replace('Agent', '', $className));
