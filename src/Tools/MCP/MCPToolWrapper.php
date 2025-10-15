@@ -36,12 +36,19 @@ class MCPToolWrapper implements ToolInterface
      */
     public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
+        // Apply tenant-specific MCP config overrides from context (for multi-tenant support)
+        $overrides = $context->getState('mcp_config_overrides', []);
+        if (! empty($overrides)) {
+            $this->mcpManager->setContextOverrides($overrides);
+        }
+
         try {
             Log::info('Executing MCP tool {tool} on server {server}', [
                 'tool' => $this->toolDefinition['name'],
                 'server' => $this->serverName,
                 'arguments' => $arguments,
                 'session_id' => $context->getSessionId(),
+                'has_overrides' => ! empty($overrides),
             ]);
 
             $result = $this->mcpManager->callTool(

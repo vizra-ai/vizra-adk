@@ -121,12 +121,16 @@ it('handles cache operations', function () {
     expect(true)->toBeTrue();
 });
 
-it('maintains singleton instances', function () {
+it('maintains correct instance behavior', function () {
+    // MCPClientManager should NOT be a singleton (for multi-tenant isolation)
     $manager1 = app(MCPClientManager::class);
     $manager2 = app(MCPClientManager::class);
 
-    expect($manager1)->toBe($manager2);
+    expect($manager1)->not->toBe($manager2)
+        ->and($manager1)->toBeInstanceOf(MCPClientManager::class)
+        ->and($manager2)->toBeInstanceOf(MCPClientManager::class);
 
+    // MCPToolDiscovery SHOULD be a singleton
     $discovery1 = app(MCPToolDiscovery::class);
     $discovery2 = app(MCPToolDiscovery::class);
 

@@ -110,7 +110,9 @@ class AgentServiceProvider extends ServiceProvider
         });
 
         // Register MCP services
-        $this->app->singleton(\Vizra\VizraADK\Services\MCP\MCPClientManager::class, function (Application $app) {
+        // MCPClientManager is bound as non-singleton to support per-request context overrides
+        // This ensures tenant-specific MCP configurations don't leak between requests
+        $this->app->bind(\Vizra\VizraADK\Services\MCP\MCPClientManager::class, function (Application $app) {
             return new \Vizra\VizraADK\Services\MCP\MCPClientManager;
         });
 

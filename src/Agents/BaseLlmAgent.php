@@ -54,6 +54,11 @@ abstract class BaseLlmAgent extends BaseAgent
         'prism_images_metadata',
         'prism_documents_metadata',
         'memory_context',  // Already handled separately in instructions
+        'mcp_config_overrides',  // Tenant-specific MCP configuration (may contain API keys)
+        'agent_name',  // Dynamic agent name for multi-tenant session isolation
+        'agent_parameters',  // Runtime agent parameters (temperature, max_tokens, etc.)
+        'prompt_version',  // Prompt versioning control
+        'streaming',  // Streaming mode flag
     ];
 
     protected string $instructions = '';
