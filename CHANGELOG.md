@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.37] - 2025-10-15
+
+Add multi-tenant MCP config overrides support
+Implements per-tenant MCP server configuration overrides via AgentContext, enabling dynamic API keys and settings for multi-tenant scenarios. MCPClientManager is now bound as non-singleton for isolation, and context overrides are deep-merged with base config. Adds documentation and comprehensive tests for override logic and multi-tenant behavior.
+
 ## [0.0.36] - 2025-10-09
 
 
