@@ -14,6 +14,7 @@ use Prism\Prism\Text\Response;
 use Prism\Prism\ValueObjects\Media\Document;
 use Prism\Prism\ValueObjects\Media\Image;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
+use Prism\Prism\ValueObjects\Messages\SystemMessage;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
 use Prism\Prism\ValueObjects\ProviderTool;
 use Prism\Prism\ValueObjects\Usage;
@@ -96,6 +97,32 @@ abstract class BaseLlmAgent extends BaseAgent
 
     /** @var array<string> */
     protected array $mcpServers = [];
+
+    /**
+     * Custom provider-specific options to pass to the LLM API.
+     * Examples: ['thinking' => ['enabled' => true]] for Anthropic extended thinking
+     *
+     * @var array
+     */
+    protected array $providerOptions = [];
+
+    /**
+     * Enable prompt caching (system prompts, tools, conversation history).
+     * Saves 90% on cached tokens. Works with Anthropic and specific models via OpenRouter
+     */
+    protected bool $enablePromptCaching = false;
+
+    /**
+     * Enable tool result caching.
+     * Caches tool execution results. Only works with supported models.
+     */
+    protected bool $enableToolResultCaching = false;
+
+    /**
+     * Cache TTL (time-to-live) for Anthropic prompt caching.
+     * Options: '5m' (default, free refresh) or '1h' (2x cost, better for workflows > 5min).
+     */
+    protected string $cacheTTL = '5m';
 
     protected ?AgentMemory $memory = null;
 
@@ -189,7 +216,19 @@ abstract class BaseLlmAgent extends BaseAgent
 
         // Add system prompt if available (now includes memory context)
         if (! empty($this->getInstructions())) {
-            $prismRequest = $prismRequest->withSystemPrompt($this->getInstructionsWithMemory($context));
+            $systemPrompt = $this->getInstructionsWithMemory($context);
+
+            // Cache system prompt for supported providers (saves 90% on repeated requests)
+            if ($this->enablePromptCaching && $this->supportsPromptCaching()) {
+                $systemMessage = (new SystemMessage($systemPrompt))
+                    ->withProviderOptions([
+                        'cacheType' => 'ephemeral',
+                        'ttl' => $this->cacheTTL,
+                    ]);
+                $prismRequest = $prismRequest->withSystemPrompt($systemMessage);
+            } else {
+                $prismRequest = $prismRequest->withSystemPrompt($systemPrompt);
+            }
         }
 
         // Add messages for conversation history
@@ -217,6 +256,33 @@ abstract class BaseLlmAgent extends BaseAgent
 
         if ($this->getTopP() !== null) {
             $prismRequest = $prismRequest->usingTopP($this->getTopP());
+        }
+
+        // Add custom provider options if set
+        if (! empty($this->providerOptions)) {
+
+            $existingOptions = $prismRequest->providerOptions() ?: [];
+            $mergedOptions = array_merge($existingOptions, $this->providerOptions);
+
+            logger()->info('Setting provider options for agent', [
+                'agent' => $this->getName(),
+                'provider' => $this->getProvider(),
+                'model' => $this->getModel(),
+                'custom_options' => $this->providerOptions,
+                'existing_options' => $existingOptions,
+                'merged_options' => $mergedOptions,
+            ]);
+
+            $prismRequest = $prismRequest->withProviderOptions($mergedOptions);
+        }
+
+        // Add tool result caching for supported providers if enabled
+        if ($this->enableToolResultCaching && $this->supportsPromptCaching()) {
+            $existingOptions = $prismRequest->providerOptions() ?: [];
+            $prismRequest = $prismRequest->withProviderOptions(array_merge(
+                $existingOptions,
+                ['tool_result_cache_type' => 'ephemeral']
+            ));
         }
 
         // Add previous response ID for stateful conversations
@@ -261,6 +327,21 @@ abstract class BaseLlmAgent extends BaseAgent
         }
 
         return $this->provider;
+    }
+
+    /**
+     * Check if the provider supports prompt caching.
+     * Cache parameters will be ignored by providers that don't support them.
+     */
+    protected function supportsPromptCaching(): bool
+    {
+        $provider = $this->getProvider();
+        $providerLower = strtolower($provider);
+
+        return $provider === Provider::Anthropic->value
+            || $provider === Provider::OpenRouter->value
+            || $providerLower === 'anthropic'
+            || $providerLower === 'openrouter';
     }
 
     protected function resolveCustomProvider(string $provider): string
@@ -528,7 +609,11 @@ abstract class BaseLlmAgent extends BaseAgent
             $this->loadedTools['delegate_to_sub_agent'] = $delegateTool;
         }
 
-        foreach ($allTools as $tool) {
+        // Convert to indexed array to enable last-item detection
+        $allToolsArray = array_values($allTools);
+        $totalTools = count($allToolsArray);
+
+        foreach ($allToolsArray as $index => $tool) {
             $definition = $tool->definition();
 
             // Create Prism Tool using the correct facade API
@@ -648,6 +733,15 @@ abstract class BaseLlmAgent extends BaseAgent
                     throw new ToolExecutionException("Error executing tool '{$tool->definition()['name']}': " . $e->getMessage(), 0, $e);
                 }
             });
+
+            // Cache ONLY the last tool (marks all tools as cacheable, saves tokens)
+            $isLastTool = $index === $totalTools - 1;
+            if ($isLastTool && $this->enablePromptCaching && $this->supportsPromptCaching()) {
+                $prismTool = $prismTool->withProviderOptions([
+                    'cacheType' => 'ephemeral',
+                    'ttl' => $this->cacheTTL,
+                ]);
+            }
 
             $tools[] = $prismTool;
         }
@@ -770,6 +864,8 @@ abstract class BaseLlmAgent extends BaseAgent
             }
 
             // Create the user message for the current input
+            // NOTE: We do NOT cache the current input because it's always new and unique
+            // Only historical messages should be cached (handled in prepareMessagesForPrism)
             if (! empty($input) || ! empty($additionalContent)) {
                 $currentMessage = new UserMessage($input ?: '', $additionalContent);
                 $messages[] = $currentMessage;
@@ -926,10 +1022,12 @@ abstract class BaseLlmAgent extends BaseAgent
         $userContext = $this->filterUserContext($allState);
 
         // If there's any user context, add it as the first message
+        // Note: We don't cache this to stay within Anthropic's 4-block limit
         if (! empty($userContext)) {
             $contextMessage = new UserMessage(
                 "Context:\n" . json_encode($userContext, JSON_PRETTY_PRINT)
             );
+
             $messages[] = $contextMessage;
         }
 
@@ -998,7 +1096,12 @@ abstract class BaseLlmAgent extends BaseAgent
                         }
 
                         // Create UserMessage with content and additional content
-                        $messages[] = new UserMessage($content, $additionalContent);
+                        $userMessage = new UserMessage($content, $additionalContent);
+
+                        // Note: We'll apply caching to the LAST message in history later,
+                        // not every message, to stay within Anthropic's 4-block limit
+
+                        $messages[] = $userMessage;
                     }
 
                     break;
@@ -1018,6 +1121,20 @@ abstract class BaseLlmAgent extends BaseAgent
                     // Skip tool messages for now as Prism handles tools differently
                     // Tool results are handled internally by Prism's tool system
                     break;
+            }
+        }
+
+        // Cache the LAST user message in history (marks end of conversation for incremental caching)
+        if ($this->enablePromptCaching && $this->supportsPromptCaching() && ! empty($messages)) {
+            for ($i = count($messages) - 1; $i >= 0; $i--) {
+                if ($messages[$i] instanceof UserMessage) {
+                    $messages[$i] = $messages[$i]->withProviderOptions([
+                        'cacheType' => 'ephemeral',
+                        'ttl' => $this->cacheTTL,
+                    ]);
+
+                    break; // Only cache the last one
+                }
             }
         }
 
