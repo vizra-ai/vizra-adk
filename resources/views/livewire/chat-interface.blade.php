@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, 50); // Small delay to ensure DOM updates
         });
-        
+
         // Removed refresh-traces-delayed event listener - now using wire:poll
     }
 });
@@ -932,7 +932,57 @@ function testModalButton() {
                                     </div>
                                 @endforeach
 
-                                @if($isLoading)
+                                <!-- Streaming Response (only visible while streaming) -->
+                                <div wire:loading.flex
+                                     wire:target="streamAgentResponse"
+                                     class="justify-start chat-message"
+                                     x-data="{
+                                         streamedText: '',
+                                         init() {
+                                             // Watch for mutations on the wire:stream element
+                                             new MutationObserver(() => this.render()).observe(this.$refs.raw, {
+                                                 childList: true,
+                                                 characterData: true,
+                                                 subtree: true
+                                             });
+                                             this.render();
+                                         },
+                                         render() {
+                                             let content = this.$refs.raw.innerText.trim();
+                                             if (!content) {
+                                                 this.streamedText = '';
+                                                 return;
+                                             }
+                                             try {
+                                                 const data = JSON.parse(content);
+                                                 this.streamedText = data.text || '';
+                                             } catch (e) {
+                                                 this.streamedText = content;
+                                             }
+                                         }
+                                     }">
+                                    <!-- Hidden element that receives wire:stream data -->
+                                    <span x-ref="raw" class="hidden" wire:stream="streamed-message" wire:replace></span>
+
+                                    <div class="max-w-xs lg:max-w-md xl:max-w-lg" x-show="streamedText.length > 0">
+                                        <div class="group flex space-x-3">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                                                    <svg class="w-4 h-4 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="bg-gray-800 border border-gray-700 rounded-2xl rounded-bl-md px-5 py-3 shadow-sm message-bubble">
+                                                    <p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap" x-text="streamedText"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if($isLoading && !$enableStreaming)
                                     <!-- Enhanced Typing Indicator with Debug -->
                                     <div class="flex justify-start chat-message" id="typing-indicator">
                                         <div class="group flex space-x-3">
@@ -987,6 +1037,24 @@ function testModalButton() {
                 <!-- Message Input -->
                 @if($selectedAgent)
                     <div class="px-6 py-4 border-t border-gray-800/50 bg-gray-800/30 rounded-b-xl">
+                        <!-- Streaming Toggle -->
+                        <div class="mb-3 flex items-center space-x-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox"
+                                       wire:model.live="enableStreaming"
+                                       class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 focus:ring-offset-gray-900">
+                                <span class="ml-2 text-sm text-gray-300">Enable streaming responses</span>
+                            </label>
+                            @if($enableStreaming)
+                                <span class="text-xs text-blue-400 flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Streaming enabled
+                                </span>
+                            @endif
+                        </div>
+
                         <form wire:submit.prevent="sendMessage" class="flex items-center space-x-3" x-data="{ messageValue: '' }" @submit="messageValue = ''">
                             <div class="flex-1">
                                 <div class="relative">
