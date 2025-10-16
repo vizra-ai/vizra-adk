@@ -4,16 +4,18 @@ namespace Vizra\VizraADK\Tests\Unit\EventDriven;
 
 use Illuminate\Database\Eloquent\Model;
 use Mockery;
-use Vizra\VizraADK\Agents\BaseAgent;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Execution\AgentExecutor;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Tests\TestCase;
 
-class TestEventDrivenAgent extends BaseAgent
+class TestEventDrivenAgent extends BaseLlmAgent
 {
     protected string $name = 'test_event_driven_agent';
 
     protected string $description = 'Test agent for event-driven functionality';
+
+    protected string $instructions = 'You are a test agent for event-driven functionality testing.';
 
     public function execute(mixed $input, AgentContext $context): mixed
     {
@@ -40,6 +42,12 @@ class EventDrivenAgentTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Register the test agent in the registry (simulates real agent registration)
+        app(\Vizra\VizraADK\Services\AgentRegistry::class)->register(
+            'test_event_driven_agent',
+            TestEventDrivenAgent::class
+        );
     }
 
     protected function tearDown(): void
@@ -125,34 +133,38 @@ class EventDrivenAgentTest extends TestCase
 
     public function test_execution_mode_is_passed_to_context()
     {
-        // Mock the dependencies to test mode passing
-        $mockAgentManager = Mockery::mock(\Vizra\VizraADK\Services\AgentManager::class);
+        // Mock only StateManager - let AgentManager work normally for name resolution
         $mockStateManager = Mockery::mock(\Vizra\VizraADK\Services\StateManager::class);
 
         $mockContext = Mockery::mock(\Vizra\VizraADK\System\AgentContext::class);
         // execution_mode is no longer set by AgentExecutor
         $mockContext->shouldReceive('setState')->withAnyArgs()->zeroOrMoreTimes();
+        $mockContext->shouldReceive('getState')->withAnyArgs()->andReturn(null);
+        $mockContext->shouldReceive('getSessionId')->andReturn('test-session');
+        $mockContext->shouldReceive('getAllState')->andReturn([]);
+        $mockContext->shouldReceive('addMessage')->withAnyArgs()->zeroOrMoreTimes();
 
+        // loadContext is called by both AgentExecutor and AgentManager
         $mockStateManager->shouldReceive('loadContext')
-            ->once()
+            ->twice()
             ->andReturn($mockContext);
+        // AgentExecutor calls with false, AgentManager calls with default (2 args)
         $mockStateManager->shouldReceive('saveContext')
-            ->once()
-            ->with($mockContext, 'test_event_driven_agent', false);
-
-        $mockAgentManager->shouldReceive('run')
-            ->once()
-            ->andReturn('Test response');
+            ->with(Mockery::type(AgentContext::class), 'test_event_driven_agent', false)
+            ->once();
+        $mockStateManager->shouldReceive('saveContext')
+            ->with(Mockery::type(AgentContext::class), 'test_event_driven_agent')
+            ->once();
 
         // Bind mocks to container
-        $this->app->instance(\Vizra\VizraADK\Services\AgentManager::class, $mockAgentManager);
         $this->app->instance(\Vizra\VizraADK\Services\StateManager::class, $mockStateManager);
         $this->app->instance(TestEventDrivenAgent::class, new TestEventDrivenAgent);
 
         // Execute and verify mode is set correctly
+        // Agent name resolved from registry (registered in setUp)
         $result = TestEventDrivenAgent::run(['test' => 'data'])->go();
 
-        $this->assertEquals('Test response', $result);
+        $this->assertStringContainsString('Asked:', $result);
     }
 
     public function test_different_modes_create_different_executors()
