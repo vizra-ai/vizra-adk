@@ -46,6 +46,8 @@ class ChatInterface extends Component
 
     public bool $hasRunningTraces = false;
 
+    public bool $enableStreaming = false;
+
     // Modal properties
     public bool $showLoadSessionModal = false;
 
@@ -103,7 +105,7 @@ class ChatInterface extends Component
                 'from' => $previousAgent ?: 'none',
                 'to' => $agentName,
             ]);
-            
+
             // FORCE clear all chat and context data first
             $this->chatHistory = [];
             $this->contextData = [];
@@ -113,11 +115,11 @@ class ChatInterface extends Component
             $this->contextStateData = [];
             $this->traceData = [];
             $this->hasRunningTraces = false;
-            
+
             // Generate new session ID with extra uniqueness
             $newSessionId = $this->generateUniqueSessionId();
             $this->sessionId = $newSessionId;
-            
+
             // Log the agent switch for debugging
             logger()->info('Agent switched successfully', [
                 'previous_agent' => $previousAgent ?: 'none',
@@ -137,7 +139,7 @@ class ChatInterface extends Component
         $this->loadAgentInfo();
         $this->loadContextData();
         $this->loadTraceData();
-        
+
         logger()->info('selectAgent completed', [
             'agent' => $agentName,
             'session_id' => $this->sessionId,
@@ -340,11 +342,12 @@ class ChatInterface extends Component
             'timestamp' => now()->format('H:i:s'),
         ];
 
-        // Store the message for async processing
-        $this->dispatch('process-agent-response', userMessage: $userMessage);
-
-        // Immediately show typing indicator by dispatching a Livewire update
-        $this->dispatch('chat-updated');
+        // Call the appropriate method directly via $wire
+        if ($this->enableStreaming) {
+            $this->js('$wire.streamAgentResponse()');
+        } else {
+            $this->dispatch('process-agent-response', userMessage: $userMessage);
+        }
     }
 
     public function processAgentResponse($userMessage)
@@ -388,10 +391,104 @@ class ChatInterface extends Component
         $this->dispatch('chat-updated');
     }
 
+    public function streamAgentResponse(): void
+    {
+        @set_time_limit(300);
+
+        if (empty($this->selectedAgent) || empty($this->chatHistory)) {
+            return;
+        }
+
+        // Get the last user message from chat history
+        $userMessage = '';
+        foreach (array_reverse($this->chatHistory) as $msg) {
+            if ($msg['role'] === 'user') {
+                $userMessage = $msg['content'];
+                break;
+            }
+        }
+
+        if (empty($userMessage)) {
+            return;
+        }
+
+        // Get agent class
+        $agentClass = $this->registeredAgents[$this->selectedAgent] ?? null;
+
+        if (! $agentClass || ! class_exists($agentClass)) {
+            $this->chatHistory[] = [
+                'role' => 'error',
+                'content' => 'Agent not found',
+                'timestamp' => now()->format('H:i:s'),
+            ];
+            $this->isLoading = false;
+
+            return;
+        }
+
+        try {
+            // Create agent and stream response
+            $stream = $agentClass::run($userMessage)
+                ->withSession($this->sessionId)
+                ->streaming()
+                ->go();
+
+            // Accumulate text for UI display only
+            // BaseLlmAgent handles ALL persistence (messages, thinking, tool calls)
+            $textContent = '';
+
+            // Stream each event to the frontend
+            foreach ($stream as $event) {
+                $eventType = $event->type()->value;
+
+                // Accumulate text deltas for UI display
+                if ($eventType === 'text_delta' || $eventType === 'text-delta') {
+                    $textContent .= $event->delta ?? '';
+                }
+
+                // Stream to frontend for real-time display
+                $this->stream(
+                    'streamed-message',
+                    json_encode(['text' => $textContent, 'currentChunkType' => $eventType]),
+                    true
+                );
+            }
+
+            // Clear the stream
+            $this->stream('streamed-message', '', false);
+
+            // Add response to chat history for UI display only
+            // All database persistence is handled automatically by BaseLlmAgent::execute()
+            $this->chatHistory[] = [
+                'role' => 'assistant',
+                'content' => $textContent,
+                'timestamp' => now()->format('H:i:s'),
+            ];
+
+            // Refresh context data
+            $this->loadContextData();
+            $this->loadTraceData();
+
+            // Mark that we have running traces to enable polling
+            $this->hasRunningTraces = true;
+
+        } catch (\Exception $e) {
+            $this->chatHistory[] = [
+                'role' => 'error',
+                'content' => 'Error: '.$e->getMessage(),
+                'timestamp' => now()->format('H:i:s'),
+            ];
+        } finally {
+            $this->isLoading = false;
+            $this->loadContextData();
+            $this->dispatch('chat-updated');
+        }
+    }
+
     public function clearChat()
     {
         $oldSessionId = $this->sessionId;
-        
+
         // Clear all chat and context data
         $this->chatHistory = [];
         $this->contextData = [];
@@ -401,17 +498,17 @@ class ChatInterface extends Component
         $this->contextStateData = [];
         $this->traceData = [];
         $this->hasRunningTraces = false;
-        
+
         // Generate new session ID
         $this->sessionId = $this->generateUniqueSessionId();
-        
+
         // Log the chat clear for debugging
         logger()->info('Chat cleared', [
             'agent' => $this->selectedAgent,
             'old_session_id' => $oldSessionId,
             'new_session_id' => $this->sessionId,
         ]);
-        
+
         // Reload context data with new session
         $this->loadContextData();
         $this->loadTraceData();
@@ -681,7 +778,7 @@ class ChatInterface extends Component
             'new_value' => $value ?? 'empty',
             'session_id_before' => $this->sessionId,
         ]);
-        
+
         if (! empty($value)) {
             $this->selectAgent($value);
         } else {
@@ -696,19 +793,19 @@ class ChatInterface extends Component
             $this->traceData = [];
             $this->chatHistory = [];
             $this->hasRunningTraces = false;
-            
+
             // Generate a new session ID even when deselecting to ensure clean state
             $this->sessionId = $this->generateUniqueSessionId();
-            
+
             logger()->info('Agent deselected', [
                 'new_session_id' => $this->sessionId,
             ]);
         }
-        
+
         // Force a re-render to ensure UI updates
         $this->dispatch('chat-updated');
     }
-    
+
     /**
      * Manual agent selection method that can be called from the UI
      * This provides an alternative to the wire:model.live binding
@@ -721,15 +818,15 @@ class ChatInterface extends Component
             'current_session' => $this->sessionId,
             'current_chat_count' => count($this->chatHistory),
         ]);
-        
+
         // COMPLETELY RESET THE COMPONENT STATE
         if ($this->selectedAgent !== $agentName) {
             logger()->info('Forcing complete component reset');
-            
+
             // Step 1: Reset ALL component state to initial values
             $this->reset([
                 'chatHistory',
-                'contextData', 
+                'contextData',
                 'memoryData',
                 'sessionData',
                 'longTermMemoryData',
@@ -737,19 +834,19 @@ class ChatInterface extends Component
                 'traceData',
                 'agentInfo'
             ]);
-            
+
             // Step 2: Force boolean and other primitive resets
             $this->hasRunningTraces = false;
             $this->isLoading = false;
             $this->activeTab = 'agent-info';
-            
+
             // Step 3: Generate completely new session
             $oldSession = $this->sessionId;
             $this->sessionId = $this->generateUniqueSessionId();
-            
+
             // Step 4: Set the new agent
             $this->selectedAgent = $agentName;
-            
+
             logger()->info('Component state completely reset', [
                 'old_session' => $oldSession,
                 'new_session' => $this->sessionId,
@@ -757,21 +854,21 @@ class ChatInterface extends Component
                 'chat_history_count' => count($this->chatHistory),
                 'context_data_empty' => empty($this->contextData),
             ]);
-            
+
             // Step 5: Load fresh data for new agent
             $this->loadAgentInfo();
             $this->loadContextData();
             $this->loadTraceData();
-            
+
         } else {
             // Same agent selected, just set it
             $this->selectedAgent = $agentName;
         }
-        
+
         // Force complete UI refresh
         $this->dispatch('agent-changed', $agentName);
         $this->dispatch('chat-updated');
-        
+
         logger()->info('changeAgent completed', [
             'final_agent' => $this->selectedAgent,
             'final_session' => $this->sessionId,
@@ -819,7 +916,7 @@ class ChatInterface extends Component
                 }
 
                 $attempts++;
-                
+
                 // Log if we're having collision issues
                 if ($attempts > 3) {
                     logger()->warning('Session ID collision detected', [
@@ -839,12 +936,12 @@ class ChatInterface extends Component
         // Fallback: use timestamp + microseconds + random for ultimate uniqueness
         $microtime = microtime(true);
         $fallbackSessionId = 'chat-'.now()->timestamp.'-'.str_replace('.', '', $microtime).'-'.Str::random(6);
-        
+
         logger()->warning('Using fallback session ID generation', [
             'fallback_session_id' => $fallbackSessionId,
             'max_attempts_reached' => $maxAttempts,
         ]);
-        
+
         return $fallbackSessionId;
     }
 

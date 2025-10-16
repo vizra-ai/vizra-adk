@@ -815,40 +815,52 @@ abstract class BaseLlmAgent extends BaseAgent
                 $tracerRef = $tracer; // capture for generator scope
                 $prismRequestRef = $prismRequest; // capture for afterLlmResponse hook
                 $wrapped = (function () use ($llmResponse, $context, $agentName, $tracerRef, $prismRequestRef) {
-                    $buffer = '';
+                    // Accumulate stream data
+                    $streamData = [
+                        'text' => '',
+                        'thinking' => '',
+                        'toolCalls' => [],
+                        'toolResults' => [],
+                    ];
 
                     try {
-                        foreach ($llmResponse as $chunk) {
-                            // Try to extract text from known chunk shapes
-                            $text = '';
-                            if (is_string($chunk)) {
-                                $text = $chunk;
-                            } elseif (is_object($chunk)) {
-                                if (method_exists($chunk, '__toString')) {
-                                    $text = (string) $chunk;
-                                } elseif (property_exists($chunk, 'text')) {
-                                    $text = $chunk->text;
-                                } elseif (method_exists($chunk, 'text')) {
-                                    $text = $chunk->text();
-                                }
+                        foreach ($llmResponse as $event) {
+                            // Prism now uses StreamEvent objects with type() method
+                            if (is_object($event) && method_exists($event, 'type')) {
+                                $eventType = $event->type()->value;
+
+                                // Accumulate different event types
+                                match ($eventType) {
+                                    'text_delta', 'text-delta' => $streamData['text'] .= $event->delta ?? '',
+                                    'thinking_delta', 'thinking-delta' => $streamData['thinking'] .= $event->delta ?? '',
+                                    'tool_call', 'tool-call' => isset($event->toolCall) ? $streamData['toolCalls'][] = [
+                                        'name' => $event->toolCall->name ?? 'unknown',
+                                        'id' => $event->toolCall->id ?? null,
+                                        'arguments' => $event->toolCall->arguments() ?? [],
+                                    ] : null,
+                                    'tool_result', 'tool-result' => isset($event->toolResult) ? $streamData['toolResults'][] = [
+                                        'result' => $event->toolResult->result ?? '',
+                                        'toolName' => $event->toolResult->toolName ?? 'unknown',
+                                        'toolCallId' => $event->toolResult->toolCallId ?? null,
+                                    ] : null,
+                                    default => null, // Skip other event types (stream_start, stream_end, etc.)
+                                };
                             }
 
-                            if ($text !== '') {
-                                $buffer .= $text;
-                            }
-
-                            // Yield the original chunk to the consumer (controller/Livewire/UI)
-                            yield $chunk;
+                            // Yield the original event to the consumer (controller/Livewire/UI)
+                            yield $event;
                         }
 
                         // After stream completes, add assistant message to context
+                        // Only save the text content - tool messages are already saved via tool callbacks
+                        // Thinking tokens are accumulated but not persisted (could be logged if needed)
                         $context->addMessage([
                             'role' => 'assistant',
-                            'content' => $buffer ?: '',
+                            'content' => $streamData['text'],
                         ]);
 
-                        // Fire response event for listeners
-                        Event::dispatch(new AgentResponseGenerated($context, $agentName, $buffer));
+                        // Fire response event for listeners with the text content
+                        Event::dispatch(new AgentResponseGenerated($context, $agentName, $streamData['text']));
 
                         // Call afterLlmResponse hook for streaming responses
                         try {
@@ -862,7 +874,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
                         // End the trace with success
                         $tracerRef->endTrace(
-                            output: ['response' => $buffer],
+                            output: ['response' => $streamData['text']],
                             status: 'success'
                         );
 
@@ -1004,7 +1016,7 @@ abstract class BaseLlmAgent extends BaseAgent
                     break;
 
                 case 'assistant':
-                    // For assistant messages, we need to handle both regular content and tool calls
+                    // For assistant messages, content is always stored as plain text string
                     $content = $message['content'] ?? '';
 
                     // Only add assistant messages if they have content
