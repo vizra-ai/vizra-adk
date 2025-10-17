@@ -76,7 +76,7 @@ class StateManager
         DB::transaction(function () use ($context, $agentName, &$agentSession) {
             $agentSession = AgentSession::updateOrCreate(
                 ['session_id' => $context->getSessionId(), 'agent_name' => $agentName],
-                ['state_data' => $context->getAllState()]
+                ['state_data' => $this->filterSerializableState($context->getAllState())]
             );
 
             // Get existing message count for this session to determine starting index
@@ -156,5 +156,27 @@ class StateManager
     public function updateMemoryData(string $agentName, array $data, ?int $userId = null): void
     {
         $this->memoryManager->updateMemoryData($agentName, $data, $userId);
+    }
+
+    /**
+     * Filter out non-serializable objects from state before database persistence.
+     * Prism Image/Document objects cannot be JSON serialized and are stored separately as metadata.
+     *
+     * @param  array  $state  The full state array
+     * @return array The filtered state safe for JSON serialization
+     */
+    protected function filterSerializableState(array $state): array
+    {
+        // Remove non-serializable Prism objects
+        // These are kept in memory for immediate use during the request,
+        // but should not be persisted to the database.
+        // The metadata versions (prism_images_metadata, prism_documents_metadata)
+        // contain the data needed to reconstruct these objects.
+        unset(
+            $state['prism_images'],
+            $state['prism_documents']
+        );
+
+        return $state;
     }
 }
