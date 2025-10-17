@@ -2,6 +2,7 @@
 
 use Prism\Prism\ValueObjects\Media\Document;
 use Prism\Prism\ValueObjects\Media\Image;
+use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Execution\AgentExecutor;
@@ -320,4 +321,58 @@ it('agent recreates images from metadata when context has no direct images', fun
 
     expect($result['images_count'])->toBe(1);
     expect($result['first_is_image'])->toBeTrue();
+});
+
+it('handles message content that is valid JSON after database load', function () {
+    $testAgent = new class extends BaseLlmAgent
+    {
+        protected string $name = 'test_agent';
+
+        protected string $description = 'Test agent';
+
+        protected string $instructions = 'Test instructions';
+
+        protected string $model = 'gpt-4o';
+
+        // Enable conversation history for this test
+        protected bool $includeConversationHistory = true;
+        protected string $contextStrategy = 'full';
+
+        public function prepareMessagesForPrism(AgentContext $context): array
+        {
+            return parent::prepareMessagesForPrism($context);
+        }
+    };
+
+    // Create context with messages where content is an array (as it would be after Laravel JSON cast)
+    $context = new AgentContext('test-session');
+
+    // Simulate what happens when LLM responds with valid JSON and it gets decoded by Laravel's JSON cast
+    $jsonContent = ['status' => 'success', 'data' => ['key' => 'value']];
+
+    $context->addMessage([
+        'role' => 'user',
+        'content' => 'Test message',
+    ]);
+
+    $context->addMessage([
+        'role' => 'assistant',
+        'content' => $jsonContent, // After JSON cast, this would be an array
+    ]);
+
+    $context->addMessage([
+        'role' => 'user',
+        'content' => $jsonContent, // Test user messages too
+    ]);
+
+    // Call prepareMessagesForPrism - should not throw TypeError
+    $messages = $testAgent->prepareMessagesForPrism($context);
+
+    // Should have 3 messages (one user, one assistant, one user)
+    expect($messages)->toHaveCount(3);
+
+    // All messages should be valid Prism message objects
+    expect($messages[0])->toBeInstanceOf(UserMessage::class);
+    expect($messages[1])->toBeInstanceOf(AssistantMessage::class);
+    expect($messages[2])->toBeInstanceOf(UserMessage::class);
 });

@@ -70,6 +70,9 @@ it('handles empty input schema', function () {
 });
 
 it('executes MCP tool successfully', function () {
+    $this->mockContext->shouldReceive('getState')
+        ->with('mcp_config_overrides', [])
+        ->andReturn([]);
     $this->mockContext->shouldReceive('getSessionId')->andReturn('test-session');
     $this->mockManager->shouldReceive('callTool')
         ->with('test_server', 'test_tool', ['input' => 'test'])
@@ -81,6 +84,9 @@ it('executes MCP tool successfully', function () {
 });
 
 it('handles MCP execution errors', function () {
+    $this->mockContext->shouldReceive('getState')
+        ->with('mcp_config_overrides', [])
+        ->andReturn([]);
     $this->mockContext->shouldReceive('getSessionId')->andReturn('test-session');
     $this->mockManager->shouldReceive('callTool')
         ->andThrow(new MCPException('MCP server error'));

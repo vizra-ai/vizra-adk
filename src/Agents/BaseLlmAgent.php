@@ -54,6 +54,11 @@ abstract class BaseLlmAgent extends BaseAgent
         'prism_images_metadata',
         'prism_documents_metadata',
         'memory_context',  // Already handled separately in instructions
+        'mcp_config_overrides',  // Tenant-specific MCP configuration (may contain API keys)
+        'agent_name',  // Dynamic agent name for multi-tenant session isolation
+        'agent_parameters',  // Runtime agent parameters (temperature, max_tokens, etc.)
+        'prompt_version',  // Prompt versioning control
+        'streaming',  // Streaming mode flag
     ];
 
     protected string $instructions = '';
@@ -952,7 +957,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
             switch ($message['role']) {
                 case 'user':
-                    $content = $message['content'] ?? '';
+                    $content = $this->getContentAsString($message['content'] ?? '');
                     // Only add user messages if they have actual content
                     if (! empty(trim($content))) {
                         // Collect additional content (images and documents)
@@ -995,7 +1000,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
                 case 'assistant':
                     // For assistant messages, we need to handle both regular content and tool calls
-                    $content = $message['content'] ?? '';
+                    $content = $this->getContentAsString($message['content'] ?? '');
 
                     // Only add assistant messages if they have content
                     if (! empty(trim($content))) {
@@ -1033,6 +1038,26 @@ abstract class BaseLlmAgent extends BaseAgent
         }
 
         return $filtered;
+    }
+
+    /**
+     * Safely convert message content to string format.
+     * Handles the case where Laravel's JSON cast has decoded content to array/object.
+     *
+     * @param  mixed  $content  The content that may be string, array, or object
+     * @return string The content as a string
+     */
+    protected function getContentAsString(mixed $content): string
+    {
+        if (is_string($content)) {
+            return $content;
+        }
+
+        if (is_array($content) || is_object($content)) {
+            return json_encode($content);
+        }
+
+        return (string) $content;
     }
 
     /**
