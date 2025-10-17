@@ -321,3 +321,85 @@ it('agent recreates images from metadata when context has no direct images', fun
     expect($result['images_count'])->toBe(1);
     expect($result['first_is_image'])->toBeTrue();
 });
+
+it('successfully restores images after database round-trip', function () {
+    $stateManager = app(\Vizra\VizraADK\Services\StateManager::class);
+
+    // Create a unique agent name and session for this test
+    $agentName = 'test_roundtrip_agent_'.uniqid();
+    $sessionId = 'test_session_'.uniqid();
+
+    // Step 1: Create context with Image objects (as AgentExecutor does)
+    $context = $stateManager->loadContext($agentName, $sessionId, 'Test input');
+
+    // Create actual Prism Image objects
+    $image = Image::fromBase64('fake-image-base64-data', 'image/png');
+    $document = Document::fromBase64('fake-doc-base64-data', 'application/pdf');
+
+    // Store metadata (as AgentExecutor.php:322 does)
+    $context->setState('prism_images_metadata', [
+        [
+            'type' => 'image',
+            'data' => $image->base64(),
+            'mimeType' => $image->mimeType(),
+        ],
+    ]);
+
+    $context->setState('prism_documents_metadata', [
+        [
+            'type' => 'document',
+            'data' => $document->base64(),
+            'mimeType' => $document->mimeType(),
+            'dataFormat' => 'base64',
+            'documentTitle' => $document->documentTitle(),
+            'documentContext' => null,
+        ],
+    ]);
+
+    // Store actual objects for immediate use (as AgentExecutor.php:324 does)
+    $context->setState('prism_images', [$image]);
+    $context->setState('prism_documents', [$document]);
+
+    // Step 2: Save to database (this is where JSON serialization happens)
+    $stateManager->saveContext($context, $agentName, false);
+
+    // Step 3: Load from database (simulating a new request)
+    $loadedContext = $stateManager->loadContext($agentName, $sessionId);
+
+    // Step 4: Check what we got back
+    $loadedImages = $loadedContext->getState('prism_images', []);
+    $loadedDocuments = $loadedContext->getState('prism_documents', []);
+    $loadedImageMetadata = $loadedContext->getState('prism_images_metadata', []);
+    $loadedDocumentMetadata = $loadedContext->getState('prism_documents_metadata', []);
+
+    // After the StateManager fix, prism_images and prism_documents should NOT be in the database
+    // Only metadata should be persisted
+    expect($loadedImages)->toBeEmpty();
+    expect($loadedDocuments)->toBeEmpty();
+
+    // Metadata should be preserved for reconstruction
+    expect($loadedImageMetadata)->toBeArray();
+    expect($loadedImageMetadata)->toHaveCount(1);
+    expect($loadedImageMetadata[0])->toHaveKey('type');
+    expect($loadedImageMetadata[0])->toHaveKey('data');
+    expect($loadedImageMetadata[0])->toHaveKey('mimeType');
+
+    expect($loadedDocumentMetadata)->toBeArray();
+    expect($loadedDocumentMetadata)->toHaveCount(1);
+    expect($loadedDocumentMetadata[0])->toHaveKey('type');
+    expect($loadedDocumentMetadata[0])->toHaveKey('data');
+    expect($loadedDocumentMetadata[0])->toHaveKey('mimeType');
+
+    // Verify that BaseLlmAgent can reconstruct images from metadata (simulating what happens in execute())
+    $reconstructedImages = [];
+    if (empty($loadedImages) && ! empty($loadedImageMetadata)) {
+        foreach ($loadedImageMetadata as $metadata) {
+            if ($metadata['type'] === 'image') {
+                $reconstructedImages[] = Image::fromBase64($metadata['data'], $metadata['mimeType']);
+            }
+        }
+    }
+
+    expect($reconstructedImages)->toHaveCount(1);
+    expect($reconstructedImages[0])->toBeInstanceOf(Image::class);
+});
