@@ -60,7 +60,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
     protected string $model = '';
 
-    protected ?string $provider = null;
+    protected ?Provider $provider = null;
 
     protected ?float $temperature = null;
 
