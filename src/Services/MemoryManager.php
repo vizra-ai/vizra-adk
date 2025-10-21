@@ -3,6 +3,7 @@
 namespace Vizra\VizraADK\Services;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Vizra\VizraADK\Events\MemoryUpdated;
 use Vizra\VizraADK\Models\AgentMemory;
@@ -55,9 +56,10 @@ class MemoryManager
      */
     public function getMemoryContext(string $agentName, int|string|null $userId = null, int $maxLength = 1000): string
     {
-        $memory = AgentMemory::where('agent_name', $agentName)
-            ->where('user_id', $userId)
-            ->first();
+        $memoryQuery = AgentMemory::where('agent_name', $agentName);
+        $this->applyUserScope($memoryQuery, $userId);
+
+        $memory = $memoryQuery->first();
 
         if (! $memory) {
             return '';
@@ -71,9 +73,10 @@ class MemoryManager
      */
     public function getMemoryContextArray(string $agentName, int|string|null $userId = null): array
     {
-        $memory = AgentMemory::where('agent_name', $agentName)
-            ->where('user_id', $userId)
-            ->first();
+        $memoryQuery = AgentMemory::where('agent_name', $agentName);
+        $this->applyUserScope($memoryQuery, $userId);
+
+        $memory = $memoryQuery->first();
 
         if (! $memory) {
             return [
@@ -208,9 +211,10 @@ class MemoryManager
      */
     public function getRecentConversations(string $agentName, int|string|null $userId = null, int $limit = 5): Collection
     {
-        $memory = AgentMemory::where('agent_name', $agentName)
-            ->where('user_id', $userId)
-            ->first();
+        $memoryQuery = AgentMemory::where('agent_name', $agentName);
+        $this->applyUserScope($memoryQuery, $userId);
+
+        $memory = $memoryQuery->first();
 
         if (! $memory) {
             return collect();
@@ -380,5 +384,19 @@ class MemoryManager
         }
 
         return $deletedCount;
+    }
+
+    /**
+     * Apply a user identifier scope to the given query builder.
+     */
+    protected function applyUserScope(Builder $query, int|string|null $userId): void
+    {
+        if ($userId === null) {
+            $query->whereNull('user_id');
+
+            return;
+        }
+
+        $query->where('user_id', $userId);
     }
 }

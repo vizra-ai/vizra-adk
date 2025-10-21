@@ -84,7 +84,7 @@ class AgentSession extends Model
         ]);
 
         // Link session to memory if not already linked
-        if (! $this->agent_memory_id) {
+        if ($this->agent_memory_id === null) {
             $this->agent_memory_id = $memory->id;
             $this->save();
         }
@@ -100,7 +100,7 @@ class AgentSession extends Model
         $memory = $this->getOrCreateMemory();
 
         // Link session to memory if not already linked
-        if (! $this->agent_memory_id) {
+        if ($this->agent_memory_id === null) {
             $this->agent_memory_id = $memory->id;
             $this->save();
         }
