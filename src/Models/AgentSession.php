@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
  *
  * @property int $id
  * @property string $session_id
- * @property int|null $user_id
+ * @property int|string|null $user_id
  * @property string $agent_name
  * @property array $state_data
  * @property \Illuminate\Support\Carbon $created_at

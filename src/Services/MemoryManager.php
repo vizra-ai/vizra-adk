@@ -17,7 +17,7 @@ class MemoryManager
     /**
      * Get or create memory for an agent and user.
      */
-    public function getOrCreateMemory(string $agentName, ?int $userId = null): AgentMemory
+    public function getOrCreateMemory(string $agentName, int|string|null $userId = null): AgentMemory
     {
         return AgentMemory::firstOrCreate([
             'agent_name' => $agentName,
@@ -53,7 +53,7 @@ class MemoryManager
     /**
      * Get memory context for an agent to include in their instructions.
      */
-    public function getMemoryContext(string $agentName, ?int $userId = null, int $maxLength = 1000): string
+    public function getMemoryContext(string $agentName, int|string|null $userId = null, int $maxLength = 1000): string
     {
         $memory = AgentMemory::where('agent_name', $agentName)
             ->where('user_id', $userId)
@@ -69,7 +69,7 @@ class MemoryManager
     /**
      * Get memory context as an array for testing and programmatic access.
      */
-    public function getMemoryContextArray(string $agentName, ?int $userId = null): array
+    public function getMemoryContextArray(string $agentName, int|string|null $userId = null): array
     {
         $memory = AgentMemory::where('agent_name', $agentName)
             ->where('user_id', $userId)
@@ -136,7 +136,7 @@ class MemoryManager
     /**
      * Add a learning to memory.
      */
-    public function addLearning(string $agentName, string $learning, ?int $userId = null): void
+    public function addLearning(string $agentName, string $learning, int|string|null $userId = null): void
     {
         $memory = $this->getOrCreateMemory($agentName, $userId);
 
@@ -155,7 +155,7 @@ class MemoryManager
     /**
      * Update memory data with facts or preferences.
      */
-    public function updateMemoryData(string $agentName, array $data, ?int $userId = null): void
+    public function updateMemoryData(string $agentName, array $data, int|string|null $userId = null): void
     {
         $memory = $this->getOrCreateMemory($agentName, $userId);
 
@@ -173,7 +173,7 @@ class MemoryManager
     /**
      * Add a fact to memory data.
      */
-    public function addFact(string $agentName, string $key, $value, ?int $userId = null): void
+    public function addFact(string $agentName, string $key, $value, int|string|null $userId = null): void
     {
         $memory = $this->getOrCreateMemory($agentName, $userId);
 
@@ -191,7 +191,7 @@ class MemoryManager
     /**
      * Update memory summary.
      */
-    public function updateSummary(string $agentName, string $summary, ?int $userId = null): void
+    public function updateSummary(string $agentName, string $summary, int|string|null $userId = null): void
     {
         $memory = $this->getOrCreateMemory($agentName, $userId);
 
@@ -206,7 +206,7 @@ class MemoryManager
     /**
      * Get recent conversations from memory.
      */
-    public function getRecentConversations(string $agentName, ?int $userId = null, int $limit = 5): Collection
+    public function getRecentConversations(string $agentName, int|string|null $userId = null, int $limit = 5): Collection
     {
         $memory = AgentMemory::where('agent_name', $agentName)
             ->where('user_id', $userId)
@@ -241,7 +241,7 @@ class MemoryManager
     /**
      * Increment the session count for an agent's memory.
      */
-    public function incrementSessionCount(string $agentName, ?int $userId = null): void
+    public function incrementSessionCount(string $agentName, int|string|null $userId = null): void
     {
         $memory = $this->getOrCreateMemory($agentName, $userId);
 
