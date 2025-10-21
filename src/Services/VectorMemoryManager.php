@@ -168,8 +168,8 @@ class VectorMemoryManager
             // Calculate norm
             $norm = VectorMemory::calculateNorm($embedding);
 
-            // Create memory entry
-            $memory = VectorMemory::create([
+            // Prepare data for the new memory entry
+            $memoryData = [
                 'agent_name' => $agentName,
                 'namespace' => $namespace,
                 'content' => $content,
@@ -180,11 +180,18 @@ class VectorMemoryManager
                 'embedding_provider' => $this->embeddingProvider->getProviderName(),
                 'embedding_model' => $this->embeddingProvider->getModel(),
                 'embedding_dimensions' => $this->embeddingProvider->getDimensions(),
-                'embedding_vector' => $this->driver === 'pgvector' ? null : $embedding,
                 'embedding_norm' => $norm,
                 'content_hash' => $contentHash,
                 'token_count' => VectorMemory::estimateTokenCount($content),
-            ]);
+            ];
+
+            // Only include the JSON embedding column when the database supports it
+            if (! ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql')) {
+                $memoryData['embedding_vector'] = $embedding;
+            }
+
+            // Create memory entry
+            $memory = VectorMemory::create($memoryData);
 
             // Handle driver-specific storage
             if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
