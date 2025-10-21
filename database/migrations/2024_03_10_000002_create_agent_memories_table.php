@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create($memoriesTableName, function (Blueprint $table) {
             $table->id();
             $table->string('agent_name')->index();
-            $table->foreignId('user_id')->nullable()->index()->comment('Optional link to users table for user-specific memories');
+            $table->string('user_id', 255)->nullable()->index()->comment('Optional link to users table or custom identifier for user-specific memories');
             $table->longText('memory_summary')->nullable()->comment('Summarized knowledge from all sessions');
             $table->json('memory_data')->nullable()->comment('Structured memory data, facts, preferences, etc.');
             $table->json('key_learnings')->nullable()->comment('Important insights learned across sessions');

@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create($tableName, function (Blueprint $table) {
             $table->id();
             $table->string('session_id')->index();
-            $table->foreignId('user_id')->nullable()->index()->comment('Optional link to users table');
+            $table->string('user_id', 255)->nullable()->index()->comment('Optional link to users table or custom identifier');
             $table->foreignId('agent_memory_id')->nullable()->index()->comment('Link to agent memory');
             $table->string('agent_name')->index();
             $table->json('state_data')->nullable();
