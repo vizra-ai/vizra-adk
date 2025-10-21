@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Pgvector\Laravel\Vector;
 use RuntimeException;
 use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Vizra\VizraADK\Facades\Agent;
@@ -163,13 +164,18 @@ class VectorMemoryManager
         try {
             // Generate embedding
             $embeddings = $this->embeddingProvider->embed($content);
+
+            if (empty($embeddings) || ! isset($embeddings[0]) || ! is_array($embeddings[0]) || empty($embeddings[0])) {
+                throw new RuntimeException('Embedding provider returned empty embedding data.');
+            }
+
             $embedding = $embeddings[0]; // Single embedding
 
             // Calculate norm
             $norm = VectorMemory::calculateNorm($embedding);
 
-            // Create memory entry
-            $memory = VectorMemory::create([
+            // Prepare data for the new memory entry
+            $memoryData = [
                 'agent_name' => $agentName,
                 'namespace' => $namespace,
                 'content' => $content,
@@ -180,19 +186,22 @@ class VectorMemoryManager
                 'embedding_provider' => $this->embeddingProvider->getProviderName(),
                 'embedding_model' => $this->embeddingProvider->getModel(),
                 'embedding_dimensions' => $this->embeddingProvider->getDimensions(),
-                'embedding_vector' => $this->driver === 'pgvector' ? null : $embedding,
                 'embedding_norm' => $norm,
                 'content_hash' => $contentHash,
                 'token_count' => VectorMemory::estimateTokenCount($content),
-            ]);
+            ];
+
+            if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
+                $memoryData['embedding'] = new Vector($embedding);
+            } else {
+                $memoryData['embedding_vector'] = $embedding;
+            }
+
+            // Create memory entry
+            $memory = VectorMemory::create($memoryData);
 
             // Handle driver-specific storage
-            if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
-                // For PostgreSQL with pgvector, update the vector column separately
-                DB::table('agent_vector_memories')
-                    ->where('id', $memory->id)
-                    ->update(['embedding' => '['.implode(',', $embedding).']']);
-            } elseif ($this->driver === 'meilisearch') {
+            if ($this->driver === 'meilisearch') {
                 // For Meilisearch, store in the vector database
                 $meilisearchDriver = new MeilisearchVectorDriver;
                 $meilisearchDriver->store($memory);
@@ -285,7 +294,7 @@ class VectorMemoryManager
         int $limit,
         float $threshold
     ): Collection {
-        $embeddingStr = '['.implode(',', $queryEmbedding).']';
+        $embeddingVector = new Vector($queryEmbedding);
 
         $results = DB::select('
             SELECT
@@ -298,7 +307,15 @@ class VectorMemoryManager
                 AND 1 - (embedding <=> ?) >= ?
             ORDER BY embedding <=> ?
             LIMIT ?
-        ', [$embeddingStr, $agentName, $namespace, $embeddingStr, $threshold, $embeddingStr, $limit]);
+        ', [
+            $embeddingVector,
+            $agentName,
+            $namespace,
+            clone $embeddingVector,
+            $threshold,
+            clone $embeddingVector,
+            $limit,
+        ]);
 
         return collect($results)->map(function ($result) {
             $result->metadata = json_decode($result->metadata, true);
