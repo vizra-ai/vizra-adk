@@ -186,6 +186,14 @@ class VectorMemoryManager
                 'token_count' => VectorMemory::estimateTokenCount($content),
             ];
 
+            // Only include the JSON embedding column when the database supports it
+            if (! ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql')) {
+                $memoryData['embedding_vector'] = $embedding;
+            }
+
+            // Create memory entry
+            $memory = VectorMemory::create($memoryData);
+
             if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
                 $memoryData['embedding'] = new Vector($embedding);
             } else {
