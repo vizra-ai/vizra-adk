@@ -164,6 +164,11 @@ class VectorMemoryManager
         try {
             // Generate embedding
             $embeddings = $this->embeddingProvider->embed($content);
+
+            if (empty($embeddings) || ! isset($embeddings[0]) || ! is_array($embeddings[0]) || empty($embeddings[0])) {
+                throw new RuntimeException('Embedding provider returned empty embedding data.');
+            }
+
             $embedding = $embeddings[0]; // Single embedding
 
             // Calculate norm
@@ -185,14 +190,6 @@ class VectorMemoryManager
                 'content_hash' => $contentHash,
                 'token_count' => VectorMemory::estimateTokenCount($content),
             ];
-
-            // Only include the JSON embedding column when the database supports it
-            if (! ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql')) {
-                $memoryData['embedding_vector'] = $embedding;
-            }
-
-            // Create memory entry
-            $memory = VectorMemory::create($memoryData);
 
             if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
                 $memoryData['embedding'] = new Vector($embedding);
