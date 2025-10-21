@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Pgvector\Laravel\Vector;
 use RuntimeException;
 use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Vizra\VizraADK\Facades\Agent;
@@ -193,13 +194,17 @@ class VectorMemoryManager
             // Create memory entry
             $memory = VectorMemory::create($memoryData);
 
-            // Handle driver-specific storage
             if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
-                // For PostgreSQL with pgvector, update the vector column separately
-                DB::table('agent_vector_memories')
-                    ->where('id', $memory->id)
-                    ->update(['embedding' => '['.implode(',', $embedding).']']);
-            } elseif ($this->driver === 'meilisearch') {
+                $memoryData['embedding'] = new Vector($embedding);
+            } else {
+                $memoryData['embedding_vector'] = $embedding;
+            }
+
+            // Create memory entry
+            $memory = VectorMemory::create($memoryData);
+
+            // Handle driver-specific storage
+            if ($this->driver === 'meilisearch') {
                 // For Meilisearch, store in the vector database
                 $meilisearchDriver = new MeilisearchVectorDriver;
                 $meilisearchDriver->store($memory);
@@ -292,7 +297,7 @@ class VectorMemoryManager
         int $limit,
         float $threshold
     ): Collection {
-        $embeddingStr = '['.implode(',', $queryEmbedding).']';
+        $embeddingVector = new Vector($queryEmbedding);
 
         $results = DB::select('
             SELECT
@@ -305,7 +310,15 @@ class VectorMemoryManager
                 AND 1 - (embedding <=> ?) >= ?
             ORDER BY embedding <=> ?
             LIMIT ?
-        ', [$embeddingStr, $agentName, $namespace, $embeddingStr, $threshold, $embeddingStr, $limit]);
+        ', [
+            $embeddingVector,
+            $agentName,
+            $namespace,
+            clone $embeddingVector,
+            $threshold,
+            clone $embeddingVector,
+            $limit,
+        ]);
 
         return collect($results)->map(function ($result) {
             $result->metadata = json_decode($result->metadata, true);
