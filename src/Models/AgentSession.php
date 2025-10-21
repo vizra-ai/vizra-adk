@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
  *
  * @property int $id
  * @property string $session_id
- * @property int|null $user_id
+ * @property int|string|null $user_id
  * @property string $agent_name
  * @property array $state_data
  * @property \Illuminate\Support\Carbon $created_at
@@ -84,7 +84,7 @@ class AgentSession extends Model
         ]);
 
         // Link session to memory if not already linked
-        if (! $this->agent_memory_id) {
+        if ($this->agent_memory_id === null) {
             $this->agent_memory_id = $memory->id;
             $this->save();
         }
@@ -100,7 +100,7 @@ class AgentSession extends Model
         $memory = $this->getOrCreateMemory();
 
         // Link session to memory if not already linked
-        if (! $this->agent_memory_id) {
+        if ($this->agent_memory_id === null) {
             $this->agent_memory_id = $memory->id;
             $this->save();
         }

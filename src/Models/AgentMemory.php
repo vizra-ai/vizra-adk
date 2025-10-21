@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property string $agent_name
- * @property int|null $user_id
+ * @property int|string|null $user_id
  * @property string|null $memory_summary
  * @property array|null $memory_data
  * @property array|null $key_learnings
@@ -58,7 +58,7 @@ class AgentMemory extends Model
         $relationship = $this->hasMany(AgentSession::class, 'agent_name', 'agent_name');
 
         // If this memory is user-specific, filter sessions by user_id
-        if ($this->user_id) {
+        if ($this->user_id !== null) {
             $relationship->where('user_id', $this->user_id);
         }
 

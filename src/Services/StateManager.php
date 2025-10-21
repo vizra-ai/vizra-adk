@@ -28,9 +28,9 @@ class StateManager
      * @param  string  $agentName  The name of the agent.
      * @param  string|null  $sessionId  Optional session ID. If null, a new session is created.
      * @param  mixed|null  $userInput  Optional initial user input for a new context.
-     * @param  int|null  $userId  Optional user ID for user-specific memory.
+     * @param  int|string|null  $userId  Optional user identifier for user-specific memory.
      */
-    public function loadContext(string $agentName, ?string $sessionId = null, mixed $userInput = null, ?int $userId = null): AgentContext
+    public function loadContext(string $agentName, ?string $sessionId = null, mixed $userInput = null, int|string|null $userId = null): AgentContext
     {
         $sessionId = $sessionId ?: (string) Str::uuid();
         $agentSession = AgentSession::firstOrCreate(
@@ -137,7 +137,7 @@ class StateManager
     /**
      * Get memory context for an agent.
      */
-    public function getMemoryContext(string $agentName, ?int $userId = null): string
+    public function getMemoryContext(string $agentName, int|string|null $userId = null): string
     {
         return $this->memoryManager->getMemoryContext($agentName, $userId);
     }
@@ -145,7 +145,7 @@ class StateManager
     /**
      * Add a learning to memory.
      */
-    public function addLearning(string $agentName, string $learning, ?int $userId = null): void
+    public function addLearning(string $agentName, string $learning, int|string|null $userId = null): void
     {
         $this->memoryManager->addLearning($agentName, $learning, $userId);
     }
@@ -153,7 +153,7 @@ class StateManager
     /**
      * Update memory data.
      */
-    public function updateMemoryData(string $agentName, array $data, ?int $userId = null): void
+    public function updateMemoryData(string $agentName, array $data, int|string|null $userId = null): void
     {
         $this->memoryManager->updateMemoryData($agentName, $data, $userId);
     }
