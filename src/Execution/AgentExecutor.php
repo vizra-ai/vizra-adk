@@ -44,6 +44,11 @@ class AgentExecutor
     /** @var array<Document> */
     protected array $documents = [];
 
+    /**
+     * Lightweight user context array (takes precedence over user model serialization)
+     */
+    protected ?array $userContext = null;
+
     public function __construct(string $agentClass, mixed $input)
     {
         $this->agentClass = $agentClass;
@@ -56,6 +61,28 @@ class AgentExecutor
     public function forUser(?Model $user): self
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * Set lightweight user context (takes precedence over user model serialization)
+     *
+     * This allows passing minimal user data instead of serializing the entire model,
+     * which is useful for preventing large relationship trees from being stored in context.
+     *
+     * Example:
+     * ```php
+     * ->withUserContext([
+     *     'user_id' => $user->id,
+     *     'user_name' => $user->name,
+     *     'user_email' => $user->email,
+     * ])
+     * ```
+     */
+    public function withUserContext(array $userContext): self
+    {
+        $this->userContext = $userContext;
 
         return $this;
     }
@@ -284,20 +311,63 @@ class AgentExecutor
         // Get agent name
         $agentName = $this->getAgentName();
 
-        // Load or create agent context
-        $agentContext = $stateManager->loadContext($agentName, $sessionId, $this->input, $this->user?->getKey());
+        // Determine user_id BEFORE creating session
+        // This ensures the session is properly associated with the user
+        $userId = null;
+        if ($this->userContext !== null) {
+            // Priority 1: Extract from explicit userContext
+            $userId = $this->userContext['user_id'] ?? $this->userContext['id'] ?? null;
+        } elseif ($this->user) {
+            // Priority 2 & 3: Extract from User model
+            $userId = $this->user->getKey();
+        }
+
+        // Load or create agent context with the correct user_id
+        $agentContext = $stateManager->loadContext($agentName, $sessionId, $this->input, $userId);
 
         // Add user information to context
-        if ($this->user) {
-            $agentContext->setState('user_id', $this->user->getKey());
-            $agentContext->setState('user_model', get_class($this->user));
-            $agentContext->setState('user_data', $this->user->toArray());
+        if ($this->user || $this->userContext) {
+            // Determine user data to store
+            $userData = null;
+            $userModel = null;
+
+            // Priority 1: Explicit lightweight user context
+            if ($this->userContext !== null) {
+                $userData = $this->userContext;
+                $userModel = $this->user ? get_class($this->user) : null;
+            }
+            // Priority 2: Model with custom toAgentContext() method
+            elseif ($this->user && method_exists($this->user, 'toAgentContext')) {
+                $userData = $this->user->toAgentContext();
+                $userModel = get_class($this->user);
+            }
+            // Priority 3: Full model serialization (backward compatibility)
+            elseif ($this->user) {
+                $userData = $this->user->toArray();
+                $userModel = get_class($this->user);
+            }
+
+            // Store in context
+            if ($userId !== null) {
+                $agentContext->setState('user_id', $userId);
+            }
+            if ($userModel !== null) {
+                $agentContext->setState('user_model', $userModel);
+            }
+            if ($userData !== null) {
+                $agentContext->setState('user_data', $userData);
+            }
 
             // Add user-specific context helpers
-            if (method_exists($this->user, 'email')) {
+            if (isset($userData['email'])) {
+                $agentContext->setState('user_email', $userData['email']);
+            } elseif ($this->user && method_exists($this->user, 'email')) {
                 $agentContext->setState('user_email', $this->user->email);
             }
-            if (method_exists($this->user, 'name')) {
+
+            if (isset($userData['name'])) {
+                $agentContext->setState('user_name', $userData['name']);
+            } elseif ($this->user && method_exists($this->user, 'name')) {
                 $agentContext->setState('user_name', $this->user->name);
             }
         }
