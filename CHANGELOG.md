@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.38] - 2025-10-29
+
+ Added
+
+  - Dynamic Agent Name Resolution: Agents can now be registered and executed with runtime-determined identities for multi-tenant applications
+  (e.g., team_agent_24, team_agent_42)
+  - Prism v0.92.0 Streaming Support: Full support for Prism's new streaming event system with type-safe StreamEvent objects
+  - Streaming UI in ChatInterface: Real-time streaming responses in Vizra ADK chat UI using Livewire 3's wire:stream pattern
+  - Lightweight User Context: New withUserContext(array) method for passing minimal user data without serializing entire User models
+  - Multi-tenant MCP Config Overrides: Per-tenant MCP server configuration via AgentContext with deep-merge support
+  - Comprehensive Documentation: Added docs for lightweight user context and multi-tenant MCP configuration
+
+  Fixed
+
+  - Image/Document Persistence: Prism Image and Document objects now properly filtered before database save to prevent serialization errors
+  - Session Association: Fixed user_id extraction to check both 'user_id' and 'id' keys in context
+  - Artisan Command: Corrected artisan command reference in eval runner blade template
+
+  Changed
+
+  - Agent Name Resolution Strategy: Implemented three-tier resolution system (explicit context → registry → fallback)
+  - User Context Priority System: Three-tier priority for user data (explicit withUserContext() → toAgentContext() → toArray())
+  - MCPClientManager Binding: Changed from singleton to non-singleton for proper multi-tenant isolation
+  - Message Persistence Architecture: AgentChat handles UI display while BaseLlmAgent handles all persistence
+
+  Improved
+
+  - Streaming Event Handling: Rewrote buffer accumulation to handle both snake_case and kebab-case event types
+  - Template Variable Clarity: Prefixed template variables with '@' in agent, evaluation, and tool creation templates
+  - Test Coverage: Added tests for multi-tenant MCP behavior, config overrides, and image/document persistence
+
 ## [0.0.37] - 2025-10-15
 
 Add multi-tenant MCP config overrides support
