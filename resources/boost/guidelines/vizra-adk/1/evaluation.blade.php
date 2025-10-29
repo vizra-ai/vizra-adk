@@ -13,22 +13,22 @@ namespace App\Evaluations;
 
 use Vizra\VizraADK\Evaluations\BaseEvaluation;
 
-class {{ EvaluationName }}Evaluation extends BaseEvaluation
+class @{{ EvaluationName }}Evaluation extends BaseEvaluation
 {
     /**
      * Name of the evaluation
      */
-    protected string $name = '{{ snake_case(EvaluationName) }}_evaluation';
+    protected string $name = '@{{ snake_case(EvaluationName) }}_evaluation';
 
     /**
      * Description of what this evaluation tests
      */
-    protected string $description = '{{ What this evaluation validates }}';
+    protected string $description = '@{{ What this evaluation validates }}';
 
     /**
      * The agent class to evaluate
      */
-    protected string $agentClass = {{ AgentName }}Agent::class;
+    protected string $agentClass = @{{ AgentName }}Agent::class;
 
     /**
      * Define test cases
@@ -74,17 +74,17 @@ namespace App\Evaluations\Assertions;
 
 use Vizra\VizraADK\Evaluations\Assertions\BaseAssertion;
 
-class {{ AssertionName }}Assertion extends BaseAssertion
+class @{{ AssertionName }}Assertion extends BaseAssertion
 {
     /**
      * Name of the assertion
      */
-    protected string $name = '{{ snake_case(AssertionName) }}';
+    protected string $name = '@{{ snake_case(AssertionName) }}';
 
     /**
      * What this assertion checks
      */
-    protected string $description = '{{ What this assertion validates }}';
+    protected string $description = '@{{ What this assertion validates }}';
 
     /**
      * The prompt for the LLM judge

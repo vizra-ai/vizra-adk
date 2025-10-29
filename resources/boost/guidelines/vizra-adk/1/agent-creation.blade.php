@@ -13,38 +13,38 @@ namespace App\Agents;
 
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 
-class {{ AgentName }}Agent extends BaseLlmAgent
+class @{{ AgentName }}Agent extends BaseLlmAgent
 {
     /**
      * Unique identifier for the agent (snake_case)
      */
-    protected string $name = '{{ snake_case(AgentName) }}';
+    protected string $name = '@{{ snake_case(AgentName) }}';
 
     /**
      * Brief description of what the agent does
      */
-    protected string $description = '{{ One line description }}';
+    protected string $description = '@{{ One line description }}';
 
     /**
      * System prompt/instructions for the LLM
      */
     protected string $instructions = <<<'INSTRUCTIONS'
-        You are a {{ role description }}.
-        
+        You are a @{{ role description }}.
+
         Your capabilities include:
-        - {{ capability 1 }}
-        - {{ capability 2 }}
-        
+        - @{{ capability 1 }}
+        - @{{ capability 2 }}
+
         Guidelines:
-        - {{ guideline 1 }}
-        - {{ guideline 2 }}
+        - @{{ guideline 1 }}
+        - @{{ guideline 2 }}
         INSTRUCTIONS;
 
     /**
      * LLM model to use
      * Options: 'gpt-4o', 'gpt-4o-mini', 'claude-3-opus', 'claude-3-sonnet', 'gemini-pro', etc.
      */
-    protected string $model = '{{ model_name }}';
+    protected string $model = '@{{ model_name }}';
 
     /**
      * Optional: Temperature setting (0.0 to 1.0)

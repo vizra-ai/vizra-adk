@@ -15,7 +15,7 @@ use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\System\AgentContext;
 
-class {{ ToolName }}Tool implements ToolInterface
+class @{{ ToolName }}Tool implements ToolInterface
 {
     /**
      * Define the tool's schema for the LLM
@@ -23,14 +23,14 @@ class {{ ToolName }}Tool implements ToolInterface
     public function definition(): array
     {
         return [
-            'name' => '{{ snake_case(ToolName) }}',
-            'description' => '{{ Clear description of what this tool does }}',
+            'name' => '@{{ snake_case(ToolName) }}',
+            'description' => '@{{ Clear description of what this tool does }}',
             'parameters' => [
                 'type' => 'object',
                 'properties' => [
-                    '{{ parameter_name }}' => [
-                        'type' => '{{ string|number|boolean|array|object }}',
-                        'description' => '{{ What this parameter is for }}',
+                    '@{{ parameter_name }}' => [
+                        'type' => '@{{ string|number|boolean|array|object }}',
+                        'description' => '@{{ What this parameter is for }}',
                         // Optional fields:
                         'enum' => ['option1', 'option2'], // For restricted values
                         'default' => 'default_value',     // Default if not provided
@@ -39,14 +39,14 @@ class {{ ToolName }}Tool implements ToolInterface
                         ],
                     ],
                 ],
-                'required' => ['{{ required_param }}'], // List required parameters
+                'required' => ['@{{ required_param }}'], // List required parameters
             ],
         ];
     }
 
     /**
      * Execute the tool with given arguments
-     * 
+     *
      * @param array $arguments The parameters passed by the LLM
      * @param AgentContext $context Current execution context
      * @param AgentMemory $memory Agent's memory instance
@@ -55,7 +55,7 @@ class {{ ToolName }}Tool implements ToolInterface
     public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
         // Extract arguments
-        $param = $arguments['{{ parameter_name }}'] ?? null;
+        $param = $arguments['@{{ parameter_name }}'] ?? null;
         
         // Perform the tool's action
         try {
