@@ -12,13 +12,51 @@ class MCPClientManager
 {
     private array $clients = [];
 
-    private array $serverConfigs;
+    private ?array $serverConfigs = null;
+
+    private array $contextOverrides = [];
 
     private const CACHE_TTL = 300; // 5 minutes
 
     public function __construct()
     {
-        $this->serverConfigs = config('vizra-adk.mcp_servers', []);
+        // Configs loaded lazily to support runtime overrides
+    }
+
+    /**
+     * Set context-based configuration overrides for multi-tenant support
+     * These overrides are merged with base configs when creating clients
+     *
+     * @param array $overrides Array of server configs to override, keyed by server name
+     */
+    public function setContextOverrides(array $overrides): void
+    {
+        $this->contextOverrides = $overrides;
+        // Clear cached configs to force reload with new overrides
+        $this->serverConfigs = null;
+    }
+
+    /**
+     * Get server configurations with context overrides applied
+     */
+    protected function getServerConfigs(): array
+    {
+        if ($this->serverConfigs === null) {
+            $this->serverConfigs = config('vizra-adk.mcp_servers', []);
+
+            // Apply context overrides (for multi-tenant support)
+            foreach ($this->contextOverrides as $serverName => $overrides) {
+                if (isset($this->serverConfigs[$serverName])) {
+                    // Use array_replace_recursive to deep merge, allowing override of nested values
+                    $this->serverConfigs[$serverName] = array_replace_recursive(
+                        $this->serverConfigs[$serverName],
+                        $overrides
+                    );
+                }
+            }
+        }
+
+        return $this->serverConfigs;
     }
 
     /**
@@ -47,7 +85,8 @@ class MCPClientManager
      */
     public function isServerEnabled(string $serverName): bool
     {
-        $config = $this->serverConfigs[$serverName] ?? null;
+        $configs = $this->getServerConfigs();
+        $config = $configs[$serverName] ?? null;
 
         return $config && ($config['enabled'] ?? true);
     }
@@ -57,7 +96,7 @@ class MCPClientManager
      */
     public function getEnabledServers(): array
     {
-        return array_keys(array_filter($this->serverConfigs, function ($config) {
+        return array_keys(array_filter($this->getServerConfigs(), function ($config) {
             return $config['enabled'] ?? true;
         }));
     }
@@ -310,11 +349,13 @@ class MCPClientManager
      */
     private function createClient(string $serverName): MCPClientInterface
     {
-        if (! isset($this->serverConfigs[$serverName])) {
+        $configs = $this->getServerConfigs();
+
+        if (! isset($configs[$serverName])) {
             throw new MCPException("MCP server '{$serverName}' is not configured");
         }
 
-        $config = $this->serverConfigs[$serverName];
+        $config = $configs[$serverName];
 
         if (! ($config['enabled'] ?? true)) {
             throw new MCPException("MCP server '{$serverName}' is disabled");

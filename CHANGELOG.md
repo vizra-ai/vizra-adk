@@ -6,6 +6,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.37] - 2025-10-15
+
+Add multi-tenant MCP config overrides support
+Implements per-tenant MCP server configuration overrides via AgentContext, enabling dynamic API keys and settings for multi-tenant scenarios. MCPClientManager is now bound as non-singleton for isolation, and context overrides are deep-merged with base config. Adds documentation and comprehensive tests for override logic and multi-tenant behavior.
+
+## [0.0.36] - 2025-10-09
+
+
+
+## [0.0.35] - 2025-10-09
+
+Refactor Tracer to use HasLogging trait
+Replaced direct calls to the logger with HasLogging trait methods (logInfo, logWarning) throughout the Tracer service. This centralizes logging logic and allows for more consistent logging behavior, with all logs now tagged under the 'traces' channel.
+
+fix: Handle plain string content properly in setContentAttribute
+The previous fix caused plain strings to become NULL when read from database.
+Now properly encodes all value types (plain strings, JSON strings, arrays/objects)
+so Laravel's JSON cast can decode them correctly.
+
+fix: Prevent double-encoding of JSON content in AgentMessage
+When AI providers return tool results as JSON strings, the model's JSON
+cast was double-encoding the content, resulting in triple-encoded data.
+
+This adds a setContentAttribute() mutator that:
+- Detects if incoming value is already a valid JSON string
+- Decodes once and re-encodes to prevent double-encoding
+- Maintains backwards compatibility with arrays/objects
+- Works seamlessly with existing JSON cast behavior
+
+Fixes triple-encoding issue with MCP tools and AI provider responses.
+
+## [0.0.35] - 2025-10-06
+
+Add SSE response parsing for HTTP MCP servers
+Some MCP servers (like Context7) return responses in Server-Sent Events (SSE) format instead of plain JSON. This commit adds support for parsing SSE responses while maintaining backward compatibility.
+
+crease agent_messages.content column size to support large MCP to...
+
+fix: Call afterLlmResponse hook for streaming responses
+
+
 ## [0.0.34] - 2025-10-03
 
 Add streaming state check in BaseLlmAgent
