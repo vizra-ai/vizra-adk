@@ -131,7 +131,7 @@ php artisan vizra:prompts
 php artisan vizra:mcp:list
 
 # Vector memory operations
-php artisan vizra:vector:store {file}
+php artisan vizra:vector:store --file={file}
 php artisan vizra:vector:search {query}
 php artisan vizra:vector:stats
 ```
@@ -282,7 +282,7 @@ VIZRA_EMBEDDING_MODEL=text-embedding-3-small
 4. Run: `php artisan vizra:eval:run`
 
 ### Using Vector Memory
-1. Store documents: `php artisan vizra:vector:store file.txt`
+1. Store documents: `php artisan vizra:vector:store --file=file.txt`
 2. Search: `php artisan vizra:vector:search "query"`
 3. Use VectorMemoryTool in agents for RAG
 
