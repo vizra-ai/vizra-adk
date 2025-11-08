@@ -836,8 +836,8 @@ abstract class BaseLlmAgent extends BaseAgent
 
                                 // Accumulate different event types
                                 match ($eventType) {
-                                    'text_delta', 'text-delta' => $streamData['text'] .= $event->delta ?? '',
-                                    'thinking_delta', 'thinking-delta' => $streamData['thinking'] .= $event->delta ?? '',
+                                    'text_delta', 'text-delta', 'text' => $streamData['text'] .= $event->text ?? (method_exists($event, 'text') ? $event->text() : ($event->delta ?? '')),
+                                    'thinking_delta', 'thinking-delta', 'thinking' => $streamData['thinking'] .= $event->text ?? (method_exists($event, 'text') ? $event->text() : ($event->delta ?? '')),
                                     'tool_call', 'tool-call' => isset($event->toolCall) ? $streamData['toolCalls'][] = [
                                         'name' => $event->toolCall->name ?? 'unknown',
                                         'id' => $event->toolCall->id ?? null,
