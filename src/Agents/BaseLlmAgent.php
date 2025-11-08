@@ -830,14 +830,15 @@ abstract class BaseLlmAgent extends BaseAgent
 
                     try {
                         foreach ($llmResponse as $event) {
-                            // Prism now uses StreamEvent objects with type() method
-                            if (is_object($event) && method_exists($event, 'type')) {
-                                $eventType = $event->type()->value;
+                            // Prism yields Chunk objects with chunkType property (not type() method)
+                            if (is_object($event) && property_exists($event, 'text')) {
+                                // Get event type from chunkType enum property
+                                $eventType = $event->chunkType->value ?? 'text';
 
                                 // Accumulate different event types
                                 match ($eventType) {
-                                    'text_delta', 'text-delta' => $streamData['text'] .= $event->delta ?? '',
-                                    'thinking_delta', 'thinking-delta' => $streamData['thinking'] .= $event->delta ?? '',
+                                    'text_delta', 'text-delta', 'text' => $streamData['text'] .= $event->text ?? '',
+                                    'thinking_delta', 'thinking-delta', 'thinking' => $streamData['thinking'] .= $event->text ?? '',
                                     'tool_call', 'tool-call' => isset($event->toolCall) ? $streamData['toolCalls'][] = [
                                         'name' => $event->toolCall->name ?? 'unknown',
                                         'id' => $event->toolCall->id ?? null,
