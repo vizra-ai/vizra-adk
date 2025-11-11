@@ -439,11 +439,13 @@ class ChatInterface extends Component
 
             // Stream each event to the frontend
             foreach ($stream as $event) {
-                $eventType = $event->type()->value;
+                // Access chunkType property instead of type() method (Prism v0.92+)
+                $eventType = $event->chunkType->value ?? 'text';
 
                 // Accumulate text deltas for UI display
-                if ($eventType === 'text_delta' || $eventType === 'text-delta') {
-                    $textContent .= $event->delta ?? '';
+                // Use text property instead of delta (Prism v0.92+)
+                if ($eventType === 'text_delta' || $eventType === 'text-delta' || $eventType === 'text') {
+                    $textContent .= $event->text ?? '';
                 }
 
                 // Stream to frontend for real-time display
