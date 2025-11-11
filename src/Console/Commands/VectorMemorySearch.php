@@ -40,11 +40,13 @@ class VectorMemorySearch extends Command
             if ($generateRag) {
                 // Generate RAG context
                 $ragContext = $vectorMemory->generateRagContext(
-                    agentName: $agentName,
-                    query: $query,
-                    namespace: $namespace,
-                    limit: $limit,
-                    threshold: $threshold
+                    agentClass: $agentName,
+                    queryOrArray: $query,
+                    options: [
+                        'limit' => $limit,
+                        'namespace' => $namespace,
+                        'threshold' => $threshold,
+                    ],
                 );
 
                 if ($outputJson) {
@@ -82,11 +84,13 @@ class VectorMemorySearch extends Command
             } else {
                 // Raw search results
                 $results = $vectorMemory->search(
-                    agentName: $agentName,
-                    query: $query,
-                    namespace: $namespace,
-                    limit: $limit,
-                    threshold: $threshold
+                    agentClass: $agentName,
+                    queryOrArray: [
+                        'query' => $query,
+                        'limit' => $limit,
+                        'namespace' => $namespace,
+                        'threshold' => $threshold,
+                    ],
                 );
 
                 if ($outputJson) {
