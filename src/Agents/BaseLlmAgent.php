@@ -251,16 +251,16 @@ abstract class BaseLlmAgent extends BaseAgent
         if ($this->provider === null) {
             $defaultProvider = config('vizra-adk.default_provider', 'openai');
             $this->provider = match ($defaultProvider) {
-                'openai' => Provider::OpenAI,
-                'anthropic' => Provider::Anthropic,
-                'gemini', 'google' => Provider::Gemini,
-                'deepseek' => Provider::DeepSeek,
-                'ollama' => Provider::Ollama,
-                'mistral' => Provider::Mistral,
-                'groq' => Provider::Groq,
-                'xai', 'grok' => Provider::XAI,
-                'voyageai', 'voyage' => Provider::VoyageAI,
-                'openrouter' => Provider::OpenRouter,
+                'openai' => Provider::OpenAI->value,
+                'anthropic' => Provider::Anthropic->value,
+                'gemini', 'google' => Provider::Gemini->value,
+                'deepseek' => Provider::DeepSeek->value,
+                'ollama' => Provider::Ollama->value,
+                'mistral' => Provider::Mistral->value,
+                'groq' => Provider::Groq->value,
+                'xai', 'grok' => Provider::XAI->value,
+                'voyageai', 'voyage' => Provider::VoyageAI->value,
+                'openrouter' => Provider::OpenRouter->value,
                 default => $this->resolveCustomProvider($defaultProvider),
             };
         }

@@ -40,7 +40,7 @@
   "require": {
     "php": "^8.2",
     "laravel/framework": "^11.0|^12.0",
-    "prism-php/prism": "^0.84.0",
+    "prism-php/prism": "^0.92.0",
     "league/csv": "^9.23",
     "livewire/livewire": "^3.0"
   },
