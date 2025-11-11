@@ -54,13 +54,20 @@ it('casts state data to array', function () {
     expect($session->state_data['nested']['data'])->toBe('value');
 });
 
-it('can associate user id', function () {
-    $session = AgentSession::create([
+it('can associate user identifier', function () {
+    $numericSession = AgentSession::create([
         'user_id' => 123,
         'agent_name' => 'test-agent',
     ]);
 
-    expect($session->user_id)->toBe(123);
+    expect($numericSession->user_id)->toBe(123);
+
+    $stringSession = AgentSession::create([
+        'user_id' => 'user-123',
+        'agent_name' => 'test-agent',
+    ]);
+
+    expect($stringSession->user_id)->toBe('user-123');
 });
 
 it('has many messages relationship', function () {

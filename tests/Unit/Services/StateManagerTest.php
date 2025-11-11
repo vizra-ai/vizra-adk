@@ -28,6 +28,19 @@ it('can load context with new session', function () {
     expect($context->getAllState())->toBeArray()->toBeEmpty();
 });
 
+it('stores string user identifiers on context creation', function () {
+    $agentName = 'string-user-agent';
+    $userId = 'user-123';
+
+    $context = $this->stateManager->loadContext($agentName, null, 'hello', $userId);
+
+    expect($context)->toBeInstanceOf(AgentContext::class);
+
+    $session = AgentSession::where('agent_name', $agentName)->first();
+    expect($session)->not->toBeNull();
+    expect($session->user_id)->toBe($userId);
+});
+
 it('can load context with existing session', function () {
     $agentName = 'test-agent';
     $sessionId = (string) Str::uuid();

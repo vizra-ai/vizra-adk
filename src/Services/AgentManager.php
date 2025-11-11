@@ -85,14 +85,14 @@ class AgentManager
      * @param  string  $agentNameOrClass  The name or class of the agent to run.
      * @param  mixed  $input  The input for the agent.
      * @param  string|null  $sessionId  Optional session ID. If null, a new session is created/managed.
-     * @param  int|null  $userId  Optional user ID for user-specific memory.
+     * @param  int|string|null  $userId  Optional user identifier for user-specific memory.
      * @return mixed The final response from the agent.
      *
      * @throws \Vizra\VizraADK\Exceptions\AgentNotFoundException
      * @throws \Vizra\VizraADK\Exceptions\AgentConfigurationException
      * @throws \Throwable
      */
-    public function run(string $agentNameOrClass, mixed $input, ?string $sessionId = null, ?int $userId = null): mixed
+    public function run(string $agentNameOrClass, mixed $input, ?string $sessionId = null, int|string|null $userId = null): mixed
     {
         // Resolve to agent name first
         $agentName = $this->registry->resolveAgentName($agentNameOrClass);
