@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.40] - 2025-11-11
+
+Add handling for Generator objects in Tracer
+Update event handling for Prism v0.92+ compatibility
+
 ## [0.0.39] - 2025-11-11
 
 PR #80 (e13b2e7) - Streaming Response Bug Fix
