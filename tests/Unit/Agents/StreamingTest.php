@@ -1,5 +1,7 @@
 <?php
 
+use Prism\Prism\Structured\PendingRequest as StructuredPendingRequest;
+use Prism\Prism\Structured\Response as StructuredResponse;
 use Prism\Prism\Text\PendingRequest;
 use Prism\Prism\Text\Response;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
@@ -491,7 +493,7 @@ class StreamingHookTestAgent extends StreamingTestAgent
         return $inputMessages;
     }
 
-    public function afterLlmResponse(Response|Generator|MockStream|MockResponse $response, AgentContext $context, ?PendingRequest $request = null): mixed
+    public function afterLlmResponse(Response|Generator|MockStream|MockResponse|StructuredResponse $response, AgentContext $context, PendingRequest|StructuredPendingRequest|null $request = null): mixed
     {
         $this->afterLlmResponseCalled = true;
         $this->receivedStreamObject = $response instanceof MockStream;

@@ -5,7 +5,8 @@ namespace {{ namespace }};
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\System\AgentContext;
-use Prism\Prism\Text\PendingRequest;
+use Prism\Prism\Structured\PendingRequest as StructuredPendingRequest;
+use Prism\Prism\Text\PendingRequest as TextPendingRequest;
 // use App\Tools\YourTool; // Example: Import your tool
 
 class {{ class }} extends BaseLlmAgent
@@ -42,7 +43,7 @@ class {{ class }} extends BaseLlmAgent
         return parent::beforeLlmCall($inputMessages, $context);
     }
 
-    public function afterLlmResponse(mixed $response, AgentContext $context, ?PendingRequest $request = null): mixed {
+    public function afterLlmResponse(mixed $response, AgentContext $context, TextPendingRequest|StructuredPendingRequest|null $request = null): mixed {
 
          return parent::afterLlmResponse($response, $context, $request);
 
