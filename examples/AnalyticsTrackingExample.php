@@ -82,9 +82,19 @@ class AnalyticsTrackingExample
         // Assuming you have a Unit model
         $unit = self::getExampleUnit();
 
-        // Track the unit when running an agent
-        $response = Agent::build(\Vizra\VizraADK\Examples\WeatherAgent::class)
+        // First, register the macro to enable tracking
+        AgentBuilder::macro('track', function ($model) {
+            $this->trackedModel = $model;
+            return $this;
+        });
+
+        // Register the agent with tracking
+        Agent::build(\Vizra\VizraADK\Examples\agents\PersonalShoppingAssistantAgent::class)
             ->track($unit)
+            ->register();
+
+        // Now run the agent (uses the AgentExecutor API)
+        $response = \Vizra\VizraADK\Examples\agents\PersonalShoppingAssistantAgent::run('Help me find a gift')
             ->forUser(auth()->user())
             ->go();
 
@@ -100,12 +110,24 @@ class AnalyticsTrackingExample
     {
         $unit = self::getExampleUnit();
 
-        $response = Agent::build(\Vizra\VizraADK\Examples\WeatherAgent::class)
+        // Register the macro if not already registered
+        AgentBuilder::macro('trackWithContext', function ($model, $context) {
+            $this->trackedModel = $model;
+            $this->trackingContext = $context;
+            return $this;
+        });
+
+        // Register the agent with context tracking
+        Agent::build(\Vizra\VizraADK\Examples\agents\PersonalShoppingAssistantAgent::class)
             ->trackWithContext($unit, [
                 'department' => 'Sales',
                 'campaign' => 'Q4-2024',
-                'feature' => 'weather_insights',
+                'feature' => 'shopping_assistant',
             ])
+            ->register();
+
+        // Run the agent
+        $response = \Vizra\VizraADK\Examples\agents\PersonalShoppingAssistantAgent::run('Show me popular products')
             ->forUser(auth()->user())
             ->go();
 
@@ -119,9 +141,25 @@ class AnalyticsTrackingExample
     {
         $unit = self::getExampleUnit();
 
-        $response = Agent::build(\Vizra\VizraADK\Examples\WeatherAgent::class)
+        // Register macros for tracking
+        AgentBuilder::macro('track', function ($model) {
+            $this->trackedModel = $model;
+            return $this;
+        });
+
+        AgentBuilder::macro('costCenter', function ($costCenter) {
+            $this->costCenter = $costCenter;
+            return $this;
+        });
+
+        // Register the agent with cost center tracking
+        Agent::build(\Vizra\VizraADK\Examples\agents\PersonalShoppingAssistantAgent::class)
             ->track($unit)
             ->costCenter('DEPT-SALES-001')
+            ->register();
+
+        // Run the agent
+        $response = \Vizra\VizraADK\Examples\agents\PersonalShoppingAssistantAgent::run('What can you help me with?')
             ->forUser(auth()->user())
             ->go();
 

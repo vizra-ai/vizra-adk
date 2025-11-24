@@ -124,6 +124,7 @@ Vizra ADK supports Laravel's powerful macro pattern, allowing you to add custom 
 
 ```php
 use Vizra\VizraADK\Services\AgentBuilder;
+use Vizra\VizraADK\Facades\Agent;
 use Illuminate\Database\Eloquent\Model;
 
 // Register a macro in your AppServiceProvider::boot()
@@ -132,9 +133,13 @@ AgentBuilder::macro('track', function (Model $model) {
     return $this;
 });
 
-// Use your custom macro
+// Step 1: Use the macro when registering the agent
 Agent::build(CustomerSupportAgent::class)
     ->track(Unit::find(12))  // Track token usage for analytics
+    ->register();
+
+// Step 2: Run the agent using the executor API
+$response = CustomerSupportAgent::run('I need help')
     ->forUser($user)
     ->go();
 ```

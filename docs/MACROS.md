@@ -45,9 +45,13 @@ public function boot(): void
 use App\Models\Unit;
 use Vizra\VizraADK\Facades\Agent;
 
-// Use the macro in your application
-$response = Agent::build(CustomerSupportAgent::class)
+// Step 1: Use the macro when registering the agent
+Agent::build(CustomerSupportAgent::class)
     ->track(Unit::find(12))
+    ->register();
+
+// Step 2: Run the agent using the executor API
+$response = CustomerSupportAgent::run('User input')
     ->forUser($user)
     ->go();
 ```
@@ -72,6 +76,11 @@ AgentBuilder::macro('track', function (Model $model) {
 // Usage
 Agent::build(MyAgent::class)
     ->track(Unit::find(12))
+    ->register();
+
+// Then run the agent
+MyAgent::run('User input')
+    ->forUser($user)
     ->go();
 ```
 
@@ -88,14 +97,17 @@ AgentBuilder::macro('whenCondition', function ($condition, callable $callback) {
 });
 
 // Usage
-Agent::define('conditional-agent')
+$agentName = Agent::define('conditional-agent')
     ->whenCondition($user->isPremium(), function ($builder) {
         $builder->model('gpt-4o');
     })
     ->whenCondition(!$user->isPremium(), function ($builder) {
         $builder->model('gpt-4o-mini');
     })
-    ->go();
+    ->register();
+
+// Run the defined agent
+Agent::named($agentName)->run('User input')->go();
 ```
 
 ### Metadata Tagging
@@ -114,10 +126,13 @@ AgentBuilder::macro('withPriority', function (string $priority) {
 });
 
 // Usage
-Agent::define('support-agent')
+$agentName = Agent::define('support-agent')
     ->withTags(['customer-facing', 'urgent'])
     ->withPriority('high')
-    ->go();
+    ->register();
+
+// Run the agent
+Agent::named($agentName)->run('User input')->go();
 ```
 
 ### Cost Tracking
@@ -134,7 +149,10 @@ AgentBuilder::macro('trackCost', function (string $costCenter) {
 // Usage
 Agent::build(AnalyticsAgent::class)
     ->trackCost('DEPT-001')
-    ->go();
+    ->register();
+
+// Run the agent
+AnalyticsAgent::run('User input')->go();
 ```
 
 ## Using Mixins
@@ -177,11 +195,14 @@ public function boot(): void
 }
 
 // Use the mixed-in methods
-Agent::define('analytics-agent')
+$agentName = Agent::define('analytics-agent')
     ->track($unit)
     ->recordActivity('agent_created')
     ->recordActivity('agent_configured')
-    ->go();
+    ->register();
+
+// Run the agent
+Agent::named($agentName)->run('User input')->go();
 ```
 
 ## Advanced Patterns
@@ -224,7 +245,10 @@ AgentBuilder::macro('configureFor', function (Model $model) {
 // Usage
 Agent::build(MyAgent::class)
     ->configureFor($tenant)
-    ->go();
+    ->register();
+
+// Run the agent
+MyAgent::run('User input')->go();
 ```
 
 ### Workflow Macros

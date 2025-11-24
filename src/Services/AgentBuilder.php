@@ -27,9 +27,13 @@ use Vizra\VizraADK\Exceptions\AgentConfigurationException;
  *     return $this;
  * });
  *
- * // Use the macro in your code
+ * // Use the macro when building/registering the agent
  * Agent::build(MyAgent::class)
  *     ->track(Unit::find(12))
+ *     ->register();
+ *
+ * // Then run the agent using the executor API
+ * MyAgent::run('User input')
  *     ->forUser($user)
  *     ->go();
  * ```
