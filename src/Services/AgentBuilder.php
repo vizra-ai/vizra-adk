@@ -4,15 +4,39 @@ namespace Vizra\VizraADK\Services;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Macroable;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Exceptions\AgentConfigurationException;
 
 /**
  * Class AgentBuilder
  * Provides a fluent interface for defining and registering agents.
+ *
+ * This class supports Laravel macros, allowing you to extend the fluent builder
+ * with custom methods. This is particularly useful for adding tracking, logging,
+ * or custom configuration methods.
+ *
+ * Example usage:
+ * ```php
+ * use Vizra\VizraADK\Services\AgentBuilder;
+ * use Illuminate\Database\Eloquent\Model;
+ *
+ * // Register a macro to track token usage with a model
+ * AgentBuilder::macro('track', function (Model $model) {
+ *     $this->trackedModel = $model;
+ *     return $this;
+ * });
+ *
+ * // Use the macro in your code
+ * Agent::build(MyAgent::class)
+ *     ->track(Unit::find(12))
+ *     ->forUser($user)
+ *     ->go();
+ * ```
  */
 class AgentBuilder
 {
+    use Macroable;
     protected Application $app;
 
     protected AgentRegistry $registry;
