@@ -118,6 +118,29 @@ class OrderLookupTool implements ToolInterface
 }
 ```
 
+## 🔧 Extending with Macros
+
+Vizra ADK supports Laravel's powerful macro pattern, allowing you to add custom methods to core classes without modifying the package:
+
+```php
+use Vizra\VizraADK\Services\AgentBuilder;
+use Illuminate\Database\Eloquent\Model;
+
+// Register a macro in your AppServiceProvider::boot()
+AgentBuilder::macro('track', function (Model $model) {
+    $this->trackedModel = $model;
+    return $this;
+});
+
+// Use your custom macro
+Agent::build(CustomerSupportAgent::class)
+    ->track(Unit::find(12))  // Track token usage for analytics
+    ->forUser($user)
+    ->go();
+```
+
+Learn more in the [Macros Documentation](docs/MACROS.md).
+
 ## 📚 Full Documentation
 
 For comprehensive documentation, tutorials, and API reference, visit:
