@@ -4,15 +4,54 @@ namespace Vizra\VizraADK\Services;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Macroable;
+use ReflectionClass;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Exceptions\AgentConfigurationException;
 
 /**
  * Class AgentBuilder
  * Provides a fluent interface for defining and registering agents.
+ *
+ * This class supports Laravel macros, allowing you to extend the fluent builder
+ * with custom methods. This is particularly useful for adding tracking, logging,
+ * or custom configuration methods.
+ *
+ * Example usage:
+ * ```php
+ * use Vizra\VizraADK\Services\AgentBuilder;
+ * use Illuminate\Database\Eloquent\Model;
+ *
+ * // Register a macro to track token usage with a model
+ * AgentBuilder::macro('track', function (Model $model) {
+ *     $this->trackedModel = $model;
+ *     return $this;
+ * });
+ *
+ * // Use the macro when building/registering the agent
+ * Agent::build(MyAgent::class)
+ *     ->track(Unit::find(12))
+ *     ->register();
+ *
+ * // Then run the agent using the executor API
+ * MyAgent::run('User input')
+ *     ->forUser($user)
+ *     ->go();
+ * ```
  */
 class AgentBuilder
 {
+    use Macroable;
+
+    protected const PERSISTENT_PROPERTIES = [
+        'app',
+        'registry',
+    ];
+
+    /**
+     * @var array<string, string[]>
+     */
+    protected static array $resettablePropertyCache = [];
     protected Application $app;
 
     protected AgentRegistry $registry;
@@ -49,6 +88,8 @@ class AgentBuilder
      */
     public function build(string $agentClass): self
     {
+        $this->resetBuilder();
+
         if (! class_exists($agentClass)) {
             throw new AgentConfigurationException("Agent class '{$agentClass}' not found.");
         }
@@ -76,6 +117,8 @@ class AgentBuilder
      */
     public function define(string $name): self
     {
+        $this->resetBuilder();
+
         $this->agentClass = null; // Marks it as an ad-hoc definition
         $this->name = $name;
 
@@ -218,12 +261,54 @@ class AgentBuilder
      */
     protected function resetBuilder(): void
     {
-        $this->agentClass = null;
-        $this->name = null;
-        $this->description = null;
-        $this->instructions = null;
-        $this->model = null;
-        $this->instructionOverride = null;
-        $this->promptVersion = null;
+        foreach ($this->getResettablePropertyNames() as $property) {
+            $this->{$property} = null;
+        }
+
+        $this->resetDynamicProperties();
+    }
+
+    /**
+     * @return string[]
+     */
+    protected function getResettablePropertyNames(): array
+    {
+        $class = static::class;
+
+        if (isset(self::$resettablePropertyCache[$class])) {
+            return self::$resettablePropertyCache[$class];
+        }
+
+        $reflection = new ReflectionClass($class);
+        $properties = [];
+
+        foreach ($reflection->getProperties() as $property) {
+            if ($property->isStatic()) {
+                continue;
+            }
+
+            $name = $property->getName();
+
+            if (in_array($name, self::PERSISTENT_PROPERTIES, true)) {
+                continue;
+            }
+
+            $properties[] = $name;
+        }
+
+        return self::$resettablePropertyCache[$class] = $properties;
+    }
+
+    protected function resetDynamicProperties(): void
+    {
+        $knownProperties = array_merge(self::PERSISTENT_PROPERTIES, $this->getResettablePropertyNames());
+
+        foreach (array_keys(get_object_vars($this)) as $property) {
+            if (in_array($property, $knownProperties, true)) {
+                continue;
+            }
+
+            unset($this->{$property});
+        }
     }
 }

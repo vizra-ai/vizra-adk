@@ -2,6 +2,7 @@
 
 namespace Vizra\VizraADK\Services;
 
+use Illuminate\Support\Traits\Macroable;
 use Vizra\VizraADK\Agents\ConditionalWorkflow;
 use Vizra\VizraADK\Agents\LoopWorkflow;
 use Vizra\VizraADK\Agents\ParallelWorkflow;
@@ -12,9 +13,24 @@ use Vizra\VizraADK\Agents\SequentialWorkflow;
  *
  * Provides factory methods for creating different types of workflow agents.
  * This class powers the Workflow facade and enables fluent workflow creation.
+ *
+ * This class supports Laravel macros, allowing you to extend workflow functionality
+ * with custom workflow types or configuration methods.
+ *
+ * Example usage:
+ * ```php
+ * use Vizra\VizraADK\Facades\Workflow;
+ *
+ * // Register a custom workflow type macro
+ * Workflow::macro('retryable', function (string $agentClass, int $maxRetries = 3) {
+ *     return Workflow::loop($agentClass)
+ *         ->until(fn($result) => $result->success || $maxRetries-- <= 0);
+ * });
+ * ```
  */
 class WorkflowManager
 {
+    use Macroable;
     /**
      * Create a sequential workflow
      *
