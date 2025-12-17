@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.41] - 2025-12-17
+
+Add macroable support
+Support Output Schemas on Agents
+
 ## [0.0.40] - 2025-11-11
 
 Add handling for Generator objects in Tracer
