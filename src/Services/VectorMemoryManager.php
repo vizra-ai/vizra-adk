@@ -477,7 +477,7 @@ class VectorMemoryManager
     {
         // Extract agent name from class
         $agentName = $this->getAgentName($agentClass);
-        
+
         // Parse parameters
         if (is_null($namespaceOrArray)) {
             $namespace = 'default';
@@ -488,7 +488,13 @@ class VectorMemoryManager
         } else {
             throw new InvalidArgumentException('Second parameter must be string, array, or null');
         }
-        
+
+        // Delete from Meilisearch first (if using that driver)
+        if ($this->driver === 'meilisearch') {
+            $meilisearchDriver = new MeilisearchVectorDriver;
+            $meilisearchDriver->delete($agentName, $namespace);
+        }
+
         $count = VectorMemory::forAgent($agentName)
             ->inNamespace($namespace)
             ->delete();
@@ -514,7 +520,7 @@ class VectorMemoryManager
     {
         // Extract agent name from class
         $agentName = $this->getAgentName($agentClass);
-        
+
         // Parse parameters
         if (is_string($sourceOrArray)) {
             $source = $sourceOrArray;
@@ -525,7 +531,13 @@ class VectorMemoryManager
         } else {
             throw new InvalidArgumentException('Second parameter must be string or array');
         }
-        
+
+        // Delete from Meilisearch first (if using that driver)
+        if ($this->driver === 'meilisearch') {
+            $meilisearchDriver = new MeilisearchVectorDriver;
+            $meilisearchDriver->delete($agentName, $namespace, $source);
+        }
+
         $count = VectorMemory::forAgent($agentName)
             ->inNamespace($namespace)
             ->fromSource($source)
