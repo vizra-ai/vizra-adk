@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.42] - 2025-12-17
+
+Add Meilisearch deletion to vector memory methods
+Updated the delete and deleteFromSource methods in VectorMemoryManager to also remove data from Meilisearch when that driver is used. This ensures consistency between the application's storage and the Meilisearch index.
+
 ## [0.0.41] - 2025-12-17
 
 Add macroable support
