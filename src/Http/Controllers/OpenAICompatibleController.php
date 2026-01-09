@@ -2,14 +2,19 @@
 
 namespace Vizra\VizraADK\Http\Controllers;
 
+use Generator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Prism\Prism\Streaming\Events\StreamEndEvent;
+use Prism\Prism\Streaming\Events\TextDeltaEvent;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Vizra\VizraADK\Exceptions\AgentNotFoundException;
 use Vizra\VizraADK\Facades\Agent;
+use Vizra\VizraADK\Services\StateManager;
+use Vizra\VizraADK\System\AgentContext;
 
 class OpenAICompatibleController extends Controller
 {
@@ -59,34 +64,34 @@ class OpenAICompatibleController extends Controller
         $sessionId = $this->getOrCreateSessionId($request);
 
         try {
-            // Get the agent executor
-            $executor = Agent::named($agentName);
+            // Get the agent
+            $agent = Agent::named($agentName);
 
             // Apply optional parameters
             if ($request->has('temperature')) {
-                $executor->setTemperature($request->input('temperature'));
+                $agent->setTemperature($request->input('temperature'));
             }
             if ($request->has('max_tokens')) {
-                $executor->setMaxTokens($request->input('max_tokens'));
+                $agent->setMaxTokens($request->input('max_tokens'));
             }
             if ($request->has('top_p')) {
-                $executor->setTopP($request->input('top_p'));
+                $agent->setTopP($request->input('top_p'));
             }
 
             // Set streaming if requested
             $stream = $request->input('stream', false);
             if ($stream) {
-                $executor->setStreaming(true);
+                $agent->setStreaming(true);
             }
 
-            // Add conversation context
-            $context = $this->buildContext($messages, $sessionId, $request->input('user'));
+            // Create proper AgentContext for execution
+            $agentContext = $this->createAgentContext($agentName, $sessionId, $request->input('user'), $messages);
 
             // Execute the agent
             if ($stream) {
-                return $this->streamResponse($executor, $lastUserMessage, $context, $request->input('model'));
+                return $this->streamResponse($agent, $lastUserMessage, $agentContext, $request->input('model'));
             } else {
-                $response = $executor->withContext($context)->execute($lastUserMessage);
+                $response = $agent->execute($lastUserMessage, $agentContext);
 
                 return $this->formatResponse($response, $request->input('model'));
             }
@@ -137,28 +142,22 @@ class OpenAICompatibleController extends Controller
     }
 
     /**
-     * Build context from OpenAI messages format
+     * Create an AgentContext for the execution
      */
-    protected function buildContext(array $messages, string $sessionId, ?string $user = null): array
+    protected function createAgentContext(string $agentName, string $sessionId, ?string $userId, array $messages): AgentContext
     {
-        $context = [
-            'session_id' => $sessionId,
-            'conversation_history' => [],
-        ];
+        $stateManager = app(StateManager::class);
+        $agentContext = $stateManager->loadContext($agentName, $sessionId, '', $userId);
 
-        if ($user) {
-            $context['user_id'] = $user;
-        }
-
-        // Convert messages to conversation history
+        // Add conversation history to context
         foreach ($messages as $message) {
-            $context['conversation_history'][] = [
+            $agentContext->addMessage([
                 'role' => $message['role'],
                 'content' => $message['content'],
-            ];
+            ]);
         }
 
-        return $context;
+        return $agentContext;
     }
 
     /**
@@ -209,9 +208,9 @@ class OpenAICompatibleController extends Controller
     /**
      * Stream response in OpenAI SSE format
      */
-    protected function streamResponse($executor, string $input, array $context, string $model): StreamedResponse
+    protected function streamResponse($agent, string $input, AgentContext $context, string $model): StreamedResponse
     {
-        return response()->stream(function () use ($executor, $input, $context, $model) {
+        return response()->stream(function () use ($agent, $input, $context, $model) {
             // Send headers for SSE
             header('Content-Type: text/event-stream');
             header('Cache-Control: no-cache');
@@ -220,8 +219,8 @@ class OpenAICompatibleController extends Controller
             $streamId = 'chatcmpl-'.Str::random(29);
 
             try {
-                // Execute with streaming
-                $stream = $executor->withContext($context)->execute($input);
+                // Execute with streaming - returns a Generator
+                $stream = $agent->execute($input, $context);
 
                 $fullContent = '';
 
@@ -244,10 +243,44 @@ class OpenAICompatibleController extends Controller
                     ],
                 ]);
 
-                // Stream the response
-                foreach ($stream as $chunk) {
-                    $fullContent .= $chunk;
+                // Stream the response - handle Prism StreamEvent objects
+                if ($stream instanceof Generator) {
+                    foreach ($stream as $event) {
+                        // Only process text delta events
+                        if ($event instanceof TextDeltaEvent) {
+                            $chunk = $event->delta;
+                            $fullContent .= $chunk;
 
+                            $this->sendChunk([
+                                'id' => $streamId,
+                                'object' => 'chat.completion.chunk',
+                                'created' => time(),
+                                'model' => $model,
+                                'choices' => [
+                                    [
+                                        'index' => 0,
+                                        'delta' => [
+                                            'content' => $chunk,
+                                        ],
+                                        'finish_reason' => null,
+                                    ],
+                                ],
+                            ]);
+
+                            // Flush output
+                            if (ob_get_level() > 0) {
+                                ob_flush();
+                            }
+                            flush();
+                        } elseif ($event instanceof StreamEndEvent) {
+                            // Stream ended, break out of the loop
+                            break;
+                        }
+                        // Ignore other event types (StreamStartEvent, etc.)
+                    }
+                } else {
+                    // Non-streaming response (string) - send as single chunk
+                    $fullContent = (string) $stream;
                     $this->sendChunk([
                         'id' => $streamId,
                         'object' => 'chat.completion.chunk',
@@ -257,14 +290,13 @@ class OpenAICompatibleController extends Controller
                             [
                                 'index' => 0,
                                 'delta' => [
-                                    'content' => $chunk,
+                                    'content' => $fullContent,
                                 ],
                                 'finish_reason' => null,
                             ],
                         ],
                     ]);
 
-                    // Flush output
                     if (ob_get_level() > 0) {
                         ob_flush();
                     }
