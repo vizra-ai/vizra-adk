@@ -32,6 +32,30 @@ class VectorMemoryManager
     }
 
     /**
+     * Get the configured database connection name for vector storage.
+     */
+    protected function getConnectionName(): ?string
+    {
+        return config('vizra-adk.vector_memory.drivers.pgvector.connection', null);
+    }
+
+    /**
+     * Get the database connection for vector storage.
+     */
+    protected function getConnection(): \Illuminate\Database\Connection
+    {
+        return DB::connection($this->getConnectionName());
+    }
+
+    /**
+     * Get the configured table name for vector memories.
+     */
+    protected function getTableName(): string
+    {
+        return config('vizra-adk.tables.agent_vector_memories', 'agent_vector_memories');
+    }
+
+    /**
      * Add a document to vector memory.
      *
      * @param string $agentClass The agent class (e.g., ChiefDinnerAgent::class)
@@ -191,7 +215,7 @@ class VectorMemoryManager
                 'token_count' => VectorMemory::estimateTokenCount($content),
             ];
 
-            if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
+            if ($this->driver === 'pgvector' && $this->getConnection()->getDriverName() === 'pgsql') {
                 $memoryData['embedding'] = new Vector($embedding);
             } else {
                 $memoryData['embedding_vector'] = $embedding;
@@ -266,7 +290,7 @@ class VectorMemoryManager
             $queryEmbeddings = $this->embeddingProvider->embed($query);
             $queryEmbedding = $queryEmbeddings[0];
 
-            if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
+            if ($this->driver === 'pgvector' && $this->getConnection()->getDriverName() === 'pgsql') {
                 return $this->searchWithPgVector($agentName, $queryEmbedding, $namespace, $limit, $threshold);
             } elseif ($this->driver === 'meilisearch') {
                 return $this->searchWithMeilisearch($agentName, $queryEmbedding, $namespace, $limit, $threshold);
@@ -295,19 +319,20 @@ class VectorMemoryManager
         float $threshold
     ): Collection {
         $embeddingVector = new Vector($queryEmbedding);
+        $tableName = $this->getTableName();
 
-        $results = DB::select('
+        $results = $this->getConnection()->select("
             SELECT
                 id, agent_name, namespace, content, metadata, source, source_id,
                 embedding_provider, embedding_model, created_at,
                 1 - (embedding <=> ?) as similarity
-            FROM agent_vector_memories
+            FROM {$tableName}
             WHERE agent_name = ?
                 AND namespace = ?
                 AND 1 - (embedding <=> ?) >= ?
             ORDER BY embedding <=> ?
             LIMIT ?
-        ', [
+        ", [
             $embeddingVector,
             $agentName,
             $namespace,

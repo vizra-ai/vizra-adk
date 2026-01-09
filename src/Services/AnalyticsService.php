@@ -311,7 +311,10 @@ class AnalyticsService
     private function getTotalVectorDocuments(): int
     {
         try {
-            return DB::table('agent_vector_memories')->count();
+            $connectionName = config('vizra-adk.vector_memory.drivers.pgvector.connection', null);
+            $tableName = config('vizra-adk.tables.agent_vector_memories', 'agent_vector_memories');
+
+            return DB::connection($connectionName)->table($tableName)->count();
         } catch (\Exception $e) {
             return 0;
         }

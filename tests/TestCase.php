@@ -45,6 +45,7 @@ class TestCase extends Orchestra
 
         // Override problematic settings for tests
         $app['config']->set('vizra-adk.vector_memory.driver', 'sqlite');
+        $app['config']->set('vizra-adk.vector_memory.drivers.pgvector.connection', null); // Use default test connection
         $app['config']->set('vizra-adk.default_provider', 'mock');
         $app['config']->set('vizra-adk.default_model', 'mock-model');
 

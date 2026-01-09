@@ -41,6 +41,23 @@ class VectorMemory extends Model
     ];
 
     /**
+     * Get the database connection name for the model.
+     * Uses the configured pgvector connection if set.
+     */
+    public function getConnectionName()
+    {
+        return config('vizra-adk.vector_memory.drivers.pgvector.connection', null);
+    }
+
+    /**
+     * Get the table name from configuration.
+     */
+    public function getTable()
+    {
+        return config('vizra-adk.tables.agent_vector_memories', parent::getTable());
+    }
+
+    /**
      * Scope to filter by agent name.
      */
     public function scopeForAgent($query, string $agentName)

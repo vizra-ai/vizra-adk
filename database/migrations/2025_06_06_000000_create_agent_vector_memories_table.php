@@ -8,16 +8,26 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
+     * Get the database connection that should be used by the migration.
+     * Uses the configured pgvector connection if set.
+     */
+    public function getConnection()
+    {
+        return config('vizra-adk.vector_memory.drivers.pgvector.connection', null);
+    }
+
+    /**
      * Run the migrations.
      */
     public function up(): void
     {
         $tableName = config('vizra-adk.tables.agent_vector_memories', 'agent_vector_memories');
+        $connection = DB::connection($this->getConnection());
 
         // First, check if we're using PostgreSQL and if pgvector extension is available
-        if (DB::connection()->getDriverName() === 'pgsql') {
+        if ($connection->getDriverName() === 'pgsql') {
             try {
-                DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
+                $connection->statement('CREATE EXTENSION IF NOT EXISTS vector');
             } catch (\Exception $e) {
                 // In test environments, pgvector might not be available, that's ok
                 if (! app()->environment('testing')) {
@@ -26,7 +36,7 @@ return new class extends Migration
             }
         }
 
-        Schema::create($tableName, function (Blueprint $table) {
+        Schema::connection($this->getConnection())->create($tableName, function (Blueprint $table) use ($connection) {
             $table->ulid('id')->primary();
             $table->string('agent_name')->index();
             $table->string('namespace')->default('default')->index(); // For organizing different memory types
@@ -40,7 +50,7 @@ return new class extends Migration
             $table->integer('embedding_dimensions'); // Vector dimensions
 
             // This will be the vector column for pgvector, or JSON for other databases
-            if (DB::connection()->getDriverName() === 'pgsql') {
+            if ($connection->getDriverName() === 'pgsql') {
                 // For PostgreSQL with pgvector extension
                 $table->addColumn('vector', 'embedding', ['dimensions' => 1536]); // Default OpenAI dimensions
             } else {
@@ -61,13 +71,13 @@ return new class extends Migration
         });
 
         // Create vector index for PostgreSQL
-        if (DB::connection()->getDriverName() === 'pgsql' && ! app()->environment('testing')) {
+        if ($connection->getDriverName() === 'pgsql' && ! app()->environment('testing')) {
             try {
                 // Create IVFFlat index for fast approximate similarity search
-                DB::statement('CREATE INDEX agent_vector_memories_embedding_idx ON '.$tableName.' USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)');
+                $connection->statement('CREATE INDEX agent_vector_memories_embedding_idx ON '.$tableName.' USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)');
 
                 // You can also create HNSW index (requires pgvector 0.5.0+)
-                // DB::statement('CREATE INDEX agent_vector_memories_embedding_hnsw_idx ON ' . $tableName . ' USING hnsw (embedding vector_cosine_ops)');
+                // $connection->statement('CREATE INDEX agent_vector_memories_embedding_hnsw_idx ON ' . $tableName . ' USING hnsw (embedding vector_cosine_ops)');
             } catch (\Exception $e) {
                 // In case pgvector is not properly installed, skip vector indexes
                 // This will still allow the table to be created
@@ -81,6 +91,6 @@ return new class extends Migration
     public function down(): void
     {
         $tableName = config('vizra-adk.tables.agent_vector_memories', 'agent_vector_memories');
-        Schema::dropIfExists($tableName);
+        Schema::connection($this->getConnection())->dropIfExists($tableName);
     }
 };
