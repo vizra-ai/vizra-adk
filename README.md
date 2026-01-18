@@ -29,7 +29,7 @@ Vizra ADK is a comprehensive Laravel package for building autonomous AI agents t
 - **📊 Evaluation Framework** - Automated quality testing framework for agents at scale with LLM-as-a-Judge
 - **💬 Streaming Responses** - Real-time, token-by-token streaming for responsive user experiences
 - **📈 Comprehensive Tracing** - Debug and monitor agent execution with detailed traces
-- **🎨 Web Dashboard** - Beautiful Livewire-powered interface for testing and monitoring
+- **🎨 Web Dashboard** - Beautiful Livewire v4-powered interface for testing and monitoring
 - **🔧 Laravel Native** - Built with Laravel patterns: Artisan commands, Eloquent models, service providers
 
 ## 🚀 Quick Start
@@ -181,6 +181,7 @@ Take your agents to the next level with **Vizra Cloud** - our professional evalu
 - PHP 8.2+
 - Laravel 11.0+
 - MySQL/PostgreSQL
+- Livewire ^4.0 (for dashboard UI)
 - At least one LLM API key (OpenAI, Anthropic, or Google)
 
 ## 🤝 Community & Support
@@ -226,7 +227,7 @@ Special thanks to:
 
 - [Laravel](https://github.com/laravel) for creating an amazing framework
 - [Prism PHP](https://github.com/prism-php/prism) for the powerful LLM integration library
-- [Livewire](https://livewire.laravel.com/) for making our web dashboard reactive and beautiful
+- [Livewire](https://livewire.laravel.com/) v4 for making our web dashboard reactive and beautiful
 - [League CSV](https://csv.thephpleague.com/) for handling CSV in our evaluation framework
 - The AI/ML community for pushing boundaries
 

@@ -89,7 +89,7 @@ class Analytics extends Component
     {
         $this->analyticsService->clearCache();
         $this->loadAnalyticsData();
-        $this->dispatchBrowserEvent('data-refreshed');
+        $this->dispatch('data-refreshed');
     }
 
     public function toggleAutoRefresh()
