@@ -195,52 +195,51 @@ function scrollChatToBottom() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, checking Livewire...');
     console.log('Livewire available:', typeof window.Livewire !== 'undefined');
-    
 
     // Initial scroll to bottom
     scrollChatToBottom();
+});
 
-    // Test Livewire connectivity with newer syntax
-    if (window.Livewire) {
-        console.log('Livewire found');
-
-        // Modern Livewire event listeners
-        document.addEventListener('livewire:navigated', () => {
-            console.log('Livewire navigated');
-            scrollChatToBottom();
-        });
-
-        document.addEventListener('livewire:init', () => {
-            console.log('Livewire initialized');
-        });
-
-        // Listen for when Livewire updates the DOM
-        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
-            succeed(({ snapshot, effect }) => {
-                // Scroll to bottom after DOM updates
-                setTimeout(scrollChatToBottom, 50);
-            });
-        });
-
-        // Listen for custom chat-updated event
-        Livewire.on('chat-updated', () => {
-            setTimeout(scrollChatToBottom, 100);
-        });
-        
-        // Listen for process-agent-response event to trigger async processing
-        Livewire.on('process-agent-response', (event) => {
-            // Use setTimeout to make the processing truly asynchronous
-            setTimeout(() => {
-                // Get the Livewire component and call the method
-                const component = Livewire.find(document.querySelector('[wire\\:id]')?.getAttribute('wire:id'));
-                if (component) {
-                    component.call('processAgentResponse', event.userMessage);
-                }
-            }, 50); // Small delay to ensure DOM updates
-        });
-
-        // Removed refresh-traces-delayed event listener - now using wire:poll
+document.addEventListener('livewire:init', () => {
+    console.log('Livewire initialized');
+    if (!window.Livewire || window.vizraChatHooksAdded) {
+        return;
     }
+
+    window.vizraChatHooksAdded = true;
+
+    // Modern Livewire event listeners
+    document.addEventListener('livewire:navigated', () => {
+        console.log('Livewire navigated');
+        scrollChatToBottom();
+    });
+
+    // Listen for when Livewire updates the DOM
+    Livewire.hook('commit', ({ succeed }) => {
+        succeed(() => {
+            // Scroll to bottom after DOM updates
+            setTimeout(scrollChatToBottom, 50);
+        });
+    });
+
+    // Listen for custom chat-updated event
+    Livewire.on('chat-updated', () => {
+        setTimeout(scrollChatToBottom, 100);
+    });
+
+    // Listen for process-agent-response event to trigger async processing
+    Livewire.on('process-agent-response', (event) => {
+        // Use setTimeout to make the processing truly asynchronous
+        setTimeout(() => {
+            // Get the Livewire component and call the method
+            const component = Livewire.find(document.querySelector('[wire\\:id]')?.getAttribute('wire:id'));
+            if (component) {
+                component.call('processAgentResponse', event.userMessage);
+            }
+        }, 50); // Small delay to ensure DOM updates
+    });
+
+    // Removed refresh-traces-delayed event listener - now using wire:poll
 });
 
 // Test button functionality
@@ -1168,14 +1167,6 @@ function testModalButton() {
 
         <!-- Scripts -->
         <script>
-            // Auto-scroll chat messages to bottom
-            document.addEventListener('livewire:updated', () => {
-                const chatMessages = document.getElementById('chat-messages');
-                if (chatMessages) {
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }
-            });
-
             // Debug agent selection changes
             document.addEventListener('DOMContentLoaded', function() {
                 const agentSelect = document.getElementById('agent-select');

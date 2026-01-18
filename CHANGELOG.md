@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+Changed
+
+  - Livewire dependency updated to ^4.0
+  - Documentation updated to reflect Livewire v4 requirements
+
 ## [0.0.43] - 2026-01-09
 
 
@@ -68,7 +73,7 @@ PR #80 (e13b2e7) - Streaming Response Bug Fix
   - Dynamic Agent Name Resolution: Agents can now be registered and executed with runtime-determined identities for multi-tenant applications
   (e.g., team_agent_24, team_agent_42)
   - Prism v0.92.0 Streaming Support: Full support for Prism's new streaming event system with type-safe StreamEvent objects
-  - Streaming UI in ChatInterface: Real-time streaming responses in Vizra ADK chat UI using Livewire 3's wire:stream pattern
+  - Streaming UI in ChatInterface: Real-time streaming responses in Vizra ADK chat UI using Livewire's wire:stream pattern
   - Lightweight User Context: New withUserContext(array) method for passing minimal user data without serializing entire User models
   - Multi-tenant MCP Config Overrides: Per-tenant MCP server configuration via AgentContext with deep-merge support
   - Comprehensive Documentation: Added docs for lightweight user context and multi-tenant MCP configuration
@@ -254,24 +259,24 @@ Add tests for fileToClassName with Windows and Unix paths
 Fix misplaced closing tag in trace-span partial
 
 Enhanced ⁠afterLLmResponse Hook
-- Added request parameter to the ⁠afterLLmResponse method 
-- Now receives both the original request and response objects 
+- Added request parameter to the ⁠afterLLmResponse method
+- Now receives both the original request and response objects
 - Enables complete request-response pair logging for better debugging and monitoring
 
 New ⁠onToolException Hook
-- Introduced a new hook to handle exceptions during tool execution 
-- Provides centralized error handling for tool-related failures 
+- Introduced a new hook to handle exceptions during tool execution
+- Provides centralized error handling for tool-related failures
 - Allows for custom error recovery strategies and logging
 
 New Event Types
 
 ⁠ToolCallFailed Event
-- Emitted when a tool call encounters an error 
-- Includes error details, tool name, and input parameters 
+- Emitted when a tool call encounters an error
+- Includes error details, tool name, and input parameters
 - Enables tracking of tool reliability and failure patterns
 ⁠LLmCallFailed Event
-- Emitted when an LLM API call fails 
-- Contains error information, request details, and failure context 
+- Emitted when an LLM API call fails
+- Contains error information, request details, and failure context
 - Facilitates monitoring of LLM service health and error rates
 
 Add OpenRouter provider support
@@ -412,7 +417,7 @@ Adds granular control over agent conversation history via new context strategy a
 - Laravel 11.0+ | 12.0+
 - Prism-PHP ^0.60.0
 - League CSV ^9.23
-- Livewire ^3.0
+- Livewire ^4.0
 
 ### Documentation
 

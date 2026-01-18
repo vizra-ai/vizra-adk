@@ -483,15 +483,22 @@
             });
             
             // Re-initialize after Livewire updates
-            document.addEventListener('livewire:load', function() {
+            document.addEventListener('livewire:init', function() {
                 console.log('Livewire loaded - JSON viewer ready');
             });
             
-            document.addEventListener('livewire:update', function() {
-                console.log('Livewire updated - JSON viewer ready');
-                // Re-apply syntax highlighting for new content
-                if (window.Prism) {
-                    Prism.highlightAll();
+            document.addEventListener('livewire:init', function() {
+                if (window.Livewire && !window.vizraPrismHookAdded) {
+                    window.vizraPrismHookAdded = true;
+                    Livewire.hook('commit', ({ succeed }) => {
+                        succeed(() => {
+                            console.log('Livewire updated - JSON viewer ready');
+                            // Re-apply syntax highlighting for new content
+                            if (window.Prism) {
+                                Prism.highlightAll();
+                            }
+                        });
+                    });
                 }
             });
         }
