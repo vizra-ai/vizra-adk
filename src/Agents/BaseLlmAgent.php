@@ -4,13 +4,17 @@ namespace Vizra\VizraADK\Agents;
 
 use Generator;
 use Illuminate\Support\Facades\Event;
+use Prism\Prism\Contracts\Schema;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Tool;
 use Prism\Prism\Prism;
 use Prism\Prism\PrismManager;
+use Prism\Prism\Schema\ObjectSchema;
 use Prism\Prism\Schema\StringSchema;
-use Prism\Prism\Text\PendingRequest;
-use Prism\Prism\Text\Response;
+use Prism\Prism\Structured\PendingRequest as StructuredPendingRequest;
+use Prism\Prism\Structured\Response as StructuredResponse;
+use Prism\Prism\Text\PendingRequest as TextPendingRequest;
+use Prism\Prism\Text\Response as TextResponse;
 use Prism\Prism\ValueObjects\Media\Document;
 use Prism\Prism\ValueObjects\Media\Image;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
@@ -170,12 +174,19 @@ abstract class BaseLlmAgent extends BaseAgent
     /**
      * @param  AgentContext  $context
      * @param  array  $messages
-     * @return PendingRequest
+     * @return TextPendingRequest
      */
-    protected function buildPrismRequest(AgentContext $context, array $messages): PendingRequest
+    protected function buildPrismRequest(AgentContext $context, array $messages): TextPendingRequest|StructuredPendingRequest
     {
-        $prismRequest = Prism::text()
-            ->using($this->getProvider(), $this->getModel());
+        if ($schema = $this->getSchema()) {
+            $prismRequest = Prism::structured()
+                ->using($this->getProvider(), $this->getModel())
+                ->withSchema($schema);
+        } else {
+            $prismRequest = Prism::text()
+                ->using($this->getProvider(), $this->getModel());
+        }
+
 
         // Apply HTTP timeout configuration
         $httpConfig = config('vizra-adk.http', []);
@@ -251,16 +262,16 @@ abstract class BaseLlmAgent extends BaseAgent
         if ($this->provider === null) {
             $defaultProvider = config('vizra-adk.default_provider', 'openai');
             $this->provider = match ($defaultProvider) {
-                'openai' => Provider::OpenAI,
-                'anthropic' => Provider::Anthropic,
-                'gemini', 'google' => Provider::Gemini,
-                'deepseek' => Provider::DeepSeek,
-                'ollama' => Provider::Ollama,
-                'mistral' => Provider::Mistral,
-                'groq' => Provider::Groq,
-                'xai', 'grok' => Provider::XAI,
-                'voyageai', 'voyage' => Provider::VoyageAI,
-                'openrouter' => Provider::OpenRouter,
+                'openai' => Provider::OpenAI->value,
+                'anthropic' => Provider::Anthropic->value,
+                'gemini', 'google' => Provider::Gemini->value,
+                'deepseek' => Provider::DeepSeek->value,
+                'ollama' => Provider::Ollama->value,
+                'mistral' => Provider::Mistral->value,
+                'groq' => Provider::Groq->value,
+                'xai', 'grok' => Provider::XAI->value,
+                'voyageai', 'voyage' => Provider::VoyageAI->value,
+                'openrouter' => Provider::OpenRouter->value,
                 default => $this->resolveCustomProvider($defaultProvider),
             };
         }
@@ -544,30 +555,33 @@ abstract class BaseLlmAgent extends BaseAgent
 
             // Add parameters based on the definition
             if (! empty($definition['parameters']['properties'])) {
+                $required = $definition['parameters']['required'] ?? [];
                 foreach ($definition['parameters']['properties'] as $paramName => $paramDef) {
                     $description = $paramDef['description'] ?? '';
                     $parameterOrder[] = $paramName;
+                    $isRequired = in_array($paramName, $required, true);
 
                     switch ($paramDef['type'] ?? 'string') {
                         case 'string':
-                            $prismTool = $prismTool->withStringParameter($paramName, $description);
+                            $prismTool = $prismTool->withStringParameter($paramName, $description, $isRequired);
 
                             break;
                         case 'number':
                         case 'integer':
-                            $prismTool = $prismTool->withNumberParameter($paramName, $description);
+                            $prismTool = $prismTool->withNumberParameter($paramName, $description, $isRequired);
 
                             break;
                         case 'boolean':
-                            $prismTool = $prismTool->withBooleanParameter($paramName, $description);
+                            $prismTool = $prismTool->withBooleanParameter($paramName, $description, $isRequired);
 
                             break;
                         case 'array':
-                            $prismTool = $prismTool->withArrayParameter($paramName, $description, new StringSchema('item', 'Array item'));
+                            $itemsSchema = new StringSchema('item', 'Array item');
+                            $prismTool = $prismTool->withArrayParameter($paramName, $description, $itemsSchema, $isRequired);
 
                             break;
                         default:
-                            $prismTool = $prismTool->withStringParameter($paramName, $description);
+                            $prismTool = $prismTool->withStringParameter($paramName, $description, $isRequired);
                     }
                 }
             }
@@ -799,7 +813,9 @@ abstract class BaseLlmAgent extends BaseAgent
                 $prismRequest = $this->buildPrismRequest($context, $messages);
 
                 // Execute the request - Prism handles all tool calls internally
-                if ($this->getStreaming()) {
+                if ($prismRequest instanceof StructuredPendingRequest) {
+                    $llmResponse = $prismRequest->asStructured();
+                } else if ($this->getStreaming()) {
                     $llmResponse = $prismRequest->asStream();
                 } else {
                     $llmResponse = $prismRequest->asText();
@@ -899,7 +915,7 @@ abstract class BaseLlmAgent extends BaseAgent
 
             $processedResponse = $this->afterLlmResponse($llmResponse, $context, $prismRequest);
 
-            if (! ($processedResponse instanceof Response)) {
+            if (! ($processedResponse instanceof TextResponse || $processedResponse instanceof StructuredResponse)) {
                 throw new \RuntimeException('afterLlmResponse hook modified the response to an incompatible type.');
             }
 
@@ -1208,7 +1224,7 @@ abstract class BaseLlmAgent extends BaseAgent
         return $this->getName();
     }
 
-    public function afterLlmResponse(Response | Generator $response, AgentContext $context, ?PendingRequest $request = null): mixed
+    public function afterLlmResponse(TextResponse | Generator | StructuredResponse $response, AgentContext $context, TextPendingRequest | StructuredPendingRequest | null $request = null): mixed
     {
         /** @var Tracer $tracer */
         $tracer = app(Tracer::class);
@@ -1216,7 +1232,7 @@ abstract class BaseLlmAgent extends BaseAgent
         // Get the span ID from context
         $spanId = $context->getState('llm_call_span_id');
 
-        if ($spanId && $response instanceof Response) {
+        if ($spanId && ($response instanceof TextResponse || $response instanceof StructuredResponse)) {
             // End the LLM call span
             $tracer->endSpan(
                 spanId: $spanId,
@@ -1234,7 +1250,7 @@ abstract class BaseLlmAgent extends BaseAgent
         }
 
         // Capture OpenAI response ID for stateful conversations
-        if ($this->useStatefulResponses && $response instanceof Response && $response->meta?->id) {
+        if ($this->useStatefulResponses && ($response instanceof TextResponse || $response instanceof StructuredResponse) && $response->meta?->id) {
             // Namespace by agent to support agent switching
             $context->setState("response_id_{$this->getName()}", $response->meta->id);
         }
@@ -1439,5 +1455,15 @@ abstract class BaseLlmAgent extends BaseAgent
     public function getMcpServers(): array
     {
         return $this->mcpServers;
+    }
+
+    /**
+     * Get an optional custom schema for agent response
+     *
+     * @return Schema|null
+     */
+    public function getSchema(): ?Schema
+    {
+        return null;
     }
 }

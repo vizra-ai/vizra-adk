@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Pgvector\Laravel\Vector;
 use RuntimeException;
 use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Vizra\VizraADK\Facades\Agent;
@@ -28,6 +29,30 @@ class VectorMemoryManager
         $this->embeddingProvider = $embeddingProvider;
         $this->chunker = $chunker;
         $this->driver = config('vizra-adk.vector_memory.driver', 'pgvector');
+    }
+
+    /**
+     * Get the configured database connection name for vector storage.
+     */
+    protected function getConnectionName(): ?string
+    {
+        return config('vizra-adk.vector_memory.drivers.pgvector.connection', null);
+    }
+
+    /**
+     * Get the database connection for vector storage.
+     */
+    protected function getConnection(): \Illuminate\Database\Connection
+    {
+        return DB::connection($this->getConnectionName());
+    }
+
+    /**
+     * Get the configured table name for vector memories.
+     */
+    protected function getTableName(): string
+    {
+        return config('vizra-adk.tables.agent_vector_memories', 'agent_vector_memories');
     }
 
     /**
@@ -163,13 +188,18 @@ class VectorMemoryManager
         try {
             // Generate embedding
             $embeddings = $this->embeddingProvider->embed($content);
+
+            if (empty($embeddings) || ! isset($embeddings[0]) || ! is_array($embeddings[0]) || empty($embeddings[0])) {
+                throw new RuntimeException('Embedding provider returned empty embedding data.');
+            }
+
             $embedding = $embeddings[0]; // Single embedding
 
             // Calculate norm
             $norm = VectorMemory::calculateNorm($embedding);
 
-            // Create memory entry
-            $memory = VectorMemory::create([
+            // Prepare data for the new memory entry
+            $memoryData = [
                 'agent_name' => $agentName,
                 'namespace' => $namespace,
                 'content' => $content,
@@ -180,19 +210,22 @@ class VectorMemoryManager
                 'embedding_provider' => $this->embeddingProvider->getProviderName(),
                 'embedding_model' => $this->embeddingProvider->getModel(),
                 'embedding_dimensions' => $this->embeddingProvider->getDimensions(),
-                'embedding_vector' => $this->driver === 'pgvector' ? null : $embedding,
                 'embedding_norm' => $norm,
                 'content_hash' => $contentHash,
                 'token_count' => VectorMemory::estimateTokenCount($content),
-            ]);
+            ];
+
+            if ($this->driver === 'pgvector' && $this->getConnection()->getDriverName() === 'pgsql') {
+                $memoryData['embedding'] = new Vector($embedding);
+            } else {
+                $memoryData['embedding_vector'] = $embedding;
+            }
+
+            // Create memory entry
+            $memory = VectorMemory::create($memoryData);
 
             // Handle driver-specific storage
-            if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
-                // For PostgreSQL with pgvector, update the vector column separately
-                DB::table('agent_vector_memories')
-                    ->where('id', $memory->id)
-                    ->update(['embedding' => '['.implode(',', $embedding).']']);
-            } elseif ($this->driver === 'meilisearch') {
+            if ($this->driver === 'meilisearch') {
                 // For Meilisearch, store in the vector database
                 $meilisearchDriver = new MeilisearchVectorDriver;
                 $meilisearchDriver->store($memory);
@@ -257,7 +290,7 @@ class VectorMemoryManager
             $queryEmbeddings = $this->embeddingProvider->embed($query);
             $queryEmbedding = $queryEmbeddings[0];
 
-            if ($this->driver === 'pgvector' && DB::connection()->getDriverName() === 'pgsql') {
+            if ($this->driver === 'pgvector' && $this->getConnection()->getDriverName() === 'pgsql') {
                 return $this->searchWithPgVector($agentName, $queryEmbedding, $namespace, $limit, $threshold);
             } elseif ($this->driver === 'meilisearch') {
                 return $this->searchWithMeilisearch($agentName, $queryEmbedding, $namespace, $limit, $threshold);
@@ -285,20 +318,29 @@ class VectorMemoryManager
         int $limit,
         float $threshold
     ): Collection {
-        $embeddingStr = '['.implode(',', $queryEmbedding).']';
+        $embeddingVector = new Vector($queryEmbedding);
+        $tableName = $this->getTableName();
 
-        $results = DB::select('
+        $results = $this->getConnection()->select("
             SELECT
                 id, agent_name, namespace, content, metadata, source, source_id,
                 embedding_provider, embedding_model, created_at,
                 1 - (embedding <=> ?) as similarity
-            FROM agent_vector_memories
+            FROM {$tableName}
             WHERE agent_name = ?
                 AND namespace = ?
                 AND 1 - (embedding <=> ?) >= ?
             ORDER BY embedding <=> ?
             LIMIT ?
-        ', [$embeddingStr, $agentName, $namespace, $embeddingStr, $threshold, $embeddingStr, $limit]);
+        ", [
+            $embeddingVector,
+            $agentName,
+            $namespace,
+            clone $embeddingVector,
+            $threshold,
+            clone $embeddingVector,
+            $limit,
+        ]);
 
         return collect($results)->map(function ($result) {
             $result->metadata = json_decode($result->metadata, true);
@@ -460,7 +502,7 @@ class VectorMemoryManager
     {
         // Extract agent name from class
         $agentName = $this->getAgentName($agentClass);
-        
+
         // Parse parameters
         if (is_null($namespaceOrArray)) {
             $namespace = 'default';
@@ -471,7 +513,13 @@ class VectorMemoryManager
         } else {
             throw new InvalidArgumentException('Second parameter must be string, array, or null');
         }
-        
+
+        // Delete from Meilisearch first (if using that driver)
+        if ($this->driver === 'meilisearch') {
+            $meilisearchDriver = new MeilisearchVectorDriver;
+            $meilisearchDriver->delete($agentName, $namespace);
+        }
+
         $count = VectorMemory::forAgent($agentName)
             ->inNamespace($namespace)
             ->delete();
@@ -497,7 +545,7 @@ class VectorMemoryManager
     {
         // Extract agent name from class
         $agentName = $this->getAgentName($agentClass);
-        
+
         // Parse parameters
         if (is_string($sourceOrArray)) {
             $source = $sourceOrArray;
@@ -508,7 +556,13 @@ class VectorMemoryManager
         } else {
             throw new InvalidArgumentException('Second parameter must be string or array');
         }
-        
+
+        // Delete from Meilisearch first (if using that driver)
+        if ($this->driver === 'meilisearch') {
+            $meilisearchDriver = new MeilisearchVectorDriver;
+            $meilisearchDriver->delete($agentName, $namespace, $source);
+        }
+
         $count = VectorMemory::forAgent($agentName)
             ->inNamespace($namespace)
             ->fromSource($source)

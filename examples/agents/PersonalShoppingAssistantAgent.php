@@ -3,8 +3,10 @@
 namespace Vizra\VizraADK\Examples\agents;
 
 use Generator;
-use Prism\Prism\Text\PendingRequest;
-use Prism\Prism\Text\Response;
+use Prism\Prism\Structured\PendingRequest as StructuredPendingRequest;
+use Prism\Prism\Structured\Response as StructuredResponse;
+use Prism\Prism\Text\PendingRequest as TextPendingRequest;
+use Prism\Prism\Text\Response as TextResponse;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Examples\tools\CartManagerTool;
 use Vizra\VizraADK\System\AgentContext;
@@ -96,9 +98,9 @@ Only include fields that are new or updated. Always place JSON after your respon
     /**
      * After each LLM response, extract and update context from JSON
      */
-    public function afterLlmResponse(Response|Generator $response, AgentContext $context, ?PendingRequest $request = null): mixed
+    public function afterLlmResponse(TextResponse|StructuredResponse|Generator $response, AgentContext $context, TextPendingRequest|StructuredPendingRequest|null $request = null): mixed
     {
-        if ($response instanceof Response) {
+        if ($response instanceof TextResponse) {
             $responseText = $response->text;
 
             // Parse structured JSON from LLM response

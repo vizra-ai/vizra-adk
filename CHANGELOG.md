@@ -6,6 +6,61 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.43] - 2026-01-09
+
+
+
+## [0.0.42] - 2025-12-17
+
+Add Meilisearch deletion to vector memory methods
+Updated the delete and deleteFromSource methods in VectorMemoryManager to also remove data from Meilisearch when that driver is used. This ensures consistency between the application's storage and the Meilisearch index.
+
+## [0.0.41] - 2025-12-17
+
+Add macroable support
+Support Output Schemas on Agents
+
+## [0.0.40] - 2025-11-11
+
+Add handling for Generator objects in Tracer
+Update event handling for Prism v0.92+ compatibility
+
+## [0.0.39] - 2025-11-11
+
+PR #80 (e13b2e7) - Streaming Response Bug Fix
+
+  Fixed: Streaming text accumulation issues
+  - Fixed access to Chunk.text property instead of non-existent delta
+  - Removed AgentMessage mutator that was causing double-encoding of content
+  - Changed to use property_exists() instead of method_exists() for Chunk detection
+  - Files changed: BaseLlmAgent.php, AgentMessage.php (39 lines removed)
+
+  PR #81 (126d2d5) - Dependency Update
+
+  Updated: Prism-php dependency version alignment
+  - Bumped prism-php from v0.84 to v0.92 to align with changelog
+  - Minor adjustments to BaseLlmAgent.php to accommodate dependency changes
+  - Files changed: composer.json, composer.lock, BaseLlmAgent.php
+
+  PR #82 (11ea505) - Vector Memory Search Improvements
+
+  Fixed: Vector memory search command
+  - Updated VectorMemorySearch command implementation
+  - Documentation updates in CLAUDE.md
+  - Files changed: VectorMemorySearch.php, CLAUDE.md
+
+  PR #69 (eecb5ab) - User ID Type Refactoring & Vector Memory Enhancements
+
+  Changed: User ID fields from integer to string/mixed type across the system
+  - Added migration to convert user_id columns to string type
+  - Updated models: AgentMemory, AgentSession, VectorMemory
+  - Updated services: AgentManager, MemoryManager, StateManager, VectorMemoryManager
+  - Fixed: pgvector embedding column handling with native bindings
+  - Added: Validation for embeddings before saving vector memories
+  - Added: Error handling - throw exception when embedding provider returns empty data
+  - Added: Comprehensive test coverage for all changes
+  - Files changed: 15 files (209 additions, 47 deletions)
+
 ## [0.0.38] - 2025-10-29
 
  Added

@@ -5,6 +5,7 @@ namespace Vizra\VizraADK\Tests\Unit\VectorMemory;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Collection;
 use Mockery;
+use RuntimeException;
 use Vizra\VizraADK\Contracts\EmbeddingProviderInterface;
 use Vizra\VizraADK\Models\VectorMemory;
 use Vizra\VizraADK\Services\DocumentChunker;
@@ -112,6 +113,24 @@ class VectorMemoryManagerTest extends TestCase
         $this->assertEquals('mock', $result->embedding_provider);
         $this->assertEquals('mock-model', $result->embedding_model);
         $this->assertEquals(384, $result->embedding_dimensions);
+    }
+
+    public function test_throws_exception_when_embedding_provider_returns_empty_embedding()
+    {
+        // Arrange
+        $agentClass = TestAgent::class;
+        $content = 'Problematic content';
+
+        $this->mockEmbeddingProvider->shouldReceive('embed')
+            ->with($content)
+            ->once()
+            ->andReturn([]);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Failed to add content to vector memory: Embedding provider returned empty embedding data.');
+
+        // Act
+        $this->vectorMemoryManager->addChunk($agentClass, $content);
     }
 
     public function test_prevents_duplicate_content()

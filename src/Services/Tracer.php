@@ -756,6 +756,11 @@ class Tracer
             return $data->name;
         }
 
+        // Handle Generator objects (streaming responses)
+        if ($data instanceof \Generator) {
+            return '[Generator - streaming data]';
+        }
+
         // Handle generic objects
         if (is_object($data)) {
             // Special handling for stringable objects

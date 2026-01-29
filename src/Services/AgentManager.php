@@ -4,6 +4,7 @@ namespace Vizra\VizraADK\Services;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Traits\Macroable;
 use Vizra\VizraADK\Agents\BaseAgent;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Events\AgentExecutionFinished; // For AgentResponseGenerated
@@ -11,8 +12,34 @@ use Vizra\VizraADK\Events\AgentExecutionStarting; // For AgentResponseGenerated
 use Vizra\VizraADK\Events\AgentResponseGenerated;
 use Vizra\VizraADK\Exceptions\AgentConfigurationException;
 
+/**
+ * AgentManager - Central management service for Vizra ADK agents
+ *
+ * This class supports Laravel macros, allowing you to extend its functionality
+ * with custom methods at runtime. This is useful for adding analytics tracking,
+ * custom integrations, or any other behavior without modifying the core package.
+ *
+ * Example usage:
+ * ```php
+ * use Vizra\VizraADK\Facades\Agent;
+ * use Illuminate\Database\Eloquent\Model;
+ *
+ * // Register a macro to track agent usage with a model
+ * Agent::macro('track', function (Model $model) {
+ *     // Store the model for tracking token usage or analytics
+ *     $this->builder->setTrackedModel($model);
+ *     return $this;
+ * });
+ *
+ * // Use the macro
+ * Agent::build(MyAgent::class)
+ *     ->track(Unit::find(12))
+ *     ->go();
+ * ```
+ */
 class AgentManager
 {
+    use Macroable;
     protected Application $app;
 
     protected AgentRegistry $registry;
@@ -85,14 +112,14 @@ class AgentManager
      * @param  string  $agentNameOrClass  The name or class of the agent to run.
      * @param  mixed  $input  The input for the agent.
      * @param  string|null  $sessionId  Optional session ID. If null, a new session is created/managed.
-     * @param  int|null  $userId  Optional user ID for user-specific memory.
+     * @param  int|string|null  $userId  Optional user identifier for user-specific memory.
      * @return mixed The final response from the agent.
      *
      * @throws \Vizra\VizraADK\Exceptions\AgentNotFoundException
      * @throws \Vizra\VizraADK\Exceptions\AgentConfigurationException
      * @throws \Throwable
      */
-    public function run(string $agentNameOrClass, mixed $input, ?string $sessionId = null, ?int $userId = null): mixed
+    public function run(string $agentNameOrClass, mixed $input, ?string $sessionId = null, int|string|null $userId = null): mixed
     {
         // Resolve to agent name first
         $agentName = $this->registry->resolveAgentName($agentNameOrClass);

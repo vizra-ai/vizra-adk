@@ -149,3 +149,26 @@ it('handles memory operations for non-existent agent gracefully', function () {
     expect($memory->memory_data['key'])->toBe('value');
     expect($memory->memory_summary)->toBe('Summary');
 });
+
+it('supports string user identifiers across operations', function () {
+    $agentName = 'string-user-agent';
+    $userId = 'user-xyz';
+
+    $this->memoryManager->addLearning($agentName, 'Learning for string user', $userId);
+    $this->memoryManager->updateMemoryData($agentName, ['preference' => 'dark-mode'], $userId);
+    $this->memoryManager->updateSummary($agentName, 'Summary for string user', $userId);
+
+    $memory = AgentMemory::where('agent_name', $agentName)
+        ->where('user_id', $userId)
+        ->first();
+
+    expect($memory)->not->toBeNull();
+    expect($memory->user_id)->toBe($userId);
+    expect($memory->key_learnings)->toContain('Learning for string user');
+    expect($memory->memory_data['preference'])->toBe('dark-mode');
+    expect($memory->memory_summary)->toBe('Summary for string user');
+
+    $context = $this->memoryManager->getMemoryContextArray($agentName, $userId);
+    expect($context['key_learnings'])->toContain('Learning for string user');
+    expect($context['facts']['preference'])->toBe('dark-mode');
+});

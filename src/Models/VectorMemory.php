@@ -4,6 +4,7 @@ namespace Vizra\VizraADK\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Pgvector\Laravel\Vector;
 
 class VectorMemory extends Model
 {
@@ -22,6 +23,7 @@ class VectorMemory extends Model
         'embedding_provider',
         'embedding_model',
         'embedding_dimensions',
+        'embedding',
         'embedding_vector',
         'embedding_norm',
         'content_hash',
@@ -31,11 +33,29 @@ class VectorMemory extends Model
     protected $casts = [
         'metadata' => 'array',
         'embedding_vector' => 'array',
+        'embedding' => Vector::class,
         'embedding_norm' => 'float',
         'chunk_index' => 'integer',
         'embedding_dimensions' => 'integer',
         'token_count' => 'integer',
     ];
+
+    /**
+     * Get the database connection name for the model.
+     * Uses the configured pgvector connection if set.
+     */
+    public function getConnectionName()
+    {
+        return config('vizra-adk.vector_memory.drivers.pgvector.connection', null);
+    }
+
+    /**
+     * Get the table name from configuration.
+     */
+    public function getTable()
+    {
+        return config('vizra-adk.tables.agent_vector_memories', parent::getTable());
+    }
 
     /**
      * Scope to filter by agent name.

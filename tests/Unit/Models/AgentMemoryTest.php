@@ -71,6 +71,26 @@ it('has many sessions relationship', function () {
     expect($memory->sessions->pluck('id')->toArray())->toBe([$session1->id, $session2->id]);
 });
 
+it('filters sessions by string user identifier', function () {
+    $memory = AgentMemory::create([
+        'agent_name' => 'test-agent',
+        'user_id' => 'user-abc',
+    ]);
+
+    $matchingSession = AgentSession::create([
+        'agent_name' => 'test-agent',
+        'user_id' => 'user-abc',
+    ]);
+
+    AgentSession::create([
+        'agent_name' => 'test-agent',
+        'user_id' => 'user-other',
+    ]);
+
+    expect($memory->sessions)->toHaveCount(1);
+    expect($memory->sessions->first()->id)->toBe($matchingSession->id);
+});
+
 it('can find memory by agent name', function () {
     $memory = AgentMemory::create([
         'agent_name' => 'unique-agent',
