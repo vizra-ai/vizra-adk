@@ -555,30 +555,33 @@ abstract class BaseLlmAgent extends BaseAgent
 
             // Add parameters based on the definition
             if (! empty($definition['parameters']['properties'])) {
+                $required = $definition['parameters']['required'] ?? [];
                 foreach ($definition['parameters']['properties'] as $paramName => $paramDef) {
                     $description = $paramDef['description'] ?? '';
                     $parameterOrder[] = $paramName;
+                    $isRequired = in_array($paramName, $required, true);
 
                     switch ($paramDef['type'] ?? 'string') {
                         case 'string':
-                            $prismTool = $prismTool->withStringParameter($paramName, $description);
+                            $prismTool = $prismTool->withStringParameter($paramName, $description, $isRequired);
 
                             break;
                         case 'number':
                         case 'integer':
-                            $prismTool = $prismTool->withNumberParameter($paramName, $description);
+                            $prismTool = $prismTool->withNumberParameter($paramName, $description, $isRequired);
 
                             break;
                         case 'boolean':
-                            $prismTool = $prismTool->withBooleanParameter($paramName, $description);
+                            $prismTool = $prismTool->withBooleanParameter($paramName, $description, $isRequired);
 
                             break;
                         case 'array':
-                            $prismTool = $prismTool->withArrayParameter($paramName, $description, new StringSchema('item', 'Array item'));
+                            $itemsSchema = new StringSchema('item', 'Array item');
+                            $prismTool = $prismTool->withArrayParameter($paramName, $description, $itemsSchema, $isRequired);
 
                             break;
                         default:
-                            $prismTool = $prismTool->withStringParameter($paramName, $description);
+                            $prismTool = $prismTool->withStringParameter($paramName, $description, $isRequired);
                     }
                 }
             }
