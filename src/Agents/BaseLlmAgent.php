@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Event;
 use Prism\Prism\Contracts\Schema;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Tool;
-use Prism\Prism\Prism;
+use Prism\Prism\Facades\Prism;
 use Prism\Prism\PrismManager;
 use Prism\Prism\Schema\ObjectSchema;
 use Prism\Prism\Schema\StringSchema;
@@ -21,6 +21,10 @@ use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
 use Prism\Prism\ValueObjects\ProviderTool;
 use Prism\Prism\ValueObjects\Usage;
+use Prism\Prism\Streaming\Events\TextDeltaEvent;
+use Prism\Prism\Streaming\Events\ThinkingEvent;
+use Prism\Prism\Streaming\Events\ToolCallEvent;
+use Prism\Prism\Streaming\Events\ToolResultEvent;
 use Throwable;
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\Events\AgentResponseGenerated;
@@ -846,28 +850,25 @@ abstract class BaseLlmAgent extends BaseAgent
 
                     try {
                         foreach ($llmResponse as $event) {
-                            // Prism yields Chunk objects with chunkType property (not type() method)
-                            if (is_object($event) && property_exists($event, 'text')) {
-                                // Get event type from chunkType enum property
-                                $eventType = $event->chunkType->value ?? 'text';
-
-                                // Accumulate different event types
-                                match ($eventType) {
-                                    'text_delta', 'text-delta', 'text' => $streamData['text'] .= $event->text ?? '',
-                                    'thinking_delta', 'thinking-delta', 'thinking' => $streamData['thinking'] .= $event->text ?? '',
-                                    'tool_call', 'tool-call' => isset($event->toolCall) ? $streamData['toolCalls'][] = [
-                                        'name' => $event->toolCall->name ?? 'unknown',
-                                        'id' => $event->toolCall->id ?? null,
-                                        'arguments' => $event->toolCall->arguments() ?? [],
-                                    ] : null,
-                                    'tool_result', 'tool-result' => isset($event->toolResult) ? $streamData['toolResults'][] = [
-                                        'result' => $event->toolResult->result ?? '',
-                                        'toolName' => $event->toolResult->toolName ?? 'unknown',
-                                        'toolCallId' => $event->toolResult->toolCallId ?? null,
-                                    ] : null,
-                                    default => null, // Skip other event types (stream_start, stream_end, etc.)
-                                };
+                            // Prism v0.99+ uses typed StreamEvent classes
+                            if ($event instanceof TextDeltaEvent) {
+                                $streamData['text'] .= $event->delta ?? '';
+                            } elseif ($event instanceof ThinkingEvent) {
+                                $streamData['thinking'] .= $event->delta ?? '';
+                            } elseif ($event instanceof ToolCallEvent) {
+                                $streamData['toolCalls'][] = [
+                                    'name' => $event->toolCall->name ?? 'unknown',
+                                    'id' => $event->toolCall->id ?? null,
+                                    'arguments' => $event->toolCall->arguments() ?? [],
+                                ];
+                            } elseif ($event instanceof ToolResultEvent) {
+                                $streamData['toolResults'][] = [
+                                    'result' => $event->toolResult->result ?? '',
+                                    'toolName' => $event->toolResult->toolName ?? 'unknown',
+                                    'toolCallId' => $event->toolResult->toolCallId ?? null,
+                                ];
                             }
+                            // Skip other event types (StreamStartEvent, StreamEndEvent, etc.)
 
                             // Yield the original event to the consumer (controller/Livewire/UI)
                             yield $event;

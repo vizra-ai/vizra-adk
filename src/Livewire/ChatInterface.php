@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Prism\Prism\Streaming\Events\TextDeltaEvent;
 use Vizra\VizraADK\Facades\Agent;
 use Vizra\VizraADK\Models\AgentSession;
 use Vizra\VizraADK\Models\TraceSpan;
@@ -439,13 +440,12 @@ class ChatInterface extends Component
 
             // Stream each event to the frontend
             foreach ($stream as $event) {
-                // Access chunkType property instead of type() method (Prism v0.92+)
-                $eventType = $event->chunkType->value ?? 'text';
+                // Prism v0.99+ uses typed StreamEvent classes with type() method
+                $eventType = method_exists($event, 'type') ? $event->type()->value : 'unknown';
 
                 // Accumulate text deltas for UI display
-                // Use text property instead of delta (Prism v0.92+)
-                if ($eventType === 'text_delta' || $eventType === 'text-delta' || $eventType === 'text') {
-                    $textContent .= $event->text ?? '';
+                if ($event instanceof TextDeltaEvent) {
+                    $textContent .= $event->delta ?? '';
                 }
 
                 // Stream to frontend for real-time display
