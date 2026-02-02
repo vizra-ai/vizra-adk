@@ -76,6 +76,11 @@ it('can run agent', function () {
     $mockAgent = Mockery::mock(BaseLlmAgent::class);
     $mockContext = Mockery::mock(AgentContext::class);
 
+    $mockAgent->shouldReceive('setStreaming')
+        ->with(false)
+        ->once()
+        ->andReturnSelf();
+
     $mockAgent->shouldReceive('execute')
         ->with($input, $mockContext)
         ->once()
