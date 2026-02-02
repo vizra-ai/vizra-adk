@@ -508,36 +508,194 @@ it('running spans transition to success properly', function () {
     $span1Id = $this->tracer->startSpan('llm_call', 'gpt-4o');
     $span2Id = $this->tracer->startSpan('tool_call', 'weather_tool');
     $span3Id = $this->tracer->startSpan('tool_call', 'calendar_tool');
-    
+
     // Verify all spans start in running state
     $runningSpans = DB::table('agent_trace_spans')
         ->where('trace_id', $traceId)
         ->where('status', 'running')
         ->count();
-    
+
     expect($runningSpans)->toBe(4); // 3 spans + 1 root span
-    
+
     usleep(1000);
-    
+
     // End spans in reverse order (LIFO - Last In, First Out)
     $this->tracer->endSpan($span3Id, ['calendar_data' => 'events']);
     $this->tracer->endSpan($span2Id, ['weather_data' => 'sunny']);
     $this->tracer->endSpan($span1Id, ['llm_response' => 'processed']);
     $this->tracer->endTrace(['final_result' => 'completed']);
-    
+
     // Verify all spans transitioned to success
     $successSpans = DB::table('agent_trace_spans')
         ->where('trace_id', $traceId)
         ->where('status', 'success')
         ->count();
-    
+
     expect($successSpans)->toBe(4); // All spans should be successful
-    
+
     // Verify no spans are still running
     $stillRunning = DB::table('agent_trace_spans')
         ->where('trace_id', $traceId)
         ->where('status', 'running')
         ->count();
-    
+
     expect($stillRunning)->toBe(0);
+});
+
+// Tests for usage tracking methods (GitHub issue #93)
+it('can get usage for session', function () {
+    // Create trace with LLM call that has usage data
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    $llmSpanId = $this->tracer->startSpan('llm_call', 'gpt-4o');
+
+    usleep(1000);
+
+    $this->tracer->endSpan($llmSpanId, [
+        'text' => 'Test response',
+        'usage' => [
+            'input_tokens' => 100,
+            'output_tokens' => 50,
+            'total_tokens' => 150,
+        ],
+    ]);
+    $this->tracer->endTrace();
+
+    $usage = $this->tracer->getUsageForSession('test-session-123');
+
+    expect($usage['input_tokens'])->toBe(100);
+    expect($usage['output_tokens'])->toBe(50);
+    expect($usage['total_tokens'])->toBe(150);
+    expect($usage['llm_calls'])->toBe(1);
+});
+
+it('aggregates usage across multiple llm calls', function () {
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+
+    // First LLM call
+    $span1 = $this->tracer->startSpan('llm_call', 'gpt-4o');
+    $this->tracer->endSpan($span1, [
+        'text' => 'Response 1',
+        'usage' => ['input_tokens' => 100, 'output_tokens' => 50, 'total_tokens' => 150],
+    ]);
+
+    // Second LLM call
+    $span2 = $this->tracer->startSpan('llm_call', 'gpt-4o');
+    $this->tracer->endSpan($span2, [
+        'text' => 'Response 2',
+        'usage' => ['input_tokens' => 200, 'output_tokens' => 100, 'total_tokens' => 300],
+    ]);
+
+    $this->tracer->endTrace();
+
+    $usage = $this->tracer->getUsageForSession('test-session-123');
+
+    expect($usage['input_tokens'])->toBe(300);
+    expect($usage['output_tokens'])->toBe(150);
+    expect($usage['total_tokens'])->toBe(450);
+    expect($usage['llm_calls'])->toBe(2);
+});
+
+it('returns empty usage for session with no llm calls', function () {
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    $this->tracer->endTrace();
+
+    $usage = $this->tracer->getUsageForSession('test-session-123');
+
+    expect($usage['input_tokens'])->toBe(0);
+    expect($usage['output_tokens'])->toBe(0);
+    expect($usage['total_tokens'])->toBe(0);
+    expect($usage['llm_calls'])->toBe(0);
+});
+
+it('can get usage for specific trace', function () {
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+    $llmSpanId = $this->tracer->startSpan('llm_call', 'gpt-4o');
+
+    $this->tracer->endSpan($llmSpanId, [
+        'text' => 'Test response',
+        'usage' => ['input_tokens' => 250, 'output_tokens' => 125, 'total_tokens' => 375],
+    ]);
+    $this->tracer->endTrace();
+
+    $usage = $this->tracer->getUsageForTrace($traceId);
+
+    expect($usage['input_tokens'])->toBe(250);
+    expect($usage['output_tokens'])->toBe(125);
+    expect($usage['total_tokens'])->toBe(375);
+    expect($usage['llm_calls'])->toBe(1);
+});
+
+it('can get detailed usage breakdown', function () {
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+
+    $span1 = $this->tracer->startSpan('llm_call', 'gpt-4o');
+    $this->tracer->endSpan($span1, [
+        'text' => 'Response 1',
+        'usage' => ['input_tokens' => 100, 'output_tokens' => 50, 'total_tokens' => 150],
+    ]);
+
+    $span2 = $this->tracer->startSpan('llm_call', 'claude-3-opus');
+    $this->tracer->endSpan($span2, [
+        'text' => 'Response 2',
+        'usage' => ['input_tokens' => 200, 'output_tokens' => 100, 'total_tokens' => 300],
+    ]);
+
+    $this->tracer->endTrace();
+
+    $details = $this->tracer->getUsageDetails('test-session-123');
+
+    expect($details)->toHaveCount(2);
+    expect($details[0]['name'])->toBe('gpt-4o');
+    expect($details[0]['usage']['input_tokens'])->toBe(100);
+    expect($details[1]['name'])->toBe('claude-3-opus');
+    expect($details[1]['usage']['input_tokens'])->toBe(200);
+});
+
+it('returns empty usage when tracing is disabled', function () {
+    config(['vizra-adk.tracing.enabled' => false]);
+    $tracer = new Tracer;
+
+    expect($tracer->getUsageForSession('test-session'))->toBe([
+        'input_tokens' => 0,
+        'output_tokens' => 0,
+        'total_tokens' => 0,
+        'llm_calls' => 0,
+    ]);
+
+    expect($tracer->getUsageForTrace('test-trace'))->toBe([
+        'input_tokens' => 0,
+        'output_tokens' => 0,
+        'total_tokens' => 0,
+        'llm_calls' => 0,
+    ]);
+
+    expect($tracer->getUsageDetails('test-session'))->toBe([]);
+});
+
+it('handles llm calls without usage data gracefully', function () {
+    $traceId = $this->tracer->startTrace($this->context, 'test_agent');
+
+    // LLM call with usage
+    $span1 = $this->tracer->startSpan('llm_call', 'gpt-4o');
+    $this->tracer->endSpan($span1, [
+        'text' => 'Response 1',
+        'usage' => ['input_tokens' => 100, 'output_tokens' => 50, 'total_tokens' => 150],
+    ]);
+
+    // LLM call without usage (missing usage field)
+    $span2 = $this->tracer->startSpan('llm_call', 'gpt-4o');
+    $this->tracer->endSpan($span2, [
+        'text' => 'Response 2',
+        // No usage field
+    ]);
+
+    $this->tracer->endTrace();
+
+    $usage = $this->tracer->getUsageForSession('test-session-123');
+
+    // Should only count the span with usage data
+    expect($usage['input_tokens'])->toBe(100);
+    expect($usage['output_tokens'])->toBe(50);
+    expect($usage['total_tokens'])->toBe(150);
+    expect($usage['llm_calls'])->toBe(1);
 });

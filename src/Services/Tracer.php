@@ -820,4 +820,148 @@ class Tracer
 
         return false;
     }
+
+    /**
+     * Get aggregated token usage for all LLM calls in a session.
+     *
+     * @param  string  $sessionId  The session ID to retrieve usage for
+     * @return array Aggregated usage metrics with keys: input_tokens, output_tokens, total_tokens, llm_calls
+     */
+    public function getUsageForSession(string $sessionId): array
+    {
+        if (! $this->isEnabled()) {
+            return $this->emptyUsageResponse();
+        }
+
+        try {
+            $spans = DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
+                ->where('session_id', $sessionId)
+                ->where('type', 'llm_call')
+                ->whereNotNull('output')
+                ->get(['output']);
+
+            return $this->aggregateUsage($spans);
+        } catch (Throwable $e) {
+            $this->logWarning('Failed to get usage for session', [
+                'session_id' => $sessionId,
+                'error' => $e->getMessage(),
+            ], 'traces');
+
+            return $this->emptyUsageResponse();
+        }
+    }
+
+    /**
+     * Get aggregated token usage for a specific trace.
+     *
+     * @param  string  $traceId  The trace ID to retrieve usage for
+     * @return array Aggregated usage metrics with keys: input_tokens, output_tokens, total_tokens, llm_calls
+     */
+    public function getUsageForTrace(string $traceId): array
+    {
+        if (! $this->isEnabled()) {
+            return $this->emptyUsageResponse();
+        }
+
+        try {
+            $spans = DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
+                ->where('trace_id', $traceId)
+                ->where('type', 'llm_call')
+                ->whereNotNull('output')
+                ->get(['output']);
+
+            return $this->aggregateUsage($spans);
+        } catch (Throwable $e) {
+            $this->logWarning('Failed to get usage for trace', [
+                'trace_id' => $traceId,
+                'error' => $e->getMessage(),
+            ], 'traces');
+
+            return $this->emptyUsageResponse();
+        }
+    }
+
+    /**
+     * Get detailed breakdown of usage per LLM call for a session.
+     *
+     * @param  string  $sessionId  The session ID to retrieve usage details for
+     * @return array Array of usage details per LLM call
+     */
+    public function getUsageDetails(string $sessionId): array
+    {
+        if (! $this->isEnabled()) {
+            return [];
+        }
+
+        try {
+            return DB::table(config('vizra-adk.tables.agent_trace_spans', 'agent_trace_spans'))
+                ->where('session_id', $sessionId)
+                ->where('type', 'llm_call')
+                ->whereNotNull('output')
+                ->get(['span_id', 'name', 'output', 'duration_ms', 'created_at'])
+                ->map(function ($span) {
+                    $output = json_decode($span->output, true);
+
+                    return [
+                        'span_id' => $span->span_id,
+                        'name' => $span->name,
+                        'usage' => $output['usage'] ?? null,
+                        'duration_ms' => $span->duration_ms,
+                        'created_at' => $span->created_at,
+                    ];
+                })
+                ->toArray();
+        } catch (Throwable $e) {
+            $this->logWarning('Failed to get usage details for session', [
+                'session_id' => $sessionId,
+                'error' => $e->getMessage(),
+            ], 'traces');
+
+            return [];
+        }
+    }
+
+    /**
+     * Aggregate token usage from a collection of span records.
+     *
+     * @param  \Illuminate\Support\Collection  $spans  Collection of span records with output field
+     * @return array Aggregated usage metrics
+     */
+    protected function aggregateUsage($spans): array
+    {
+        $inputTokens = 0;
+        $outputTokens = 0;
+        $llmCalls = 0;
+
+        foreach ($spans as $span) {
+            $output = json_decode($span->output, true);
+            if (isset($output['usage'])) {
+                $inputTokens += $output['usage']['input_tokens'] ?? 0;
+                $outputTokens += $output['usage']['output_tokens'] ?? 0;
+                $llmCalls++;
+            }
+        }
+
+        return [
+            'input_tokens' => $inputTokens,
+            'output_tokens' => $outputTokens,
+            'total_tokens' => $inputTokens + $outputTokens,
+            'llm_calls' => $llmCalls,
+        ];
+    }
+
+    /**
+     * Return an empty usage response structure.
+     *
+     * @return array Empty usage metrics
+     */
+    protected function emptyUsageResponse(): array
+    {
+        return [
+            'input_tokens' => 0,
+            'output_tokens' => 0,
+            'total_tokens' => 0,
+            'llm_calls' => 0,
+        ];
+    }
 }

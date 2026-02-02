@@ -1231,14 +1231,18 @@ abstract class BaseLlmAgent extends BaseAgent
 
         if ($spanId && ($response instanceof TextResponse || $response instanceof StructuredResponse)) {
             // End the LLM call span
+            // Prism Usage class uses promptTokens and completionTokens
+            $inputTokens = $response->usage->promptTokens ?? 0;
+            $outputTokens = $response->usage->completionTokens ?? 0;
+
             $tracer->endSpan(
                 spanId: $spanId,
                 output: [
                     'text' => $response->text,
                     'usage' => $response->usage ? [
-                        'input_tokens' => $response->usage->input ?? $response->usage->inputTokens ?? 0,
-                        'output_tokens' => $response->usage->output ?? $response->usage->outputTokens ?? 0,
-                        'total_tokens' => ($response->usage->input ?? $response->usage->inputTokens ?? 0) + ($response->usage->output ?? $response->usage->outputTokens ?? 0),
+                        'input_tokens' => $inputTokens,
+                        'output_tokens' => $outputTokens,
+                        'total_tokens' => $inputTokens + $outputTokens,
                     ] : null,
                     'finish_reason' => $response->finishReason ?? null,
                 ],
