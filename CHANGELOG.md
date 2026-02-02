@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.44] - 2026-02-02
+
+Add LLM usage aggregation and adjust agent output
+Normalize LLM usage reporting and add aggregation APIs. BaseLlmAgent now extracts promptTokens/completionTokens into input_tokens/output_tokens and computes total_tokens before ending spans. Tracer gained getUsageForSession, getUsageForTrace and getUsageDetails plus helper methods (aggregateUsage, emptyUsageResponse) to query spans, decode outputs and aggregate token counts, with safe handling when tracing is disabled or DB errors occur. Tests updated/added to cover session/trace aggregation, detailed breakdowns, disabled tracing and spans without usage data.
+
+Bump prism to ^0.99.0 and update deps
+Increase prism-php/prism requirement to ^0.99.0 in composer.json and regenerate composer.lock (dependency bumps and metadata updated). Apply small changes to BaseLlmAgent and AgentManager to remain compatible with the updated dependency behavior/API. This brings bug fixes and compatibility improvements from the newer prism and related packages.
+
+Update Livewire dependency to v4.0 and adjust related documentation
+
 ## [0.0.43] - 2026-01-09
 
 
