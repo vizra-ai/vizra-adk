@@ -129,6 +129,10 @@ class AgentManager
             throw new AgentConfigurationException("Agent '{$agentName}' is not an LLM agent and cannot be run directly via this method in MVP.");
         }
 
+        // Ensure streaming is disabled for synchronous run()
+        // Streaming should only be enabled via AgentBuilder::streaming()->go()
+        $agent->setStreaming(false);
+
         // Load or create context
         // The StateManager's loadContext now takes agentName first.
         $context = $this->stateManager->loadContext($agentName, $sessionId, $input, $userId);
