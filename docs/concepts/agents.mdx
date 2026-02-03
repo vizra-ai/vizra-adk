@@ -324,13 +324,24 @@ You have {{ $ticket_count }} open tickets.
 
 [Learn more about Blade Templates & Advanced Features](/concepts/dynamic-prompts)
 
-## Building Agent Teams
+## SubAgents: Building Agent Teams
 
-Why have one agent when you can have a whole team? Agents can delegate tasks to specialized sub-agents, creating powerful AI workflows. Think of it as building your own AI company!
+Why have one agent when you can have a whole team? **SubAgents** let you create specialized agents that work together, with a manager agent delegating tasks to the right specialist. Think of it as building your own AI company!
+
+### What Are SubAgents?
+
+SubAgents are specialized agents that a parent agent can delegate tasks to. When you define subAgents on an agent, Vizra ADK automatically adds the `DelegateToSubAgentTool` - allowing your manager agent to intelligently route requests to the right specialist.
 
 ```php
-class ManagerAgent extends BaseLlmAgent
+class CustomerServiceManager extends BaseLlmAgent
 {
+    protected string $name = 'customer_service_manager';
+
+    protected string $instructions = "You are a customer service manager.
+        Route technical questions to the technical support agent.
+        Route billing questions to the billing agent.
+        Handle general inquiries yourself.";
+
     protected array $subAgents = [
         TechnicalSupportAgent::class,
         BillingSupportAgent::class,
@@ -338,6 +349,82 @@ class ManagerAgent extends BaseLlmAgent
     ];
 }
 ```
+
+### How SubAgent Delegation Works
+
+When a user asks a question, the manager agent decides whether to handle it directly or delegate:
+
+```
+User: "My payment failed"
+  ↓
+Manager Agent analyzes the request
+  ↓
+Decides: "This is a billing issue"
+  ↓
+Delegates to BillingSupportAgent
+  ↓
+BillingSupportAgent handles the request
+  ↓
+Response returned to user
+```
+
+### Creating Specialized SubAgents
+
+Each subAgent should be focused on a specific domain:
+
+```php
+class TechnicalSupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'technical_support';
+
+    protected string $description = 'Handles technical issues, bugs, and integration problems';
+
+    protected string $instructions = "You are a technical support specialist.
+        Help users with technical issues, debugging, and integration problems.
+        Be patient and thorough in your explanations.";
+
+    protected array $tools = [
+        LogLookupTool::class,
+        SystemStatusTool::class,
+    ];
+}
+
+class BillingSupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'billing_support';
+
+    protected string $description = 'Handles billing, payments, and subscription questions';
+
+    protected string $instructions = "You are a billing specialist.
+        Help users with payment issues, invoices, and subscription management.";
+
+    protected array $tools = [
+        InvoiceLookupTool::class,
+        RefundProcessorTool::class,
+    ];
+}
+```
+
+<Tip>
+**Pro Tip:** Write clear `description` properties on your subAgents - the manager agent uses these to decide which specialist to delegate to!
+</Tip>
+
+### SubAgent Benefits
+
+<CardGroup cols={2}>
+  <Card title="Separation of Concerns" icon="puzzle-piece">
+    Each agent focuses on what it does best
+  </Card>
+  <Card title="Specialized Tools" icon="toolbox">
+    SubAgents can have their own unique tools
+  </Card>
+  <Card title="Different Models" icon="microchip">
+    Use GPT-4 for complex tasks, GPT-3.5 for simple ones
+  </Card>
+  <Card title="Easier Testing" icon="flask">
+    Test each specialist agent independently
+  </Card>
+</CardGroup>
 
 ## Advanced Agent Techniques
 
