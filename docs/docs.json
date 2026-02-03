@@ -2,10 +2,32 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Vizra ADK",
+  "logo": {
+    "dark": "/images/logo.jpg",
+    "light": "/images/logo.jpg"
+  },
+  "favicon": "/favicon.svg",
   "colors": {
     "primary": "#6366F1",
     "light": "#818CF8",
     "dark": "#4F46E5"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/vizra-ai/vizra-adk"
+      },
+      {
+        "label": "Discord",
+        "href": "https://discord.gg/vizra"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "/installation/getting-started"
+    }
   },
   "contextual": {
     "options": [
@@ -31,10 +53,7 @@
               "index",
               "installation/getting-started",
               "installation/requirements",
-              "installation/configuration",
-              "api-reference/providers",
-              "api-reference/openai-compatibility",
-              "api-reference/laravel-boost"
+              "installation/configuration"
             ]
           },
           {
@@ -43,14 +62,57 @@
               "concepts/architecture",
               "concepts/agents",
               "concepts/tools",
-              "concepts/mcp-integration",
-              "concepts/sessions-memory",
-              "concepts/dynamic-prompts",
+              "concepts/sessions-memory"
+            ]
+          },
+          {
+            "group": "Agents",
+            "pages": [
+              "agents/overview",
+              "agents/audio-agent",
+              "agents/image-agent"
+            ]
+          },
+          {
+            "group": "Tools",
+            "pages": [
+              "tools/toolbox",
+              "tools/tool-pipelines",
+              "tools/structured-output"
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              "examples/overview",
+              "examples/customer-support-agent",
+              "examples/shopping-assistant"
+            ]
+          },
+          {
+            "group": "Advanced Features",
+            "pages": [
               "concepts/workflows",
               "concepts/vector-rag",
-              "concepts/evaluations",
-              "concepts/tracing",
-              "concepts/web-dashboard"
+              "concepts/dynamic-prompts",
+              "advanced/agent-queuing"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/providers",
+              "integrations/openai-compatibility",
+              "integrations/mcp",
+              "integrations/laravel-boost"
+            ]
+          },
+          {
+            "group": "Testing & Observability",
+            "pages": [
+              "testing/evaluations",
+              "testing/tracing",
+              "testing/web-dashboard"
             ]
           },
           {
@@ -69,5 +131,12 @@
         ]
       }
     ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/vizra-ai/vizra-adk",
+      "discord": "https://discord.gg/vizra",
+      "x": "https://x.com/aaronlumsden"
+    }
   }
 }

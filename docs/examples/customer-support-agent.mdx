@@ -1,0 +1,260 @@
+---
+title: "Customer Support Agent"
+description: "Build a complete customer support agent with order lookup and refund processing"
+icon: "headset"
+---
+
+<Frame>
+  <iframe
+    width="100%"
+    height="400"
+    src="https://www.youtube.com/embed/VIDEO_ID"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</Frame>
+
+## Overview
+
+This example demonstrates how to build a customer support agent that can:
+
+- Look up customer orders by order ID or email
+- Check order status and shipping information
+- Process refund requests
+- Handle common customer inquiries
+
+## Agent Definition
+
+```php
+<?php
+
+namespace App\Agents;
+
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'customer_support';
+
+    protected string $description = 'A customer support agent that helps with order inquiries and refunds';
+
+    protected string $model = 'gpt-4o';
+
+    protected ?float $temperature = 0.3;
+
+    protected array $tools = [
+        \App\Tools\OrderLookupTool::class,
+        \App\Tools\RefundProcessorTool::class,
+        \App\Tools\ShippingStatusTool::class,
+    ];
+
+    protected string $instructions = <<<'PROMPT'
+You are a helpful customer support agent for an e-commerce store. Your role is to assist customers with their orders and resolve issues efficiently.
+
+Key responsibilities:
+- Look up orders when customers provide their order ID or email
+- Provide accurate shipping status updates
+- Process refund requests according to company policy
+- Be empathetic and professional in all interactions
+
+Refund Policy:
+- Full refunds available within 30 days of purchase
+- Items must be unused and in original packaging
+- Digital products are non-refundable after download
+
+Always verify the customer's identity before sharing order details or processing refunds.
+PROMPT;
+}
+```
+
+## Order Lookup Tool
+
+```php
+<?php
+
+namespace App\Tools;
+
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
+
+class OrderLookupTool implements ToolInterface
+{
+    public function definition(): array
+    {
+        return [
+            'name' => 'order_lookup',
+            'description' => 'Look up a customer order by order ID or email address',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'order_id' => [
+                        'type' => 'string',
+                        'description' => 'The order ID to look up',
+                    ],
+                    'email' => [
+                        'type' => 'string',
+                        'description' => 'Customer email to find orders',
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        $orderId = $arguments['order_id'] ?? null;
+        $email = $arguments['email'] ?? null;
+
+        if ($orderId) {
+            $order = Order::find($orderId);
+        } elseif ($email) {
+            $order = Order::where('customer_email', $email)
+                ->latest()
+                ->first();
+        } else {
+            return json_encode(['error' => 'Please provide an order ID or email']);
+        }
+
+        if (!$order) {
+            return json_encode(['error' => 'Order not found']);
+        }
+
+        return json_encode([
+            'order_id' => $order->id,
+            'status' => $order->status,
+            'total' => $order->total,
+            'items' => $order->items->map(fn($item) => [
+                'name' => $item->name,
+                'quantity' => $item->quantity,
+                'price' => $item->price,
+            ]),
+            'created_at' => $order->created_at->toDateString(),
+        ]);
+    }
+}
+```
+
+## Refund Processor Tool
+
+```php
+<?php
+
+namespace App\Tools;
+
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
+
+class RefundProcessorTool implements ToolInterface
+{
+    public function definition(): array
+    {
+        return [
+            'name' => 'process_refund',
+            'description' => 'Process a refund for an order. Only use after verifying eligibility.',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'order_id' => [
+                        'type' => 'string',
+                        'description' => 'The order ID to refund',
+                    ],
+                    'reason' => [
+                        'type' => 'string',
+                        'description' => 'Reason for the refund',
+                    ],
+                    'amount' => [
+                        'type' => 'number',
+                        'description' => 'Refund amount (defaults to full order total)',
+                    ],
+                ],
+                'required' => ['order_id', 'reason'],
+            ],
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        $order = Order::find($arguments['order_id']);
+
+        if (!$order) {
+            return json_encode(['error' => 'Order not found']);
+        }
+
+        // Check refund eligibility
+        if ($order->created_at->diffInDays(now()) > 30) {
+            return json_encode([
+                'error' => 'Order is outside the 30-day refund window',
+            ]);
+        }
+
+        $amount = $arguments['amount'] ?? $order->total;
+
+        // Process the refund
+        $refund = $order->refunds()->create([
+            'amount' => $amount,
+            'reason' => $arguments['reason'],
+            'status' => 'pending',
+        ]);
+
+        // Trigger refund processing (payment gateway, etc.)
+        ProcessRefund::dispatch($refund);
+
+        return json_encode([
+            'success' => true,
+            'refund_id' => $refund->id,
+            'amount' => $amount,
+            'message' => 'Refund initiated. Customer will receive funds within 5-7 business days.',
+        ]);
+    }
+}
+```
+
+## Usage Example
+
+```php
+use Vizra\VizraADK\Facades\Agent;
+
+// Get the agent
+$agent = Agent::get('customer_support');
+
+// Process a customer message
+$response = $agent->run(
+    'Hi, I ordered something last week but it hasn\'t arrived yet. My order number is ORD-12345.',
+    userId: 'customer_123',
+    sessionId: 'support_session_456'
+);
+
+echo $response->text;
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always verify identity first">
+    Before sharing sensitive order information or processing refunds, ensure the customer has provided verifiable information like their order ID and associated email.
+  </Accordion>
+
+  <Accordion title="Use low temperature for consistency">
+    Customer support requires consistent, accurate responses. Use a lower temperature (0.3) to reduce creative variation in responses.
+  </Accordion>
+
+  <Accordion title="Define clear policies in instructions">
+    Include refund policies, response guidelines, and escalation procedures directly in the agent's instructions.
+  </Accordion>
+
+  <Accordion title="Log all actions">
+    Use the tracing system to log all order lookups and refund processing for audit purposes.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Add Memory" icon="brain" href="/concepts/sessions-memory">
+    Enable conversation memory to maintain context across sessions
+  </Card>
+  <Card title="Add Evaluations" icon="vial" href="/testing/evaluations">
+    Write automated tests to ensure your agent handles edge cases
+  </Card>
+</CardGroup>
