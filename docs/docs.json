@@ -2,67 +2,59 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Vizra ADK",
-  "logo": {
-    "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg"
-  },
-  "favicon": "/favicon.svg",
   "colors": {
     "primary": "#6366F1",
     "light": "#818CF8",
     "dark": "#4F46E5"
   },
-  "navigation": [
-    {
-      "group": "Getting Started",
-      "pages": [
-        "index",
-        "installation/getting-started",
-        "installation/requirements",
-        "installation/configuration",
-        "api-reference/providers",
-        "api-reference/openai-compatibility",
-        "api-reference/laravel-boost"
-      ]
-    },
-    {
-      "group": "Core Concepts",
-      "pages": [
-        "concepts/architecture",
-        "concepts/agents",
-        "concepts/tools",
-        "concepts/mcp-integration",
-        "concepts/sessions-memory",
-        "concepts/dynamic-prompts",
-        "concepts/workflows",
-        "concepts/vector-rag",
-        "concepts/evaluations",
-        "concepts/tracing",
-        "concepts/web-dashboard"
-      ]
-    },
-    {
-      "group": "API Reference",
-      "pages": [
-        "api-reference/artisan-commands",
-        "api-reference/agent-class",
-        "api-reference/tool-class",
-        "api-reference/workflow-class",
-        "api-reference/evaluation-class",
-        "api-reference/events",
-        "api-reference/error-handling",
-        "api-reference/tracing-class"
-      ]
-    }
-  ],
-  "anchors": [
-    {
-      "name": "GitHub",
-      "icon": "github",
-      "url": "https://github.com/vizra-ai/vizra-adk"
-    }
-  ],
-  "footerSocials": {
-    "github": "https://github.com/vizra-ai/vizra-adk"
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "index",
+              "installation/getting-started",
+              "installation/requirements",
+              "installation/configuration"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/architecture",
+              "concepts/agents",
+              "concepts/tools",
+              "concepts/mcp-integration",
+              "concepts/sessions-memory",
+              "concepts/dynamic-prompts",
+              "concepts/workflows",
+              "concepts/vector-rag",
+              "concepts/evaluations",
+              "concepts/tracing",
+              "concepts/web-dashboard"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "api-reference/artisan-commands",
+              "api-reference/agent-class",
+              "api-reference/tool-class",
+              "api-reference/workflow-class",
+              "api-reference/evaluation-class",
+              "api-reference/events",
+              "api-reference/error-handling",
+              "api-reference/providers",
+              "api-reference/openai-compatibility",
+              "api-reference/laravel-boost",
+              "api-reference/tracing-class"
+            ]
+          }
+        ]
+      }
+    ]
   }
 }
