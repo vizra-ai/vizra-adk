@@ -45,7 +45,7 @@ php artisan vizra:make:agent CustomerSupportAgent
 
 ### The Agent Blueprint
 
-```php app/Agents/CustomerSupportAgent.php
+```php app/Agents/CustomerSupportAgent.php expandable
 <?php
 
 namespace App\Agents;
@@ -103,7 +103,7 @@ class AdvancedAgent extends BaseLlmAgent
 Now comes the fun part - putting your agent to work! Vizra ADK gives you a **powerful and simple** way to interact with your agents.
 
 <Tip>
-**One Method to Rule Them All** - The `run()` method is your gateway to agent intelligence. Simple, powerful, and flexible - it handles everything from conversations to complex data processing.
+  **One Method to Rule Them All** - The `run()` method is your gateway to agent intelligence. Simple, powerful, and flexible - it handles everything from conversations to complex data processing.
 </Tip>
 
 ### Let's Chat! Using the Fluent API
@@ -171,7 +171,7 @@ foreach ($stream as $chunk) {
 ### Managing Conversation History
 
 <Warning>
-**Important:** All messages are always saved to the database for session continuity. These settings only control what previous messages are sent to the LLM for context.
+  **Important:** All messages are always saved to the database for session continuity. These settings only control what previous messages are sent to the LLM for context.
 </Warning>
 
 By default, agents don't send conversation history to the LLM (for better performance and lower costs). But for chat agents, you'll want context! Here's how to control what history gets sent to the LLM:
@@ -247,7 +247,7 @@ class CustomAgent extends BaseLlmAgent
 Want to test different personalities without changing code? Prompt versioning lets you A/B test, switch between tones, and evolve your agent's voice on the fly!
 
 <Tip>
-**Switch Prompts at Runtime** - No more hardcoding prompts! Store different versions and switch between them instantly.
+  **Switch Prompts at Runtime** - No more hardcoding prompts! Store different versions and switch between them instantly.
 </Tip>
 
 ```php
@@ -406,7 +406,7 @@ class BillingSupportAgent extends BaseLlmAgent
 ```
 
 <Tip>
-**Pro Tip:** Write clear `description` properties on your subAgents - the manager agent uses these to decide which specialist to delegate to!
+  **Pro Tip:** Write clear `description` properties on your subAgents - the manager agent uses these to decide which specialist to delegate to!
 </Tip>
 
 ### SubAgent Benefits
@@ -481,11 +481,12 @@ $results = $agent->vector()->search('framework');
 ```
 
 <Info>
-**Vector Memory Pro Tips**
-- Use progressive API: simple strings for prototypes, arrays for production
-- Public methods make testing in Tinkerwell super easy
-- Organize with namespaces: 'docs', 'faqs', 'policies', etc.
-- Perfect for building chatbots that remember context
+  **Vector Memory Pro Tips**
+
+  - Use progressive API: simple strings for prototypes, arrays for production
+  - Public methods make testing in Tinkerwell super easy
+  - Organize with namespaces: 'docs', 'faqs', 'policies', etc.
+  - Perfect for building chatbots that remember context
 </Info>
 
 ### Background Processing with Async
@@ -643,14 +644,14 @@ public function beforeToolCall(string $toolName, array $arguments, AgentContext 
 
 As your agent works, it broadcasts events you can listen to for monitoring, logging, or triggering other actions:
 
-| Event | Description |
-|-------|-------------|
+| Event                    | Description           |
+| ------------------------ | --------------------- |
 | `AgentExecutionStarting` | When execution begins |
-| `LlmCallInitiating` | Before calling the AI |
-| `ToolCallInitiating` | Before using a tool |
-| `ToolCallCompleted` | After tool finishes |
-| `LlmResponseReceived` | AI response received |
-| `AgentExecutionFinished` | All done! |
+| `LlmCallInitiating`      | Before calling the AI |
+| `ToolCallInitiating`     | Before using a tool   |
+| `ToolCallCompleted`      | After tool finishes   |
+| `LlmResponseReceived`    | AI response received  |
+| `AgentExecutionFinished` | All done!             |
 
 ## Pro Tips from the Trenches
 
