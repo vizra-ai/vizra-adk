@@ -9,7 +9,15 @@
   },
   "contextual": {
     "options": [
-      "copy"
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "grok",
+      "mcp",
+      "cursor",
+      "vscode"
     ]
   },
   "navigation": {
