@@ -7,6 +7,11 @@
     "light": "#818CF8",
     "dark": "#4F46E5"
   },
+  "contextual": {
+    "options": [
+      "copy"
+    ]
+  },
   "navigation": {
     "tabs": [
       {
