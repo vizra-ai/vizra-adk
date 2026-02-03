@@ -406,4 +406,65 @@ return [
             'include_metadata' => env('VIZRA_ADK_RAG_INCLUDE_METADATA', true),
         ],
     ],
+
+    /**
+     * Media Generation Configuration
+     * Configure image and audio generation capabilities.
+     */
+    'media' => [
+        /**
+         * Enable media generation functionality.
+         */
+        'enabled' => env('VIZRA_ADK_MEDIA_ENABLED', true),
+
+        /**
+         * Storage configuration for generated media.
+         */
+        'storage' => [
+            'disk' => env('VIZRA_ADK_MEDIA_DISK', 'public'),
+            'path' => env('VIZRA_ADK_MEDIA_PATH', 'vizra-adk/generated'),
+        ],
+
+        /**
+         * Image generation configuration.
+         *
+         * Supported providers: openai (DALL-E), google (Imagen)
+         * OpenAI models: dall-e-2, dall-e-3, gpt-image-1
+         * Google models: gemini-2.0-flash-preview-image-generation, imagen-3, imagen-4
+         */
+        'image' => [
+            'provider' => env('VIZRA_ADK_IMAGE_PROVIDER', 'openai'),
+            'model' => env('VIZRA_ADK_IMAGE_MODEL', 'dall-e-3'),
+            'default_size' => env('VIZRA_ADK_IMAGE_SIZE', '1024x1024'),
+            'default_quality' => env('VIZRA_ADK_IMAGE_QUALITY', 'standard'), // standard, hd
+            'default_style' => env('VIZRA_ADK_IMAGE_STYLE', 'vivid'), // vivid, natural
+            'response_format' => env('VIZRA_ADK_IMAGE_FORMAT', 'url'), // url, b64_json
+        ],
+
+        /**
+         * Audio/TTS (Text-to-Speech) generation configuration.
+         *
+         * Supported providers: openai
+         * OpenAI models: tts-1, tts-1-hd, gpt-4o-mini-tts
+         * Voices: alloy, echo, fable, onyx, nova, shimmer
+         */
+        'audio' => [
+            'provider' => env('VIZRA_ADK_AUDIO_PROVIDER', 'openai'),
+            'model' => env('VIZRA_ADK_AUDIO_MODEL', 'tts-1'),
+            'default_voice' => env('VIZRA_ADK_AUDIO_VOICE', 'alloy'),
+            'default_format' => env('VIZRA_ADK_AUDIO_FORMAT', 'mp3'), // mp3, wav, opus, aac, flac
+            'default_speed' => env('VIZRA_ADK_AUDIO_SPEED', 1.0), // 0.25 to 4.0
+        ],
+
+        /**
+         * Transcription/STT (Speech-to-Text) configuration.
+         *
+         * Supported providers: openai
+         * OpenAI models: whisper-1
+         */
+        'transcription' => [
+            'provider' => env('VIZRA_ADK_TRANSCRIPTION_PROVIDER', 'openai'),
+            'model' => env('VIZRA_ADK_TRANSCRIPTION_MODEL', 'whisper-1'),
+        ],
+    ],
 ];
