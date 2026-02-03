@@ -1,0 +1,673 @@
+---
+title: "Tools"
+description: "Supercharge your agents with powerful capabilities. Tools let your AI agents interact with the real world - from databases to APIs to custom business logic."
+icon: "wrench"
+---
+
+## What Makes Tools Awesome?
+
+Think of tools as your agent's superpowers! While agents are great at conversation, tools let them actually **do things** - like looking up orders, sending emails, or integrating with your favorite APIs. It's like giving your AI a Swiss Army knife!
+
+## Understanding Tools
+
+Here's what makes Vizra tools special:
+
+<CardGroup cols={2}>
+  <Card title="Simple PHP Classes" icon="cube">
+    Just implement the `ToolInterface` and you're ready to roll!
+  </Card>
+  <Card title="Self-Describing" icon="robot">
+    JSON Schema definitions help LLMs understand exactly how to use your tools
+  </Card>
+  <Card title="Auto-Integration" icon="bolt">
+    Prism automatically connects your tools to the LLM's function calling
+  </Card>
+  <Card title="Context-Aware" icon="brain">
+    Access the full `AgentContext` for stateful operations
+  </Card>
+</CardGroup>
+
+## Creating Your First Tool
+
+<Tip>
+**Quick Start with Artisan** - The easiest way to create a tool? Let Artisan do the heavy lifting!
+</Tip>
+
+```bash Terminal
+php artisan vizra:make:tool OrderLookupTool
+```
+
+This creates a fully-functional tool template in `app/Tools/` ready for your custom logic!
+
+### Tool Structure
+
+Every tool follows a simple pattern - implement the `ToolInterface` and define two key methods:
+
+```php app/Tools/OrderLookupTool.php
+<?php
+
+namespace App\Tools;
+
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
+
+class OrderLookupTool implements ToolInterface
+{
+    public function definition(): array
+    {
+        return [
+            'name' => 'order_lookup',
+            'description' => 'Look up order information by order ID',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'order_id' => [
+                        'type' => 'string',
+                        'description' => 'The order ID to look up',
+                    ],
+                ],
+                'required' => ['order_id'],
+            ],
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
+    {
+        $orderId = $arguments['order_id'] ?? null;
+
+        if (!$orderId) {
+            return json_encode([
+                'status' => 'error',
+                'message' => 'Order ID is required',
+            ]);
+        }
+
+        // Look up the order in your database
+        $order = Order::find($orderId);
+
+        if (!$order) {
+            return json_encode([
+                'status' => 'error',
+                'message' => "Order {$orderId} not found",
+            ]);
+        }
+
+        // Store this interaction in memory
+        $memory->addFact("Recent order lookup: #{$orderId}", 1.0);
+        $memory->addLearning("User inquired about order #{$orderId}");
+
+        return json_encode([
+            'status' => 'success',
+            'order_id' => $order->id,
+            'status' => $order->status,
+            'total' => $order->total,
+            'created_at' => $order->created_at->toDateTimeString(),
+        ]);
+    }
+}
+```
+
+## Tool Interface Methods
+
+### The definition() Method
+
+This is where you tell the LLM exactly what your tool does and what parameters it needs. Think of it as your tool's instruction manual!
+
+```php Tool Definition Example
+public function definition(): array
+{
+    return [
+        'name' => 'weather_tool',
+        'description' => 'Get current weather information',
+        'parameters' => [
+            'type' => 'object',
+            'properties' => [
+                'location' => [
+                    'type' => 'string',
+                    'description' => 'The city and state, e.g. San Francisco, CA',
+                ],
+                'units' => [
+                    'type' => 'string',
+                    'enum' => ['celsius', 'fahrenheit'],
+                    'description' => 'Temperature units',
+                ],
+            ],
+            'required' => ['location'],
+        ],
+    ];
+}
+```
+
+<CardGroup cols={3}>
+  <Card title="Clear Names" icon="check">
+    Use descriptive names that tell the LLM exactly what your tool does
+  </Card>
+  <Card title="Good Descriptions" icon="pencil">
+    Help the LLM understand when and how to use your tool
+  </Card>
+  <Card title="Type Safety" icon="bullseye">
+    Define parameter types to ensure correct usage
+  </Card>
+</CardGroup>
+
+### The execute() Method
+
+This is where the magic happens! Your tool receives arguments from the LLM and the current context, then returns results as JSON.
+
+```php Tool Execution Example
+public function execute(array $arguments, AgentContext $context): string
+{
+    // Access arguments
+    $location = $arguments['location'] ?? null;
+
+    // Access context
+    $sessionId = $context->getSessionId();
+    $previousValue = $context->getState('some_key');
+
+    // Implement tool logic
+    $result = [
+        'status' => 'success',
+        'temperature' => 25,
+        'condition' => 'sunny',
+        'location' => $location,
+    ];
+
+    // Must return JSON string
+    return json_encode($result);
+}
+```
+
+<Warning>
+**Remember:** Always return a JSON-encoded string! The LLM expects structured data it can understand.
+</Warning>
+
+## Working with AgentContext
+
+The `AgentContext` is your tool's memory bank! It lets you access session info, store state between calls, and maintain context across conversations.
+
+```php Using AgentContext
+public function execute(array $arguments, AgentContext $context): string
+{
+    // Get session ID
+    $sessionId = $context->getSessionId();
+
+    // Access state
+    $previousOrder = $context->getState('last_order_id');
+
+    // Store state for future use
+    $context->setState('last_order_id', $orderId);
+
+    // Access user information if available
+    $userId = $context->getState('user_id');
+    $userEmail = $context->getState('user_email');
+
+    // Your tool logic here...
+
+    return json_encode(['status' => 'success']);
+}
+```
+
+<CardGroup cols={2}>
+  <Card title="Reading State" icon="pencil">
+    Use `getState()` to retrieve previously stored values
+  </Card>
+  <Card title="Writing State" icon="floppy-disk">
+    Use `setState()` to persist data for future tool calls
+  </Card>
+</CardGroup>
+
+## Connecting Tools to Agents
+
+Ready to give your agent superpowers? Just add your tools to the agent's `$tools` array and watch the magic happen!
+
+```php app/Agents/CustomerSupportAgent.php
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    /** @var array<class-string<ToolInterface>> */
+    protected array $tools = [
+        OrderLookupTool::class,
+        RefundProcessorTool::class,
+        TicketCreatorTool::class,
+        EmailSenderTool::class,
+    ];
+}
+```
+
+<Tip>
+Tools are automatically instantiated and made available to the LLM. Just list them and Vizra handles the rest!
+</Tip>
+
+## Advanced Tool Features
+
+Let's explore some powerful patterns for building sophisticated tools!
+
+### Database Queries
+
+Connect your tools directly to your database for powerful data operations:
+
+```php Database Search Tool
+class CustomerSearchTool implements ToolInterface
+{
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        $customers = Customer::query()
+            ->where('name', 'like', "%{$arguments['query']}%")
+            ->orWhere('email', 'like', "%{$arguments['query']}%")
+            ->limit(10)
+            ->get();
+
+        return json_encode([
+            'status' => 'success',
+            'customers' => $customers->map(fn($c) => [
+                'id' => $c->id,
+                'name' => $c->name,
+                'email' => $c->email,
+            ])->toArray(),
+        ]);
+    }
+}
+```
+
+### API Integration
+
+Connect to external APIs and bring real-world data into your conversations:
+
+```php External API Tool
+class WeatherApiTool implements ToolInterface
+{
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        try {
+            $response = Http::get('https://api.weather.com/v1/current', [
+                'location' => $arguments['location'],
+                'api_key' => config('services.weather.key'),
+            ]);
+
+            return json_encode([
+                'status' => 'success',
+                'weather' => $response->json(),
+            ]);
+        } catch (Exception $e) {
+            return json_encode([
+                'status' => 'error',
+                'message' => 'Failed to fetch weather: ' . $e->getMessage(),
+            ]);
+        }
+    }
+}
+```
+
+### File Operations
+
+Handle file uploads, downloads, and processing with ease:
+
+```php File Handler Tool
+class FileUploaderTool implements ToolInterface
+{
+    public function definition(): array
+    {
+        return [
+            'name' => 'file_uploader',
+            'description' => 'Upload a file from base64 content',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'file_content' => [
+                        'type' => 'string',
+                        'description' => 'Base64 encoded file content',
+                    ],
+                    'filename' => [
+                        'type' => 'string',
+                        'description' => 'Name for the file',
+                    ],
+                ],
+                'required' => ['file_content', 'filename'],
+            ],
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        $content = base64_decode($arguments['file_content']);
+        $path = Storage::put('uploads/' . $arguments['filename'], $content);
+
+        return json_encode([
+            'status' => 'success',
+            'file_path' => $path,
+            'size' => strlen($content),
+        ]);
+    }
+}
+```
+
+## Error Handling & Validation
+
+Build bulletproof tools with proper validation and error handling! Your agents will thank you.
+
+### Input Validation
+
+Always validate your inputs - it's the first line of defense against errors:
+
+```php Input Validation Example
+public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
+{
+    // Validate inputs
+    $validator = Validator::make($arguments, [
+        'email' => 'required|email',
+        'amount' => 'required|numeric|min:0|max:10000',
+    ]);
+
+    if ($validator->fails()) {
+        return json_encode([
+            'status' => 'error',
+            'message' => 'Invalid parameters: ' . $validator->errors()->first(),
+        ]);
+    }
+
+    // Store validated information
+    $memory->addFact("User email: {$arguments['email']}", 1.0);
+    $memory->addLearning("User requested transaction of amount: {$arguments['amount']}");
+
+    // Proceed with validated data
+    return json_encode(['status' => 'success']);
+}
+```
+
+### User Context Access
+
+Check for user authentication and access user-specific data safely:
+
+```php User Context Validation
+public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
+{
+    // Check if user context is available
+    $userId = $context->getState('user_id');
+    if (!$userId) {
+        return json_encode([
+            'status' => 'error',
+            'message' => 'User authentication required',
+        ]);
+    }
+
+    // Get user data from context
+    $userData = $context->getState('user_data');
+    $userEmail = $context->getState('user_email');
+
+    // Store user-specific information
+    if ($userEmail && !$memory->getFacts()->contains('content', "User email: {$userEmail}")) {
+        $memory->addFact("User email: {$userEmail}", 1.0);
+    }
+
+    // Process with user context
+    return json_encode(['status' => 'success']);
+}
+```
+
+## Tools with Memory Access
+
+<Tip>
+**Every Tool Gets Memory Access!** - All tools now receive the agent's memory as a third parameter. Build personalized experiences by reading and writing to memory!
+</Tip>
+
+The `execute` method now includes `AgentMemory`:
+
+```php app/Tools/UserProfileTool.php
+<?php
+
+namespace App\Tools;
+
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
+
+class UserProfileTool implements ToolInterface
+{
+    public function definition(): array
+    {
+        return [
+            'name' => 'manage_user_profile',
+            'description' => 'Update or retrieve user profile information from memory',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'action' => [
+                        'type' => 'string',
+                        'description' => 'Action to perform',
+                        'enum' => ['update_fact', 'add_preference', 'get_profile']
+                    ],
+                    'key' => ['type' => 'string'],
+                    'value' => ['type' => 'string']
+                ],
+                'required' => ['action']
+            ]
+        ];
+    }
+
+    public function execute(
+        array $arguments,
+        AgentContext $context,
+        AgentMemory $memory  // Now included in all tools!
+    ): string {
+        switch ($arguments['action']) {
+            case 'update_fact':
+                $memory->addFact(
+                    "{$arguments['key']}: {$arguments['value']}",
+                    1.0
+                );
+                return json_encode(['success' => true]);
+
+            case 'add_preference':
+                $memory->addPreference(
+                    $arguments['value'],
+                    $arguments['key'] ?? 'general'
+                );
+                return json_encode(['success' => true]);
+
+            case 'get_profile':
+                return json_encode([
+                    'summary' => $memory->getSummary(),
+                    'facts' => $memory->getFacts()->pluck('content'),
+                    'preferences' => $memory->getPreferences()
+                ]);
+        }
+    }
+}
+```
+
+<CardGroup cols={2}>
+  <Card title="Memory Methods Available" icon="wrench">
+    - `addFact()` - Store immutable facts
+    - `addLearning()` - Track insights
+    - `addPreference()` - Store preferences
+    - `updateSummary()` - Update user profile
+  </Card>
+  <Card title="Use Cases" icon="bullseye">
+    - Update user preferences from form submissions
+    - Store discovered facts during conversations
+    - Build comprehensive user profiles over time
+    - Sync memory across different tools
+  </Card>
+</CardGroup>
+
+<Info>
+**Pro Tip: Simple Memory Usage** - Every tool automatically receives the agent's memory! Use it to store learnings, facts, and preferences. The memory persists across sessions, enabling truly personalized experiences.
+</Info>
+
+## Testing Your Tools
+
+Great tools deserve great tests! Here's how to ensure your tools work perfectly every time:
+
+```php tests/Tools/OrderLookupToolTest.php
+class OrderLookupToolTest extends TestCase
+{
+    public function test_finds_existing_order()
+    {
+        $order = Order::factory()->create();
+        $tool = new OrderLookupTool();
+        $context = new AgentContext('test-session');
+
+        $result = $tool->execute(
+            ['order_id' => $order->id],
+            $context
+        );
+
+        $data = json_decode($result, true);
+        $this->assertEquals('success', $data['status']);
+        $this->assertEquals($order->id, $data['order_id']);
+    }
+
+    public function test_handles_missing_order()
+    {
+        $tool = new OrderLookupTool();
+        $context = new AgentContext('test-session');
+
+        $result = $tool->execute(
+            ['order_id' => 'invalid'],
+            $context
+        );
+
+        $data = json_decode($result, true);
+        $this->assertEquals('error', $data['status']);
+        $this->assertStringContainsString('not found', $data['message']);
+    }
+}
+```
+
+<Tip>
+**Testing tip:** Test both success paths and error conditions. Your future self will appreciate it!
+</Tip>
+
+## Complete Example: Refund Processor
+
+Let's put it all together with a real-world example that shows validation, error handling, and business logic!
+
+```php app/Tools/RefundProcessorTool.php
+<?php
+
+namespace App\Tools;
+
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
+use App\Models\Order;
+use App\Services\RefundService;
+use Illuminate\Support\Facades\Validator;
+
+class RefundProcessorTool implements ToolInterface
+{
+    public function __construct(
+        protected RefundService $refunds
+    ) {}
+
+    public function definition(): array
+    {
+        return [
+            'name' => 'process_refund',
+            'description' => 'Process a refund for an order',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'order_id' => [
+                        'type' => 'string',
+                        'description' => 'The order ID to refund',
+                    ],
+                    'amount' => [
+                        'type' => 'number',
+                        'description' => 'Refund amount (optional for partial refunds)',
+                        'minimum' => 0,
+                    ],
+                    'reason' => [
+                        'type' => 'string',
+                        'description' => 'Reason for refund',
+                    ],
+                ],
+                'required' => ['order_id', 'reason'],
+            ],
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        // Validate inputs
+        $validator = Validator::make($arguments, [
+            'order_id' => 'required|string',
+            'amount' => 'nullable|numeric|min:0',
+            'reason' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return json_encode([
+                'status' => 'error',
+                'message' => 'Validation failed: ' . $validator->errors()->first(),
+            ]);
+        }
+
+        // Check user authorization
+        $userId = $context->getState('user_id');
+        if (!$userId) {
+            return json_encode([
+                'status' => 'error',
+                'message' => 'User authentication required',
+            ]);
+        }
+
+        try {
+            $order = Order::findOrFail($arguments['order_id']);
+
+            // Verify order belongs to user
+            if ($order->user_id !== $userId) {
+                return json_encode([
+                    'status' => 'error',
+                    'message' => 'Order not found',
+                ]);
+            }
+
+            $refund = $this->refunds->process(
+                $order,
+                $arguments['amount'] ?? $order->total,
+                $arguments['reason']
+            );
+
+            return json_encode([
+                'status' => 'success',
+                'refund_id' => $refund->id,
+                'amount' => $refund->amount,
+                'refund_status' => $refund->status,
+                'message' => 'Refund processed successfully',
+            ]);
+
+        } catch (\Exception $e) {
+            return json_encode([
+                'status' => 'error',
+                'message' => 'Failed to process refund: ' . $e->getMessage(),
+            ]);
+        }
+    }
+}
+```
+
+## Tool Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Do's" icon="check">
+    - **Single Responsibility** - Each tool should do one thing and do it well
+    - **Input Validation** - Always validate parameters before processing
+    - **Clear Error Messages** - Help the LLM understand what went wrong
+    - **Descriptive Naming** - Use names that clearly describe the tool's purpose
+  </Card>
+  <Card title="More Do's" icon="check">
+    - **Error Handling** - Gracefully handle exceptions and edge cases
+    - **Rate Limiting** - Protect expensive operations from abuse
+    - **Thorough Testing** - Test success paths and error conditions
+    - **JSON Responses** - Always return properly formatted JSON strings
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Sessions & Memory" icon="brain" href="/concepts/sessions-memory">
+    Learn about context management and persistent state
+  </Card>
+  <Card title="Tool API Reference" icon="book" href="/api/tool-class">
+    Detailed tool class documentation and methods
+  </Card>
+</CardGroup>

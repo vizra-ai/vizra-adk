@@ -1,0 +1,162 @@
+---
+title: "Web Dashboard"
+description: "Your command center for AI agents. The Vizra ADK comes with a beautiful web dashboard that lets you monitor, test, and manage your agents - all from your browser."
+icon: "desktop"
+---
+
+## What's the Web Dashboard?
+
+The web dashboard is a **Livewire-powered interface** that ships with the Vizra ADK package. It provides real-time monitoring, interactive testing, and management capabilities for your agents - all through your browser!
+
+<CardGroup cols={2}>
+  <Card title="Real-time Monitoring" icon="chart-line">
+    Live agent stats, system health, and activity tracking
+  </Card>
+  <Card title="Interactive Testing" icon="comments">
+    Chat with your agents directly from the browser
+  </Card>
+  <Card title="Evaluation Runner" icon="flask">
+    Run and visualize evaluation results with ease
+  </Card>
+  <Card title="Quick Commands" icon="rocket">
+    Copy-ready artisan commands for rapid development
+  </Card>
+</CardGroup>
+
+## Accessing the Dashboard
+
+By default, the web dashboard is accessible at the `/vizra` route of your Laravel application.
+
+The dashboard URL will be displayed after running the installation command.
+
+## Dashboard Components
+
+### Main Dashboard
+
+The main dashboard provides an overview of your Vizra ADK installation:
+
+<Frame>
+  <img src="/img/screenshots/web-dashboard.png" alt="Web Dashboard" />
+</Frame>
+
+- **Package Information**: Current version and configuration status
+- **Agent Registry**: Live display of all registered agents
+- **Quick Commands**: Copy-ready artisan commands for common tasks
+- **System Status**: Health indicators and configuration checks
+
+### Chat Interface
+
+The chat interface allows interactive testing of your agents:
+
+<Frame>
+  <img src="/img/screenshots/web-chat.png" alt="Chat Interface" />
+</Frame>
+
+**Features include:**
+- Real-time streaming responses
+- Session management
+- Message history
+- Agent selection dropdown
+
+### Evaluation Runner
+
+The evaluation runner provides a visual interface for running and monitoring evaluations:
+
+<Frame>
+  <img src="/img/screenshots/web-evals.png" alt="Evaluation Runner" />
+</Frame>
+
+## Configuration
+
+The web dashboard can be configured in your `config/vizra.php` file:
+
+```php config/vizra.php
+'routes' => [
+    'web' => [
+        'enabled' => env('VIZRA_WEB_ENABLED', true),
+        'prefix' => 'vizra',
+        'middleware' => ['web'],
+    ],
+],
+```
+
+### Disabling the Dashboard
+
+To disable the web dashboard in production:
+
+```bash .env
+# Disable web dashboard
+VIZRA_WEB_ENABLED=false
+```
+
+### Custom Route Prefix
+
+To change the dashboard URL prefix:
+
+```php config/vizra.php
+'routes' => [
+    'web' => [
+        'prefix' => 'ai-dashboard', // Now accessible at /ai-dashboard
+    ],
+],
+```
+
+### Adding Authentication
+
+To protect the dashboard with authentication:
+
+```php config/vizra.php
+'routes' => [
+    'web' => [
+        'middleware' => ['web', 'auth'], // Requires authentication
+    ],
+],
+```
+
+## Dashboard Routes
+
+The web dashboard registers the following routes:
+
+| Route | Description |
+|-------|-------------|
+| `/vizra` | Main dashboard overview |
+| `/vizra/chat` | Interactive agent testing |
+| `/vizra/eval` | Evaluation runner interface |
+
+## Dashboard Command
+
+The `vizra:dashboard` command provides quick access:
+
+```bash Terminal
+# Display dashboard URL
+php artisan vizra:dashboard
+
+# Open dashboard in browser
+php artisan vizra:dashboard --open
+```
+
+## Security Considerations
+
+<Warning>
+**Important Security Notes**
+- Always protect the dashboard with authentication in production
+- Consider IP whitelisting for sensitive environments
+- Disable the dashboard entirely if not needed (`VIZRA_WEB_ENABLED=false`)
+- Use HTTPS in production environments
+</Warning>
+
+## Ready to Explore?
+
+Now that you understand the web dashboard, dive deeper into:
+
+<CardGroup cols={3}>
+  <Card title="Learn about Agents" icon="robot" href="/concepts/agents">
+    Build your first AI teammates
+  </Card>
+  <Card title="Explore Commands" icon="bolt" href="/api/artisan-commands">
+    Master the CLI tools
+  </Card>
+  <Card title="Master Evaluations" icon="flask" href="/concepts/evaluations">
+    Test your agents like a pro
+  </Card>
+</CardGroup>

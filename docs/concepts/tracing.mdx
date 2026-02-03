@@ -1,0 +1,418 @@
+---
+title: "Tracing"
+description: "Get X-ray vision into your agents. See exactly what's happening inside with powerful debugging and performance insights."
+icon: "magnifying-glass"
+---
+
+<Info>
+**What is Tracing?** - Think of tracing as having superpowers that let you see through your agent's execution! Every conversation, every tool call, every decision - it's all captured in beautiful detail. No more guessing what went wrong or why something is slow!
+</Info>
+
+## What Gets Captured?
+
+<CardGroup cols={3}>
+  <Card title="Execution Timeline" icon="clock">
+    Complete timeline with nested spans showing exactly when each operation happened
+  </Card>
+  <Card title="LLM Interactions" icon="robot">
+    Every request and response, including prompts, completions, and model details
+  </Card>
+  <Card title="Tool Executions" icon="wrench">
+    All tool calls with their parameters, results, and execution time
+  </Card>
+  <Card title="Memory Operations" icon="brain">
+    Vector searches, context retrieval, and memory storage operations
+  </Card>
+  <Card title="Token Usage" icon="coins">
+    Detailed token counts and costs for every LLM interaction
+  </Card>
+  <Card title="Performance Metrics" icon="bolt">
+    Bottlenecks, slow operations, and optimization opportunities
+  </Card>
+</CardGroup>
+
+## Viewing Your Traces
+
+### Web Interface - The Visual Experience!
+
+Fire up your browser and navigate to `http://your-app.test/vizra/traces` for the full visual experience!
+
+<CardGroup cols={2}>
+  <Card title="Interactive Timeline" icon="chart-bar">
+    Zoom, pan, and explore your execution flow visually
+  </Card>
+  <Card title="Span Details" icon="magnifying-glass">
+    Click any span to see inputs, outputs, and metadata
+  </Card>
+  <Card title="Waterfall Charts" icon="droplet">
+    Visualize performance bottlenecks at a glance
+  </Card>
+  <Card title="Token Analytics" icon="chart-line">
+    See exactly where your tokens are being spent
+  </Card>
+</CardGroup>
+
+### CLI Commands - For the Terminal Warriors!
+
+Prefer the command line? We've got you covered with powerful CLI tools!
+
+<Tip>
+**Pro Tip:** Every agent interaction creates a unique session ID (like `abc123`). Use this session ID to view all the execution traces from that conversation! You can find the session ID in your agent responses or logs.
+</Tip>
+
+```bash Terminal
+# View traces for a session
+php artisan vizra:trace {session_id}
+
+# Example: View all traces for session abc123
+php artisan vizra:trace abc123
+
+# View trace with additional options
+php artisan vizra:trace abc123 --format=tree --show-input --show-output
+
+# View a specific trace ID instead of all session traces
+php artisan vizra:trace any-session --trace-id=specific-trace-id
+
+# Clean up old traces
+php artisan vizra:trace:cleanup --days=30
+```
+
+## Understanding Trace Structure
+
+Traces are organized in a beautiful tree structure, just like a family tree! Each operation has parent and child relationships that show you exactly how your agent thinks.
+
+```text Typical Trace Structure
+Agent Execution (root span)
+├── Session Initialization
+├── Memory Retrieval
+│   ├── Vector Search
+│   └── Context Building
+├── LLM Request
+│   ├── Prompt Construction
+│   ├── API Call
+│   └── Response Processing
+├── Tool Execution
+│   ├── Tool: order_lookup
+│   └── Tool: send_email
+└── Memory Storage
+```
+
+| Span Type | Description |
+|-----------|-------------|
+| Root Span | The main execution |
+| Parent Spans | Major operations |
+| Child Spans | Detailed steps |
+
+## Programmatic Tracing
+
+### Accessing Traces in Code
+
+Want to build your own debugging tools? Access trace data directly in your code! It's like having a debugger API at your fingertips.
+
+```php TraceAccess.php
+use Vizra\ADK\Tracing\TraceManager;
+
+// Get trace for a session
+$trace = TraceManager::forSession($sessionId);
+
+// Loop through all spans
+foreach ($trace->spans as $span) {
+    echo $span->name . ': ' . $span->duration . "ms\n";
+}
+
+// Get performance metrics
+$metrics = $trace->getMetrics();
+echo "Total Duration: " . $metrics['total_duration'] . "ms\n";
+echo "Token Usage: " . $metrics['total_tokens'] . "\n";
+```
+
+### Creating Custom Spans
+
+Add your own spans to trace custom operations! Perfect for tracking database queries, API calls, or any complex logic.
+
+```php CustomTool.php
+use Vizra\ADK\Tracing\Tracer;
+
+class CustomTool extends BaseTool
+{
+    public function execute(array $parameters): ToolResult
+    {
+        return Tracer::span('custom_operation', function() use ($parameters) {
+            // Add span attributes
+            Tracer::addAttribute('operation.type', 'database');
+            Tracer::addAttribute('query.complexity', 'high');
+
+            // Your operation
+            $result = $this->performOperation($parameters);
+
+            // Add result to span
+            Tracer::addEvent('operation_completed', [
+                'records_processed' => count($result),
+            ]);
+
+            return ToolResult::success($result);
+        });
+    }
+}
+```
+
+<Tip>
+The `Tracer::span()` method automatically handles timing, error capturing, and span hierarchy. Just wrap your code and let it do the magic!
+</Tip>
+
+## Analyzing Your Traces
+
+### Performance Analysis
+
+Find those pesky bottlenecks and optimize like a pro! Let's hunt down slow operations and expensive API calls.
+
+```php PerformanceAnalysis.php
+// Find slow operations
+$slowSpans = $trace->getSlowSpans(1000); // Spans over 1 second
+
+foreach ($slowSpans as $span) {
+    echo "Slow operation: {$span->name} took {$span->duration}ms\n";
+}
+
+// Analyze token usage
+$tokenAnalysis = $trace->analyzeTokenUsage();
+echo "Most expensive span: " . $tokenAnalysis['most_expensive']->name;
+echo " used " . $tokenAnalysis['most_expensive']->tokens . " tokens\n";
+```
+
+<CardGroup cols={2}>
+  <Card title="Quick Wins" icon="bullseye">
+    Look for operations over 500ms - they're usually the easiest to optimize!
+  </Card>
+  <Card title="Token Tip" icon="lightbulb">
+    High token usage often means verbose prompts - try to be more concise!
+  </Card>
+</CardGroup>
+
+### Error Tracking
+
+Errors happen to the best of us! Track them down and squash those bugs with precision.
+
+```php ErrorTracking.php
+// Find failed spans
+$errors = $trace->getErrors();
+
+foreach ($errors as $error) {
+    echo "Error in {$error->span->name}: {$error->message}\n";
+    echo "Stack trace:\n{$error->stackTrace}\n";
+}
+```
+
+**Error Recovery Tips:**
+- Check error patterns - repeated errors often have the same root cause
+- Look at parent spans - context matters!
+- Review input parameters - bad data in = errors out
+- Monitor error rates over time to catch regressions early
+
+## Configuring Tracing
+
+### Configuration Options
+
+Fine-tune your tracing setup to match your needs! Control what gets traced, how long to keep data, and more.
+
+```php config/vizra-adk.php
+'tracing' => [
+    'enabled' => env('VIZRA_ADK_TRACING_ENABLED', true),
+    'table' => 'agent_trace_spans',
+    'cleanup_days' => env('VIZRA_ADK_TRACING_CLEANUP_DAYS', 30),
+];
+```
+
+### Environment Variables
+
+Set these in your `.env` file to control tracing behavior across environments!
+
+```bash .env
+# Enable/disable tracing
+VIZRA_ADK_TRACING_ENABLED=true
+
+# Days to keep trace data before cleanup
+VIZRA_ADK_TRACING_CLEANUP_DAYS=30
+```
+
+<CardGroup cols={2}>
+  <Card title="Development Tip" icon="lightbulb">
+    Always enable tracing in development for maximum visibility!
+  </Card>
+  <Card title="Production Tip" icon="building">
+    Consider sampling in production to balance insights with performance.
+  </Card>
+</CardGroup>
+
+### Data Retention & Cleanup
+
+Keep your database lean and mean! Set up automatic cleanup to remove old traces.
+
+```bash Terminal
+# Clean up old traces (uses config value, default 30 days)
+php artisan vizra:trace:cleanup
+
+# Keep last 30 days of traces (delete anything older)
+php artisan vizra:trace:cleanup --days=30
+
+# Keep last week of traces (delete anything older)
+php artisan vizra:trace:cleanup --days=7
+
+# Keep only today's traces (delete anything from yesterday or earlier)
+php artisan vizra:trace:cleanup --days=1
+
+# Delete ALL traces (use with caution!)
+php artisan vizra:trace:cleanup --days=0
+
+# Dry run to see what would be deleted
+php artisan vizra:trace:cleanup --days=7 --dry-run
+
+# Skip confirmation prompt
+php artisan vizra:trace:cleanup --days=7 --force
+```
+
+<Tip>
+**Pro Tip: Schedule It!** - Add this to your Laravel scheduler for automatic cleanup:
+
+```php app/Console/Kernel.php
+$schedule->command('vizra:trace:cleanup')->daily();
+```
+</Tip>
+
+## How Tracing Works Behind the Scenes
+
+### Automatic Span Creation
+
+The ADK works its magic by automatically creating spans for key operations. No manual instrumentation needed!
+
+<CardGroup cols={2}>
+  <Card title="Agent Execution" icon="bullseye">
+    Root span created when agent runs
+
+    `BaseLlmAgent::handle()`
+  </Card>
+  <Card title="LLM Calls" icon="robot">
+    Every AI interaction tracked
+
+    `BaseLlmAgent::callLlm()`
+  </Card>
+  <Card title="Tool Calls" icon="wrench">
+    Tool execution monitoring
+
+    `BaseLlmAgent::executeTool()`
+  </Card>
+  <Card title="Sub-agent Calls" icon="link">
+    Delegation tracking
+
+    When delegating to sub-agents
+  </Card>
+</CardGroup>
+
+### Manual Span Creation
+
+Need more control? Create your own spans for custom operations! Perfect for tracking specific business logic.
+
+```php CustomOperation.php
+use Vizra\VizraADK\Services\Tracer;
+
+class CustomOperation
+{
+    public function process(Tracer $tracer)
+    {
+        // Start a custom span
+        $spanId = $tracer->startSpan(
+            type: 'custom_operation',
+            name: 'Process Data',
+            input: ['records' => 100],
+            metadata: ['batch_id' => 'abc123']
+        );
+
+        try {
+            // Your operation
+            $result = $this->doWork();
+
+            // End span with success
+            $tracer->endSpan($spanId, ['processed' => 100]);
+
+        } catch (\Throwable $e) {
+            // Mark span as failed
+            $tracer->failSpan($spanId, $e);
+            throw $e;
+        }
+    }
+}
+```
+
+**Span Best Practices:**
+- Keep span names descriptive and consistent
+- Add relevant metadata for better filtering
+- Always handle errors to mark spans as failed
+- Use nested spans for complex operations
+
+## Debugging Like a Detective
+
+### Common Issues & Solutions
+
+Let's solve those mysteries! Here are the most common issues and how to track them down.
+
+<CardGroup cols={2}>
+  <Card title="Slow LLM Calls" icon="snail">
+    Check prompt size and model selection
+
+    **Tip:** Smaller prompts = faster responses!
+  </Card>
+  <Card title="Failed Tool Calls" icon="xmark">
+    Review parameters and error messages
+
+    **Tip:** Check for missing required params!
+  </Card>
+  <Card title="High Token Usage" icon="coins">
+    Optimize prompts and context
+
+    **Tip:** Use system prompts wisely!
+  </Card>
+  <Card title="Memory Misses" icon="brain">
+    Verify vector search configuration
+
+    **Tip:** Check embedding model consistency!
+  </Card>
+  <Card title="Timeout Errors" icon="clock">
+    Identify bottlenecks in execution
+
+    **Tip:** Look for sequential operations!
+  </Card>
+  <Card title="Retry Loops" icon="rotate">
+    Check for infinite retry patterns
+
+    **Tip:** Add exponential backoff!
+  </Card>
+</CardGroup>
+
+## Tracing Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Development" icon="rocket">
+    - Enable tracing for all requests - visibility is king!
+    - Add custom spans for business logic
+    - Use trace viewer frequently during development
+  </Card>
+  <Card title="Production" icon="building">
+    - Use sampling to control costs and performance
+    - Set up alerts for anomalies and errors
+    - Regularly clean up old traces
+  </Card>
+</CardGroup>
+
+**Golden Rules:**
+1. **Review traces regularly** - Make it a habit!
+2. **Export important traces** - Keep them for post-mortems
+3. **Share traces with your team** - Collective debugging is powerful
+4. **Learn from patterns** - Similar issues often have similar traces
+
+---
+
+## You're Now a Tracing Expert!
+
+With the power of tracing, you can see through your agents like never before. No more mysteries, no more guessing - just pure visibility and control!
+
+Remember: Great debugging starts with great tracing. Use it liberally, learn from it constantly, and let it guide you to building amazing AI agents!

@@ -1,0 +1,149 @@
+---
+title: "Requirements Checklist"
+description: "Let's make sure your environment is ready for the exciting journey ahead!"
+icon: "list-check"
+---
+
+<Info>
+Getting your environment ready is like preparing your workspace before starting a masterpiece! Let's check off these requirements together to ensure smooth sailing ahead.
+</Info>
+
+## System Requirements
+
+First things first! Let's make sure your system has the essentials. These are pretty standard for modern Laravel development.
+
+<AccordionGroup>
+  <Accordion title="PHP 8.2 or higher" icon="php">
+    We're using the latest PHP features to give you the best developer experience! Your agents will thank you for the performance boost.
+  </Accordion>
+  <Accordion title="Laravel 11.0 or 12.0" icon="laravel">
+    Built for the latest Laravel versions! We're always keeping up with Taylor's innovations to bring you cutting-edge features.
+  </Accordion>
+  <Accordion title="Composer 2.x" icon="box">
+    The package manager that makes installation a breeze! If you're still on v1, now's a great time to upgrade.
+  </Accordion>
+</AccordionGroup>
+
+## Database Requirements
+
+Your AI agents need a cozy home for their memories! Let's pick the perfect database for your setup.
+
+<CardGroup cols={2}>
+  <Card title="MySQL 5.7+ / 8.0+" icon="dolphin">
+    Our top pick for production! Fast, reliable, and battle-tested.
+
+    <span style={{color: '#3B82F6'}}>Recommended</span>
+  </Card>
+  <Card title="PostgreSQL 10+" icon="elephant">
+    Perfect for vector search with pgvector extension!
+
+    <span style={{color: '#06B6D4'}}>Great for RAG</span>
+  </Card>
+  <Card title="SQLite 3.8.8+" icon="feather">
+    Lightning-fast for local development and testing!
+
+    <span style={{color: '#10B981'}}>Dev Friendly</span>
+  </Card>
+  <Card title="SQL Server 2017+" icon="windows">
+    For teams already in the Microsoft ecosystem.
+
+    <span style={{color: '#8B5CF6'}}>Enterprise Ready</span>
+  </Card>
+</CardGroup>
+
+<Tip>
+SQLite is fantastic for getting started quickly! But when your agents start handling serious workloads or need vector memory features, consider graduating to MySQL or PostgreSQL. Think of it as moving from a studio apartment to a proper house!
+</Tip>
+
+## LLM Provider Requirements
+
+Time to choose the AI brains for your agents! You'll need at least one API key from these providers. Don't worry, you can always add more later!
+
+<CardGroup cols={3}>
+  <Card title="OpenAI" icon="circle" iconType="solid" color="#14B8A6">
+    The OG of AI models!
+    - GPT-4 Turbo
+    - GPT-4
+    - GPT-3.5 Turbo
+  </Card>
+  <Card title="Anthropic" icon="circle" iconType="solid" color="#F97316">
+    Claude's got personality!
+    - Claude 3 Opus
+    - Claude 3 Sonnet
+    - Claude 3 Haiku
+  </Card>
+  <Card title="Google" icon="circle" iconType="solid" color="#3B82F6">
+    Gemini shines bright!
+    - Gemini 1.5 Pro
+    - Gemini 1.5 Flash
+    - Gemini 1.0 Pro
+  </Card>
+</CardGroup>
+
+## Optional Power-Ups
+
+Want to supercharge your agents? These optional features will take them to the next level!
+
+### For Vector Memory & RAG
+
+Give your agents photographic memory with semantic search capabilities! Perfect for building knowledge-aware assistants.
+
+<Tabs>
+  <Tab title="Vector Search Engine">
+    | Engine | Description |
+    |--------|-------------|
+    | **Meilisearch 1.0+** | Lightning-fast and easy to set up! |
+    | **PostgreSQL + pgvector** | Keep everything in one database |
+  </Tab>
+  <Tab title="Embedding Providers">
+    - OpenAI Embeddings API
+    - Cohere Embed API
+    - Ollama (run locally!)
+  </Tab>
+</Tabs>
+
+### For Queue Processing
+
+Handle heavy workloads like a pro! Background jobs keep your agents responsive even under pressure.
+
+- **Redis 5.0+ (Recommended)** - The speed demon of queue drivers! Your agents will thank you.
+- **Process Managers** - Supervisor or Laravel Horizon to keep your workers running 24/7
+
+## PHP Extensions
+
+Last but not least! These PHP extensions are the building blocks your agents need. Good news: most of them come pre-installed!
+
+<CardGroup cols={4}>
+  <Card title="BCMath" icon="check" color="#10B981" />
+  <Card title="Ctype" icon="check" color="#10B981" />
+  <Card title="cURL" icon="check" color="#10B981" />
+  <Card title="DOM" icon="check" color="#10B981" />
+  <Card title="Fileinfo" icon="check" color="#10B981" />
+  <Card title="JSON" icon="check" color="#10B981" />
+  <Card title="Mbstring" icon="check" color="#10B981" />
+  <Card title="OpenSSL" icon="check" color="#10B981" />
+  <Card title="PCRE" icon="check" color="#10B981" />
+  <Card title="PDO" icon="check" color="#10B981" />
+  <Card title="Tokenizer" icon="check" color="#10B981" />
+  <Card title="XML" icon="check" color="#10B981" />
+</CardGroup>
+
+## Quick Environment Check
+
+Let's make sure everything's in place! Run this handy command to see your setup at a glance.
+
+```bash Terminal
+php artisan about
+```
+
+<Tip>
+This magical command will show you all the juicy details: Laravel version, PHP version, loaded extensions, and more! It's like a health check-up for your development environment.
+</Tip>
+
+## All Set? Let's Go!
+
+Your environment is ready, and your AI agents are waiting to be born! Time to dive into the exciting world of Vizra ADK.
+
+<Card title="Continue to Getting Started" icon="arrow-right" href="/installation/getting-started">
+  Install Vizra ADK and create your first AI agent
+</Card>

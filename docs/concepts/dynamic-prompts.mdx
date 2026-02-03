@@ -1,0 +1,513 @@
+---
+title: "Dynamic Prompts"
+description: "Master your AI's voice with dynamic prompts. Track improvements over time with versions, test different personalities with variants, and evolve your agents without touching code."
+icon: "bullseye"
+---
+
+## Why Dynamic Prompts Change Everything
+
+Remember changing code just to tweak your AI's personality? Those days are OVER! With dynamic prompts, you can experiment, test, and perfect your agent's responses without deploying a single line of code.
+
+<CardGroup cols={3}>
+  <Card title="A/B Testing" icon="flask">
+    Test different prompts side-by-side
+  </Card>
+  <Card title="Instant Rollback" icon="rotate-left">
+    Revert to any previous version
+  </Card>
+  <Card title="Track Performance" icon="chart-line">
+    See which prompts work best
+  </Card>
+</CardGroup>
+
+## Versions vs Variants: What's the Difference?
+
+There's an important distinction between **versions** and **variants**. Vizra ADK supports **BOTH** seamlessly!
+
+<CardGroup cols={2}>
+  <Card title="Versions" icon="chart-line">
+    Track **improvements over time**. Each version builds on the last, getting better and smarter.
+
+    ```
+    v1: "You are a helpful assistant"
+    v2: "You are a helpful assistant. Be concise."
+    v3: "You are a helpful assistant. Be concise and cite sources."
+    ```
+
+    Use for: A/B testing improvements, safe rollbacks, tracking prompt evolution
+  </Card>
+  <Card title="Variants" icon="masks-theater">
+    Different **styles for different contexts**. Same capability, different personality.
+
+    ```
+    formal: "I shall assist you with utmost professionalism"
+    casual: "Hey! Happy to help out"
+    technical: "Initiating support protocol. State your query."
+    ```
+
+    Use for: User preferences, context-specific responses, brand voices
+  </Card>
+</CardGroup>
+
+### The Magic: Use Both Together!
+
+**File Structure:**
+```
+resources/prompts/support_agent/
+├── v1/
+│   ├── default.md
+│   ├── formal.md
+│   └── casual.md
+└── v2/
+    ├── default.md
+    ├── formal.md
+    └── casual.md
+```
+
+**Usage Examples:**
+```php
+// Use latest version, default variant
+SupportAgent::run('Help')->go();
+
+// Use specific variant
+SupportAgent::run('Help')
+    ->withPromptVersion('formal')
+    ->go();
+
+// Use specific version & variant
+SupportAgent::run('Help')
+    ->withPromptVersion('v1/casual')
+    ->go();
+```
+
+## Getting Started with Dynamic Prompts
+
+When you create an agent using the `vizra:make:agent` command, it automatically creates a prompt blade file for you in `/resources/prompts/YourAgent`. This gives you instant access to dynamic prompts without any additional setup!
+
+<Tip>
+**Quick Example**
+
+```php
+// Use a variant
+MyAgent::run('Hello')
+    ->withPromptVersion('brief')
+    ->go();
+
+// Use a specific version/variant
+MyAgent::run('Hello')
+    ->withPromptVersion('v2/formal')
+    ->go();
+```
+</Tip>
+
+## Real-World Example: Customer Support Agent
+
+Let's see how versions and variants work together in practice. Imagine evolving a customer support agent over time while maintaining different tones for different customers.
+
+```php Usage in Production
+// A/B test new version with specific users
+$version = $user->isInTestGroup() ? 'v3' : 'v2';
+$variant = $user->preferredTone ?? 'default';
+
+$response = CustomerSupportAgent::run($query)
+    ->withPromptVersion("$version/$variant")
+    ->forUser($user)
+    ->go();
+
+// Or use smart routing based on context
+$promptVersion = match(true) {
+    $isAngryCustomer => 'v3/empathetic',
+    $isTechnicalIssue => 'v3/technical',
+    $isVipCustomer => 'v3/formal',
+    default => 'v3/default'
+};
+
+$response = CustomerSupportAgent::run($query)
+    ->withPromptVersion($promptVersion)
+    ->go();
+```
+
+## Blade Templates for Dynamic Prompts
+
+Use Laravel's Blade templating engine to create dynamic prompts that adapt based on user data, context, and session state.
+
+### How It Works
+
+Save your prompts with a `.blade.php` extension instead of `.md`:
+
+```blade resources/prompts/customer_support/default.blade.php
+You are {{ $agent['name'] }}, a helpful assistant.
+
+@if(isset($user_name))
+Hello {{ $user_name }}! How can I help you today?
+@else
+Hello! How can I assist you?
+@endif
+
+@if($tools->isNotEmpty())
+Available capabilities:
+@foreach($tools as $tool)
+- {{ $tool['description'] }}
+@endforeach
+@endif
+```
+
+### Available Variables
+
+<CardGroup cols={2}>
+  <Card title="Core Variables">
+    - `$agent` - Agent info (name, model, etc.)
+    - `$context` - Full AgentContext object
+    - `$user_input` - Current user input
+    - `$session_id` - Session identifier
+  </Card>
+  <Card title="User & Memory">
+    - `$user`, `$user_name` - User data
+    - `$memory_context` - Previous interactions
+    - `$tools` - Available tools collection
+    - `$sub_agents` - Sub-agents collection
+  </Card>
+</CardGroup>
+
+### Custom Variables
+
+Add your own variables to inject into the blade prompt with `getPromptData()`:
+
+```php
+class SalesAgent extends BaseLlmAgent
+{
+    protected function getPromptData(?AgentContext $context): array
+    {
+        return [
+            'company_name' => config('app.company_name'),
+            'promotions' => $this->getActivePromotions(),
+            'business_hours' => '9 AM - 5 PM EST',
+        ];
+    }
+}
+```
+
+### When to Use What
+
+<CardGroup cols={2}>
+  <Card title="Use Markdown When:" icon="file-lines">
+    - Prompts are mostly static
+    - Simple version control needed
+    - No dynamic content required
+  </Card>
+  <Card title="Use Blade When:" icon="palette">
+    - Need user personalization
+    - Conditional logic required
+    - Dynamic content injection
+  </Card>
+</CardGroup>
+
+<Tip>
+Blade templates work seamlessly with the existing versioning system - just use `withPromptVersion('name')` as usual!
+</Tip>
+
+## Organizing Your Prompts
+
+Keep your prompts organized with these flexible structures:
+
+<CardGroup cols={2}>
+  <Card title="Simple Structure (Variants Only)">
+    ```
+    resources/prompts/
+    ├── weather_reporter/
+    │   ├── default.md      # Standard tone
+    │   ├── detailed.md     # Comprehensive
+    │   ├── concise.md      # Brief responses
+    │   └── professional.md # Business tone
+    └── customer_support/
+        ├── default.md
+        ├── friendly.md
+        └── technical.md
+    ```
+  </Card>
+  <Card title="Versioned Structure (Versions + Variants)">
+    ```
+    resources/prompts/
+    ├── weather_reporter/
+    │   ├── v1/
+    │   │   ├── default.md
+    │   │   └── concise.md
+    │   └── v2/
+    │       ├── default.md
+    │       ├── concise.md
+    │       └── detailed.md    # New in v2
+    └── customer_support/
+        ├── v1/
+        │   └── default.md
+        └── v2/
+            ├── default.md
+            ├── friendly.md    # New variant
+            └── technical.md   # New variant
+    ```
+  </Card>
+</CardGroup>
+
+<Info>
+Start simple with just variants. Add versioning when you need to track improvements over time!
+</Info>
+
+## CLI Command Mastery
+
+The `vizra:prompt` command is your Swiss Army knife for prompt management!
+
+### Creating Prompts
+
+```bash Terminal
+# Interactive mode - enter multi-line content
+php artisan vizra:prompt create weather_reporter friendly
+
+# Quick mode - inline content
+php artisan vizra:prompt create weather_reporter v2 --content="You are a helpful weather assistant."
+```
+
+### Listing Prompts
+
+```bash Terminal
+# List all prompts
+php artisan vizra:prompt list
+
+# List for specific agent
+php artisan vizra:prompt list weather_reporter
+
+# Example output:
+# +------------------+----------+--------+--------+---------------------+
+# | Agent            | Version  | Source | Active | Created             |
+# +------------------+----------+--------+--------+---------------------+
+# | weather_reporter | default  | File   | ✓      | 2024-01-15 10:30:00 |
+# | weather_reporter | detailed | File   |        | 2024-01-15 11:00:00 |
+# | weather_reporter | concise  | File   |        | 2024-01-15 11:30:00 |
+# +------------------+----------+--------+--------+---------------------+
+```
+
+### Import & Export
+
+```bash Terminal
+# Export a prompt to file
+php artisan vizra:prompt export weather_reporter detailed --file=weather_detailed.md
+
+# Import from file
+php artisan vizra:prompt import weather_reporter v3 --file=weather_detailed.md
+
+# View prompt content directly
+php artisan vizra:prompt export weather_reporter detailed
+```
+
+## Runtime Magic
+
+Switch prompt versions on the fly - no redeploys needed!
+
+### Setting Default Version in Agent Class
+
+You can define a default prompt version directly in your agent class:
+
+```php Agent with Default Prompt Version
+class WeatherReporterAgent extends BaseLlmAgent
+{
+    protected string $name = 'weather_reporter';
+
+    // Set default prompt version for this agent
+    protected ?string $promptVersion = 'professional';
+
+    // This will be overridden by the professional.md file
+    protected string $instructions = 'You are a weather reporter.';
+}
+
+// Now all calls use 'professional' by default
+$response = WeatherReporterAgent::run('What\'s the weather?')->go();
+
+// Override the default when needed
+$response = WeatherReporterAgent::run('Current temperature?')
+    ->withPromptVersion('concise')
+    ->go();
+```
+
+### Using Blade Templates at Runtime
+
+Blade templates work seamlessly with the existing prompt versioning system:
+
+```php Using Blade Templates with Runtime API
+// Blade templates work just like markdown versions
+$response = WeatherReporter::run('What\'s the weather?')
+    ->withPromptVersion('detailed')  // Can be detailed.blade.php
+    ->go();
+
+// Mix and match - the system automatically detects the file type
+// Version 'friendly' could be friendly.md or friendly.blade.php
+$response = CustomerSupport::run($query)
+    ->withPromptVersion('friendly')
+    ->go();
+
+// Pass additional context for Blade templates
+$response = SalesAgent::run('Show me pricing')
+    ->withContext([
+        'premium_user' => true,
+        'account_age_days' => 365,
+        'preferred_language' => 'es',
+    ])
+    ->withPromptVersion('personalized')  // Uses personalized.blade.php
+    ->go();
+
+// Works with async operations too
+$job = ReportGenerator::run($data)
+    ->withPromptVersion('executive')  // executive.blade.php with dynamic formatting
+    ->async()
+    ->go();
+```
+
+### Runtime Version Selection
+
+```php Using Prompt Versions in Code
+// Using specific version
+$response = WeatherReporterAgent::run('What\'s the weather?')
+    ->withPromptVersion('detailed')
+    ->go();
+
+// Using Agent Facade
+$response = Agent::build('weather_reporter')
+    ->withPromptVersion('concise')
+    ->run('Current temperature?')
+    ->go();
+
+// Version from variable (great for A/B testing!)
+$version = $user->prefers_detailed ? 'detailed' : 'concise';
+$response = WeatherReporter::run($query)
+    ->withPromptVersion($version)
+    ->go();
+```
+
+### Advanced Patterns
+
+```php Advanced Prompt Version Usage
+// A/B Testing Pattern
+$versions = ['default', 'friendly', 'professional'];
+$results = [];
+
+foreach ($versions as $version) {
+    $startTime = microtime(true);
+
+    $response = CustomerSupportAgent::run($testQuery)
+        ->withPromptVersion($version)
+        ->go();
+
+    $results[$version] = [
+        'response' => $response,
+        'time' => microtime(true) - $startTime,
+        'length' => strlen($response)
+    ];
+}
+
+// Find the best performer
+$bestVersion = collect($results)->sortBy('time')->keys()->first();
+```
+
+## Evaluation Integration
+
+Test different prompt versions systematically with evaluations!
+
+### CSV-Driven Testing
+
+```csv evaluation_data.csv
+location,expected_format,prompt_version
+"New York",detailed,detailed
+"London",concise,concise
+"Tokyo",professional,professional
+"Paris",friendly,friendly
+```
+
+```php Evaluation Class with Prompt Versions
+class PromptComparisonEval extends BaseEvaluation
+{
+    public string $agentName = 'weather_reporter';
+
+    // CSV column that specifies prompt version
+    public ?string $promptVersionColumn = 'prompt_version';
+
+    // Or set a default for all tests
+    public array $agentConfig = [
+        'prompt_version' => 'detailed',
+        'temperature' => 0.7,
+    ];
+
+    public function evaluateRow(array $csvRow, string $response): array
+    {
+        // Your evaluation logic here
+        // The correct prompt version is automatically used!
+    }
+}
+```
+
+## Configuration Options
+
+Customize prompt versioning behavior in `config/vizra-adk.php`:
+
+```php Prompt Configuration
+'prompts' => [
+    // Enable database storage (optional)
+    'use_database' => env('VIZRA_ADK_PROMPTS_USE_DATABASE', false),
+
+    // Custom storage path
+    'storage_path' => env('VIZRA_ADK_PROMPTS_PATH', resource_path('prompts')),
+
+    // Track usage analytics
+    'track_usage' => env('VIZRA_ADK_PROMPTS_TRACK_USAGE', false),
+],
+```
+
+### Database Storage (Advanced)
+
+For production environments, enable database storage:
+
+```bash Terminal
+# Run migrations
+php artisan migrate
+
+# Update .env
+VIZRA_ADK_PROMPTS_USE_DATABASE=true
+
+# Activate a version
+php artisan vizra:prompt activate weather_reporter v2
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Naming Conventions" icon="tag">
+    - `default` - Always have one!
+    - `friendly` - Descriptive names
+    - `2024_01_15_improved` - Date versions
+    - ~~`v2`~~ - Too vague!
+  </Card>
+  <Card title="Testing Strategy" icon="bullseye">
+    - Start with file-based prompts
+    - Test with evaluations
+    - A/B test in production
+    - Move winners to database
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+### Prompt Not Loading?
+
+1. Check file exists: `resources/prompts/{agent_name}/{version}.md`
+2. Verify file permissions are readable
+3. Clear cache: `php artisan cache:clear`
+4. Check agent name matches directory name
+
+### Database Prompts Not Working?
+
+1. Ensure `use_database` is `true` in config
+2. Run migrations: `php artisan migrate`
+3. Check prompt exists: `php artisan vizra:prompt list`
+4. Verify database connection is working
+
+---
+
+## You're Now a Dynamic Prompts Pro!
+
+With dynamic prompts, your AI agents can evolve and improve without touching code. Test freely, roll back instantly, and find the perfect voice for every agent. The future of AI development is here!

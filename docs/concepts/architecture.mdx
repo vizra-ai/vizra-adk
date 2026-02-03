@@ -1,0 +1,138 @@
+---
+title: "Welcome to Vizra ADK"
+description: "The Laravel-native framework for building intelligent AI agents that actually work. No more toy demos - build intelligent systems that solve real problems."
+icon: "sparkles"
+---
+
+## What is Vizra ADK?
+
+Vizra ADK (Agent Development Kit) is a **comprehensive Laravel package** that makes building AI agents as easy as creating a controller. We've taken all the hard parts of AI development - managing conversations, handling tools, storing memories, debugging failures - and wrapped them in familiar Laravel patterns you already love.
+
+<Tip>
+**Think of it this way...** If Laravel made web development delightful, Vizra ADK does the same for AI agents. We handle the complex stuff so you can focus on building amazing AI-powered features.
+</Tip>
+
+## Why Developers Love Vizra ADK
+
+<CardGroup cols={3}>
+  <Card title="Laravel Native" icon="cube">
+    Artisan commands, service providers, facades - everything you expect from a Laravel package
+  </Card>
+  <Card title="Multi-LLM Support" icon="plug">
+    Works with OpenAI, Anthropic Claude, and Google Gemini out of the box
+  </Card>
+  <Card title="Built-in Testing" icon="flask">
+    LLM-as-a-Judge evaluation system for quality assurance at scale
+  </Card>
+  <Card title="Debug Everything" icon="magnifying-glass">
+    Comprehensive tracing shows exactly what your agents are thinking
+  </Card>
+  <Card title="Smart Memory" icon="brain">
+    Vector memory with RAG for agents that actually remember
+  </Card>
+  <Card title="Enterprise Grade" icon="bolt">
+    Streaming, async processing, and queue support built-in
+  </Card>
+</CardGroup>
+
+## Core Concepts That Power Everything
+
+Vizra ADK is built on **six fundamental concepts** that work together seamlessly. Master these, and you'll be building incredible AI agents in no time.
+
+### Agents - Your AI Teammates
+
+The stars of the show! Agents are intelligent systems that can chat, analyze data, trigger workflows, and work together. They're like smart controllers that understand natural language.
+
+```php
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'customer_support';
+    protected string $instructions = 'You are a helpful assistant...';
+}
+```
+
+### Tools - Agent Superpowers
+
+Tools let agents interact with the real world - query databases, call APIs, send emails, or anything else your Laravel app can do. Think of them as specialized methods agents can call.
+
+**Example tools:** DatabaseQueryTool, EmailSenderTool, WeatherAPITool, PDFGeneratorTool
+
+### Memory & Sessions - Never Forget
+
+Agents remember conversations, learn from interactions, and build knowledge over time. Sessions track conversations while memory stores long-term knowledge and user preferences.
+
+**Features:** Conversation history, Vector search, User preferences, Persistent facts
+
+### Workflows - Multi-Agent Orchestration
+
+Build complex systems by orchestrating multiple agents. Workflows let you create sequential pipelines, parallel processing, conditional logic, and loops - all without LLM overhead.
+
+**Patterns:** Sequential, Parallel, Conditional, While/Until loops, For-each processing
+
+### Evaluations - Quality at Scale
+
+Test your agents like you test your code. Our LLM-as-a-Judge system automatically evaluates agent responses for quality, accuracy, and helpfulness.
+
+**Testing tools:** CSV test data, Automated scoring, Quality metrics, Regression testing
+
+### Tracing - X-Ray Vision
+
+See exactly what your agents are thinking. Our tracing system records every decision, tool call, and response, making debugging a breeze.
+
+**Debug features:** Execution timeline, Token usage, Performance metrics, Error tracking
+
+## Getting Started is a Breeze
+
+We've made it incredibly easy to get up and running. Here's how simple it is to create your first agent:
+
+```bash Terminal
+# 1. Install the package
+composer require vizra/vizra-adk
+
+# 2. Create your first agent
+php artisan vizra:make:agent CustomerSupportAgent
+
+# 3. Chat with your agent
+php artisan vizra:chat customer_support
+```
+
+**That's it!** You now have a working AI agent in your Laravel app.
+
+## What Makes Vizra ADK Special?
+
+<Note>
+**Seamless Laravel Integration** - We don't fight Laravel - we embrace it! Use facades, service providers, middleware, jobs, events, and everything else you love about Laravel. Your AI agents feel like a natural extension of your application, not a bolted-on afterthought.
+</Note>
+
+<Tip>
+**Developer Experience First** - From our intuitive Artisan commands to our comprehensive debugging tools, everything is designed to make your life easier. See exactly what your agents are thinking with our tracing system, test them with our evaluation framework, and deploy with confidence.
+</Tip>
+
+## Your Learning Journey
+
+Ready to dive deeper? Here's your roadmap to becoming a Vizra ADK expert:
+
+<CardGroup cols={2}>
+  <Card title="Start Here" icon="graduation-cap">
+    - [Agents](/concepts/agents) - Build your first AI teammate
+    - [Tools](/concepts/tools) - Give agents superpowers
+  </Card>
+  <Card title="Level Up" icon="rocket">
+    - [Memory System](/concepts/sessions-memory) - Build agents that remember
+    - [Workflows](/concepts/workflows) - Complex multi-agent systems
+    - [Evaluations](/concepts/evaluations) - Test agent quality
+  </Card>
+</CardGroup>
+
+## Welcome to the Vizra ADK Family
+
+Let's build something incredible together.
+
+<CardGroup cols={2}>
+  <Card title="Quick Start Guide" icon="rocket" href="/installation/getting-started">
+    Get your first agent running in 5 minutes
+  </Card>
+  <Card title="Meet the Agents" icon="robot" href="/concepts/agents">
+    Learn how to create your AI teammates
+  </Card>
+</CardGroup>

@@ -1,0 +1,357 @@
+---
+title: "Evaluation Class Reference"
+description: "Turn your agents into perfection machines. The BaseEvaluation class is your quality assurance superhero - test, validate, and polish your agents until they shine."
+icon: "flask-vial"
+---
+
+## Class Overview
+
+```php
+namespace Vizra\VizraADK\Evaluations;
+
+abstract class BaseEvaluation
+{
+    // Your evaluation extends this class
+}
+```
+
+## Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `$agentName` | string | Yes | Agent alias to evaluate (e.g., 'customer_support') |
+| `$name` | string | Yes | Human-readable evaluation name |
+| `$description` | string | Yes | Brief description of what this evaluation tests |
+| `$csvPath` | string | Yes | Path to CSV file relative to base_path() |
+| `$promptCsvColumn` | string | No | CSV column containing prompts (default: 'prompt') |
+
+## Abstract Methods
+
+### preparePrompt()
+
+```php
+abstract public function preparePrompt(array $csvRowData): string
+```
+
+Prepares the prompt to be sent to the agent based on CSV row data.
+
+```php
+public function preparePrompt(array $csvRowData): string
+{
+    // Basic implementation
+    return $csvRowData[$this->getPromptCsvColumn()] ?? '';
+
+    // Or with context
+    $prompt = $csvRowData['prompt'];
+    if (isset($csvRowData['context'])) {
+        $prompt = "Context: " . $csvRowData['context'] . "\n\n" . $prompt;
+    }
+    return $prompt;
+}
+```
+
+### evaluateRow()
+
+```php
+abstract public function evaluateRow(array $csvRowData, string $llmResponse): array
+```
+
+Evaluates a single row of CSV data against the LLM's response using assertion methods.
+
+```php
+public function evaluateRow(array $csvRowData, string $llmResponse): array
+{
+    // Reset assertions for this row
+    $this->resetAssertionResults();
+
+    // Run assertions
+    $this->assertResponseContains($llmResponse, 'expected');
+    $this->assertResponseHasPositiveSentiment($llmResponse);
+
+    // Return structured results
+    return [
+        'row_data' => $csvRowData,
+        'llm_response' => $llmResponse,
+        'assertions' => $this->assertionResults,
+        'final_status' => 'pass' // or 'fail'
+    ];
+}
+```
+
+## Content Assertion Methods
+
+### Text Content Assertions
+
+```php
+// Check if response contains substring
+$this->assertResponseContains($response, 'expected text');
+
+// Check if response does NOT contain substring
+$this->assertResponseDoesNotContain($response, 'unwanted');
+
+// Regex pattern matching
+$this->assertResponseMatchesRegex($response, '/\d{3}-\d{4}/');
+
+// Check start and end of response
+$this->assertResponseStartsWith($response, 'Hello');
+$this->assertResponseEndsWith($response, '.');
+
+// Check for multiple substrings
+$this->assertContainsAnyOf($response, ['yes', 'sure', 'okay']);
+$this->assertContainsAllOf($response, ['thank', 'you']);
+
+// Check if response is not empty
+$this->assertResponseIsNotEmpty($response);
+```
+
+### Length and Size Assertions
+
+```php
+// Character length range
+$this->assertResponseLengthBetween($response, 100, 500);
+
+// Word count range
+$this->assertWordCountBetween($response, 20, 100);
+```
+
+### Quality and Safety Assertions
+
+```php
+// Sentiment analysis
+$this->assertResponseHasPositiveSentiment($response);
+
+// Grammar and readability
+$this->assertGrammarCorrect($response);
+$this->assertReadabilityLevel($response, 12); // Max grade level
+$this->assertNoRepetition($response, 0.3); // Max repetition ratio
+
+// Content safety
+$this->assertNotToxic($response);
+$this->assertNotToxic($response, ['custom', 'bad', 'words']);
+$this->assertNoPII($response);
+
+// Spelling conventions
+$this->assertIsBritishSpelling($response);
+$this->assertIsAmericanSpelling($response);
+```
+
+## Format and Structure Assertions
+
+### JSON Validation
+
+```php
+// Check if response is valid JSON
+$this->assertResponseIsValidJson($response);
+
+// Check if JSON contains specific key
+$this->assertJsonHasKey($response, 'result');
+```
+
+### XML Validation
+
+```php
+// Check if response is valid XML
+$this->assertResponseIsValidXml($response);
+
+// Check if XML contains specific tag
+$this->assertXmlHasValidTag($response, 'result');
+```
+
+## Comparison Assertions
+
+```php
+// Equality checks
+$this->assertEquals('expected', $actual);
+$this->assertTrue($condition);
+$this->assertFalse($condition);
+
+// Numeric comparisons
+$this->assertGreaterThan(10, $value);
+$this->assertLessThan(100, $value);
+```
+
+## LLM as Judge
+
+### Pass/Fail Judge
+
+```php
+// Use LLM to evaluate pass/fail
+$this->judge($response)
+    ->using(PassFailJudgeAgent::class)
+    ->expectPass();
+```
+
+### Quality Scoring
+
+```php
+// Get quality score from LLM (0-10)
+$this->judge($response)
+    ->using(QualityJudgeAgent::class)
+    ->expectMinimumScore(7.5);
+```
+
+### Multi-dimensional Evaluation
+
+```php
+// Evaluate multiple dimensions
+$this->judge($response)
+    ->using(ComprehensiveJudgeAgent::class)
+    ->expectMinimumScore([
+        'accuracy' => 8,
+        'helpfulness' => 7,
+        'clarity' => 7
+    ]);
+```
+
+## Helper Methods
+
+### Protected Methods
+
+```php
+// Reset assertion results (called automatically)
+$this->resetAssertionResults();
+
+// Get the CSV column name for prompts
+$columnName = $this->getPromptCsvColumn(); // Returns 'prompt' by default
+
+// Record custom assertion result
+$this->recordAssertion(
+    'customCheck',
+    true, // status
+    'Custom check passed',
+    'expected',
+    'actual'
+);
+```
+
+### Assertion Results Structure
+
+```php
+// Each assertion returns an array with:
+[
+    'assertion_method' => 'assertResponseContains',
+    'status' => 'pass' // or 'fail',
+    'message' => 'Response should contain substring.',
+    'expected' => 'expected text',
+    'actual' => 'actual response...'
+]
+```
+
+## Result Structure
+
+### evaluateRow() Return Format
+
+```php
+// Your evaluateRow() method should return:
+[
+    'row_data' => $csvRowData,       // Original CSV row
+    'llm_response' => $llmResponse, // Agent's response
+    'assertions' => $this->assertionResults, // Array of assertion results
+    'final_status' => 'pass', // 'pass', 'fail', or 'error'
+    'error' => null // Optional error message
+]
+```
+
+## Complete Example
+
+```php CustomerSupportEvaluation.php
+<?php
+
+namespace App\Evaluations;
+
+use Vizra\VizraADK\Evaluations\BaseEvaluation;
+
+class CustomerSupportEvaluation extends BaseEvaluation
+{
+    public string $agentName = 'customer_support';
+    public string $name = 'Customer Support Evaluation';
+    public string $description = 'Tests customer support agent responses';
+    public string $csvPath = 'app/Evaluations/data/support_tests.csv';
+    public string $promptCsvColumn = 'user_message'; // Custom column
+
+    public function preparePrompt(array $csvRowData): string
+    {
+        $prompt = $csvRowData[$this->getPromptCsvColumn()] ?? '';
+
+        // Add customer context if available
+        if (isset($csvRowData['customer_type'])) {
+            $prompt = "Customer Type: " . $csvRowData['customer_type'] . "\n\n" . $prompt;
+        }
+
+        return $prompt;
+    }
+
+    public function evaluateRow(array $csvRowData, string $llmResponse): array
+    {
+        $this->resetAssertionResults();
+
+        // Basic quality checks
+        $this->assertResponseIsNotEmpty($llmResponse);
+        $this->assertNotToxic($llmResponse);
+        $this->assertNoPII($llmResponse);
+
+        // Test-specific assertions based on scenario
+        $scenario = $csvRowData['scenario'] ?? '';
+
+        switch ($scenario) {
+            case 'greeting':
+                $this->assertResponseHasPositiveSentiment($llmResponse);
+                $this->assertContainsAnyOf($llmResponse, ['hello', 'hi', 'welcome']);
+                break;
+
+            case 'complaint':
+                $this->assertResponseContains($llmResponse, 'sorry');
+                $this->judge($llmResponse)
+                    ->using(PassFailJudgeAgent::class)
+                    ->expectPass('Response should be empathetic and helpful');
+                break;
+
+            case 'technical_support':
+                $this->assertReadabilityLevel($llmResponse, 10);
+                $this->assertGrammarCorrect($llmResponse);
+                break;
+        }
+
+        // Check for expected content if specified
+        if (isset($csvRowData['must_contain'])) {
+            $requiredTerms = explode(',', $csvRowData['must_contain']);
+            $this->assertContainsAllOf($llmResponse, $requiredTerms);
+        }
+
+        // Determine overall pass/fail
+        $allPassed = collect($this->assertionResults)
+            ->every(fn($result) => $result['status'] === 'pass');
+
+        return [
+            'row_data' => $csvRowData,
+            'llm_response' => $llmResponse,
+            'assertions' => $this->assertionResults,
+            'final_status' => $allPassed ? 'pass' : 'fail',
+        ];
+    }
+}
+```
+
+<Tip>
+**CSV File Example:**
+
+```csv
+user_message,scenario,customer_type,must_contain
+"Hello, I need help",greeting,new,help
+"My order hasn't arrived",complaint,vip,"sorry,assist"
+"How do I reset my password?",technical_support,regular,"reset,password"
+```
+
+Structure your CSV files with clear columns for prompts, test scenarios, and expected outcomes.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Events" icon="bolt" href="/api-reference/events">
+    Event reference documentation
+  </Card>
+  <Card title="Evaluation Concepts" icon="lightbulb" href="/concepts/evaluations">
+    Learn more about evaluations
+  </Card>
+</CardGroup>

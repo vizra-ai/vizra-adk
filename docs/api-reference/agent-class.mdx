@@ -1,0 +1,521 @@
+---
+title: "Agent Class Reference"
+description: "Master the heart of Vizra ADK. The BaseLlmAgent class is your gateway to building incredible AI agents. Every property, method, and secret revealed."
+icon: "robot"
+---
+
+<Info>
+Think of `BaseLlmAgent` as the DNA of your AI agents. Every intelligent behavior, every smart response, every amazing capability starts here.
+</Info>
+
+## The Agent Family Tree
+
+Understanding the class hierarchy is like knowing your agent's family tree. Here's how everything connects:
+
+```php Agent Class Hierarchy
+namespace Vizra\VizraADK\Agents;
+
+abstract class BaseAgent
+{
+    // Base contract for all agents
+}
+
+abstract class BaseLlmAgent extends BaseAgent
+{
+    // LLM-powered agent implementation
+}
+```
+
+## Agent Properties - Your Agent's DNA
+
+These properties are like your agent's personality traits. Set them right, and your agent will be amazing.
+
+### Required Properties
+
+<CardGroup cols={2}>
+  <Card title="$name" icon="tag">
+    **Type:** `string` (required)
+
+    Your agent's unique identifier. Like a superhero name, it should be memorable and descriptive. No two agents can share the same name.
+
+    ```php
+    protected string $name = 'customer_support';
+    ```
+  </Card>
+  <Card title="$description" icon="file-lines">
+    **Type:** `string` (required)
+
+    Tell everyone what your agent does. This human-readable description helps you and your team understand the agent's purpose at a glance.
+
+    ```php
+    protected string $description = 'Helps customers with support inquiries';
+    ```
+  </Card>
+</CardGroup>
+
+### Optional Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `$instructions` | string | `''` | System prompt for the agent |
+| `$promptVersion` | ?string | `null` | Default prompt version to use |
+| `$model` | string | `''` | LLM model to use (e.g., 'gpt-4o', 'claude-3-opus') |
+| `$provider` | ?Provider | `null` | LLM provider (OpenAI, Anthropic, Gemini) |
+| `$temperature` | ?float | `null` | Response creativity (0-1) |
+| `$maxTokens` | ?int | `null` | Maximum response tokens |
+| `$topP` | ?float | `null` | Nucleus sampling parameter |
+| `$streaming` | bool | `false` | Enable streaming responses |
+| `$tools` | array | `[]` | Array of tool class names |
+
+## Static Method - The Universal Entry Point
+
+All agents use a single, powerful entry point - the `run()` method. This unified approach keeps things simple and consistent across all your agents.
+
+### run()
+
+```php Method Signature
+public static function run(mixed $input): AgentExecutor
+```
+
+The `run()` method creates a fluent agent executor that you can configure with various options before executing. It's your Swiss Army knife for all agent interactions.
+
+<Tip>
+Whether you're asking questions, processing data, analyzing events, or monitoring systems - it all starts with `run()`. The input you provide and the context you set determine what your agent does.
+</Tip>
+
+### Common Usage Patterns
+
+#### Conversational Interactions
+
+Perfect for chat-like interactions where you need natural language responses.
+
+```php
+// Ask a question
+$response = CustomerSupportAgent::run('Where is my order?')
+    ->forUser($user)
+    ->go();
+
+// Have a conversation with context
+$response = CustomerSupportAgent::run('I need help with shipping')
+    ->withSession($sessionId)
+    ->withContext(['order_id' => $orderId])
+    ->go();
+```
+
+#### Event Processing
+
+Handle events, webhooks, or triggers from your application.
+
+```php
+// Process an event
+$response = NotificationAgent::run($orderCreatedEvent)
+    ->forUser($user)
+    ->go();
+
+// Handle webhook data
+$response = WebhookAgent::run($webhookPayload)
+    ->withContext(['source' => 'stripe'])
+    ->go();
+```
+
+#### Data Analysis
+
+Analyze data, detect patterns, or generate insights.
+
+```php
+// Analyze payment data
+$response = FraudDetectionAgent::run($paymentData)
+    ->withContext(['risk_threshold' => 0.7])
+    ->go();
+
+// Generate insights
+$response = AnalyticsAgent::run($salesData)
+    ->withContext(['period' => 'last_quarter'])
+    ->go();
+```
+
+#### Batch Processing
+
+Process large datasets or perform batch operations asynchronously.
+
+```php
+// Process batch data
+$response = DataProcessorAgent::run($largeDataset)
+    ->async()
+    ->onQueue('processing')
+    ->go();
+
+// Import data with progress tracking
+$response = ImportAgent::run($csvFile)
+    ->withContext(['notify_on_complete' => true])
+    ->async()
+    ->go();
+```
+
+#### Monitoring & Alerts
+
+Monitor systems, metrics, or conditions continuously.
+
+```php
+// Monitor system metrics
+$response = SystemMonitorAgent::run($metrics)
+    ->onQueue('monitoring')
+    ->withContext(['alert_threshold' => 90])
+    ->go();
+
+// Health checks
+$response = HealthCheckAgent::run($serviceEndpoints)
+    ->delay(60) // Check every minute
+    ->go();
+```
+
+#### Report Generation
+
+Generate reports, summaries, or formatted outputs.
+
+```php
+// Generate daily report
+$response = ReportAgent::run('daily_sales')
+    ->withContext(['date' => today()])
+    ->go();
+
+// Create summary with specific format
+$response = SummaryAgent::run($quarterlyData)
+    ->withContext(['format' => 'executive_summary'])
+    ->go();
+```
+
+## Instance Methods (BaseLlmAgent)
+
+### Core Methods
+
+```php
+// Execute the agent's primary logic (must be implemented)
+public function run(mixed $input, AgentContext $context): mixed
+
+// Get agent properties
+public function getName(): string
+public function getDescription(): string
+```
+
+### Configuration Methods
+
+```php
+// Getters
+public function getModel(): string
+public function getProvider(): Provider
+public function getInstructions(): string
+public function getInstructionsWithMemory(AgentContext $context): string
+public function getTemperature(): ?float
+public function getMaxTokens(): ?int
+public function getTopP(): ?float
+public function getStreaming(): bool
+
+// Setters
+public function setInstructions(string $instructions): static
+public function setModel(string $model): static
+public function setProvider(Provider $provider): static
+public function setTemperature(?float $temperature): static
+public function setMaxTokens(?int $maxTokens): static
+public function setTopP(?float $topP): static
+public function setStreaming(bool $streaming): static
+```
+
+### Dynamic Prompts (via VersionablePrompts trait)
+
+```php
+// Prompt version management
+public function setPromptVersion(?string $version): static
+public function getPromptVersion(): ?string
+public function setPromptOverride(string $prompt): static
+public function getAvailablePromptVersions(): array
+```
+
+### Tool Management
+
+```php
+public function loadTools(): void
+public function getLoadedTools(): array
+```
+
+### Sub-Agent Management
+
+```php
+public function getSubAgent(string $name): ?BaseLlmAgent
+public function getLoadedSubAgents(): array
+```
+
+## Protected Methods (Override in Your Agent)
+
+### Sub-Agent Registration
+
+```php
+/**
+ * Sub-agents available for delegation.
+ * The framework automatically generates names from class names:
+ * - TechnicalSupportAgent -> technical_support
+ * - BillingSupportAgent -> billing_support
+ * - SalesAgent -> sales
+ */
+protected array $subAgents = [
+    TechnicalSupportAgent::class,
+    BillingSupportAgent::class,
+    SalesAgent::class,
+];
+```
+
+### Lifecycle Hooks
+
+```php
+// Called before sending messages to LLM
+public function beforeLlmCall(array $inputMessages, AgentContext $context): array
+{
+    // Modify messages, start tracing, etc.
+    return $inputMessages;
+}
+
+// Called after receiving LLM response
+public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
+{
+    // Process response, access token usage, etc.
+    return $response;
+}
+
+// Called before tool execution
+public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array
+{
+    // Modify tool arguments before execution
+    return $arguments;
+}
+
+// Called after tool execution
+public function afterToolResult(string $toolName, string $result, AgentContext $context): string
+{
+    // Process tool results
+    return $result;
+}
+```
+
+### Sub-Agent Delegation Hooks
+
+```php
+// Called before delegating to sub-agent
+public function beforeSubAgentDelegation(
+    string $subAgentName,
+    string $taskInput,
+    string $contextSummary,
+    AgentContext $parentContext
+): array
+{
+    // Returns [subAgentName, taskInput, contextSummary]
+    return [$subAgentName, $taskInput, $contextSummary];
+}
+
+// Called after sub-agent completes
+public function afterSubAgentDelegation(
+    string $subAgentName,
+    string $taskInput,
+    string $subAgentResult,
+    AgentContext $parentContext,
+    AgentContext $subAgentContext
+): string
+{
+    // Process and return the result
+    return $subAgentResult;
+}
+```
+
+## AgentExecutor Methods
+
+The `AgentExecutor` provides a fluent API for configuring agent execution:
+
+```php
+// User context
+public function forUser(?Model $user): self
+
+// Session management
+public function withSession(string $sessionId): self
+
+// Context data
+public function withContext(array $context): self
+
+// Prompt versioning
+public function withPromptVersion(string $version): self
+
+// Streaming
+public function streaming(bool $enabled = true): self
+
+// Parameters
+public function withParameters(array $parameters): self
+public function temperature(float $temperature): self
+public function maxTokens(int $maxTokens): self
+
+// Async execution
+public function async(bool $enabled = true): self
+public function onQueue(string $queue): self
+public function delay(int $seconds): self
+public function tries(int $tries): self
+public function timeout(int $seconds): self
+
+// Multimodal support
+public function withImage(string $path, ?string $mimeType = null): self
+public function withImageFromBase64(string $base64Data, string $mimeType): self
+public function withImageFromUrl(string $url): self
+public function withDocument(string $path, ?string $mimeType = null): self
+public function withDocumentFromBase64(string $base64Data, string $mimeType): self
+public function withDocumentFromUrl(string $url): self
+
+// Execute the agent
+public function go(): mixed
+```
+
+## Complete Example
+
+```php CustomerSupportAgent.php
+<?php
+
+namespace App\Agents;
+
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\System\AgentContext;
+use Prism\Prism\Text\Response;
+use Generator;
+
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'customer_support';
+
+    protected string $description = 'Handles customer inquiries and support requests';
+
+    protected string $instructions = "You are a helpful customer support agent.
+        Be friendly, professional, and solution-oriented.
+        Always prioritize customer satisfaction.";
+
+    protected string $model = 'gpt-4o';
+
+    protected ?float $temperature = 0.7;
+
+    protected ?int $maxTokens = 1000;
+
+    /** @var array<class-string<ToolInterface>> */
+    protected array $tools = [
+        OrderLookupTool::class,
+        RefundProcessorTool::class,
+        EmailSenderTool::class,
+    ];
+
+    // Sub-agents available for delegation
+    protected array $subAgents = [
+        TechnicalSupportAgent::class, // Becomes: technical_support
+        BillingAgent::class,            // Becomes: billing
+    ];
+
+    // Customize LLM call behavior
+    public function beforeLlmCall(array $inputMessages, AgentContext $context): array
+    {
+        // Add customer context to messages if available
+        if ($userId = $context->getState('user_id')) {
+            logger()->info('Processing request for user', ['user_id' => $userId]);
+        }
+
+        return parent::beforeLlmCall($inputMessages, $context);
+    }
+
+    // Process response after LLM call
+    public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
+    {
+        if ($response instanceof Response) {
+            // Log token usage for monitoring
+            if ($response->usage) {
+                logger()->info('Token usage', [
+                    'input_tokens' => $response->usage->inputTokens ?? 0,
+                    'output_tokens' => $response->usage->outputTokens ?? 0,
+                ]);
+            }
+        }
+
+        return parent::afterLlmResponse($response, $context);
+    }
+}
+```
+
+## Complete Usage Examples
+
+Let's see how the unified `run()` method handles all your agent needs. From simple queries to complex multimodal interactions, it's all here.
+
+```php Real-World Examples
+// Basic conversation
+$response = CustomerSupportAgent::run('How do I reset my password?')
+    ->go();
+
+// With user context and session
+$response = CustomerSupportAgent::run('Show me my recent orders')
+    ->forUser($user)
+    ->withSession($sessionId)
+    ->go();
+
+// Streaming response for real-time output
+$stream = CustomerSupportAgent::run('Explain our refund policy')
+    ->streaming()
+    ->go();
+
+foreach ($stream as $chunk) {
+    echo $chunk; // Display as it streams
+}
+
+// Async processing for heavy workloads
+$job = DataProcessorAgent::run($supportTickets)
+    ->async()
+    ->onQueue('support')
+    ->timeout(3600) // 1 hour timeout
+    ->go();
+
+// Multimodal with images
+$response = ProductAnalysisAgent::run('What\'s wrong with this product?')
+    ->withImage('/path/to/product-photo.jpg')
+    ->go();
+
+// Complex analysis with multiple inputs
+$response = FinancialAdvisorAgent::run('Analyze my portfolio')
+    ->withDocument('/path/to/portfolio.pdf')
+    ->withContext([
+        'risk_tolerance' => 'moderate',
+        'investment_horizon' => '10_years'
+    ])
+    ->temperature(0.3) // Lower temperature for financial advice
+    ->go();
+
+// Event-driven processing
+$response = OrderProcessingAgent::run($orderEvent)
+    ->withContext(['priority' => 'high'])
+    ->forUser($customer)
+    ->go();
+
+// Scheduled monitoring
+$response = SystemHealthAgent::run($systemMetrics)
+    ->onQueue('monitoring')
+    ->delay(300) // Check every 5 minutes
+    ->tries(3) // Retry up to 3 times
+    ->go();
+```
+
+<Note>
+**Agent Best Practices:**
+- Keep agent instructions focused and clear
+- Override lifecycle hooks for custom behavior
+- Use appropriate temperature settings for your use case
+- Implement error handling for robustness
+- Test agents thoroughly with evaluations
+- Monitor token usage and costs
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Tool Class" icon="wrench" href="/api-reference/tool-class">
+    Tool class reference
+  </Card>
+  <Card title="Agent Concepts" icon="lightbulb" href="/concepts/agents">
+    Learn more about agents
+  </Card>
+</CardGroup>

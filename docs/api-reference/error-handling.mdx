@@ -1,0 +1,381 @@
+---
+title: "Error Handling"
+description: "Handle errors like a pro. The Vizra ADK provides a robust error handling system with specialized exceptions to help you build resilient AI agents that gracefully handle the unexpected."
+icon: "triangle-exclamation"
+---
+
+## Exception Types
+
+The framework includes three specialized exception classes that extend PHP's base `\Exception` class:
+
+### AgentNotFoundException
+
+Thrown when attempting to access or execute an agent that doesn't exist in the registry.
+
+```php AgentRegistry.php
+use Vizra\VizraADK\Exceptions\AgentNotFoundException;
+
+// Example from AgentRegistry::getAgent()
+if (!isset($this->registeredAgents[$name])) {
+    throw new AgentNotFoundException("Agent '{$name}' is not registered.");
+}
+```
+
+### AgentConfigurationException
+
+Thrown when there are issues with agent configuration, such as invalid settings or missing required parameters.
+
+```php Configuration Validation
+use Vizra\VizraADK\Exceptions\AgentConfigurationException;
+
+// Example usage
+if (!class_exists($config)) {
+    throw new AgentConfigurationException(
+        "Agent class '{$config}' does not exist."
+    );
+}
+```
+
+### ToolExecutionException
+
+Thrown when errors occur during tool execution, including invalid parameters or runtime failures.
+
+```php Tool Execution
+use Vizra\VizraADK\Exceptions\ToolExecutionException;
+
+// Example in tool execution
+try {
+    $result = $tool->execute($arguments, $context);
+} catch (\Exception $e) {
+    throw new ToolExecutionException(
+        "Tool '{$toolName}' failed: " . $e->getMessage()
+    );
+}
+```
+
+## Handling Exceptions in Controllers
+
+The `AgentApiController` demonstrates comprehensive exception handling:
+
+```php AgentApiController.php
+use Vizra\VizraADK\Facades\Agent;
+use Vizra\VizraADK\Exceptions\AgentNotFoundException;
+use Vizra\VizraADK\Exceptions\ToolExecutionException;
+use Vizra\VizraADK\Exceptions\AgentConfigurationException;
+
+class AgentApiController extends Controller
+{
+    public function handleAgentInteraction(Request $request): JsonResponse
+    {
+        try {
+            // Check if agent exists
+            if (!Agent::hasAgent($agentName)) {
+                return response()->json([
+                    'error' => "Agent '{$agentName}' is not registered or found.",
+                    'message' => "Please ensure the agent is registered..."
+                ], 404);
+            }
+
+            // Execute agent
+            $response = Agent::run($agentName, $input, $sessionId);
+
+            return response()->json([
+                'agent_name' => $agentName,
+                'session_id' => $sessionId,
+                'response' => $response,
+            ]);
+
+        } catch (AgentNotFoundException $e) {
+            logger()->error("Agent not found: " . $e->getMessage());
+            return response()->json([
+                'error' => "Agent '{$agentName}' could not be found or loaded.",
+                'detail' => $e->getMessage()
+            ], 404);
+
+        } catch (ToolExecutionException $e) {
+            logger()->error("Tool execution error for agent {$agentName}: " . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            return response()->json([
+                'error' => 'A tool required by the agent failed to execute.',
+                'detail' => $e->getMessage()
+            ], 500);
+
+        } catch (AgentConfigurationException $e) {
+            logger()->error("Agent configuration error for agent {$agentName}: " . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            return response()->json([
+                'error' => 'Agent configuration error.',
+                'detail' => $e->getMessage()
+            ], 500);
+
+        } catch (\Throwable $e) {
+            // Catch-all for unexpected errors
+            logger()->error("Error during agent '{$agentName}' execution: " . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            return response()->json([
+                'error' => 'An unexpected error occurred while processing your request.',
+                'detail' => $e->getMessage()
+            ], 500);
+        }
+    }
+}
+```
+
+## Error Handling in Commands
+
+Artisan commands handle errors gracefully to provide helpful feedback:
+
+```php RunEvalCommand.php
+// Example from RunEvalCommand
+try {
+    $evaluation = $this->loadEvaluation($evaluationName);
+    $results = $evaluation->run();
+} catch (\Exception $e) {
+    $this->error("Evaluation failed: " . $e->getMessage());
+    return 1; // Return non-zero exit code
+}
+```
+
+## Error Handling in Services
+
+Services like `AgentRegistry` validate configuration and throw appropriate exceptions:
+
+```php AgentRegistry.php
+public function getAgent(string $name): BaseAgent
+{
+    if (!isset($this->registeredAgents[$name])) {
+        throw new AgentNotFoundException("Agent '{$name}' is not registered.");
+    }
+
+    $config = $this->registeredAgents[$name];
+
+    if (is_string($config)) {
+        if (!class_exists($config)) {
+            throw new AgentConfigurationException(
+                "Agent class '{$config}' does not exist."
+            );
+        }
+
+        $agent = new $config();
+
+        if (!$agent instanceof BaseAgent) {
+            throw new AgentConfigurationException(
+                "Agent class '{$config}' must extend BaseAgent."
+            );
+        }
+
+        return $agent;
+    }
+
+    // Handle array configuration...
+}
+```
+
+## Best Practices
+
+### 1. Use Specific Exception Types
+
+Always throw the most specific exception type for the error scenario:
+
+```php Exception Best Practices
+// Good - specific exception
+if (!$agent) {
+    throw new AgentNotFoundException("Agent 'chatbot' not found");
+}
+
+// Avoid - generic exception
+if (!$agent) {
+    throw new \Exception("Agent not found");
+}
+```
+
+### 2. Provide Meaningful Error Messages
+
+Include context in error messages to help with debugging:
+
+```php Descriptive Error Messages
+throw new ToolExecutionException(
+    "Weather tool failed for location '{$location}': API key not configured"
+);
+```
+
+### 3. Log Errors with Context
+
+Always log errors with relevant context for debugging:
+
+```php Error Logging
+catch (ToolExecutionException $e) {
+    logger()->error("Tool execution failed", [
+        'agent' => $agentName,
+        'tool' => $e->getToolName(),
+        'session_id' => $sessionId,
+        'exception' => $e
+    ]);
+}
+```
+
+### 4. Handle Errors at the Right Level
+
+Let exceptions bubble up to where they can be handled appropriately:
+
+```php Error Handling Layers
+// In a tool - let exception bubble up
+public function execute(array $arguments, AgentContext $context): string
+{
+    if (!isset($arguments['location'])) {
+        throw new ToolExecutionException("Location parameter is required");
+    }
+
+    // Tool logic...
+}
+
+// In the controller - handle and return appropriate response
+try {
+    $result = $agent->run($input);
+} catch (ToolExecutionException $e) {
+    return response()->json(['error' => $e->getMessage()], 400);
+}
+```
+
+## Creating Custom Exceptions
+
+You can create custom exceptions for your specific use cases:
+
+```php app/Exceptions/ApiRateLimitException.php
+<?php
+
+namespace App\Exceptions;
+
+use Vizra\VizraADK\Exceptions\ToolExecutionException;
+
+class ApiRateLimitException extends ToolExecutionException
+{
+    protected string $service;
+    protected int $retryAfter;
+
+    public function __construct(string $service, int $retryAfter)
+    {
+        $this->service = $service;
+        $this->retryAfter = $retryAfter;
+
+        parent::__construct(
+            "Rate limit exceeded for {$service}. Retry after {$retryAfter} seconds."
+        );
+    }
+
+    public function getRetryAfter(): int
+    {
+        return $this->retryAfter;
+    }
+}
+```
+
+## Error Recovery Strategies
+
+### Graceful Degradation
+
+Provide fallback behavior when non-critical operations fail:
+
+```php Fallback Pattern
+public function execute(array $arguments, AgentContext $context): string
+{
+    try {
+        // Try to get weather from primary API
+        $weather = $this->primaryApi->getWeather($location);
+    } catch (ToolExecutionException $e) {
+        logger()->warning("Primary weather API failed, using fallback", [
+            'error' => $e->getMessage()
+        ]);
+
+        // Fallback to secondary API
+        try {
+            $weather = $this->fallbackApi->getWeather($location);
+        } catch (ToolExecutionException $e) {
+            // Return cached or default response
+            return json_encode([
+                'error' => 'Weather service temporarily unavailable',
+                'cached' => true,
+                'data' => $this->getCachedWeather($location)
+            ]);
+        }
+    }
+
+    return json_encode($weather);
+}
+```
+
+### Retry Logic
+
+Implement retry logic for transient failures:
+
+```php Retry with Exponential Backoff
+use Illuminate\Support\Facades\Http;
+
+public function executeWithRetry(callable $operation, int $maxAttempts = 3)
+{
+    $attempt = 1;
+
+    while ($attempt <= $maxAttempts) {
+        try {
+            return $operation();
+        } catch (ToolExecutionException $e) {
+            if ($attempt === $maxAttempts) {
+                throw $e;
+            }
+
+            logger()->warning("Operation failed, retrying", [
+                'attempt' => $attempt,
+                'max_attempts' => $maxAttempts,
+                'error' => $e->getMessage()
+            ]);
+
+            sleep(pow(2, $attempt)); // Exponential backoff
+            $attempt++;
+        }
+    }
+}
+```
+
+## Testing Error Handling
+
+Always test your error handling paths:
+
+```php tests/Feature/ErrorHandlingTest.php
+use Vizra\VizraADK\Exceptions\AgentNotFoundException;
+
+test('throws exception for non-existent agent', function () {
+    $registry = app(AgentRegistry::class);
+
+    expect(fn() => $registry->getAgent('non-existent'))
+        ->toThrow(AgentNotFoundException::class, "Agent 'non-existent' is not registered.");
+});
+
+test('handles tool execution failure gracefully', function () {
+    $response = $this->postJson('/api/vizra/interact', [
+        'agent_name' => 'test_agent',
+        'input' => 'trigger tool failure'
+    ]);
+
+    $response->assertStatus(500)
+        ->assertJson([
+            'error' => 'A tool required by the agent failed to execute.'
+        ]);
+});
+```
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Agent Class Reference" icon="robot" href="/api-reference/agent-class">
+    Agent class documentation
+  </Card>
+  <Card title="Tool Development" icon="wrench" href="/api-reference/tool-class">
+    Build custom tools
+  </Card>
+  <Card title="Testing Strategies" icon="flask-vial" href="/best-practices/testing">
+    Test your agents
+  </Card>
+</CardGroup>

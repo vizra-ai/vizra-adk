@@ -1,0 +1,355 @@
+---
+title: "Events API Reference"
+description: "Become an agent lifecycle ninja. Master every moment of agent execution with comprehensive event hooks. Monitor, debug, extend - turn your agents into observable, intelligent systems."
+icon: "bolt"
+---
+
+## Event Overview
+
+All events are in the `Vizra\VizraADK\Events` namespace and use Laravel's event system.
+
+```php
+use Vizra\VizraADK\Events\AgentExecutionStarting;
+use Illuminate\Support\Facades\Event;
+
+// Listen to an event
+Event::listen(AgentExecutionStarting::class, function (AgentExecutionStarting $event) {
+    Log::info('Agent starting', [
+        'agent' => $event->agentName,
+        'input' => $event->input
+    ]);
+});
+```
+
+## Agent Execution Events
+
+### AgentExecutionStarting
+
+Fired when an agent begins execution.
+
+```php
+class AgentExecutionStarting
+{
+    public function __construct(
+        public AgentContext $context,
+        public string $agentName,
+        public mixed $input
+    ) {}
+}
+```
+
+**Properties:**
+
+| Property | Description |
+|----------|-------------|
+| `$context` | The agent execution context |
+| `$agentName` | Name of the agent being executed |
+| `$input` | Initial input provided to the agent |
+
+### AgentExecutionFinished
+
+Fired when an agent completes execution.
+
+```php
+class AgentExecutionFinished
+{
+    public function __construct(
+        public AgentContext $context,
+        public string $agentName
+    ) {}
+}
+```
+
+### AgentResponseGenerated
+
+Fired when an agent generates its final response.
+
+```php
+class AgentResponseGenerated
+{
+    public function __construct(
+        public AgentContext $context,
+        public string $agentName,
+        public mixed $finalResponse
+    ) {}
+}
+```
+
+## LLM Interaction Events
+
+### LlmCallInitiating
+
+Fired before making a call to the LLM.
+
+```php
+class LlmCallInitiating
+{
+    public function __construct(
+        public AgentContext $context,
+        public string $agentName,
+        public array $promptMessages
+    ) {}
+}
+```
+
+**Properties:**
+
+| Property | Description |
+|----------|-------------|
+| `$promptMessages` | Array of messages being sent to the LLM |
+
+### LlmResponseReceived
+
+Fired after receiving a response from the LLM.
+
+```php
+class LlmResponseReceived
+{
+    public function __construct(
+        public AgentContext $context,
+        public string $agentName,
+        public mixed $llmResponse,
+        public ?PendingRequest $request = null
+    ) {}
+}
+```
+
+### LlmCallFailed
+
+Fired when an LLM API call fails.
+
+```php
+class LlmCallFailed
+{
+    public function __construct(
+        public AgentContext $context,
+        public string $agentName,
+        public Throwable $exception,
+        public ?PendingRequest $request = null
+    ) {}
+}
+```
+
+**Properties:**
+
+| Property | Description |
+|----------|-------------|
+| `$exception` | The exception that caused the failure |
+| `$request` | The failed request details (optional) |
+
+## Tool Execution Events
+
+### ToolCallInitiating
+
+Fired before executing a tool.
+
+```php
+class ToolCallInitiating
+{
+    public function __construct(
+        public AgentContext $context,
+        public string $agentName,
+        public string $toolName,
+        public array $arguments
+    ) {}
+}
+```
+
+### ToolCallCompleted
+
+Fired after a tool completes execution.
+
+```php
+class ToolCallCompleted
+{
+    public function __construct(
+        public AgentContext $context,
+        public string $agentName,
+        public string $toolName,
+        public string $result // JSON string
+    ) {}
+}
+```
+
+### ToolCallFailed
+
+Fired when a tool call encounters an error.
+
+```php
+class ToolCallFailed
+{
+    public function __construct(
+        public AgentContext $context,
+        public string $agentName,
+        public string $toolName,
+        public Throwable $exception
+    ) {}
+}
+```
+
+**Properties:**
+
+| Property | Description |
+|----------|-------------|
+| `$toolName` | Name of the tool that failed |
+| `$exception` | The exception that caused the failure |
+
+## State Management Events
+
+### StateUpdated
+
+Fired when agent state is updated.
+
+```php
+class StateUpdated
+{
+    public function __construct(
+        public AgentContext $context,
+        public string $key,
+        public mixed $value
+    ) {}
+}
+```
+
+### MemoryUpdated
+
+Fired when agent memory is updated.
+
+```php
+class MemoryUpdated
+{
+    public function __construct(
+        public AgentMemory $memory,
+        public ?AgentSession $session,
+        public string $updateType
+    ) {}
+}
+```
+
+**Update Types:**
+
+| Type | Description |
+|------|-------------|
+| `'session_completed'` | Session summary extracted |
+| `'learning_added'` | New learning stored |
+| `'fact_added'` | New fact stored |
+
+## Multi-Agent Events
+
+### TaskDelegated
+
+Fired when an agent delegates a task to a sub-agent.
+
+```php
+class TaskDelegated
+{
+    public function __construct(
+        public AgentContext $parentContext,
+        public AgentContext $subAgentContext,
+        public string $parentAgentName,
+        public string $subAgentName,
+        public string $taskInput,
+        public string $contextSummary,
+        public int $delegationDepth
+    ) {}
+}
+```
+
+## Usage Examples
+
+### Monitoring Agent Performance
+
+```php
+use Vizra\VizraADK\Events\{AgentExecutionStarting, AgentExecutionFinished};
+use Illuminate\Support\Facades\Event;
+
+class AgentPerformanceMonitor
+{
+    private array $startTimes = [];
+
+    public function register(): void
+    {
+        Event::listen(AgentExecutionStarting::class, [$this, 'handleStart']);
+        Event::listen(AgentExecutionFinished::class, [$this, 'handleFinish']);
+    }
+
+    public function handleStart(AgentExecutionStarting $event): void
+    {
+        $this->startTimes[$event->context->getSessionId()] = microtime(true);
+    }
+
+    public function handleFinish(AgentExecutionFinished $event): void
+    {
+        $sessionId = $event->context->getSessionId();
+        $duration = microtime(true) - $this->startTimes[$sessionId];
+
+        Log::info('Agent execution completed', [
+            'agent' => $event->agentName,
+            'duration' => round($duration, 2) . 's'
+        ]);
+    }
+}
+```
+
+### Debugging Tool Calls
+
+```php
+Event::listen(ToolCallInitiating::class, function (ToolCallInitiating $event) {
+    Log::debug('Tool call starting', [
+        'tool' => $event->toolName,
+        'arguments' => $event->arguments,
+        'session' => $event->context->getSessionId()
+    ]);
+});
+
+Event::listen(ToolCallCompleted::class, function (ToolCallCompleted $event) {
+    $result = json_decode($event->result, true);
+    Log::debug('Tool call completed', [
+        'tool' => $event->toolName,
+        'success' => $result['success'] ?? false
+    ]);
+});
+```
+
+### Memory Tracking
+
+```php
+Event::listen(MemoryUpdated::class, function (MemoryUpdated $event) {
+    switch ($event->updateType) {
+        case 'learning_added':
+            Log::info('New learning stored', [
+                'agent' => $event->memory->agent_name,
+                'learning' => $event->memory->learnings->last()
+            ]);
+            break;
+
+        case 'fact_added':
+            Log::info('New fact stored', [
+                'agent' => $event->memory->agent_name,
+                'fact' => $event->memory->facts->last()
+            ]);
+            break;
+    }
+});
+```
+
+<Note>
+**Event Best Practices:**
+- Use event listeners for cross-cutting concerns like logging and monitoring
+- Keep event handlers lightweight to avoid impacting agent performance
+- Use queued listeners for heavy processing tasks
+- Events are synchronous by default - be mindful of execution time
+- All events include the AgentContext for accessing session state
+- Tool results are JSON strings - decode them for processing
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agent Lifecycle" icon="rotate" href="/concepts/agent-lifecycle">
+    Learn about the agent execution flow
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference">
+    View all API references
+  </Card>
+</CardGroup>

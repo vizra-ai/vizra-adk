@@ -1,0 +1,629 @@
+---
+title: "Sessions & Memory"
+description: "Give your agents a memory that lasts. Learn how to build agents that remember conversations, learn from interactions, and provide personalized experiences over time."
+icon: "brain"
+---
+
+<Info>
+**Sessions** provide conversation context while **memory** enables long-term knowledge retention. Together, they create intelligent, personalized agent interactions that improve over time!
+</Info>
+
+## Understanding Sessions
+
+Think of sessions as your agent's short-term memory during a conversation!
+
+<CardGroup cols={2}>
+  <Card title="Conversation History" icon="pencil">
+    Every message between your agent and user is tracked
+  </Card>
+  <Card title="Context Preservation" icon="rotate">
+    State persists across multiple interactions
+  </Card>
+  <Card title="State Storage" icon="floppy-disk">
+    Keep track of important conversation data
+  </Card>
+  <Card title="Memory Links" icon="link">
+    Connect to long-term agent memory
+  </Card>
+</CardGroup>
+
+## Creating and Managing Sessions
+
+### Using Sessions with Agents
+
+Let's see how easy it is to maintain conversations across multiple interactions!
+
+```php app/Http/Controllers/ChatController.php
+use App\Agents\CustomerSupportAgent;
+
+// Start a conversation with a session
+$response = CustomerSupportAgent::run('I need help with my order')
+    ->forUser($user)
+    ->withSession($sessionId)
+    ->go();
+
+// Continue in the same session - agent remembers!
+$response2 = CustomerSupportAgent::run('The order number is #12345')
+    ->forUser($user)
+    ->withSession($sessionId)
+    ->go();
+```
+
+### Session Models
+
+Sessions are first-class citizens in Vizra, stored safely in your database!
+
+```php
+use Vizra\VizraADK\Models\AgentSession;
+use Vizra\VizraADK\Models\AgentMessage;
+
+// Sessions are stored in the database
+$session = AgentSession::where('session_id', $sessionId)->first();
+
+// Access session messages
+$messages = $session->messages()->get();
+
+// Access session state
+$stateData = $session->state_data;
+```
+
+### AgentContext Magic
+
+The `AgentContext` is your Swiss Army knife for session management!
+
+```php app/Agents/MyAgent.php
+// AgentContext provides session state management
+public function run(string $input, AgentContext $context): mixed
+{
+    // Get session ID
+    $sessionId = $context->getSessionId();
+
+    // Store state in session
+    $context->setState('order_id', '#12345');
+
+    // Retrieve state
+    $orderId = $context->getState('order_id');
+
+    // Get conversation history
+    $history = $context->getConversationHistory();
+}
+```
+
+## Memory System
+
+Give your agents the gift of memory! Vizra provides persistent memory across sessions through the powerful `AgentMemory` model and `MemoryManager` service:
+
+<CardGroup cols={2}>
+  <Card title="Session State" icon="thought-bubble">
+    Short-term context stored in AgentContext during a conversation - like working memory!
+  </Card>
+  <Card title="Agent Memory" icon="brain">
+    Long-term memory with learnings, facts, and session summaries - like permanent storage!
+  </Card>
+</CardGroup>
+
+## Using Persistent Memory
+
+### Agent Memory API
+
+Every agent now has a built-in memory system that's super easy to use!
+
+```php app/Agents/SupportAgent.php
+class SupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'support_agent';
+
+    public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
+    {
+        // Extract insights from the conversation
+        if (str_contains($response, 'prefer email')) {
+            $this->memory()->addLearning('User prefers email communication');
+        }
+
+        // Store facts
+        if ($this->detectAccountType($response)) {
+            $this->memory()->addFact('Customer has premium account', 0.9);
+        }
+
+        // Add preferences
+        $this->memory()->addPreference('Email notifications', 'communication');
+
+        // Update summary periodically
+        if ($this->shouldUpdateSummary()) {
+            $this->memory()->updateSummary(
+                'Premium customer who prefers email, interested in API features'
+            );
+        }
+
+        return $response;
+    }
+
+    protected function buildSystemPrompt(): string
+    {
+        // Automatically include memory context in prompts!
+        $memoryContext = $this->memory()->getContext(1000);
+
+        return $this->instructions . "\n\nUser Context:\n" . $memoryContext;
+    }
+}
+```
+
+### Memory Methods
+
+The agent memory API provides specialized methods for different types of information:
+
+```php
+// Inside any agent method, access memory via $this->memory()
+
+// Learnings - Insights gained from interactions
+$this->memory()->addLearning('User works in healthcare', [
+    'confidence' => 'high',
+    'source' => 'direct_mention'
+]);
+
+// Facts - Immutable truths about the user
+$this->memory()->addFact('Located in New York', 1.0); // confidence score
+
+// Preferences - User likes and dislikes
+$this->memory()->addPreference('Detailed explanations', 'communication_style');
+
+// Summary - Overall user profile (replaces previous)
+$this->memory()->updateSummary('Tech-savvy healthcare professional in NYC');
+
+// Recall - Search through memories
+$learnings = $this->memory()->getLearnings();
+$facts = $this->memory()->getFacts();
+$preferences = $this->memory()->getPreferences('communication_style');
+$summary = $this->memory()->getSummary();
+
+// Context - Get formatted memory for prompts
+$context = $this->memory()->getContext(1500); // max tokens
+```
+
+### Memory Manager Service
+
+For advanced use cases, you can still access the Memory Manager directly:
+
+```php app/Services/AgentService.php
+use Vizra\VizraADK\Services\MemoryManager;
+
+// Get or create memory for an agent
+$memory = $memoryManager->getOrCreateMemory('support_agent', $userId);
+
+// Add a learning
+$memoryManager->addLearning(
+    'support_agent',
+    'User prefers email communication',
+    $userId
+);
+
+// Add a fact
+$memoryManager->addFact(
+    'support_agent',
+    'preferred_contact',
+    'email',
+    $userId
+);
+
+// Update memory summary
+$memoryManager->updateSummary(
+    'support_agent',
+    'Customer is a premium member who prefers email contact',
+    $userId
+);
+```
+
+### Using Memory Tool
+
+Agents can manage their own memory - how cool is that?
+
+```php app/Agents/SupportAgent.php
+// Agents can use the MemoryTool to manage their own memory
+class SupportAgent extends BaseLlmAgent
+{
+    protected array $tools = [
+        MemoryTool::class,
+    ];
+
+    protected string $instructions = '...
+    Use the manage_memory tool to:
+    - Add important learnings about the user
+    - Store facts for future reference
+    - Retrieve context from previous conversations
+    ';
+}
+```
+
+### Memory Context in Instructions
+
+Inject past memories into your agent's instructions for truly personalized interactions!
+
+```php
+// Get memory context to include in agent instructions
+$memoryContext = $memoryManager->getMemoryContext(
+    'support_agent',
+    $userId,
+    1000 // max length
+);
+
+// Memory context includes:
+// - Previous Knowledge (summary)
+// - Key Learnings (last 5)
+// - Important Facts (up to 10)
+```
+
+## Memory Model Structure
+
+Let's peek under the hood! The `AgentMemory` model is beautifully organized:
+
+### Memory Properties
+
+```json database/agent_memories table
+// AgentMemory model structure
+{
+    "agent_name": "support_agent",
+    "user_id": 123,
+    "memory_summary": "Previous conversation summaries",
+    "memory_data": {                  // Facts stored as key-value pairs
+        "preferred_contact": "email",
+        "account_type": "premium"
+    },
+    "key_learnings": [              // Array of learnings with timestamps
+        {
+            "learning": "User prefers detailed explanations",
+            "learned_at": "2024-01-15T10:30:00Z"
+        }
+    ],
+    "total_sessions": 42,
+    "last_session_at": "2024-01-15T10:30:00Z"
+}
+```
+
+### Accessing Memory Data
+
+Working with memory data is a breeze! Check out these handy methods:
+
+```php
+use Vizra\VizraADK\Models\AgentMemory;
+
+// Find memory for agent and user
+$memory = AgentMemory::where('agent_name', 'support_agent')
+    ->where('user_id', $userId)
+    ->first();
+
+// Get context summary for agent instructions
+$contextSummary = $memory->getContextSummary(1000);
+
+// Add a learning
+$memory->addLearning('User works in healthcare industry');
+
+// Update memory data
+$memory->updateMemoryData([
+    'industry' => 'healthcare',
+    'timezone' => 'EST'
+]);
+
+// Record a new session
+$memory->recordSession();
+```
+
+## Session and Memory Integration
+
+### Automatic Memory Updates
+
+The magic happens automatically! Sessions and memory work together seamlessly:
+
+```php
+// Sessions automatically link to memory
+$session = AgentSession::find($id);
+$memory = $session->getOrCreateMemory();
+
+// Update memory from session
+$session->updateMemory([
+    'learnings' => [
+        'User is interested in API integration',
+        'Prefers Python code examples'
+    ],
+    'facts' => [
+        'programming_language' => 'Python',
+        'api_experience' => 'intermediate'
+    ]
+]);
+```
+
+### Memory Extraction
+
+Watch as Vizra intelligently extracts insights from conversations!
+
+```php
+// MemoryManager automatically extracts insights from sessions
+$memoryManager->updateMemoryFromSession($session);
+
+// This automatically:
+// - Records the session in memory
+// - Extracts preferences ("I like/prefer...")
+// - Extracts personal info ("My name is...")
+// - Updates session count and timestamps
+```
+
+## Memory Lifecycle
+
+### Session Summarization
+
+Keep memories fresh and relevant with intelligent summarization!
+
+```php
+// Summarize recent sessions into memory
+$memoryManager->summarizeMemory(
+    $memory,
+    10 // Number of recent sessions to summarize
+);
+
+// Get recent conversations
+$recentConversations = $memoryManager->getRecentConversations(
+    'support_agent',
+    $userId,
+    5 // Limit
+);
+```
+
+### Memory Cleanup
+
+Keep your database tidy with smart cleanup strategies!
+
+```php
+// Clean up old memories
+$deletedCount = $memoryManager->cleanupOldMemories(
+    90,    // Days old
+    1000   // Max sessions
+);
+
+// Clean up old sessions while preserving memory
+$deletedSessions = $memoryManager->cleanupOldSessions(
+    'support_agent',
+    30 // Days old
+);
+```
+
+## Implementation Examples
+
+### Customer Support Agent
+
+A complete example of a memory-aware support agent that learns and adapts!
+
+```php app/Agents/CustomerSupportAgent.php
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'customer_support';
+    protected string $instructions = 'You are a helpful customer support agent...';
+
+    public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
+    {
+        $responseText = $response instanceof Response ? $response->text : '';
+
+        // Extract and store contact preferences
+        if (preg_match('/prefer.*(email|phone|chat)/i', $responseText, $matches)) {
+            $this->memory()->addPreference(
+                "Prefers {$matches[1]} communication",
+                'contact'
+            );
+        }
+
+        // Detect product interests
+        if (str_contains($responseText, 'API') || str_contains($responseText, 'integration')) {
+            $this->memory()->addLearning('Interested in API/integration features');
+        }
+
+        // Store important facts
+        if (preg_match('/order\s*#?(\d+)/i', $responseText, $matches)) {
+            $this->memory()->addFact("Recent order: #{$matches[1]}", 1.0);
+        }
+
+        return $response;
+    }
+
+    protected function buildSystemPrompt(): string
+    {
+        // Include all relevant memory context
+        $memory = $this->memory();
+        $summary = $memory->getSummary();
+        $preferences = $memory->getPreferences('contact');
+        $recentFacts = $memory->getFacts()->take(5);
+
+        $prompt = $this->instructions;
+
+        if ($summary) {
+            $prompt .= "\n\nCustomer Profile: " . $summary;
+        }
+
+        if ($preferences->isNotEmpty()) {
+            $prompt .= "\n\nCommunication Preferences:";
+            foreach ($preferences as $pref) {
+                $prompt .= "\n- " . $pref->content;
+            }
+        }
+
+        if ($recentFacts->isNotEmpty()) {
+            $prompt .= "\n\nRecent Information:";
+            foreach ($recentFacts as $fact) {
+                $prompt .= "\n- " . $fact->content;
+            }
+        }
+
+        return $prompt;
+    }
+}
+```
+
+### Educational Tutor Agent
+
+An agent that tracks learning progress and adapts teaching style!
+
+```php app/Agents/TutorAgent.php
+class TutorAgent extends BaseLlmAgent
+{
+    protected string $name = 'tutor_agent';
+
+    public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
+    {
+        // Track topics covered
+        if ($topic = $this->extractTopic($response)) {
+            $this->memory()->addLearning("Studied topic: {$topic}", [
+                'timestamp' => now()->toIso8601String(),
+                'session_id' => $context->getSessionId()
+            ]);
+        }
+
+        // Detect learning style preferences
+        $this->detectLearningStyle($response, $context);
+
+        // Update progress summary
+        $learnings = $this->memory()->getLearnings();
+        if ($learnings->count() % 5 === 0) { // Every 5 learnings
+            $topics = $learnings->pluck('content')->take(10)->implode(', ');
+            $this->memory()->updateSummary(
+                "Student has covered: {$topics}. Shows strong interest in practical examples."
+            );
+        }
+
+        return $response;
+    }
+
+    private function detectLearningStyle($response, $context): void
+    {
+        $userInput = $context->getLastUserMessage();
+
+        if (str_contains($userInput, 'example') || str_contains($userInput, 'show me')) {
+            $this->memory()->addPreference('Prefers examples', 'learning_style');
+        }
+
+        if (str_contains($userInput, 'why') || str_contains($userInput, 'explain')) {
+            $this->memory()->addPreference('Likes detailed explanations', 'learning_style');
+        }
+
+        if (str_contains($userInput, 'quick') || str_contains($userInput, 'summary')) {
+            $this->memory()->addPreference('Prefers concise answers', 'learning_style');
+        }
+    }
+}
+```
+
+### Memory-Aware Agent Base Class
+
+Create a reusable base class for all memory-aware agents:
+
+```php app/Agents/MemoryAwareAgent.php
+abstract class MemoryAwareAgent extends BaseLlmAgent
+{
+    protected bool $autoExtractPreferences = true;
+    protected bool $includeMemoryInPrompt = true;
+
+    protected function buildSystemPrompt(): string
+    {
+        $prompt = $this->instructions;
+
+        if ($this->includeMemoryInPrompt) {
+            $memoryContext = $this->memory()->getContext(800);
+            if ($memoryContext) {
+                $prompt .= "\n\nUser Context:\n" . $memoryContext;
+            }
+        }
+
+        return $prompt;
+    }
+
+    public function afterLlmResponse(Response|Generator $response, AgentContext $context): mixed
+    {
+        if ($this->autoExtractPreferences) {
+            $this->extractPreferences($response, $context);
+        }
+
+        // Let child classes add their own memory logic
+        $this->updateMemory($response, $context);
+
+        return $response;
+    }
+
+    /**
+     * Override this in child classes to add custom memory updates
+     */
+    protected function updateMemory(Response|Generator $response, AgentContext $context): void
+    {
+        // Child classes implement their specific memory logic
+    }
+
+    private function extractPreferences($response, $context): void
+    {
+        $text = $response instanceof Response ? $response->text : '';
+        $userInput = $context->getLastUserMessage();
+
+        // Common preference patterns
+        $patterns = [
+            '/I (?:prefer|like|want|need) (.+?)(?:\.|,|$)/i' => 'general',
+            '/(?:call|email|text|message) me/i' => 'contact',
+            '/I (?:work in|am in|from) (.+?)(?:\.|,|$)/i' => 'location',
+            '/my (?:job|role|position) is (.+?)(?:\.|,|$)/i' => 'occupation'
+        ];
+
+        foreach ($patterns as $pattern => $category) {
+            if (preg_match($pattern, $userInput, $matches)) {
+                $preference = isset($matches[1]) ? $matches[1] : $matches[0];
+                $this->memory()->addPreference(trim($preference), $category);
+            }
+        }
+    }
+}
+```
+
+### Session State Management
+
+Store complex data structures in session state - it's that flexible!
+
+```php
+// Store complex state in sessions
+$context->setState('cart_items', [
+    ['id' => 123, 'quantity' => 2],
+    ['id' => 456, 'quantity' => 1]
+]);
+
+// Load all state
+$allState = $context->getAllState();
+
+// Merge new state
+$context->loadState([
+    'preferences' => $userPreferences,
+    'settings' => $userSettings
+]);
+```
+
+## Memory Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Short-term Memory" icon="thought-bubble">
+    Use AgentContext for session state
+  </Card>
+  <Card title="Long-term Memory" icon="brain">
+    Store important facts in AgentMemory
+  </Card>
+  <Card title="Auto-summarization" icon="pencil">
+    Let MemoryManager handle summaries
+  </Card>
+  <Card title="Agent Control" icon="wrench">
+    Use MemoryTool for self-management
+  </Card>
+  <Card title="Cleanup Strategy" icon="broom">
+    Implement cleanup for old sessions
+  </Card>
+  <Card title="Context Injection" icon="bullseye">
+    Include memory in instructions
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Next: Workflows" icon="rotate" href="/concepts/workflows">
+    Learn about agent workflows and multi-step processes
+  </Card>
+  <Card title="Next: Dynamic Prompts" icon="pencil" href="/concepts/dynamic-prompts">
+    Learn about dynamic prompt versioning and variants
+  </Card>
+</CardGroup>

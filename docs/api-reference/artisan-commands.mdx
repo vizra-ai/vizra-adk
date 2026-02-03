@@ -1,0 +1,406 @@
+---
+title: "Artisan Commands"
+description: "Your CLI toolkit for building amazing AI agents. Master these commands to create, debug, and deploy intelligent agents with ease."
+icon: "terminal"
+---
+
+<Tip>
+Vizra's Artisan commands are your Swiss Army knife for AI agent development. From creating new agents to debugging complex interactions, everything is just a command away.
+</Tip>
+
+## Agent Development Commands
+
+These commands help you scaffold new agents and tools in seconds.
+
+### vizra:make:agent
+
+Create a new AI agent with a single command. This is where the magic begins.
+
+```bash Terminal
+# Create a new agent interactively
+php artisan vizra:make:agent
+
+# The command will prompt for the agent name
+# Creates: app/Agents/YourAgent.php
+```
+
+**What you get:**
+
+- Name, description, and instructions properties ready to customize
+- Model configuration (defaults to the blazing-fast gemini-2.0-flash)
+- Temperature and max tokens settings pre-configured
+- Empty tools array ready for your custom capabilities
+
+### vizra:make:tool
+
+Give your agents superpowers. Tools let your agents interact with databases, APIs, and more.
+
+```bash Terminal
+# Create a new tool interactively
+php artisan vizra:make:tool
+
+# The command will prompt for the tool name
+# Creates: app/Tools/YourTool.php
+```
+
+**Smart features:**
+
+- Tool names are automatically snake_cased for consistency
+- "_tool" suffix is intelligently removed from the name
+- Implements ToolInterface with definition() and execute() methods
+- Includes JSON schema parameter definition for type safety
+
+### vizra:make:eval
+
+Quality assurance for your AI. Create evaluations to ensure your agents perform consistently.
+
+```bash Terminal
+# Create a new evaluation interactively
+php artisan vizra:make:eval
+
+# The command will prompt for the evaluation name
+# Creates: app/Evaluations/YourEvaluation.php
+```
+
+## Agent Discovery Commands
+
+Explore your AI workforce. These commands help you discover and manage your agents.
+
+### vizra:discover-agents
+
+See all your available agents. This command shows you every agent in your application, whether registered or not.
+
+```bash Terminal
+# Discover all agents
+php artisan vizra:discover-agents
+
+# Clear discovery cache and rediscover
+php artisan vizra:discover-agents --clear-cache
+```
+
+**What you'll see:**
+
+- Complete list of all agents in your `app/Agents` directory
+- Agent names, class names, and registration status
+- Automatic discovery of new agents without manual registration
+- Clear indication of which agents are already registered vs available
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--clear-cache` | Force rediscovery by clearing the cache |
+
+<Note>
+Vizra ADK automatically discovers and registers agents when you use them. You don't need to manually register agents in your `AppServiceProvider` anymore. Just create an agent and start using it.
+</Note>
+
+## Agent Interaction Commands
+
+Time to talk. These commands let you interact with your agents directly from the terminal.
+
+### vizra:chat
+
+Have a conversation with your AI agent right in your terminal. Perfect for testing and development.
+
+```bash Terminal
+php artisan vizra:chat {agent_name}
+
+# Example: Chat with the weather reporter agent
+php artisan vizra:chat weather_reporter
+
+# Type "exit" or "quit" to end the chat
+```
+
+**Features:**
+
+- Interactive terminal-based chat interface for instant feedback
+- Unique session ID for each chat to track conversations
+- Handles string, array, and object responses gracefully
+- Comprehensive error handling so nothing breaks
+
+## Evaluation Commands
+
+Test your agents like a pro. Run comprehensive evaluations to ensure quality at scale.
+
+### vizra:run:eval
+
+Put your agents through their paces. Run evaluations to measure performance and catch regressions.
+
+```bash Terminal
+php artisan vizra:run:eval {name} [--output=results.csv]
+
+# Example: Run CustomerServiceEvaluation
+php artisan vizra:run:eval CustomerServiceEvaluation
+
+# Save results to CSV file
+php artisan vizra:run:eval CustomerServiceEvaluation --output=results.csv
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `name` | The evaluation class name (e.g., MyTestEvaluation) |
+| `--output` | Path to save CSV results for analysis |
+
+**What you'll see:**
+
+- Real-time progress bar during evaluation
+- Summary statistics with pass/fail counts
+- Detailed results with assertion breakdowns
+- CSV export with all test data for deeper analysis
+
+## Prompt Management Commands
+
+Master your AI's voice. Manage prompt versions without touching code.
+
+### vizra:prompt
+
+Your command center for prompt versioning. Create, list, activate, and manage different prompt versions for each agent.
+
+```bash Terminal
+# Create a new prompt version
+php artisan vizra:prompt create {agent} {version} [--content="..."]
+
+# List all prompt versions
+php artisan vizra:prompt list [agent]
+
+# Activate a version (database only)
+php artisan vizra:prompt activate {agent} {version}
+
+# Export prompt to file
+php artisan vizra:prompt export {agent} {version} [--file=output.txt]
+
+# Import prompt from file
+php artisan vizra:prompt import {agent} {version} --file=input.txt
+```
+
+**Examples in action:**
+
+```bash Terminal
+# Create friendly customer support prompt
+php artisan vizra:prompt create customer_support friendly \
+    --content="You are a warm and friendly support agent. Use casual language."
+
+# List all weather reporter prompts
+php artisan vizra:prompt list weather_reporter
+
+# Switch to professional version in production
+php artisan vizra:prompt activate customer_support professional
+
+# Share prompts between projects
+php artisan vizra:prompt export my_agent v2 --file=awesome_prompt.txt
+php artisan vizra:prompt import other_agent v1 --file=awesome_prompt.txt
+```
+
+**Prompt versioning features:**
+
+- File-based storage by default at `resources/prompts/{agent}/{version}.txt`
+- Optional database storage for production environments
+- Runtime version switching without code changes
+- Perfect for A/B testing and experimentation
+- Integration with evaluations for systematic testing
+
+## Debugging Commands
+
+Become a debugging detective. These commands help you understand exactly what your agents are doing.
+
+### vizra:trace
+
+X-ray vision for your agents. See every step of execution in beautiful detail.
+
+```bash Terminal
+php artisan vizra:trace {session_id} [options]
+
+# View trace in tree format (default)
+php artisan vizra:trace abc123
+
+# View specific trace ID
+php artisan vizra:trace abc123 --trace-id=xyz789
+
+# Show detailed span data
+php artisan vizra:trace abc123 --show-input --show-output --show-metadata
+
+# Show only errors
+php artisan vizra:trace abc123 --errors-only
+
+# Different output formats
+php artisan vizra:trace abc123 --format=table
+php artisan vizra:trace abc123 --format=json
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--trace-id` | Zero in on a specific trace |
+| `--show-input` | See what went in |
+| `--show-output` | See what came out |
+| `--show-metadata` | View all the extra details |
+| `--errors-only` | Focus on problems |
+| `--format` | Choose your view: tree, table, or json |
+
+### vizra:trace:cleanup
+
+Keep things tidy. Clean up old trace data to save space and maintain performance.
+
+```bash Terminal
+# Clean up traces older than config value (default: 30 days)
+php artisan vizra:trace:cleanup
+
+# Clean up traces older than 7 days
+php artisan vizra:trace:cleanup --days=7
+
+# Preview what would be deleted
+php artisan vizra:trace:cleanup --dry-run
+
+# Skip confirmation prompt
+php artisan vizra:trace:cleanup --force
+```
+
+## Vector Memory Commands
+
+Give your agents perfect memory. Store and search through knowledge using advanced vector embeddings.
+
+### vector:store
+
+Feed your agent's brain. Store documents, manuals, and knowledge for instant recall.
+
+```bash Terminal
+php artisan vector:store {agent} [options]
+
+# Store content from a file
+php artisan vector:store customer_support --file=docs.txt
+
+# Store direct content
+php artisan vector:store customer_support --content="Important product information"
+
+# With metadata
+php artisan vector:store customer_support \
+    --file=manual.pdf \
+    --namespace=products \
+    --source=manual \
+    --source-id=v2.0 \
+    --metadata='{"category":"electronics","version":"2.0"}'
+```
+
+**Storage options:**
+
+| Option | Description |
+|--------|-------------|
+| `--file` | Path to document or file |
+| `--content` | Direct text to store |
+| `--namespace` | Organize your memories |
+| `--source` | Track where it came from |
+| `--source-id` | Version or ID tracking |
+| `--metadata` | Extra context as JSON |
+
+### vector:search
+
+Find anything instantly. Search through your agent's knowledge with semantic understanding.
+
+```bash Terminal
+php artisan vector:search {agent} {query} [options]
+
+# Basic search
+php artisan vector:search customer_support "refund policy"
+
+# Search with custom parameters
+php artisan vector:search customer_support "shipping rates" \
+    --limit=10 \
+    --threshold=0.8 \
+    --namespace=policies
+
+# Generate RAG context
+php artisan vector:search customer_support "product warranty" --rag
+
+# JSON output
+php artisan vector:search customer_support "user manual" --json
+```
+
+**Search options:**
+
+| Option | Description |
+|--------|-------------|
+| `--namespace` | Search specific memory spaces |
+| `--limit` | How many results to return |
+| `--threshold` | Similarity score (0.0-1.0) |
+| `--rag` | Get formatted context for agents |
+| `--json` | Machine-readable output |
+
+### vector:stats
+
+Monitor your memory usage. Get insights into how your vector storage is performing.
+
+```bash Terminal
+# Global statistics
+php artisan vector:stats
+
+# Agent-specific statistics
+php artisan vector:stats customer_support
+
+# Detailed statistics
+php artisan vector:stats --detailed
+
+# Specific namespace
+php artisan vector:stats customer_support --namespace=products
+
+# JSON output
+php artisan vector:stats --json
+```
+
+## Setup Commands
+
+Get started quickly. These commands help you set up and configure Vizra ADK.
+
+### vizra:install
+
+One command to rule them all. Install everything you need to start building agents.
+
+```bash Terminal
+php artisan vizra:install
+
+# This command:
+# - Publishes configuration files
+# - Publishes database migrations
+# - Shows post-installation information
+```
+
+### vizra:dashboard
+
+Access your command center. Launch the web dashboard to test and monitor your agents.
+
+```bash Terminal
+# Display dashboard URL
+php artisan vizra:dashboard
+
+# Open dashboard in browser
+php artisan vizra:dashboard --open
+```
+
+## Pro Tips
+
+<CardGroup cols={2}>
+  <Card title="Development Flow" icon="code">
+    - Use `vizra:chat` for rapid testing
+    - Create agents and tools with make commands
+    - Debug with traces when things get complex
+  </Card>
+  <Card title="Production Excellence" icon="rocket">
+    - Run evaluations before deploying
+    - Clean up traces to save storage
+    - Monitor vector memory performance
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start Guide" icon="play" href="/getting-started/quick-start">
+    Jump back to the basics and get started
+  </Card>
+  <Card title="Full API Reference" icon="book" href="/api-reference">
+    Explore all the APIs and capabilities
+  </Card>
+</CardGroup>

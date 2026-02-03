@@ -1,0 +1,705 @@
+---
+title: "Vector Memory & RAG"
+description: "Unlock the power of semantic search and intelligent information retrieval. Let your agents access vast knowledge bases and provide incredibly accurate, context-aware responses."
+icon: "magnifying-glass"
+---
+
+## Understanding Vector Memory
+
+Think of vector memory as your agent's superpower! It transforms text into mathematical representations that capture meaning, enabling your agent to find semantically similar content even when the exact words don't match.
+
+<Tip>
+**Flexible & Powerful:** Choose from multiple storage providers (Meilisearch, PostgreSQL + pgvector) and embedding providers (OpenAI, Gemini, Cohere, Ollama) to fit your needs!
+</Tip>
+
+<CardGroup cols={2}>
+  <Card title="Semantic Search" icon="bullseye">
+    Find content by meaning, not just keywords
+  </Card>
+  <Card title="Efficient Retrieval" icon="bolt">
+    Lightning-fast similarity searches at scale
+  </Card>
+  <Card title="Multiple Providers" icon="wrench">
+    Support for various storage and embedding providers
+  </Card>
+  <Card title="Context Augmentation" icon="rocket">
+    Enhance responses with relevant knowledge
+  </Card>
+</CardGroup>
+
+## Setting Up Vector Memory
+
+Let's get your vector memory up and running with Meilisearch! It's the perfect balance of speed, simplicity, and power.
+
+### Quick Setup with Meilisearch
+
+Configure vector memory with Meilisearch in your `.env` file:
+
+```bash .env
+# Vector Memory with Meilisearch (recommended for most use cases)
+VIZRA_ADK_VECTOR_DRIVER=meilisearch
+
+# Choose your embedding provider
+VIZRA_ADK_EMBEDDING_PROVIDER=gemini  # or openai, cohere, ollama
+
+# Gemini for embeddings (recommended)
+GEMINI_API_KEY=your-gemini-api-key
+
+# Meilisearch configuration
+MEILISEARCH_HOST=http://localhost:7700
+MEILISEARCH_KEY=your-master-key
+MEILISEARCH_PREFIX=agent_vectors_
+
+# Alternative: OpenAI embeddings
+# VIZRA_ADK_EMBEDDING_PROVIDER=openai
+# OPENAI_API_KEY=your-openai-key
+```
+
+<Info>
+**Alternative option:** You can also use PostgreSQL + pgvector for production-scale vector similarity search. See the complete configuration reference below for setup details.
+</Info>
+
+### Database Setup
+
+```bash Terminal
+# Run migrations for vector memory tables
+php artisan migrate
+
+# For PostgreSQL, ensure pgvector extension is installed
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+## Using Vector Memory in Agents
+
+<Tip>
+Your agents now have built-in access to vector memory! Use the convenient `$this->vector()` or `$this->rag()` methods directly within your agent.
+
+**New!** These methods are now **public**, so you can also access them externally for testing: `$agent->vector()->addDocument(...)`
+</Tip>
+
+### Storing Documents in Your Agent
+
+```php Using Vector Memory in an Agent
+class DocumentationAgent extends BaseLlmAgent
+{
+    protected string $name = 'documentation_agent';
+
+    public function storeKnowledge(string $content, array $metadata = []): void
+    {
+        // Simple string content with optional metadata
+        $this->vector()->addDocument($content, $metadata);
+
+        // Or use array format for full control
+        $this->vector()->addDocument([
+            'content' => $content,
+            'metadata' => $metadata,
+            'namespace' => 'docs',
+            'source' => 'user-upload'
+        ]);
+    }
+
+    public function searchKnowledge(string $query): array
+    {
+        // Simple search with default settings
+        return $this->rag()->search($query);
+
+        // Or with custom limit
+        return $this->rag()->search($query, 10);
+
+        // Or full control with array
+        return $this->rag()->search([
+            'query' => $query,
+            'limit' => 5,
+            'threshold' => 0.7,
+            'namespace' => 'docs'
+        ]);
+    }
+}
+```
+
+<Info>
+Both `$this->vector()` and `$this->rag()` return a proxy that automatically injects your agent class. No need to pass agent names anymore!
+
+**Simplified API:** Use simple strings for basic operations, or arrays for full control with progressive disclosure!
+</Info>
+
+### Direct VectorMemoryManager Access
+
+For advanced use cases outside of agent contexts, you can still use the VectorMemoryManager directly:
+
+```php Direct VectorMemoryManager Usage
+use Vizra\VizraADK\Services\VectorMemoryManager;
+use App\Agents\DocumentationAgent;
+
+$vectorManager = app(VectorMemoryManager::class);
+
+// Simple usage with agent class
+$memories = $vectorManager->addDocument(
+    DocumentationAgent::class,
+    'Vizra ADK is a Laravel package for building AI agents...',
+    ['category' => 'overview']
+);
+
+// Or with full options
+$memories = $vectorManager->addDocument(
+    DocumentationAgent::class,
+    [
+        'content' => 'Vizra ADK is a Laravel package...',
+        'metadata' => [
+            'category' => 'overview',
+            'version' => '1.0'
+        ],
+        'namespace' => 'docs',
+        'source' => 'overview-page'
+    ]
+);
+```
+
+### Progressive Disclosure API
+
+<Tip>
+**Smart API Design:** Start simple, add complexity only when needed!
+</Tip>
+
+```php Progressive API Examples
+class KnowledgeAgent extends BaseLlmAgent
+{
+    public function demonstrateAPI(): void
+    {
+        // 1. SIMPLE: Just content (perfect for quick prototyping)
+        $this->vector()->addChunk('Laravel is awesome!');
+
+        // 2. COMMON: Content + metadata (most typical usage)
+        $this->vector()->addChunk(
+            'Eloquent is Laravel\'s ORM',
+            ['category' => 'database', 'difficulty' => 'beginner']
+        );
+
+        // 3. ADVANCED: Full control with array (when you need everything)
+        $this->vector()->addChunk([
+            'content' => 'Advanced Laravel patterns and practices',
+            'metadata' => ['category' => 'advanced', 'priority' => 'high'],
+            'namespace' => 'tutorials',
+            'source' => 'expert-guide',
+            'source_id' => 'guide-123',
+            'chunk_index' => 0
+        ]);
+    }
+
+    public function searchExamples(): void
+    {
+        // Simple search
+        $results = $this->rag()->search('Laravel ORM');
+
+        // With limit
+        $results = $this->rag()->search('Laravel patterns', 10);
+
+        // Full control
+        $results = $this->rag()->search([
+            'query' => 'advanced Laravel',
+            'namespace' => 'tutorials',
+            'limit' => 5,
+            'threshold' => 0.8
+        ]);
+    }
+}
+```
+
+### Document Chunking Configuration
+
+<Info>
+**Pro tip:** Adjust chunk sizes based on your content type. Smaller chunks for FAQs, larger for narrative content!
+</Info>
+
+```php config/vizra-adk.php
+// Configure chunking in config/vizra-adk.php
+'vector_memory' => [
+    'chunking' => [
+        'size' => 1000,      // Characters per chunk
+        'overlap' => 100,    // Overlap between chunks
+        'separators' => ["\n\n", "\n", ". ", ", ", " "],
+        'keep_separators' => true,
+    ],
+];
+```
+
+## Searching Vector Memory
+
+Here's where the magic happens! Watch your agent find exactly what it needs, even when users ask questions in completely different words.
+
+### Semantic Search in Agents
+
+```php Semantic Search in Agent
+class SmartAssistant extends BaseLlmAgent
+{
+    protected string $name = 'smart_assistant';
+
+    public function findRelevantInfo(string $query): string
+    {
+        // Simple search - uses defaults
+        $results = $this->rag()->search($query);
+
+        // Or with custom limit
+        $results = $this->rag()->search($query, 10);
+
+        // Or full control
+        $results = $this->rag()->search([
+            'query' => $query,
+            'limit' => 5,
+            'threshold' => 0.7,
+            'namespace' => 'knowledge'
+        ]);
+
+        // Format results for response
+        $relevant = [];
+        foreach ($results as $result) {
+            $relevant[] = $result->content;
+        }
+
+        return implode("\n\n", $relevant);
+    }
+}
+```
+
+### RAG Context Generation
+
+<Note>
+RAG (Retrieval-Augmented Generation) combines the power of vector search with LLM generation for incredibly accurate responses!
+</Note>
+
+```php Generate RAG Context in Agent
+class RAGEnabledAgent extends BaseLlmAgent
+{
+    protected string $name = 'rag_agent';
+
+    public function run(mixed $input, AgentContext $context): mixed
+    {
+        // Simple: just pass the query (uses intelligent defaults)
+        $ragContext = $this->rag()->generateRagContext($input);
+
+        // Common: with a few key options
+        $ragContext = $this->rag()->generateRagContext($input, [
+            'namespace' => 'knowledge',
+            'limit' => 5
+        ]);
+
+        // Advanced: full control over retrieval
+        $ragContext = $this->rag()->generateRagContext($input, [
+            'namespace' => 'knowledge',
+            'limit' => 5,
+            'threshold' => 0.7,
+            'include_metadata' => true
+        ]);
+
+        // Only augment if we found relevant content
+        if ($ragContext['total_results'] > 0) {
+            $augmentedInput = "Based on the following context:\n" .
+                             $ragContext['context'] .
+                             "\n\nUser Question: " . $input;
+        } else {
+            $augmentedInput = $input; // No relevant context found
+        }
+
+        return parent::run($augmentedInput, $context);
+    }
+}
+```
+
+## Building RAG-Powered Agents
+
+Transform your agents into knowledge powerhouses! Here's a complete example of a RAG-enabled documentation assistant.
+
+### Complete RAG Agent Example
+
+```php Documentation Assistant with RAG
+class DocumentationAssistant extends BaseLlmAgent
+{
+    protected string $name = 'doc_assistant';
+    protected string $description = 'AI assistant with access to documentation';
+
+    protected string $instructions = 'You are a helpful documentation assistant.
+        Use the provided context to answer questions accurately.';
+
+    /**
+     * Load documentation into vector memory
+     */
+    public function loadDocumentation(string $filePath): void
+    {
+        $content = file_get_contents($filePath);
+
+        // Simple with metadata
+        $this->vector()->addDocument($content, [
+            'source' => basename($filePath),
+            'type' => 'documentation'
+        ]);
+
+        // Or with full control
+        $this->vector()->addDocument([
+            'content' => $content,
+            'metadata' => [
+                'source' => basename($filePath),
+                'type' => 'documentation'
+            ],
+            'namespace' => 'docs',
+            'source' => 'documentation',
+            'source_id' => md5($filePath)
+        ]);
+    }
+
+    /**
+     * Process user questions with RAG
+     */
+    public function run(mixed $input, AgentContext $context): mixed
+    {
+        // Search for relevant documentation with array options
+        $ragContext = $this->rag()->generateRagContext($input, [
+            'namespace' => 'docs',
+            'limit' => 5,
+            'threshold' => 0.7
+        ]);
+
+        // Only augment if we found relevant content
+        if ($ragContext['total_results'] > 0) {
+            $augmentedInput = "Relevant Documentation:\n" .
+                             $ragContext['context'] .
+                             "\n\nUser Question: " . $input .
+                             "\n\nPlease answer based on the documentation provided.";
+        } else {
+            $augmentedInput = $input . "\n\n(No relevant documentation found)";
+        }
+
+        return parent::run($augmentedInput, $context);
+    }
+
+    /**
+     * Get statistics about loaded documentation
+     */
+    public function getDocStats(): array
+    {
+        // Default namespace
+        return $this->vector()->getStatistics();
+
+        // Or specific namespace
+        return $this->vector()->getStatistics('docs');
+
+        // Or with array
+        return $this->vector()->getStatistics(['namespace' => 'docs']);
+    }
+}
+```
+
+### RAG Configuration
+
+```php config/vizra-adk.php
+// Configure RAG in config/vizra-adk.php
+'vector_memory' => [
+    'rag' => [
+        'context_template' => "Based on the following context:\n{context}\n\nAnswer this question: {query}",
+        'max_context_length' => 4000,
+        'include_metadata' => true,
+    ],
+],
+```
+
+## Embedding Providers
+
+<CardGroup cols={3}>
+  <Card title="OpenAI (Default)" icon="bullseye">
+    ```bash .env
+    OPENAI_API_KEY=your-api-key
+
+    # In config/vizra-adk.php
+    'embedding_models' => [
+        'openai' => 'text-embedding-3-small'
+    ]
+    ```
+  </Card>
+  <Card title="Supported Models" icon="chart-line">
+    - text-embedding-3-small (1536 dims)
+    - text-embedding-3-large (3072 dims)
+    - text-embedding-ada-002 (1536 dims)
+  </Card>
+  <Card title="Custom Provider" icon="wrench">
+    Implement `EmbeddingProviderInterface` to add custom embedding providers
+  </Card>
+</CardGroup>
+
+## Vector Memory Management
+
+Keep your vector memory clean and efficient! Here's how to manage, monitor, and optimize your knowledge base.
+
+### Managing Memories
+
+```php Memory Management in Agents
+class ManagedKnowledgeAgent extends BaseLlmAgent
+{
+    protected string $name = 'managed_agent';
+
+    /**
+     * Clear all memories in a namespace
+     */
+    public function clearNamespace(string $namespace = 'default'): int
+    {
+        // Simple: just the namespace name
+        return $this->vector()->deleteMemories($namespace);
+
+        // Advanced: with array for consistency
+        return $this->vector()->deleteMemories(['namespace' => $namespace]);
+    }
+
+    /**
+     * Remove memories from a specific source
+     */
+    public function removeSource(string $source, string $namespace = 'default'): int
+    {
+        // Simple: source only (uses default namespace)
+        return $this->vector()->deleteMemoriesBySource($source);
+
+        // Common: source with namespace
+        return $this->vector()->deleteMemoriesBySource($source, $namespace);
+
+        // Advanced: full array control
+        return $this->vector()->deleteMemoriesBySource([
+            'source' => $source,
+            'namespace' => $namespace
+        ]);
+    }
+
+    /**
+     * Get memory usage statistics
+     */
+    public function getMemoryStats(string $namespace = 'default'): array
+    {
+        // Simple: default namespace
+        $stats = $this->vector()->getStatistics();
+
+        // Specific namespace
+        $stats = $this->vector()->getStatistics($namespace);
+
+        // Advanced: with array
+        $stats = $this->vector()->getStatistics(['namespace' => $namespace]);
+
+        return $stats;
+    }
+
+    /**
+     * Example: External testing access (new public methods!)
+     */
+    public function demonstrateExternalAccess(): void
+    {
+        // These methods are now PUBLIC - can be called externally!
+        // Perfect for Tinkerwell testing:
+
+        $agent = Agent::named('managed_agent');
+        $result = $agent->vector()->addDocument('Test content');
+        $search = $agent->rag()->search('test query');
+    }
+}
+```
+
+### Creating Tools for Vector Operations
+
+```php Vector Memory Tools
+class SearchKnowledgeTool implements ToolInterface
+{
+    public function definition(): array
+    {
+        return [
+            'name' => 'search_knowledge',
+            'description' => 'Search the knowledge base for relevant information',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'query' => [
+                        'type' => 'string',
+                        'description' => 'The search query'
+                    ],
+                    'namespace' => [
+                        'type' => 'string',
+                        'description' => 'Knowledge namespace to search',
+                        'default' => 'default'
+                    ],
+                    'limit' => [
+                        'type' => 'integer',
+                        'description' => 'Maximum results to return',
+                        'default' => 5
+                    ]
+                ],
+                'required' => ['query']
+            ]
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
+    {
+        // Get agent from context
+        $agentClass = $context->getState('agent_class');
+        $agent = new $agentClass();
+
+        // Use the simplified API - proxy handles agent class injection
+        $results = $agent->rag()->search([
+            'query' => $arguments['query'],
+            'namespace' => $arguments['namespace'] ?? 'default',
+            'limit' => $arguments['limit'] ?? 5
+        ]);
+
+        return json_encode([
+            'success' => true,
+            'results' => $results->map(fn($r) => [
+                'content' => $r->content,
+                'similarity' => round($r->similarity, 3),
+                'metadata' => $r->metadata,
+                'source' => $r->source
+            ])->toArray(),
+            'total_found' => $results->count()
+        ]);
+    }
+}
+```
+
+### Using the VectorMemory Model
+
+```php Direct Model Access
+use Vizra\VizraADK\Models\VectorMemory;
+
+// Query memories directly
+$memories = VectorMemory::forAgent('my_agent')
+    ->inNamespace('default')
+    ->fromSource('docs')
+    ->get();
+
+// Calculate similarity (for non-pgvector)
+$similarity = $memory->cosineSimilarity($queryEmbedding);
+```
+
+## Vector Storage Drivers
+
+<CardGroup cols={2}>
+  <Card title="PostgreSQL with pgvector" icon="database">
+    High-performance vector similarity search with native PostgreSQL integration.
+
+    ```sql Setup
+    # Install pgvector extension
+    CREATE EXTENSION IF NOT EXISTS vector;
+
+    # Configure in .env
+    VIZRA_ADK_VECTOR_DRIVER=pgvector
+    DB_CONNECTION=pgsql
+    ```
+  </Card>
+  <Card title="Meilisearch" icon="magnifying-glass">
+    Lightning-fast, typo-tolerant search engine with built-in vector support.
+
+    ```bash Setup
+    # Configure for Meilisearch
+    VIZRA_ADK_VECTOR_DRIVER=meilisearch
+    MEILISEARCH_HOST=http://localhost:7700
+    MEILISEARCH_KEY=your-master-key
+    MEILISEARCH_PREFIX=agent_vectors_
+    ```
+  </Card>
+</CardGroup>
+
+<Info>
+**Fallback Behavior** - When neither pgvector nor Meilisearch are available, Vizra ADK automatically falls back to cosine similarity calculation using your database. This works with any driver but is best for development or small datasets.
+</Info>
+
+## Complete Configuration Reference
+
+Here's a complete reference for all vector memory configuration options available in Vizra ADK!
+
+```php config/vizra-adk.php
+// Complete vector memory configuration
+'vector_memory' => [
+    // Enable/disable vector memory
+    'enabled' => env('VIZRA_ADK_VECTOR_ENABLED', true),
+
+    // Storage driver: pgvector, meilisearch
+    'driver' => env('VIZRA_ADK_VECTOR_DRIVER', 'pgvector'),
+
+    // Embedding provider: openai, cohere, ollama, gemini
+    'embedding_provider' => env('VIZRA_ADK_EMBEDDING_PROVIDER', 'openai'),
+
+    // Model configuration per provider
+    'embedding_models' => [
+        'openai' => env('VIZRA_ADK_OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small'),
+        'cohere' => env('VIZRA_ADK_COHERE_EMBEDDING_MODEL', 'embed-english-v3.0'),
+        'ollama' => env('VIZRA_ADK_OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text'),
+        'gemini' => env('VIZRA_ADK_GEMINI_EMBEDDING_MODEL', 'text-embedding-004'),
+    ],
+
+    // Driver-specific settings
+    'drivers' => [
+        'meilisearch' => [
+            'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
+            'api_key' => env('MEILISEARCH_KEY'),
+            'index_prefix' => env('MEILISEARCH_PREFIX', 'agent_vectors_'),
+        ],
+        // ... other drivers
+    ],
+
+    // Document chunking
+    'chunking' => [
+        'strategy' => env('VIZRA_ADK_CHUNK_STRATEGY', 'sentence'),
+        'chunk_size' => env('VIZRA_ADK_CHUNK_SIZE', 1000),
+        'overlap' => env('VIZRA_ADK_CHUNK_OVERLAP', 200),
+    ],
+
+    // RAG settings
+    'rag' => [
+        'max_context_length' => env('VIZRA_ADK_RAG_MAX_CONTEXT', 4000),
+        'include_metadata' => env('VIZRA_ADK_RAG_INCLUDE_METADATA', true),
+    ],
+]
+```
+
+## Console Commands
+
+Powerful CLI tools to manage your vector memory right from the terminal!
+
+### Available Commands
+
+```bash Terminal
+# Store content from a file
+php artisan vector:store my_agent /path/to/document.txt
+
+# Search vector memory
+php artisan vector:search my_agent "search query"
+
+# Get statistics
+php artisan vector:stats my_agent
+```
+
+## Vector Memory Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Organization" icon="folder-tree">
+    - Use namespaces to organize content
+    - Include descriptive metadata
+    - Use content hashing to avoid duplicates
+  </Card>
+  <Card title="Optimization" icon="gear">
+    - Choose appropriate chunk sizes
+    - Monitor token counts for costs
+    - Use pgvector for production
+  </Card>
+  <Card title="Strategy" icon="bullseye">
+    - Match chunking to content type
+    - Select models for your use case
+    - Clean up old memories regularly
+  </Card>
+  <Card title="Remember" icon="clipboard-list">
+    - Test similarity thresholds
+    - Balance context size vs accuracy
+    - Consider hybrid search approaches
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Next: Evaluations" icon="flask" href="/concepts/evaluations">
+    Learn about testing and evaluating agents
+  </Card>
+  <Card title="Sessions & Memory" icon="brain" href="/concepts/sessions-memory">
+    Review memory management
+  </Card>
+</CardGroup>

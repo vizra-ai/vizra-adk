@@ -1,0 +1,266 @@
+---
+title: "LLM Providers"
+description: "Choose your AI's brain. From lightning-fast Groq to privacy-focused local models, Vizra ADK supports 10 different LLM providers via Prism PHP. Find the perfect match for your use case."
+icon: "brain"
+---
+
+<Info>
+Not all AI models are created equal. Some excel at creative writing, others at coding, and some are just blazing fast. With Vizra ADK, you can mix and match providers to give each agent the perfect brain for its job.
+</Info>
+
+## Quick Setup
+
+Getting started is as easy as 1-2-3.
+
+### 1. Set Your Default Provider
+
+```bash .env
+VIZRA_ADK_DEFAULT_PROVIDER=openai
+VIZRA_ADK_DEFAULT_MODEL=gpt-4-turbo
+
+# Don't forget your API key!
+OPENAI_API_KEY=sk-...
+```
+
+### 2. Or Configure Per Agent
+
+```php app/Agents/CustomerSupportAgent.php
+use Prism\Prism\Enums\Provider;
+
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    protected ?Provider $provider = Provider::Anthropic;
+    protected string $model = 'claude-3-opus-20240229';
+}
+```
+
+### 3. Or Switch on the Fly
+
+```php
+$agent->setProvider('groq')
+    ->setModel('mixtral-8x7b-32768')
+    ->setTemperature(0.7);
+```
+
+## Meet the Providers
+
+Each provider brings something special to the table. Let's meet the team.
+
+### OpenAI
+
+The industry leader - GPT-4 is your Swiss Army knife for any task.
+
+| Best For | Popular Models |
+|----------|----------------|
+| General purpose, creative tasks, code generation | gpt-4-turbo, gpt-3.5-turbo, o1-preview |
+
+**Environment Variable:** `OPENAI_API_KEY`
+
+```php
+protected ?Provider $provider = Provider::OpenAI;
+protected string $model = 'gpt-4-turbo';
+```
+
+### Anthropic
+
+Claude is thoughtful, careful, and great at complex reasoning.
+
+| Best For | Popular Models |
+|----------|----------------|
+| Analysis, writing, safe & ethical responses | claude-3-opus, claude-3-sonnet |
+
+**Environment Variable:** `ANTHROPIC_API_KEY`
+
+```php
+protected ?Provider $provider = Provider::Anthropic;
+protected string $model = 'claude-3-opus-20240229';
+```
+
+### Google Gemini
+
+Multimodal magic - handles text, images, and more.
+
+| Best For | Popular Models |
+|----------|----------------|
+| Multimodal tasks, fast responses, cost efficiency | gemini-1.5-pro, gemini-1.5-flash |
+
+**Environment Variable:** `GEMINI_API_KEY`
+
+```php
+protected ?Provider $provider = Provider::Gemini;
+protected string $model = 'gemini-1.5-flash';
+```
+
+### Groq
+
+Speed demon. Insanely fast inference for real-time applications.
+
+| Best For | Popular Models |
+|----------|----------------|
+| Real-time chat, low latency needs | mixtral-8x7b-32768, llama2-70b-4096 |
+
+**Environment Variable:** `GROQ_API_KEY`
+
+```php
+protected ?Provider $provider = Provider::Groq;
+protected string $model = 'mixtral-8x7b-32768';
+```
+
+### Ollama
+
+Run models locally - your data never leaves your machine.
+
+| Best For | Popular Models |
+|----------|----------------|
+| Privacy, offline use, experimentation | llama2, codellama, mistral, phi |
+
+```php
+protected ?Provider $provider = Provider::Ollama;
+protected string $model = 'llama2';
+```
+
+<Warning>
+Requires Ollama to be installed and running locally.
+</Warning>
+
+### OpenRouter
+
+One API, 100+ models - the ultimate flexibility.
+
+| Best For | Available Models |
+|----------|------------------|
+| Model flexibility, A/B testing, cost optimization | GPT-4, Claude, Gemini, Llama, and 100+ more |
+
+**Environment Variable:** `OPENROUTER_API_KEY`
+
+```php
+protected ?Provider $provider = Provider::OpenRouter;
+protected string $model = 'openai/gpt-4-turbo';
+// Or use any model: 'anthropic/claude-3-opus', 'google/gemini-pro', etc.
+```
+
+<Tip>
+Perfect for testing different models without managing multiple API keys.
+</Tip>
+
+### DeepSeek
+
+Specialized models for chat and code generation.
+
+**Environment Variable:** `DEEPSEEK_API_KEY`
+
+```php
+protected ?Provider $provider = Provider::DeepSeek;
+protected string $model = 'deepseek-coder';
+```
+
+### Mistral AI
+
+Open-weight models with impressive performance.
+
+**Environment Variable:** `MISTRAL_API_KEY`
+
+```php
+protected ?Provider $provider = Provider::Mistral;
+protected string $model = 'mistral-large-latest';
+```
+
+### xAI
+
+Grok models from Elon's xAI team.
+
+**Environment Variable:** `XAI_API_KEY`
+
+```php
+protected ?Provider $provider = Provider::XAI;
+protected string $model = 'grok-beta';
+```
+
+### Voyage AI
+
+Embedding specialist for semantic search.
+
+**Environment Variable:** `VOYAGEAI_API_KEY`
+
+```php
+protected ?Provider $provider = Provider::VoyageAI;
+protected string $model = 'voyage-large-2';
+```
+
+<Warning>
+Primarily for embeddings, not text generation.
+</Warning>
+
+## Cool Provider Tricks
+
+<CardGroup cols={2}>
+  <Card title="Auto-Detection Magic" icon="wand-magic-sparkles">
+    Just set the model name and Vizra figures out the provider.
+
+    ```php
+    // These auto-detect the provider!
+    protected string $model = 'gpt-4';        // OpenAI
+    protected string $model = 'claude-3-opus'; // Anthropic
+    protected string $model = 'gemini-pro';    // Gemini
+    protected string $model = 'llama2';        // Ollama
+    ```
+  </Card>
+  <Card title="Runtime Switching" icon="arrows-rotate">
+    Change providers on the fly based on user needs.
+
+    ```php
+    // Premium users get the good stuff!
+    if ($user->isPremium()) {
+        $agent->setProvider('anthropic')
+              ->setModel('claude-3-opus-20240229');
+    } else {
+        $agent->setProvider('openai')
+              ->setModel('gpt-3.5-turbo');
+    }
+    ```
+  </Card>
+</CardGroup>
+
+## Choosing the Right Provider
+
+Not sure which to pick? Here's your cheat sheet.
+
+| Use Case | Recommended Provider |
+|----------|---------------------|
+| Business Apps | OpenAI GPT-4 or Anthropic Claude - reliable and versatile |
+| Speed Demons | Groq or Gemini Flash - when milliseconds matter |
+| Privacy First | Ollama - keep everything local and secure |
+| Code Generation | DeepSeek Coder or GPT-4 - they speak fluent code |
+| Long Context | Claude 3 or Gemini 1.5 Pro - handle entire books |
+| Budget Conscious | GPT-3.5 Turbo or local Ollama models |
+
+## API Keys Setup
+
+Don't forget to add your API keys to the `.env` file.
+
+```bash .env
+# OpenAI
+OPENAI_API_KEY=sk-...
+
+# Anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Google Gemini
+GEMINI_API_KEY=...
+
+# OpenRouter (100+ models!)
+OPENROUTER_API_KEY=...
+
+# Add others as needed!
+GROQ_API_KEY=...
+MISTRAL_API_KEY=...
+# etc...
+```
+
+## Next Steps
+
+Now that you've picked your provider, let's create some amazing agents.
+
+<Card title="Create Your First Agent" icon="robot" href="/concepts/agents">
+  Learn how to build powerful AI agents with your chosen provider.
+</Card>

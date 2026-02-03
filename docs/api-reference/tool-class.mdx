@@ -1,0 +1,429 @@
+---
+title: "Tool Class Reference"
+description: "Unleash your agent's superpowers. The ToolInterface is your gateway to giving agents incredible abilities. From database wizardry to API mastery - build tools that make agents unstoppable."
+icon: "wrench"
+---
+
+<Info>
+Think of the `ToolInterface` as your agent's superhero training academy. Every tool you build expands what your agents can do - from simple calculations to complex integrations.
+</Info>
+
+## The Simple Yet Powerful Interface
+
+The beauty of Vizra tools lies in their simplicity. Just two methods to implement, and your agent gains a whole new superpower. Here's the elegant contract:
+
+```php The ToolInterface Contract
+namespace Vizra\VizraADK\Contracts;
+
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
+
+interface ToolInterface
+{
+    public function definition(): array;
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string;
+}
+```
+
+## The Two Magical Methods
+
+Just two methods stand between you and tool mastery. Each serves a crucial purpose in making your agent interactions seamless and powerful.
+
+<CardGroup cols={2}>
+  <Card title="definition()" icon="clipboard-list">
+    **The blueprint method.** Tell the AI exactly how to use your tool with a JSON Schema definition. It's like writing a user manual that AI can understand perfectly.
+
+    ```php
+    public function definition(): array
+    ```
+  </Card>
+  <Card title="execute()" icon="bolt">
+    **The action hero.** This is where the magic happens - take the AI's parameters and make something amazing occur. Database queries, API calls, calculations - you name it.
+
+    ```php
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
+    ```
+  </Card>
+</CardGroup>
+
+### definition() - Teaching AI How to Use Your Tool
+
+This method returns a JSON Schema that's like a detailed instruction manual for AI. Here's how to write one that makes your tool shine:
+
+```php Perfect Tool Definition
+public function definition(): array
+{
+    return [
+        'name' => 'order_lookup',
+        'description' => 'Look up order information by ID',
+        'parameters' => [
+            'type' => 'object',
+            'properties' => [
+                'order_id' => [
+                    'type' => 'string',
+                    'description' => 'The order ID to look up',
+                ],
+                'include_items' => [
+                    'type' => 'boolean',
+                    'description' => 'Include order items in response',
+                ],
+            ],
+            'required' => ['order_id'],
+        ],
+    ];
+}
+```
+
+### execute()
+
+```php
+public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
+```
+
+Execute the tool with provided arguments, context, and agent memory. Must return a JSON-encoded string.
+
+```php
+public function execute(array $arguments, AgentContext $context): string
+{
+    $order = Order::find($arguments['order_id']);
+
+    if (!$order) {
+        return json_encode([
+            'status' => 'error',
+            'message' => 'Order not found',
+        ]);
+    }
+
+    return json_encode([
+        'status' => 'success',
+        'order' => $order->toArray(),
+    ]);
+}
+```
+
+## Parameter Schema Examples
+
+### Basic Parameter Types
+
+```php
+'parameters' => [
+    'type' => 'object',
+    'properties' => [
+        'name' => [
+            'type' => 'string',
+            'description' => 'User name',
+        ],
+        'age' => [
+            'type' => 'integer',
+            'description' => 'User age',
+            'minimum' => 0,
+            'maximum' => 150,
+        ],
+        'active' => [
+            'type' => 'boolean',
+            'description' => 'Whether user is active',
+        ],
+        'price' => [
+            'type' => 'number',
+            'description' => 'Product price',
+            'minimum' => 0,
+        ],
+    ],
+    'required' => ['name'],
+]
+```
+
+### Complex Parameter Types
+
+```php
+'parameters' => [
+    'type' => 'object',
+    'properties' => [
+        'status' => [
+            'type' => 'string',
+            'enum' => ['pending', 'processing', 'completed'],
+            'description' => 'Order status',
+        ],
+        'tags' => [
+            'type' => 'array',
+            'description' => 'List of tags',
+            'items' => [
+                'type' => 'string',
+            ],
+        ],
+        'address' => [
+            'type' => 'object',
+            'description' => 'User address',
+            'properties' => [
+                'street' => ['type' => 'string'],
+                'city' => ['type' => 'string'],
+                'zip' => ['type' => 'string'],
+            ],
+        ],
+    ],
+    'required' => [],
+]
+```
+
+## Return Value Format
+
+Tools must return a JSON-encoded string. Common patterns include:
+
+```php
+// Success response
+return json_encode([
+    'status' => 'success',
+    'data' => $resultData,
+    'message' => 'Operation completed successfully',
+]);
+
+// Error response
+return json_encode([
+    'status' => 'error',
+    'message' => 'Detailed error message',
+    'error_code' => 'SPECIFIC_ERROR',
+]);
+```
+
+## Working with AgentContext
+
+The `AgentContext` parameter provides access to session state and conversation history:
+
+```php
+public function execute(array $arguments, AgentContext $context): string
+{
+    // Get session ID
+    $sessionId = $context->getSessionId();
+
+    // Access state
+    $previousValue = $context->getState('last_order_id');
+
+    // Store state for future use
+    $context->setState('last_order_id', $orderId);
+
+    // Access user information if available
+    $userId = $context->getState('user_id');
+
+    return json_encode(['status' => 'success']);
+}
+```
+
+## Advanced Features
+
+### Tool with User Context
+
+```php
+class UserOrdersTool implements ToolInterface
+{
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        // Get user ID from context
+        $userId = $context->getState('user_id');
+
+        if (!$userId) {
+            return json_encode([
+                'status' => 'error',
+                'message' => 'User authentication required',
+            ]);
+        }
+
+        $user = User::find($userId);
+        $orders = $user->orders()
+            ->latest()
+            ->limit($arguments['limit'] ?? 10)
+            ->get();
+
+        return json_encode([
+            'status' => 'success',
+            'orders' => $orders->toArray(),
+        ]);
+    }
+}
+```
+
+### Tool with Session Context
+
+```php
+public function execute(array $arguments, AgentContext $context): string
+{
+    // Access session context
+    $previousOrder = $context->getState('last_order_discussed');
+
+    // Store data in session
+    $context->setState('current_order', $order->id);
+
+    return json_encode([
+        'status' => 'success',
+        'order' => $order->toArray(),
+    ]);
+}
+```
+
+### Tool with File Handling
+
+```php
+class FileProcessorTool implements ToolInterface
+{
+    public function definition(): array
+    {
+        return [
+            'name' => 'file_processor',
+            'description' => 'Process uploaded files',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'file_content' => [
+                        'type' => 'string',
+                        'description' => 'Base64 encoded content',
+                    ],
+                    'filename' => [
+                        'type' => 'string',
+                    ],
+                ],
+                'required' => ['file_content', 'filename'],
+            ],
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        $content = base64_decode($arguments['file_content']);
+        $path = Storage::put('uploads/' . $arguments['filename'], $content);
+
+        return json_encode([
+            'status' => 'success',
+            'path' => $path,
+            'size' => strlen($content),
+        ]);
+    }
+}
+```
+
+## Complete Example
+
+```php RefundProcessorTool.php
+<?php
+
+namespace App\Tools;
+
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
+use App\Models\Order;
+use App\Services\RefundService;
+
+class RefundProcessorTool implements ToolInterface
+{
+
+    public function __construct(
+        protected RefundService $refunds
+    ) {}
+
+    public function definition(): array
+    {
+        return [
+            'name' => 'process_refund',
+            'description' => 'Process a refund for an order',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'order_id' => [
+                        'type' => 'string',
+                        'description' => 'The order ID to refund',
+                    ],
+                    'amount' => [
+                        'type' => 'number',
+                        'description' => 'Refund amount (optional for partial refunds)',
+                        'minimum' => 0,
+                    ],
+                    'reason' => [
+                        'type' => 'string',
+                        'description' => 'Reason for refund',
+                    ],
+                ],
+                'required' => ['order_id', 'reason'],
+            ],
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        // Validate inputs
+        $validator = Validator::make($arguments, [
+            'order_id' => 'required|string',
+            'amount' => 'nullable|numeric|min:0',
+            'reason' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return json_encode([
+                'status' => 'error',
+                'message' => 'Validation failed: ' . $validator->errors()->first(),
+            ]);
+        }
+
+        // Check user authorization
+        $userId = $context->getState('user_id');
+        if (!$userId) {
+            return json_encode([
+                'status' => 'error',
+                'message' => 'User authentication required',
+            ]);
+        }
+
+        try {
+            $order = Order::findOrFail($arguments['order_id']);
+
+            // Verify order belongs to user
+            if ($order->user_id !== $userId) {
+                return json_encode([
+                    'status' => 'error',
+                    'message' => 'Order not found',
+                ]);
+            }
+
+            $refund = $this->refunds->process(
+                $order,
+                $arguments['amount'] ?? $order->total,
+                $arguments['reason']
+            );
+
+            return json_encode([
+                'status' => 'success',
+                'refund_id' => $refund->id,
+                'amount' => $refund->amount,
+                'refund_status' => $refund->status,
+                'message' => 'Refund processed successfully',
+            ]);
+
+        } catch (\Exception $e) {
+            return json_encode([
+                'status' => 'error',
+                'message' => 'Failed to process refund: ' . $e->getMessage(),
+            ]);
+        }
+    }
+}
+```
+
+<Warning>
+**Tool Best Practices:**
+- Keep tools focused on a single action
+- Implement the ToolInterface, not extend a base class
+- Use descriptive names and descriptions
+- Return JSON-encoded strings from execute()
+- Use AgentContext for session state management
+- Validate parameters thoroughly
+- Handle errors gracefully
+- Return clear success/error messages
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Workflow Class" icon="diagram-project" href="/api-reference/workflow-class">
+    Workflow class reference
+  </Card>
+  <Card title="Tool Concepts" icon="lightbulb" href="/concepts/tools">
+    Learn more about tools
+  </Card>
+</CardGroup>

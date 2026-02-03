@@ -1,0 +1,390 @@
+---
+title: "OpenAI Compatibility"
+description: "Use your Vizra agents with any OpenAI-compatible tool or library. Drop-in replacement for OpenAI's Chat Completions API that opens up your agents to the entire OpenAI ecosystem."
+icon: "plug"
+---
+
+## Why OpenAI Compatibility?
+
+The OpenAI Chat Completions API has become the de facto standard for AI applications. By implementing this same interface, Vizra ADK instantly becomes compatible with **thousands of existing tools, libraries, and workflows** without any code changes.
+
+<CardGroup cols={3}>
+  <Card title="Existing Tools" icon="wrench">
+    Use with LangChain, LlamaIndex, Vercel AI SDK, and countless other libraries
+  </Card>
+  <Card title="Client Apps" icon="mobile">
+    Works with ChatGPT clients, mobile apps, browser extensions, and desktop tools
+  </Card>
+  <Card title="Zero Migration" icon="arrows-rotate">
+    Just change the base URL - everything else works exactly the same
+  </Card>
+</CardGroup>
+
+## API Endpoint
+
+```text OpenAI Compatible Endpoint
+POST /api/vizra-adk/chat/completions
+```
+
+This endpoint accepts the exact same request format as OpenAI's Chat Completions API.
+
+## Quick Start
+
+Ready to try it? Here are examples in different languages:
+
+<Tabs>
+  <Tab title="cURL">
+```bash Terminal
+curl -X POST http://your-app.com/api/vizra-adk/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "your-agent-name",
+    "messages": [
+      {"role": "user", "content": "Hello! Tell me about yourself."}
+    ],
+    "temperature": 0.7,
+    "max_tokens": 500
+  }'
+```
+  </Tab>
+  <Tab title="Laravel Http">
+```php
+use Illuminate\Support\Facades\Http;
+
+$response = Http::post('http://your-app.com/api/vizra-adk/chat/completions', [
+    'model' => 'your-agent-name',
+    'messages' => [
+        ['role' => 'user', 'content' => 'Hello! Tell me about yourself.']
+    ],
+    'temperature' => 0.7,
+    'max_tokens' => 500
+]);
+
+$result = $response->json();
+echo $result['choices'][0]['message']['content'];
+```
+  </Tab>
+  <Tab title="JavaScript">
+```javascript
+const response = await fetch('http://your-app.com/api/vizra-adk/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'your-agent-name',
+    messages: [
+      { role: 'user', content: 'Hello! Tell me about yourself.' }
+    ],
+    temperature: 0.7,
+    max_tokens: 500
+  })
+});
+
+const data = await response.json();
+console.log(data.choices[0].message.content);
+```
+  </Tab>
+  <Tab title="Python">
+```python
+import requests
+
+response = requests.post(
+    'http://your-app.com/api/vizra-adk/chat/completions',
+    json={
+        'model': 'your-agent-name',
+        'messages': [
+            {'role': 'user', 'content': 'Hello! Tell me about yourself.'}
+        ],
+        'temperature': 0.7,
+        'max_tokens': 500
+    }
+)
+
+result = response.json()
+print(result['choices'][0]['message']['content'])
+```
+  </Tab>
+</Tabs>
+
+## Using with Existing Libraries
+
+<Tabs>
+  <Tab title="OpenAI SDK (Python)">
+```python
+from openai import OpenAI
+
+# Just change the base_url to point to your Vizra ADK instance
+client = OpenAI(
+    api_key="not-needed",  # Vizra ADK doesn't require API keys
+    base_url="http://your-app.com/api/vizra-adk"
+)
+
+response = client.chat.completions.create(
+    model="your-agent-name",
+    messages=[
+        {"role": "user", "content": "What can you help me with?"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+  </Tab>
+  <Tab title="LangChain">
+```python
+from langchain_openai import ChatOpenAI
+
+# Use your Vizra agents with LangChain
+llm = ChatOpenAI(
+    model="your-agent-name",
+    openai_api_key="not-needed",
+    openai_api_base="http://your-app.com/api/vizra-adk",
+    temperature=0.7
+)
+
+response = llm.invoke("What's the weather like today?")
+print(response.content)
+```
+  </Tab>
+</Tabs>
+
+## Configuration
+
+Configure model-to-agent mapping to make your agents accessible via familiar OpenAI model names:
+
+```php config/vizra-adk.php
+return [
+    // ... other config
+
+    /**
+     * OpenAI API Compatibility Configuration
+     * Maps OpenAI model names to your agent names
+     */
+    'openai_model_mapping' => [
+        // Default mappings for OpenAI models
+        'gpt-4' => env('VIZRA_ADK_OPENAI_GPT4_AGENT', 'chat_agent'),
+        'gpt-4-turbo' => env('VIZRA_ADK_OPENAI_GPT4_TURBO_AGENT', 'chat_agent'),
+        'gpt-3.5-turbo' => env('VIZRA_ADK_OPENAI_GPT35_AGENT', 'chat_agent'),
+        'gpt-4o' => env('VIZRA_ADK_OPENAI_GPT4O_AGENT', 'chat_agent'),
+        'gpt-4o-mini' => env('VIZRA_ADK_OPENAI_GPT4O_MINI_AGENT', 'chat_agent'),
+
+        // Add your own custom mappings here
+        // 'my-custom-model' => 'my_specialized_agent',
+        // 'claude-3-opus' => 'advanced_reasoning_agent',
+        // 'gpt-4-vision' => 'image_analysis_agent',
+    ],
+
+    /**
+     * Default agent when no mapping is found
+     * Used for unmapped OpenAI models (gpt-*)
+     */
+    'default_chat_agent' => env('VIZRA_ADK_DEFAULT_CHAT_AGENT', 'chat_agent'),
+];
+```
+
+<Info>
+**How Model Resolution Works:**
+
+1. First checks for exact match in `openai_model_mapping`
+2. If model starts with `gpt-`, uses `default_chat_agent`
+3. Otherwise, treats the model name as the agent name directly
+
+This means you can use `model: "your_agent_name"` directly without any mapping.
+</Info>
+
+You can customize mappings via environment variables or by publishing the config file with `php artisan vendor:publish --tag=vizra-adk-config`.
+
+## Streaming Support
+
+Enable real-time streaming responses by setting `"stream": true` in your request:
+
+<Tabs>
+  <Tab title="JavaScript">
+```javascript
+async function streamResponse() {
+  const response = await fetch('/api/vizra-adk/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'my-agent',
+      messages: [{ role: 'user', content: 'Tell me a long story' }],
+      stream: true,
+      temperature: 0.8
+    })
+  });
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value);
+    const lines = chunk.split('\n');
+
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const data = line.slice(6);
+        if (data === '[DONE]') return;
+
+        try {
+          const parsed = JSON.parse(data);
+          const content = parsed.choices[0]?.delta?.content;
+          if (content) {
+            process.stdout.write(content); // Stream to console
+            // Or update your UI in real-time
+          }
+        } catch (e) {
+          // Handle parsing errors
+        }
+      }
+    }
+  }
+}
+
+streamResponse();
+```
+  </Tab>
+  <Tab title="Python">
+```python
+import requests
+import json
+
+def stream_completion():
+    response = requests.post(
+        'http://your-app.com/api/vizra-adk/chat/completions',
+        json={
+            'model': 'my-agent',
+            'messages': [{'role': 'user', 'content': 'Write a poem'}],
+            'stream': True,
+            'temperature': 0.7
+        },
+        stream=True
+    )
+
+    for line in response.iter_lines():
+        if line.startswith(b'data: '):
+            data = line[6:].decode('utf-8')
+            if data == '[DONE]':
+                break
+
+            try:
+                chunk = json.loads(data)
+                content = chunk['choices'][0]['delta'].get('content')
+                if content:
+                    print(content, end='', flush=True)
+            except json.JSONDecodeError:
+                continue
+
+stream_completion()
+```
+  </Tab>
+</Tabs>
+
+## Supported Parameters
+
+The OpenAI compatibility layer supports all major ChatGPT parameters:
+
+| Parameter | Description |
+|-----------|-------------|
+| `model` | Agent name or mapped model name |
+| `messages` | Array of conversation messages |
+| `stream` | Enable streaming responses |
+| `temperature` | Creativity level (0.0 - 2.0) |
+| `max_tokens` | Maximum response length |
+| `top_p` | Nucleus sampling parameter |
+| `user` | User identifier for sessions |
+
+## Response Format
+
+Responses match OpenAI's format exactly, ensuring perfect compatibility:
+
+### Standard Response
+
+```json Non-streaming Response
+{
+  "id": "chatcmpl-AbCdEfGhIjKlMnOpQrStUvWxYz",
+  "object": "chat.completion",
+  "created": 1677858242,
+  "model": "your-agent-name",
+  "system_fingerprint": null,
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Hello! I'm your Vizra agent, ready to help!"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 12,
+    "completion_tokens": 15,
+    "total_tokens": 27
+  }
+}
+```
+
+### Streaming Response
+
+```text Server-Sent Events Format
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1677858242,"model":"your-agent","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1677858242,"model":"your-agent","choices":[{"index":0,"delta":{"content":"Hello"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1677858242,"model":"your-agent","choices":[{"index":0,"delta":{"content":"!"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1677858242,"model":"your-agent","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+data: [DONE]
+```
+
+## Error Handling
+
+Error responses also match OpenAI's format for seamless compatibility:
+
+```json Error Response Format
+{
+  "error": {
+    "message": "The model 'unknown-agent' does not exist or you do not have access to it.",
+    "type": "not_found_error",
+    "code": "model_not_found"
+  }
+}
+```
+
+| Status Code | Description |
+|-------------|-------------|
+| 400 - Bad Request | Invalid request format or missing required fields |
+| 404 - Not Found | Agent/model not found or not registered |
+| 500 - Server Error | Internal error during agent execution |
+
+## Tips & Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Agent Naming Strategy" icon="tag">
+    Map commonly used OpenAI model names to your best agents to make migration seamless. For example, map `gpt-4` to your most advanced agent.
+  </Card>
+  <Card title="Performance Optimization" icon="bolt">
+    Use the `user` parameter to maintain persistent sessions and memory across conversations for more personalized responses.
+  </Card>
+  <Card title="Development Workflow" icon="code">
+    Test your OpenAI compatibility with existing tools during development. Most AI applications allow changing the base URL for easy integration testing.
+  </Card>
+  <Card title="Direct Agent Access" icon="arrow-right">
+    You can use `model: "your_agent_name"` directly without any mapping configuration.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get Started" icon="rocket" href="/getting-started/quick-start">
+    Create your first agent and try the OpenAI endpoint
+  </Card>
+  <Card title="Learn About Agents" icon="robot" href="/concepts/agents">
+    Understand how to create powerful AI agents
+  </Card>
+</CardGroup>

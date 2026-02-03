@@ -1,0 +1,268 @@
+---
+title: "Tracing Classes API Reference"
+description: "Complete API reference for the TraceSpan model and Tracer service that power ADK's tracing system."
+icon: "magnifying-glass"
+---
+
+<Info>
+This page documents the TraceSpan model and Tracer service that power the observability features in Vizra ADK.
+</Info>
+
+## TraceSpan Model
+
+The `TraceSpan` model represents an individual span within an agent execution trace.
+
+```php
+namespace Vizra\VizraADK\Models;
+
+class TraceSpan extends Model
+{
+    use HasUlids;
+}
+```
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | string (ULID) | Primary key for this span |
+| `trace_id` | string (ULID) | Identifies the entire agent run trace |
+| `parent_span_id` | string\|null | Parent span ID for hierarchy |
+| `span_id` | string (ULID) | Unique ID for this specific span |
+| `session_id` | string | Session ID from AgentContext |
+| `agent_name` | string | Name of the agent executing this span |
+| `type` | string | Operation type: agent_run, llm_call, tool_call, sub_agent_delegation |
+| `name` | string | Specific name (model name, tool name, etc.) |
+| `input` | array\|null | Input data for the operation |
+| `output` | array\|null | Result/output of the operation |
+| `metadata` | array\|null | Additional contextual information |
+| `status` | string | Execution status: running, success, error |
+| `error_message` | string\|null | Error message if status is error |
+| `start_time` | decimal(16,6) | Start timestamp with microseconds |
+| `end_time` | decimal(16,6)\|null | End timestamp with microseconds |
+| `duration_ms` | integer\|null | Duration in milliseconds |
+
+### Relationships
+
+```php
+// Get the parent span
+$parentSpan = $span->parent();
+
+// Get child spans
+$childSpans = $span->children();
+
+// Get all spans in the same trace
+$traceSpans = $span->traceSpans();
+```
+
+### Query Scopes
+
+```php
+// Filter by trace ID
+$spans = TraceSpan::forTrace($traceId)->get();
+
+// Filter by session ID
+$spans = TraceSpan::forSession($sessionId)->get();
+
+// Filter by type
+$llmCalls = TraceSpan::ofType('llm_call')->get();
+
+// Filter by status
+$errors = TraceSpan::withStatus('error')->get();
+
+// Get root spans only
+$rootSpans = TraceSpan::rootSpans()->get();
+
+// Order chronologically
+$orderedSpans = TraceSpan::chronological()->get();
+```
+
+### Helper Methods
+
+```php
+// Check if span is completed
+if ($span->isCompleted()) {
+    echo "Span finished in " . $span->duration_ms . "ms";
+}
+
+// Check if span has error
+if ($span->hasError()) {
+    echo "Error: " . $span->error_message;
+}
+
+// Check if root span
+if ($span->isRoot()) {
+    echo "This is the root span";
+}
+
+// Get formatted duration
+echo $span->getFormattedDuration(); // "125ms" or "1.5s"
+
+// Get status icon
+echo $span->getStatusIcon(); // Check, X, or spinner icon
+
+// Get type icon
+echo $span->getTypeIcon(); // Robot, brain, wrench, or users icon
+
+// Get summary
+echo $span->getSummary(); // "llm_call: gpt-4 - 1.2s (success)"
+```
+
+## Tracer Service
+
+The `Tracer` service manages span creation and lifecycle.
+
+```php
+namespace Vizra\VizraADK\Services;
+
+class Tracer
+{
+    // Service is typically injected via dependency injection
+}
+```
+
+### Creating Spans
+
+```php
+// Start a new span
+$spanId = $tracer->startSpan(
+    type: 'tool_call',
+    name: 'database_query',
+    input: ['query' => 'SELECT * FROM users'],
+    metadata: ['database' => 'mysql']
+);
+
+// End the span successfully
+$tracer->endSpan($spanId, [
+    'rows_returned' => 42,
+    'cache_hit' => false
+]);
+
+// Mark span as failed
+$tracer->failSpan($spanId, $exception);
+```
+
+### Span Types
+
+| Type | Description |
+|------|-------------|
+| `agent_run` | Root span for agent execution |
+| `llm_call` | LLM API calls |
+| `tool_call` | Tool executions |
+| `sub_agent_delegation` | Sub-agent invocations |
+
+### Trace Management
+
+```php
+// Create a new trace
+$traceId = $tracer->createTrace(
+    sessionId: $context->getSessionId(),
+    agentName: 'customer_support'
+);
+
+// Set current trace context
+$tracer->setCurrentTrace($traceId);
+
+// Get current trace ID
+$currentTraceId = $tracer->getCurrentTraceId();
+```
+
+### Cleanup Operations
+
+```php
+// Get count of old traces
+$count = $tracer->getOldTracesCount(30); // 30 days
+
+// Clean up old traces with progress callback
+$deleted = $tracer->cleanupOldTraces(30, function($batchCount) {
+    echo "Deleted {$batchCount} traces...\n";
+});
+```
+
+## Usage Examples
+
+### Analyzing Trace Performance
+
+```php
+use Vizra\VizraADK\Models\TraceSpan;
+
+// Find slowest operations in a trace
+$slowestSpans = TraceSpan::forTrace($traceId)
+    ->where('duration_ms', '>', 1000)
+    ->orderBy('duration_ms', 'desc')
+    ->get();
+
+foreach ($slowestSpans as $span) {
+    echo $span->getSummary() . "\n";
+}
+```
+
+### Error Analysis
+
+```php
+// Get all errors for a session
+$errors = TraceSpan::forSession($sessionId)
+    ->withStatus('error')
+    ->with('parent')
+    ->get();
+
+foreach ($errors as $error) {
+    echo "Error in {$error->name}: {$error->error_message}\n";
+
+    // Show parent context
+    if ($error->parent) {
+        echo "  Parent: {$error->parent->name}\n";
+    }
+}
+```
+
+### Building Trace Trees
+
+```php
+// Build hierarchical trace tree
+function buildTraceTree(string $traceId): array
+{
+    $spans = TraceSpan::forTrace($traceId)
+        ->with('children')
+        ->chronological()
+        ->get();
+
+    $tree = [];
+    $spanMap = [];
+
+    // First pass: create span map
+    foreach ($spans as $span) {
+        $spanMap[$span->span_id] = $span;
+    }
+
+    // Second pass: build tree
+    foreach ($spans as $span) {
+        if ($span->isRoot()) {
+            $tree[] = $span;
+        }
+    }
+
+    return $tree;
+}
+```
+
+<Note>
+**Best Practices:**
+- Always end spans properly to ensure accurate duration tracking
+- Use descriptive span names for better trace readability
+- Include relevant metadata for debugging purposes
+- Fail spans with exceptions to capture error context
+- Use appropriate span types for automatic categorization
+- Implement regular cleanup to manage storage
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Tracing Concepts" icon="magnifying-glass-chart" href="/concepts/tracing">
+    Learn about tracing concepts
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference">
+    View all API references
+  </Card>
+</CardGroup>

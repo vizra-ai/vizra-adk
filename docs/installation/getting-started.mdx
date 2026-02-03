@@ -1,0 +1,222 @@
+---
+title: "Getting Started"
+description: "Launch your first AI agent in minutes with Vizra ADK! Ready to feel the magic? Let's get you building intelligent agents faster than you can say 'artificial intelligence'!"
+icon: "rocket"
+---
+
+<Info>
+Building AI agents has never been easier! In just a few steps, you'll have your own intelligent agent up and running.
+</Info>
+
+## Installation via Composer
+
+Let's kick things off! First, we'll add Vizra ADK to your Laravel project:
+
+```bash Terminal
+composer require vizra/vizra-adk
+```
+
+## Running the Install Command
+
+Now let's set everything up with our magical installation command:
+
+```bash Terminal
+php artisan vizra:install
+```
+
+<Tip>
+This command publishes config, runs migrations, sets up the web interface, and creates example agents to get you started!
+</Tip>
+
+## Setting Up Your AI Provider
+
+Before your agents can start thinking, they need access to an AI provider. Add your preferred AI provider's API key to your `.env` file:
+
+```bash .env
+# Choose one (or add multiple!)
+OPENAI_API_KEY=your-openai-api-key-here
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+GEMINI_API_KEY=your-gemini-api-key-here
+```
+
+<CardGroup cols={3}>
+  <Card title="OpenAI" icon="circle" iconType="solid" color="#10B981">
+    GPT-4, GPT-3.5 Turbo
+
+    [Get API Key](https://platform.openai.com/api-keys)
+  </Card>
+  <Card title="Anthropic" icon="circle" iconType="solid" color="#8B5CF6">
+    Claude 3 Models
+
+    [Get API Key](https://console.anthropic.com/account/keys)
+  </Card>
+  <Card title="Google" icon="circle" iconType="solid" color="#3B82F6">
+    Gemini Pro Models
+
+    [Get API Key](https://makersuite.google.com/app/apikey)
+  </Card>
+</CardGroup>
+
+### Which Provider Should I Choose?
+
+- **OpenAI:** Great all-around choice, GPT-4 for complex tasks, GPT-3.5 for speed
+- **Anthropic:** Claude excels at analysis, writing, and following instructions
+- **Google:** Gemini offers great performance and generous free tier
+
+Don't worry - you can switch providers anytime or use different ones for different agents!
+
+<Note>
+Vizra ADK supports 10+ AI providers through [Prism PHP](https://github.com/echolabsdev/prism), including DeepSeek, Mistral, Groq, and more. [See all providers](/api-reference/providers)
+</Note>
+
+## 5-Minute Quick Start: Build a Smart Assistant
+
+Let's build something real! In just 5 minutes, you'll create an intelligent FAQ assistant that can answer questions about your product.
+
+### Step 1: Create the Agent
+
+```bash Terminal
+php artisan vizra:make:agent ProductAssistant
+```
+
+Agent created at `app/Agents/ProductAssistant.php`
+
+### Step 2: Configure Your Agent
+
+Open the agent file and give it some personality and knowledge:
+
+```php app/Agents/ProductAssistant.php
+<?php
+
+namespace App\Agents;
+
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+
+class ProductAssistant extends BaseLlmAgent
+{
+    protected string $name = 'product_assistant';
+
+    protected string $description = 'Helps users understand our product features and pricing';
+
+    protected string $instructions = "You are a helpful product assistant for AcmeApp.
+
+        Key product information:
+        - AcmeApp is a project management tool for teams
+        - Pricing: Free for up to 5 users, $10/user/month for larger teams
+        - Features: Task management, team collaboration, time tracking, reporting
+        - Integrations: Slack, GitHub, Google Calendar
+
+        Be friendly, concise, and always try to be helpful. If you don't know
+        something, be honest about it.";
+
+    // Use GPT-3.5 for quick responses
+    protected string $model = 'gpt-3.5-turbo';
+    protected ?float $temperature = 0.7;
+}
+```
+
+### Step 3: Test Your Agent
+
+You have three ways to test your new agent:
+
+<Tabs>
+  <Tab title="Command Line">
+    ```bash Terminal
+    php artisan vizra:chat product_assistant
+    ```
+  </Tab>
+  <Tab title="Web Interface">
+    Visit `http://your-app.test/vizra` for a beautiful chat interface with trace debugging!
+  </Tab>
+  <Tab title="API Endpoints">
+    **OpenAI-Compatible** (use with any OpenAI tool!):
+    ```bash
+    curl -X POST http://your-app.test/api/vizra-adk/chat/completions \
+      -H "Content-Type: application/json" \
+      -d '{
+        "model": "product_assistant",
+        "messages": [{"role": "user", "content": "What is AcmeApp?"}]
+      }'
+    ```
+
+    **Native Vizra API**:
+    ```bash
+    curl -X POST http://your-app.test/api/vizra-adk/interact \
+      -H "Content-Type: application/json" \
+      -d '{"agent_name": "product_assistant", "input": "What is AcmeApp?"}'
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+The web interface is perfect for development - you can see traces, debug tool calls, and test conversations visually!
+</Tip>
+
+### Step 4: Use in Your Application
+
+Use your assistant within Laravel:
+
+```php routes/web.php
+use App\Agents\ProductAssistant;
+
+$response = ProductAssistant::run($request->input('message'))
+    ->forUser(auth()->user())
+    ->go();
+```
+
+<Tip>
+Your agent automatically maintains conversation history per user!
+</Tip>
+
+## Congratulations! You Did It!
+
+In just 5 minutes, you've created an AI assistant that can answer questions about your product. But this is just the beginning! Your agent can do so much more:
+
+- Add **custom tools** to let it search databases, send emails, or call APIs
+- Delegate tasks to **sub agents**
+- Enable **vector memory** to give it knowledge from your documentation
+- Create **workflows** to handle complex multi-step processes
+- Run **evaluations** to ensure quality at scale
+
+## Common Issues & Quick Fixes
+
+### "Invalid API Key" or "Unauthorized" Errors
+
+This is the most common issue! Here's how to fix it:
+
+1. Check your `.env` file has the correct API key (no extra spaces!)
+2. Clear config cache: `php artisan config:clear`
+3. Verify the API key is active in your provider's dashboard
+4. For OpenAI: Ensure you have billing set up (even for free tier)
+
+### "Agent Not Found" Errors
+
+- Make sure your agent class extends `BaseLlmAgent`
+- Agent file must be in `app/Agents/` directory
+- Class name must match filename (PSR-4 autoloading)
+- Run `composer dump-autoload` if needed
+
+### Database/Migration Issues
+
+If you see database errors:
+
+```bash Terminal
+# Reset and re-run migrations
+php artisan migrate:fresh
+php artisan vizra:install
+```
+
+<Warning>
+This will reset your database! Use with caution in production.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/installation/configuration">
+    Fine-tune Vizra ADK to match your project's needs perfectly
+  </Card>
+  <Card title="Understanding Agents" icon="brain" href="/concepts/agents">
+    Master the art of building intelligent AI agents
+  </Card>
+</CardGroup>

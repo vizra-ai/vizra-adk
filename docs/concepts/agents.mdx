@@ -1,0 +1,601 @@
+---
+title: "AI Agents"
+description: "Meet your new AI workforce. Agents are the heart and soul of Vizra ADK - intelligent, conversational, and incredibly powerful."
+icon: "robot"
+---
+
+## What's an Agent?
+
+Think of agents as your **smart AI assistants** that can handle complex tasks, remember conversations, and even work with other agents. They're not just chatbots - they're intelligent systems that can analyze data, make decisions, and take actions.
+
+<CardGroup cols={2}>
+  <Card title="Smart & Contextual" icon="brain">
+    Remembers conversations, understands context, and learns from interactions
+  </Card>
+  <Card title="Tool-Powered" icon="wrench">
+    Uses custom tools to access databases, APIs, and perform real actions
+  </Card>
+  <Card title="Multi-Model Support" icon="globe">
+    Works with OpenAI, Anthropic Claude, and Google Gemini models
+  </Card>
+  <Card title="Team Players" icon="users">
+    Agents can delegate tasks to other specialized agents
+  </Card>
+  <Card title="Vector Memory" icon="brain">
+    Built-in semantic search and RAG capabilities with public API access
+  </Card>
+  <Card title="Testing Friendly" icon="flask">
+    Public methods make testing and experimentation a breeze
+  </Card>
+</CardGroup>
+
+## Creating Your First Agent
+
+Ready to build your first AI agent? It's easier than you think! Let's create a helpful customer support agent that can answer questions and solve problems.
+
+### Quick Start with Artisan
+
+Fire up your terminal and run this magical command:
+
+```bash Terminal
+php artisan vizra:make:agent CustomerSupportAgent
+```
+
+**Boom!** You've just created your first agent! Let's peek inside and see what makes it tick:
+
+### The Agent Blueprint
+
+```php app/Agents/CustomerSupportAgent.php
+<?php
+
+namespace App\Agents;
+
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'customer_support';
+
+    protected string $description = 'Handles customer inquiries and support requests';
+
+    protected string $instructions = "You are a helpful customer support assistant.
+                Be friendly, professional, and solution-oriented.
+                Always prioritize customer satisfaction.";
+
+    // Optional: Specify model and parameters
+    protected string $model = 'gpt-4o';
+    protected ?float $temperature = 0.7;
+    protected ?int $maxTokens = 1000;
+}
+```
+
+### Agent Configuration Options
+
+```php
+class AdvancedAgent extends BaseLlmAgent
+{
+    // Model configuration
+    protected string $model = 'gpt-4o';
+    protected ?float $temperature = 0.7;
+    protected ?int $maxTokens = 1000;
+    protected ?float $topP = 0.9;
+
+    // Tools this agent can use
+    protected array $tools = [
+        OrderLookupTool::class,
+        RefundProcessorTool::class,
+        EmailSenderTool::class,
+    ];
+
+    // Sub-agents this agent can delegate to
+    protected array $subAgents = [
+        TechnicalSupportAgent::class,
+        BillingSupportAgent::class,
+    ];
+
+    // Enable streaming responses
+    protected bool $streaming = false;
+}
+```
+
+## Unleashing Your Agent's Powers
+
+Now comes the fun part - putting your agent to work! Vizra ADK gives you a **powerful and simple** way to interact with your agents.
+
+<Tip>
+**One Method to Rule Them All** - The `run()` method is your gateway to agent intelligence. Simple, powerful, and flexible - it handles everything from conversations to complex data processing.
+</Tip>
+
+### Let's Chat! Using the Fluent API
+
+Working with agents feels natural with our fluent API. Check out these examples:
+
+```php
+// Basic conversational usage
+$response = CustomerSupportAgent::run('How do I reset my password?')
+    ->go();
+
+// With user context
+$response = CustomerSupportAgent::run('Show me my recent orders')
+    ->forUser($user)
+    ->go();
+
+// With session for conversation continuity
+$response = CustomerSupportAgent::run('What was my previous question?')
+    ->withSession($sessionId)
+    ->go();
+
+// Event-driven execution
+OrderProcessingAgent::run($orderCreatedEvent)
+    ->async()
+    ->go();
+
+// Data analysis with context
+$insights = AnalyticsAgent::run($salesData)
+    ->withContext(['period' => 'last_quarter'])
+    ->go();
+
+// Process large datasets asynchronously
+DataProcessorAgent::run($largeDataset)
+    ->async()
+    ->onQueue('processing')
+    ->go();
+
+// Monitor system health with thresholds
+SystemMonitorAgent::run($metrics)
+    ->withContext(['threshold' => 0.95])
+    ->go();
+
+// Generate reports with specific formats
+$report = ReportAgent::run('weekly_summary')
+    ->withContext(['format' => 'pdf'])
+    ->go();
+```
+
+### Real-time Magic with Streaming
+
+Want to see your agent think in real-time? Enable streaming for that ChatGPT-like experience:
+
+```php
+// Enable streaming for real-time responses
+$stream = StorytellerAgent::run('Tell me a story')
+    ->streaming()
+    ->go();
+
+foreach ($stream as $chunk) {
+    echo $chunk;
+    flush();
+}
+```
+
+### Managing Conversation History
+
+<Warning>
+**Important:** All messages are always saved to the database for session continuity. These settings only control what previous messages are sent to the LLM for context.
+</Warning>
+
+By default, agents don't send conversation history to the LLM (for better performance and lower costs). But for chat agents, you'll want context! Here's how to control what history gets sent to the LLM:
+
+```php
+// Enable history for conversational agents
+class ChatAgent extends BaseLlmAgent
+{
+    protected bool $includeConversationHistory = true; // Send history to LLM
+    protected string $contextStrategy = 'recent'; // 'none', 'recent', 'full'
+    protected int $historyLimit = 10; // last 10 messages (for 'recent' strategy)
+}
+
+// Override at runtime
+$context->setState('include_history', true);
+$context->setState('history_depth', 5);
+```
+
+## Customizing Agent Behavior
+
+Want to add your own special sauce? Agents come with powerful lifecycle hooks that let you customize exactly how they work. It's like having backstage passes to your agent's brain!
+
+### Available Hooks
+
+- **beforeLlmCall** - Tweak messages before they hit the AI
+- **afterLlmResponse** - Process AI responses your way
+- **beforeToolCall** - Modify tool inputs on the fly
+- **afterToolResult** - Transform tool outputs
+- **onToolException** - Handle tool execution errors
+
+Here's how to use these superpowers:
+
+```php
+class CustomAgent extends BaseLlmAgent
+{
+    public function beforeLlmCall(array $inputMessages, AgentContext $context): array
+    {
+        // Modify messages before sending to LLM
+        // This is also where tracing starts
+        return $inputMessages;
+    }
+
+    public function afterLlmResponse(Response|Generator $response, AgentContext $context, ?PendingRequest $request = null): mixed
+    {
+        // Process the LLM response
+        // Access token usage: $response->usage
+        // Access original request: $request
+        return $response;
+    }
+
+    public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array
+    {
+        // Modify tool arguments before execution
+        return $arguments;
+    }
+
+    public function afterToolResult(string $toolName, string $result, AgentContext $context): string
+    {
+        // Process tool results
+        return $result;
+    }
+
+    public function onToolException(string $toolName, Throwable $e, AgentContext $context): void
+    {
+        // Handle tool execution errors
+        // Log errors, send alerts, or implement recovery strategies
+    }
+}
+```
+
+## Dynamic Prompts
+
+Want to test different personalities without changing code? Prompt versioning lets you A/B test, switch between tones, and evolve your agent's voice on the fly!
+
+<Tip>
+**Switch Prompts at Runtime** - No more hardcoding prompts! Store different versions and switch between them instantly.
+</Tip>
+
+```php
+// Use a specific prompt version
+$response = CustomerSupportAgent::run('Help me with my order')
+    ->withPromptVersion('friendly')
+    ->go();
+
+// A/B test different tones
+$version = rand(0, 1) ? 'professional' : 'casual';
+$response = CustomerSupportAgent::run($query)
+    ->withPromptVersion($version)
+    ->go();
+```
+
+Store prompts as `.md` files in `resources/prompts/{agent_name}/` for easy version control!
+
+[Learn more about Dynamic Prompts](/concepts/dynamic-prompts)
+
+## Dynamic Prompts with Blade Templates
+
+Create **dynamic, context-aware prompts** using Laravel's Blade templating engine. Your prompts can adapt based on user data, session state, and custom variables.
+
+### Quick Example
+
+Save your prompt as `.blade.php` to enable dynamic content:
+
+```blade resources/prompts/agent_name/default.blade.php
+You are {{ $agent['name'] }}, a helpful assistant.
+
+@if(isset($user_name))
+Hello {{ $user_name }}! How can I help you today?
+@else
+Hello! How can I assist you?
+@endif
+
+@if($context && $context->getState('premium_user'))
+Premium support mode activated
+@endif
+
+@if($tools->isNotEmpty())
+I can help you with: {{ $tools->pluck('description')->join(', ') }}
+@endif
+```
+
+### Adding Custom Variables
+
+Inject your own data by implementing `getPromptData()` in your agent:
+
+```php
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    protected function getPromptData(AgentContext $context): array
+    {
+        return [
+            'company_name' => config('app.company_name'),
+            'support_hours' => '9 AM - 5 PM EST',
+            'ticket_count' => $this->getUserTicketCount($context),
+        ];
+    }
+}
+```
+
+Then use them in your template:
+
+```blade
+Welcome to {{ $company_name }} support!
+Our hours: {{ $support_hours }}
+
+@if($ticket_count > 0)
+You have {{ $ticket_count }} open tickets.
+@endif
+```
+
+[Learn more about Blade Templates & Advanced Features](/concepts/dynamic-prompts)
+
+## Building Agent Teams
+
+Why have one agent when you can have a whole team? Agents can delegate tasks to specialized sub-agents, creating powerful AI workflows. Think of it as building your own AI company!
+
+```php
+class ManagerAgent extends BaseLlmAgent
+{
+    protected array $subAgents = [
+        TechnicalSupportAgent::class,
+        BillingSupportAgent::class,
+        SalesAgent::class,
+    ];
+}
+```
+
+## Advanced Agent Techniques
+
+Ready to level up? Here are some pro tips and advanced features that'll make your agents work harder and smarter!
+
+### Vector Memory & RAG
+
+Give your agents superpowers with built-in semantic search and knowledge retrieval! Perfect for building documentation assistants, knowledge bases, and intelligent Q&A systems.
+
+```php Agent with Vector Memory
+class DocumentationAgent extends BaseLlmAgent
+{
+    protected string $name = 'docs_agent';
+
+    public function loadKnowledge(string $content): void
+    {
+        // Simple: just add content
+        $this->vector()->addDocument($content);
+
+        // Advanced: with full metadata and organization
+        $this->vector()->addDocument([
+            'content' => $content,
+            'metadata' => ['type' => 'docs', 'version' => '2.0'],
+            'namespace' => 'knowledge_base',
+            'source' => 'user_upload'
+        ]);
+    }
+
+    public function answerQuestion(string $question, AgentContext $context): mixed
+    {
+        // Generate contextual answer using RAG
+        $ragContext = $this->rag()->generateRagContext($question, [
+            'namespace' => 'knowledge_base',
+            'limit' => 5,
+            'threshold' => 0.7
+        ]);
+
+        if ($ragContext['total_results'] > 0) {
+            $contextualInput = "Based on this knowledge:\n" .
+                             $ragContext['context'] .
+                             "\n\nAnswer: " . $question;
+        } else {
+            $contextualInput = $question;
+        }
+
+        return parent::run($contextualInput, $context);
+    }
+}
+
+// Public access means you can test directly:
+$agent = Agent::named('docs_agent');
+$agent->vector()->addDocument('Laravel is awesome!');
+$results = $agent->vector()->search('framework');
+```
+
+<Info>
+**Vector Memory Pro Tips**
+- Use progressive API: simple strings for prototypes, arrays for production
+- Public methods make testing in Tinkerwell super easy
+- Organize with namespaces: 'docs', 'faqs', 'policies', etc.
+- Perfect for building chatbots that remember context
+</Info>
+
+### Background Processing with Async
+
+Got heavy lifting to do? Send your agents to work in the background:
+
+```php
+// Execute agent asynchronously via queue
+$job = DataProcessorAgent::run($largeDataset)
+    ->async()
+    ->onQueue('processing')
+    ->go();
+
+// With delay and retries
+$job = ReportAgent::run('quarterly_report')
+    ->delay(300) // 5 minutes
+    ->tries(3)
+    ->timeout(600) // 10 minutes
+    ->go();
+```
+
+### Vision & Multimodal Magic
+
+Your agents aren't just text wizards - they have **eyes** too! Send images, documents, and watch the magic happen:
+
+```php
+// Send images with your request
+$response = VisionAgent::run('What\'s in this image?')
+    ->withImage('/path/to/image.jpg')
+    ->go();
+
+// Multiple images and documents
+$response = DocumentAnalyzer::run('Summarize these documents')
+    ->withDocument('/path/to/report.pdf')
+    ->withImage('/path/to/chart.png')
+    ->withImageFromUrl('https://example.com/diagram.jpg')
+    ->go();
+```
+
+### Fine-Tune on the Fly
+
+Need more creativity? Want faster responses? **Override any parameter** at runtime:
+
+```php
+// Override agent parameters at runtime
+$response = CreativeWriterAgent::run('Write a poem')
+    ->temperature(0.9) // More creative
+    ->maxTokens(500)
+    ->go();
+
+// Set multiple parameters
+$response = AnalyticalAgent::run($data)
+    ->withParameters([
+        'temperature' => 0.2,
+        'max_tokens' => 2000,
+        'top_p' => 0.95
+    ])
+    ->go();
+```
+
+## Memory That Actually Remembers
+
+Unlike that friend who forgets your birthday every year, your agents have **perfect memory**! They remember everything important about your conversations and context.
+
+<CardGroup cols={2}>
+  <Card title="Conversation History" icon="comments">
+    Every message in the session
+  </Card>
+  <Card title="Tool Results" icon="screwdriver-wrench">
+    What tools did and returned
+  </Card>
+  <Card title="User Context" icon="user">
+    Who they're talking to
+  </Card>
+  <Card title="Custom Data" icon="database">
+    Any context you provide
+  </Card>
+</CardGroup>
+
+```php
+// Add custom context
+$response = ShoppingAssistant::run('Find me a laptop')
+    ->withContext([
+        'budget' => 1500,
+        'preferences' => ['brand' => 'Apple'],
+        'location' => 'New York'
+    ])
+    ->go();
+```
+
+## Understanding the Agent Lifecycle
+
+When you ask an agent to do something, it goes through a **carefully orchestrated lifecycle**. Understanding this flow helps you build more powerful agents and debug issues faster!
+
+### The Request Journey
+
+```
+1. Your Code → AgentExecutor (Fluent API)
+2. AgentExecutor → AgentManager (Orchestration)
+3. AgentManager → Agent Instance (Your Logic)
+4. Agent → LLM Provider (AI Processing)
+5. LLM → Tools (If Needed)
+6. Response → Back Through the Chain
+```
+
+### Lifecycle Hooks - Your Power Points
+
+Agents provide strategic hooks where you can intercept and modify behavior. These are your **control points** for customization:
+
+#### beforeLlmCall() - Pre-Processing
+
+Called before sending messages to the AI. Perfect for adding context, filtering messages, or injecting system prompts.
+
+```php
+public function beforeLlmCall(array $messages, AgentContext $context): array
+{
+    // Add user preferences to system message
+    $messages[0]['content'] .= "\nUser prefers formal tone.";
+    return $messages;
+}
+```
+
+#### afterLlmResponse() - Post-Processing
+
+Called after receiving the AI's response. Transform responses, extract insights, or trigger side effects. Now includes the original request for complete logging.
+
+```php
+public function afterLlmResponse(Response $response, AgentContext $context, ?PendingRequest $request): mixed
+{
+    // Log token usage and request details for monitoring
+    Log::info('LLM call completed', [
+        'model' => $request?->model(),
+        'usage' => $response->usage
+    ]);
+    return $response;
+}
+```
+
+#### Tool Execution Hooks
+
+Control tool execution with beforeToolCall() and afterToolResult() hooks.
+
+```php
+public function beforeToolCall(string $toolName, array $arguments, AgentContext $context): array
+{
+    // Add API keys or validate permissions
+    if ($toolName === 'weather_api') {
+        $arguments['api_key'] = config('services.weather.key');
+    }
+    return $arguments;
+}
+```
+
+### Lifecycle Events
+
+As your agent works, it broadcasts events you can listen to for monitoring, logging, or triggering other actions:
+
+| Event | Description |
+|-------|-------------|
+| `AgentExecutionStarting` | When execution begins |
+| `LlmCallInitiating` | Before calling the AI |
+| `ToolCallInitiating` | Before using a tool |
+| `ToolCallCompleted` | After tool finishes |
+| `LlmResponseReceived` | AI response received |
+| `AgentExecutionFinished` | All done! |
+
+## Pro Tips from the Trenches
+
+Want to build agents that users **actually love**? Here's the wisdom we've gathered from building hundreds of agents:
+
+<CardGroup cols={2}>
+  <Card title="Crystal Clear Instructions" icon="bullseye">
+    Write instructions like you're explaining to a smart friend. Be specific about what you want!
+  </Card>
+  <Card title="Right Model for the Job" icon="car">
+    GPT-4 for complex reasoning, GPT-3.5 for quick tasks. Don't use a Ferrari to go to the corner store!
+  </Card>
+  <Card title="Hook Into Everything" icon="magnifying-glass">
+    Use lifecycle hooks for debugging and monitoring. You'll thank yourself later!
+  </Card>
+  <Card title="Delegate Like a Boss" icon="users">
+    Complex workflows? Use sub-agents! Let specialists handle what they do best.
+  </Card>
+  <Card title="Stream for the Win" icon="bolt">
+    Enable streaming for long responses. Users love seeing agents "think" in real-time!
+  </Card>
+</CardGroup>
+
+## Ready to Build Something Amazing?
+
+You've got the knowledge, now let's put it to work!
+
+<CardGroup cols={2}>
+  <Card title="Power Up with Tools" icon="wrench" href="/concepts/tools">
+    Give your agents superpowers with custom tools
+  </Card>
+  <Card title="Deep Dive API Docs" icon="book" href="/api/agent-class">
+    Every method, property, and secret revealed
+  </Card>
+</CardGroup>

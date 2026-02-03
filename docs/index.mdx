@@ -1,0 +1,118 @@
+---
+title: "Vizra ADK"
+description: "Build incredible intelligent agents with the most developer-friendly Laravel package. Your journey to AI mastery starts here!"
+icon: "robot"
+---
+
+Welcome to the future of AI development! Build incredible intelligent agents with the most developer-friendly Laravel package on the planet.
+
+## Lightning Quick Start
+
+Get your first AI agent running with these simple commands:
+
+```bash Terminal
+# Install the package
+composer require vizra/vizra-adk
+
+# Set up everything with one command
+php artisan vizra:install
+
+# Create your first agent
+php artisan vizra:make:agent CustomerSupportAgent
+```
+
+## What Makes Vizra ADK Special?
+
+Vizra ADK isn't just another package - it's your toolkit for creating intelligent, conversational agents that work in production.
+
+<CardGroup cols={3}>
+  <Card title="Multi-LLM Support" icon="brain">
+    OpenAI, Anthropic, Google Gemini - use them all!
+  </Card>
+  <Card title="Powerful Tool System" icon="wrench">
+    Give your agents superpowers with custom tools
+  </Card>
+  <Card title="Smart Memory" icon="message">
+    Vector memory & RAG for intelligent conversations
+  </Card>
+  <Card title="Complex Workflows" icon="arrows-rotate">
+    Build multi-step processes that just work
+  </Card>
+  <Card title="Quality Evaluations" icon="flask-vial">
+    LLM-as-a-Judge for automated testing
+  </Card>
+  <Card title="Debug Tracing" icon="magnifying-glass">
+    See exactly what your agents are thinking
+  </Card>
+</CardGroup>
+
+## Your Learning Adventure
+
+Pick your path and let's build something incredible together:
+
+<CardGroup cols={2}>
+  <Card title="Installation & Setup" icon="rocket" href="/installation/getting-started">
+    Get up and running in minutes! Requirements, installation, and your first agent
+  </Card>
+  <Card title="Core Concepts" icon="graduation-cap" href="/concepts/architecture">
+    Master agents, tools, sessions, and workflows - the building blocks of intelligence
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/artisan-commands">
+    Complete technical reference - every class, method, and command documented
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/api-reference/error-handling">
+    Handle exceptions gracefully and build resilient agents that recover from failures
+  </Card>
+</CardGroup>
+
+## See the Magic in Action
+
+Here's a real agent that can look up orders and process refunds - all in just a few lines of code!
+
+```php app/Agents/CustomerSupportAgent.php
+<?php
+
+namespace App\Agents;
+
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use App\Tools\OrderLookupTool;
+use App\Tools\RefundProcessorTool;
+
+class CustomerSupportAgent extends BaseLlmAgent
+{
+    protected string $name = 'customer_support';
+
+    protected string $description = 'Helpful customer support assistant';
+
+    protected array $tools = [
+        OrderLookupTool::class,
+        RefundProcessorTool::class,
+    ];
+
+    protected function getSystemPrompt(): string
+    {
+        return "You are a helpful customer support assistant. " .
+               "Be friendly, professional, and solution-oriented.";
+    }
+}
+```
+
+<Tip>
+That's it! This agent can now have intelligent conversations, look up customer orders, and process refunds - all while maintaining context and providing helpful responses. The framework handles all the complex AI orchestration for you!
+</Tip>
+
+## Ready to Build Something Amazing?
+
+Your AI journey starts with a single command! Choose your adventure and let's create agents that will blow your mind.
+
+<CardGroup cols={3}>
+  <Card title="Getting Started" icon="bolt" href="/installation/getting-started">
+    Install, create, and deploy your first agent in minutes!
+  </Card>
+  <Card title="Learn Concepts" icon="brain" href="/concepts/architecture">
+    Master the fundamentals of intelligent agent development
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/artisan-commands">
+    Deep dive into every class, method, and feature
+  </Card>
+</CardGroup>

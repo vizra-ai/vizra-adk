@@ -1,0 +1,413 @@
+---
+title: "MCP Integration"
+description: "Supercharge your agents with Model Context Protocol. Connect to filesystems, databases, APIs, and the entire MCP ecosystem with just one line of code."
+icon: "plug"
+---
+
+## What is MCP?
+
+Model Context Protocol (MCP) is like **"USB-C for AI applications"** - a universal standard that lets your agents connect to external data sources and tools. Instead of building custom integrations for every service, you can use the growing ecosystem of MCP servers!
+
+<CardGroup cols={3}>
+  <Card title="File Systems" icon="folder">
+    Read, write, search files and directories with full filesystem access
+  </Card>
+  <Card title="GitHub Integration" icon="github">
+    Create issues, manage repos, read code, and automate workflows
+  </Card>
+  <Card title="Databases" icon="database">
+    Query PostgreSQL, MySQL, and other databases directly from agents
+  </Card>
+  <Card title="Web Search" icon="magnifying-glass">
+    Search the web with Brave Search for real-time information
+  </Card>
+  <Card title="Team Tools" icon="comments">
+    Integrate with Slack, Discord, and other communication platforms
+  </Card>
+  <Card title="Custom Servers" icon="bullseye">
+    Build your own MCP servers in any language for specialized needs
+  </Card>
+</CardGroup>
+
+## Quick Start - Add MCP in 60 Seconds
+
+Getting MCP working with your agents is incredibly simple. Here's how:
+
+### 1. Install MCP Server
+
+```bash Terminal
+npm install -g @modelcontextprotocol/server-filesystem
+```
+
+### 2. Configure in Vizra
+
+```php config/vizra-adk.php
+'mcp_servers' => [
+    'filesystem' => [
+        'command' => 'npx',
+        'args' => [
+            '@modelcontextprotocol/server-filesystem',
+            storage_path('app'), // Allow access to storage directory
+        ],
+        'enabled' => true,
+    ],
+],
+```
+
+### 3. Create MCP-Enabled Agent
+
+```php app/Agents/FileManagerAgent.php
+<?php
+namespace App\Agents;
+
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+
+class FileManagerAgent extends BaseLlmAgent
+{
+    protected string $name = 'file_manager';
+    protected string $instructions = 'You can read, write, and manage files. Help users with file operations!';
+
+    protected array $mcpServers = ['filesystem'];
+}
+```
+
+### 4. Test It Out!
+
+```bash Terminal
+php artisan vizra:chat file_manager
+```
+
+<Tip>
+**That's It!** Your agent now has access to all filesystem tools! It can read files, write content, search directories, and more. The MCP tools are automatically discovered and added to your agent.
+</Tip>
+
+## Available MCP Servers
+
+Here are some popular MCP servers you can use right away:
+
+### Filesystem Server
+
+Access local files and directories with comprehensive file operations.
+
+<CardGroup cols={2}>
+  <Card title="Installation">
+    ```bash
+    npm install -g @modelcontextprotocol/server-filesystem
+    ```
+  </Card>
+  <Card title="Configuration">
+    ```php
+    'filesystem' => [
+        'command' => 'npx',
+        'args' => ['@modelcontextprotocol/server-filesystem', '/safe/path'],
+        'enabled' => true,
+    ],
+    ```
+  </Card>
+</CardGroup>
+
+**Available Tools:**
+- `read_file` - Read file contents
+- `write_file` - Write to files
+- `list_directory` - List directory contents
+- `search_files` - Search for files and content
+
+### GitHub Server
+
+Comprehensive GitHub integration for repository management and automation.
+
+<CardGroup cols={2}>
+  <Card title="Installation">
+    ```bash
+    npm install -g @modelcontextprotocol/server-github
+    ```
+  </Card>
+  <Card title="Configuration">
+    ```php
+    'github' => [
+        'command' => 'npx',
+        'args' => ['@modelcontextprotocol/server-github', '--token', env('GITHUB_TOKEN')],
+        'enabled' => !empty(env('GITHUB_TOKEN')),
+    ],
+    ```
+  </Card>
+</CardGroup>
+
+**Available Tools:**
+- `create_issue` - Create GitHub issues
+- `search_repositories` - Search repos
+- `get_file_contents` - Read files from repos
+- `list_issues` - List repository issues
+
+### PostgreSQL Server
+
+Direct database access for queries and data manipulation.
+
+<CardGroup cols={2}>
+  <Card title="Installation">
+    ```bash
+    npm install -g @modelcontextprotocol/server-postgres
+    ```
+  </Card>
+  <Card title="Configuration">
+    ```php
+    'postgres' => [
+        'command' => 'npx',
+        'args' => ['@modelcontextprotocol/server-postgres', '--connection-string', env('DATABASE_URL')],
+        'enabled' => !empty(env('DATABASE_URL')),
+    ],
+    ```
+  </Card>
+</CardGroup>
+
+**Available Tools:**
+- `query` - Execute SQL queries
+- `describe_table` - Get table schema
+- `list_tables` - List all tables
+- `get_schema` - Get database schema
+
+## Advanced Configuration
+
+### Transport Types
+
+Vizra ADK supports two transport types for MCP servers:
+
+<CardGroup cols={2}>
+  <Card title="STDIO Transport (Default)" icon="terminal">
+    Local MCP servers running as subprocesses. Best for filesystem, local databases, and npm packages.
+
+    ```php
+    'filesystem' => [
+        'transport' => 'stdio', // Default
+        'command' => 'npx',
+        'args' => ['@modelcontextprotocol/server-filesystem'],
+        'enabled' => true,
+    ],
+    ```
+  </Card>
+  <Card title="HTTP Transport" icon="globe">
+    Remote MCP servers via HTTP/SSE. Perfect for cloud services, microservices, and shared resources.
+
+    ```php
+    'github_remote' => [
+        'transport' => 'http',
+        'url' => 'https://mcp.example.com/api',
+        'api_key' => env('MCP_API_KEY'),
+        'enabled' => true,
+    ],
+    ```
+  </Card>
+</CardGroup>
+
+### Environment-Based Setup
+
+Use environment variables to control MCP servers across different environments:
+
+```bash .env
+# Enable/disable servers per environment
+MCP_FILESYSTEM_ENABLED=true
+MCP_GITHUB_ENABLED=true
+MCP_POSTGRES_ENABLED=false
+
+# Server-specific configuration
+GITHUB_TOKEN=your_github_token_here
+DATABASE_URL=postgresql://user:pass@localhost/db
+BRAVE_API_KEY=your_brave_search_key
+MCP_NPX_PATH="/path/to/npx"  # Optional: specify npx path if not in PATH
+```
+
+```php config/vizra-adk.php
+'mcp_servers' => [
+    'filesystem' => [
+        'command' => 'npx',
+        'args' => ['@modelcontextprotocol/server-filesystem', storage_path('app')],
+        'enabled' => env('MCP_FILESYSTEM_ENABLED', false),
+        'timeout' => 30,
+    ],
+
+    'github' => [
+        'command' => 'npx',
+        'args' => ['@modelcontextprotocol/server-github', '--token', env('GITHUB_TOKEN')],
+        'enabled' => env('MCP_GITHUB_ENABLED', false) && !empty(env('GITHUB_TOKEN')),
+        'timeout' => 45,
+    ],
+
+    'postgres' => [
+        'command' => 'npx',
+        'args' => ['@modelcontextprotocol/server-postgres', '--connection-string', env('DATABASE_URL')],
+        'enabled' => env('MCP_POSTGRES_ENABLED', false) && !empty(env('DATABASE_URL')),
+        'timeout' => 30,
+    ],
+],
+```
+
+### Multiple Servers per Agent
+
+Agents can use multiple MCP servers simultaneously:
+
+```php Multi-Server Agent
+class DeveloperAssistantAgent extends BaseLlmAgent
+{
+    protected string $name = 'developer_assistant';
+
+    protected string $instructions = 'You are a comprehensive development assistant with access to:
+
+    **File System**: Read, write, and search project files
+    **GitHub**: Manage repositories, issues, and pull requests
+    **Database**: Query and analyze data directly
+
+    Use these tools together to provide powerful development support!';
+
+    protected array $mcpServers = ['filesystem', 'github', 'postgres'];
+}
+```
+
+## Management Commands
+
+Vizra ADK provides helpful commands to manage your MCP integration:
+
+```bash Terminal
+# List configured servers and their status
+php artisan vizra:mcp:servers
+
+# Test connections and show available tools from each server
+php artisan vizra:mcp:servers --test
+```
+
+## Real-World Examples
+
+### Code Review Assistant
+
+```php Code Review Agent
+class CodeReviewAgent extends BaseLlmAgent
+{
+    protected string $name = 'code_reviewer';
+
+    protected string $instructions = 'You are an expert code reviewer. You can:
+
+    1. Read code files to understand implementations
+    2. Search for patterns and potential issues
+    3. Create GitHub issues for problems found
+    4. Suggest improvements and best practices
+
+    Always provide constructive feedback with specific examples.';
+
+    protected array $mcpServers = ['filesystem', 'github'];
+}
+```
+
+**Example Conversation:**
+- **User:** "Review the authentication code in src/Auth/"
+- **Agent:** "I'll examine the authentication code for you..."
+  - Uses filesystem tools to read auth files
+  - Analyzes code for security issues
+  - Creates GitHub issue for potential vulnerability
+- **Agent:** "Found 3 areas for improvement. Created issue #42 for the critical security concern."
+
+### Data Analysis Assistant
+
+```php Data Analysis Agent
+class DataAnalystAgent extends BaseLlmAgent
+{
+    protected string $name = 'data_analyst';
+
+    protected string $instructions = 'You are a data analysis expert. You can:
+
+    1. Query databases to extract insights
+    2. Generate reports and save them as files
+    3. Create data visualizations and charts
+    4. Identify trends and anomalies in data
+
+    Always explain your analysis methodology and findings clearly.';
+
+    protected array $mcpServers = ['postgres', 'filesystem'];
+}
+```
+
+## Security Best Practices
+
+<Warning>
+**Filesystem Security**
+- **Limit directory access** - Only allow access to safe directories
+- **Use storage paths** - Prefer `storage_path()` over system directories
+- **Validate file operations** - MCP servers should validate all file paths
+- **Monitor file access** - Log all file operations for audit trails
+</Warning>
+
+<Note>
+**API Token Security**
+- **Use environment variables** - Never hardcode tokens in config
+- **Minimal permissions** - Grant only necessary API permissions
+- **Rotate tokens regularly** - Set up token rotation schedules
+- **Monitor usage** - Track API calls and unusual activity
+</Note>
+
+<Info>
+**Environment Isolation**
+- **Separate configs** - Different MCP servers for dev/staging/prod
+- **Sandbox testing** - Test MCP integrations in isolated environments
+- **Resource limits** - Set appropriate timeouts and resource constraints
+- **Error handling** - Graceful degradation when MCP servers are unavailable
+</Info>
+
+## Troubleshooting
+
+### Server Connection Failed
+
+**Error:** "Failed to start MCP server"
+
+- Check that the MCP server package is installed globally
+- Verify the command path and arguments in config
+- Run `php artisan vizra:mcp:servers --test` for details
+
+### Tools Not Available
+
+**Error:** "Tool not found" or tools not appearing
+
+- Ensure the server is enabled in configuration
+- Check that the mcpServers property includes the server
+- Clear cache and restart the application
+
+### Permission Denied
+
+**Error:** "Access denied" or "Insufficient permissions"
+
+- Check filesystem permissions for directory access
+- Verify API tokens have necessary permissions
+- Ensure environment variables are set correctly
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="Agent Design" icon="palette">
+    - **Single responsibility** - Each agent should have a clear, focused purpose
+    - **Appropriate tools** - Only include MCP servers the agent actually needs
+    - **Clear instructions** - Explain what MCP capabilities the agent has
+    - **Error handling** - Handle MCP failures gracefully in agent instructions
+  </Card>
+  <Card title="Performance" icon="bolt">
+    - **Cache wisely** - MCP tool discovery is cached for 5 minutes
+    - **Connection pooling** - MCP clients are reused across requests
+    - **Timeout settings** - Set appropriate timeouts for different server types
+    - **Monitor usage** - Track MCP server performance and availability
+  </Card>
+  <Card title="Development Workflow" icon="wrench">
+    - **Test locally first** - Use `--test` flag to verify servers
+    - **Gradual rollout** - Enable MCP servers incrementally
+    - **Monitor logs** - Watch for MCP-related errors and performance issues
+    - **Documentation** - Document which agents use which MCP servers
+  </Card>
+</CardGroup>
+
+## MCP Opens Infinite Possibilities
+
+Your agents can now connect to any data source or service in the MCP ecosystem.
+
+<CardGroup cols={2}>
+  <Card title="Learn About Tools" icon="wrench" href="/concepts/tools">
+    Understand how tools work and combine with MCP
+  </Card>
+  <Card title="Build Better Agents" icon="robot" href="/concepts/agents">
+    Create more powerful agents with MCP integration
+  </Card>
+</CardGroup>

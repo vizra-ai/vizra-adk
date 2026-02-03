@@ -1,0 +1,361 @@
+---
+title: "Workflows"
+description: "Orchestrate multiple agents together in powerful patterns"
+icon: "rotate"
+---
+
+<Info>
+**Agent Orchestration Made Simple** - Workflows are special agents that conduct other agents like a symphony! They orchestrate multiple agents in sequential, parallel, conditional, or loop patterns - all without requiring LLM control for the workflow logic itself. Think of them as your agent choreographer!
+</Info>
+
+## Understanding Workflows
+
+Workflows are the conductors of your agent orchestra! They're special agent types that bring order to complexity:
+
+<CardGroup cols={2}>
+  <Card title="Built on Solid Foundation" icon="dna">
+    Extend `BaseWorkflowAgent` which extends `BaseAgent`
+  </Card>
+  <Card title="No LLM Overhead" icon="masks-theater">
+    Orchestrate agents without using LLMs for flow control
+  </Card>
+  <Card title="Multiple Patterns" icon="palette">
+    Support sequential, parallel, conditional, and loop execution
+  </Card>
+  <Card title="Smart Data Flow" icon="link">
+    Pass results between steps automatically
+  </Card>
+</CardGroup>
+
+## Workflow Patterns
+
+<CardGroup cols={4}>
+  <Card title="Sequential" icon="arrow-right">
+    Steps execute one after another in perfect order
+  </Card>
+  <Card title="Parallel" icon="bolt">
+    Multiple agents work simultaneously
+  </Card>
+  <Card title="Conditional" icon="code-branch">
+    Choose paths based on conditions
+  </Card>
+  <Card title="Loops" icon="rotate">
+    Repeat operations with while, times, or forEach
+  </Card>
+</CardGroup>
+
+## Creating Your First Workflow
+
+Let's build your first workflow! It's as easy as chaining methods together.
+
+### Using the Workflow Facade
+
+```php app/Workflows/DataProcessingWorkflow.php
+use Vizra\VizraADK\Facades\Workflow;
+use App\Agents\DataCollectorAgent;
+use App\Agents\DataProcessorAgent;
+use App\Agents\ReportGeneratorAgent;
+
+$workflow = Workflow::sequential()
+    ->then(DataCollectorAgent::class)
+    ->then(DataProcessorAgent::class)
+    ->then(ReportGeneratorAgent::class);
+```
+
+### Sequential Workflow Class
+
+```php
+use Vizra\VizraADK\Agents\SequentialWorkflow;
+use App\Agents\AnalysisAgent;
+use App\Agents\SummaryAgent;
+use App\Agents\CleanupAgent;
+
+$workflow = new SequentialWorkflow();
+$workflow
+    ->start(AnalysisAgent::class, 'Analyze the data')
+    ->then(SummaryAgent::class, fn($previousResult) =>
+        "Summarize this: " . $previousResult
+    )
+    ->finally(CleanupAgent::class); // Always runs
+
+$result = $workflow->execute('Initial input');
+```
+
+## Workflow Types in Action
+
+### Parallel Workflows
+
+Need to notify multiple channels at once? Run data processing in parallel? This is your power tool!
+
+```php
+// Using the facade
+use App\Agents\EmailAgent;
+use App\Agents\SmsAgent;
+use App\Agents\SlackAgent;
+
+$workflow = Workflow::parallel([
+    EmailAgent::class,
+    SmsAgent::class,
+    SlackAgent::class
+])->waitForAll();
+```
+
+### Conditional Workflows
+
+Make smart decisions in your workflow! Route to different agents based on conditions.
+
+```php
+use Vizra\VizraADK\Agents\ConditionalWorkflow;
+use App\Agents\PremiumAgent;
+use App\Agents\UrgentHandler;
+use App\Agents\StandardAgent;
+
+$workflow = Workflow::conditional()
+    ->when(
+        'score > 80',
+        PremiumAgent::class,
+        'Handle premium customer'
+    )
+    ->when(
+        fn($input) => $input['type'] === 'urgent',
+        UrgentHandler::class
+    )
+    ->otherwise(
+        StandardAgent::class,
+        'Handle standard request'
+    );
+```
+
+### Loop Workflows
+
+Process lists, retry until success, or repeat operations - loops make it easy!
+
+```php
+use App\Agents\ProcessingAgent;
+use App\Agents\BatchProcessor;
+use App\Agents\ItemProcessor;
+
+// While loop
+$workflow = Workflow::while(
+    ProcessingAgent::class,
+    fn($result) => $result['continue'] === true,
+    10 // max iterations
+);
+
+// Times loop
+$workflow = Workflow::times(BatchProcessor::class, 5);
+
+// ForEach loop
+$items = ['item1', 'item2', 'item3'];
+$workflow = Workflow::forEach(ItemProcessor::class, $items);
+```
+
+## Running Your Workflows
+
+### Basic Execution
+
+```php
+use Vizra\VizraADK\Facades\Workflow;
+use Vizra\VizraADK\System\AgentContext;
+use App\Agents\FirstAgent;
+use App\Agents\SecondAgent;
+
+// Workflows are agents, so they run like any agent
+$workflow = Workflow::sequential(FirstAgent::class, SecondAgent::class);
+
+// Create an agent context (required)
+$context = new AgentContext('session-123');
+
+// Execute with input and context
+$result = $workflow->execute('Process this data', $context);
+```
+
+### Understanding Workflow Results
+
+Each workflow type returns structured results so you always know what happened!
+
+```php
+// Sequential workflow returns
+{
+    'final_result': 'Last agent output',
+    'step_results': {
+        'App\\Agents\\FirstAgent': 'First result',
+        'App\\Agents\\SecondAgent': 'Second result'
+    },
+    'workflow_type': 'sequential'
+}
+
+// Parallel workflow returns
+{
+    'results': {
+        'App\\Agents\\AgentOne': 'Result 1',
+        'App\\Agents\\AgentTwo': 'Result 2'
+    },
+    'completed': ['App\\Agents\\AgentOne', 'App\\Agents\\AgentTwo'],
+    'workflow_type': 'parallel'
+}
+```
+
+## Advanced Workflow Features
+
+<Note>
+Take your workflows to the next level with advanced error handling, callbacks, and dynamic parameters!
+</Note>
+
+### Error Handling and Retries
+
+```php
+use App\Agents\RiskyAgent;
+
+$workflow = new SequentialWorkflow();
+$workflow
+    ->retryOnFailure(3, 1000) // 3 retries, 1 second delay
+    ->timeout(300) // 5 minute timeout
+    ->then(RiskyAgent::class, 'Process risky operation', [
+        'retries' => 5, // Override for this step
+        'timeout' => 60
+    ]);
+```
+
+### Callbacks for Workflow Events
+
+```php
+use App\Agents\FirstAgent;
+use App\Agents\SecondAgent;
+
+$workflow = Workflow::sequential(FirstAgent::class, SecondAgent::class)
+    ->onSuccess(function($result, $stepResults) {
+        Log::info('Workflow succeeded', [
+            'final' => $result,
+            'steps' => $stepResults
+        ]);
+    })
+    ->onFailure(function(\Throwable $e, $stepResults) {
+        Log::error('Workflow failed: ' . $e->getMessage());
+    })
+    ->onComplete(function($result, $success, $stepResults) {
+        // Always runs, regardless of success/failure
+    });
+```
+
+### Dynamic Parameters
+
+Pass data between steps dynamically based on results and context!
+
+```php
+use App\Agents\DataFetcher;
+use App\Agents\Processor;
+
+$workflow = new SequentialWorkflow();
+$workflow
+    ->then(DataFetcher::class)
+    ->then(
+        Processor::class,
+        // Dynamic params based on previous results
+        fn($input, $results, $context) => [
+            'data' => $results[DataFetcher::class],
+            'mode' => $context->getState('processing_mode')
+        ]
+    );
+```
+
+## Workflow State Management
+
+Access results from any step and manage state throughout your workflow!
+
+```php
+use App\Agents\Collector;
+use App\Agents\Analyzer;
+
+// Access results from previous steps
+$workflow = new SequentialWorkflow();
+$workflow
+    ->then(Collector::class, 'Collect data')
+    ->then(Analyzer::class, function($input, $results) {
+        // Access previous step result
+        $collectedData = $results[Collector::class];
+        return "Analyze: " . json_encode($collectedData);
+    });
+
+// After execution, get specific results
+$result = $workflow->execute('Start');
+$analyzerResult = $workflow->getStepResult(Analyzer::class);
+$allResults = $workflow->getResults();
+```
+
+## Creating Workflows from Arrays
+
+Define workflows using simple arrays - perfect for dynamic or configuration-based workflows!
+
+### Array Definition
+
+```php
+use App\Agents\DataCollector;
+use App\Agents\Validator;
+
+$definition = [
+    'type' => 'sequential',
+    'steps' => [
+        [
+            'agent' => DataCollector::class,
+            'params' => 'Collect user data'
+        ],
+        [
+            'agent' => Validator::class,
+            'options' => ['retries' => 3]
+        ]
+    ]
+];
+
+$workflow = Workflow::fromArray($definition);
+```
+
+### Complex Array Definitions
+
+```php
+use App\Agents\UrgentHandler;
+use App\Agents\SupportAgent;
+use App\Agents\StandardHandler;
+
+// Conditional workflow from array
+$definition = [
+    'type' => 'conditional',
+    'conditions' => [
+        [
+            'condition' => 'input.priority == "high"',
+            'agent' => UrgentHandler::class
+        ],
+        [
+            'condition' => 'input.type == "support"',
+            'agent' => SupportAgent::class
+        ]
+    ],
+    'default' => [
+        'agent' => StandardHandler::class
+    ]
+];
+```
+
+## Workflow Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Design Tips" icon="bullseye">
+    - **Remember the Foundation** - Workflows are agents - they extend BaseWorkflowAgent
+    - **Choose the Right Pattern** - Use the appropriate workflow type for your use case
+    - **Set Smart Limits** - Configure reasonable timeouts and retry limits
+  </Card>
+  <Card title="Development Tips" icon="chart-line">
+    - **Monitor Everything** - Leverage callbacks for monitoring and debugging
+    - **Smart Data Flow** - Pass results between steps using closures
+    - **Test Thoroughly** - Test workflows with various input scenarios
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Next: Vector & RAG" icon="brain" href="/concepts/vector-rag">
+    Learn about vector memory and retrieval augmented generation!
+  </Card>
+  <Card title="Workflow API Reference" icon="book" href="/api/workflow-class">
+    Deep dive into workflow class documentation
+  </Card>
+</CardGroup>
