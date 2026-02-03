@@ -4,8 +4,9 @@ namespace Vizra\VizraADK\Execution;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Prism\Prism\ValueObjects\Media\Image;
+use Laravel\SerializableClosure\SerializableClosure;
 use Prism\Prism\ValueObjects\Media\Document;
+use Prism\Prism\ValueObjects\Media\Image;
 use Vizra\VizraADK\Jobs\AgentJob;
 use Vizra\VizraADK\Services\AgentManager;
 use Vizra\VizraADK\Services\StateManager;
@@ -48,6 +49,13 @@ class AgentExecutor
      * Lightweight user context array (takes precedence over user model serialization)
      */
     protected ?array $userContext = null;
+
+    /**
+     * Callback to execute when the agent completes
+     *
+     * @var callable|null
+     */
+    protected $onComplete = null;
 
     public function __construct(string $agentClass, mixed $input)
     {
@@ -204,6 +212,24 @@ class AgentExecutor
     public function timeout(int $seconds): self
     {
         $this->timeout = $seconds;
+
+        return $this;
+    }
+
+    /**
+     * Set a callback to execute when the agent completes
+     *
+     * The callback receives the result and context array:
+     * fn(mixed $result, array $context) => void
+     *
+     * For async execution, the callback is serialized and executed
+     * by the queue worker after the agent completes.
+     *
+     * @param  callable  $callback  The callback to execute on completion
+     */
+    public function onComplete(callable $callback): self
+    {
+        $this->onComplete = $callback;
 
         return $this;
     }
@@ -436,7 +462,18 @@ class AgentExecutor
         $stateManager->saveContext($agentContext, $agentName, false);
 
         // Execute the agent
-        return $agentManager->run($agentName, $this->input, $sessionId);
+        $result = $agentManager->run($agentName, $this->input, $sessionId);
+
+        // Execute onComplete callback if provided
+        if ($this->onComplete !== null) {
+            call_user_func($this->onComplete, $result, [
+                'agent' => $agentName,
+                'session_id' => $sessionId,
+                'user_id' => $userId,
+            ]);
+        }
+
+        return $result;
     }
 
     /**
@@ -508,6 +545,11 @@ class AgentExecutor
             if (method_exists($this->user, 'name')) {
                 $context['user']['name'] = $this->user->name;
             }
+        }
+
+        // Serialize the onComplete callback using Laravel's SerializableClosure
+        if ($this->onComplete !== null) {
+            $context['on_complete'] = serialize(new SerializableClosure($this->onComplete));
         }
 
         return $context;

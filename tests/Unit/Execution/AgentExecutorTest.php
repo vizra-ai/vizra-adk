@@ -366,4 +366,93 @@ class AgentExecutorTest extends TestCase
 
         $this->assertSame($executor, $result); // Should return self for chaining
     }
+
+    public function test_on_complete_returns_self_for_chaining()
+    {
+        $executor = new AgentExecutor('TestAgent', 'test input');
+        $result = $executor->onComplete(fn ($result, $context) => null);
+
+        $this->assertSame($executor, $result);
+    }
+
+    public function test_on_complete_callback_is_called_on_synchronous_execution()
+    {
+        $callbackCalled = false;
+        $callbackResult = null;
+        $callbackContext = null;
+
+        // Mock the AgentManager
+        $mockAgentManager = Mockery::mock(AgentManager::class);
+        $mockAgentManager->shouldReceive('run')
+            ->once()
+            ->andReturn('Test response');
+
+        // Mock the StateManager
+        $mockStateManager = Mockery::mock(StateManager::class);
+        $mockContext = Mockery::mock(AgentContext::class);
+        $mockContext->shouldReceive('setState')->zeroOrMoreTimes();
+        $mockStateManager->shouldReceive('loadContext')
+            ->once()
+            ->andReturn($mockContext);
+        $mockStateManager->shouldReceive('saveContext')
+            ->once();
+
+        // Mock an agent
+        $mockAgent = Mockery::mock();
+        $mockAgent->shouldReceive('getName')->andReturn('test_agent');
+
+        // Bind mocks to the container
+        $this->app->instance(AgentManager::class, $mockAgentManager);
+        $this->app->instance(StateManager::class, $mockStateManager);
+        $this->app->instance('TestAgent', $mockAgent);
+
+        $executor = new AgentExecutor('TestAgent', 'test input');
+        $executor->onComplete(function ($result, $context) use (&$callbackCalled, &$callbackResult, &$callbackContext) {
+            $callbackCalled = true;
+            $callbackResult = $result;
+            $callbackContext = $context;
+        });
+
+        $response = $executor->go();
+
+        $this->assertTrue($callbackCalled);
+        $this->assertEquals('Test response', $callbackResult);
+        $this->assertIsArray($callbackContext);
+        $this->assertArrayHasKey('agent', $callbackContext);
+        $this->assertArrayHasKey('session_id', $callbackContext);
+    }
+
+    public function test_on_complete_callback_is_serialized_for_async_execution()
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+
+        $executor = new AgentExecutor('TestAgent', 'test input');
+
+        // Use reflection to access the protected buildJobContext method
+        $reflection = new \ReflectionClass($executor);
+
+        // First set the onComplete callback
+        $executor->onComplete(fn ($result, $context) => logger()->info('Completed!'));
+
+        // Access the buildJobContext method
+        $method = $reflection->getMethod('buildJobContext');
+        $method->setAccessible(true);
+
+        $jobContext = $method->invoke($executor);
+
+        $this->assertArrayHasKey('on_complete', $jobContext);
+        $this->assertIsString($jobContext['on_complete']); // Should be serialized
+    }
+
+    public function test_on_complete_with_method_chaining()
+    {
+        $executor = new AgentExecutor('TestAgent', 'test input');
+
+        $result = $executor
+            ->withSession('test-session')
+            ->onComplete(fn ($result, $context) => null)
+            ->temperature(0.8);
+
+        $this->assertSame($executor, $result);
+    }
 }

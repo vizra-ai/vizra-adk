@@ -87,6 +87,9 @@ class AgentJob implements ShouldQueue
             // Store result in cache for retrieval (optional)
             $this->storeResult($result);
 
+            // Execute onComplete callback if provided
+            $this->executeOnCompleteCallback($result);
+
             // Dispatch any follow-up events
             $this->dispatchCompletionEvents($result);
 
@@ -181,6 +184,45 @@ class AgentJob implements ShouldQueue
             'completed_at' => now()->toISOString(),
             'result_type' => gettype($result),
         ], now()->addHour());
+    }
+
+    /**
+     * Execute the onComplete callback if one was provided
+     */
+    protected function executeOnCompleteCallback($result): void
+    {
+        if (! isset($this->context['on_complete'])) {
+            return;
+        }
+
+        try {
+            // Deserialize the callback
+            $callback = unserialize($this->context['on_complete']);
+
+            // Execute the callback with result and context
+            $callback($result, [
+                'agent' => $this->getAgentName(),
+                'agent_class' => $this->agentClass,
+                'session_id' => $this->sessionId,
+                'job_id' => $this->jobId,
+                'user_id' => $this->context['user']['id'] ?? null,
+            ]);
+
+            $this->logInfo('onComplete callback executed successfully', [
+                'job_id' => $this->jobId,
+                'agent_class' => $this->agentClass,
+            ], 'agents');
+
+        } catch (\Exception $e) {
+            $this->logError('onComplete callback failed', [
+                'job_id' => $this->jobId,
+                'agent_class' => $this->agentClass,
+                'error' => $e->getMessage(),
+            ], 'agents');
+
+            // Don't re-throw - the agent execution was successful,
+            // we don't want callback failures to trigger job retries
+        }
     }
 
     /**
