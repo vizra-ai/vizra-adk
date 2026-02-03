@@ -31,7 +31,10 @@
               "index",
               "installation/getting-started",
               "installation/requirements",
-              "installation/configuration"
+              "installation/configuration",
+              "api-reference/providers",
+              "api-reference/openai-compatibility",
+              "api-reference/laravel-boost"
             ]
           },
           {
@@ -60,9 +63,6 @@
               "api-reference/evaluation-class",
               "api-reference/events",
               "api-reference/error-handling",
-              "api-reference/providers",
-              "api-reference/openai-compatibility",
-              "api-reference/laravel-boost",
               "api-reference/tracing-class"
             ]
           }
