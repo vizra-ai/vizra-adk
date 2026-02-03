@@ -1,5 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
   "name": "Vizra ADK",
   "logo": {
     "dark": "/logo/dark.svg",
@@ -11,57 +12,52 @@
     "light": "#818CF8",
     "dark": "#4F46E5"
   },
-  "navigation": {
-    "groups": [
-      {
-        "group": "Getting Started 1",
-        "icon": "rocket",
-        "pages": [
-          "index",
-          "installation/getting-started",
-          "installation/requirements",
-          "installation/configuration",
-          "api-reference/providers",
-          "api-reference/openai-compatibility",
-          "api-reference/laravel-boost"
-        ]
-      },
-      {
-        "group": "Core Concepts",
-        "icon": "graduation-cap",
-        "pages": [
-          "concepts/architecture",
-          "concepts/agents",
-          "concepts/tools",
-          "concepts/mcp-integration",
-          "concepts/sessions-memory",
-          "concepts/dynamic-prompts",
-          "concepts/workflows",
-          "concepts/vector-rag",
-          "concepts/evaluations",
-          "concepts/tracing",
-          "concepts/web-dashboard"
-        ]
-      },
-      {
-        "group": "API Reference",
-        "icon": "code",
-        "pages": [
-          "api-reference/artisan-commands",
-          "api-reference/agent-class",
-          "api-reference/tool-class",
-          "api-reference/workflow-class",
-          "api-reference/evaluation-class",
-          "api-reference/events",
-          "api-reference/error-handling",
-          "api-reference/tracing-class"
-        ]
-      }
-    ]
-  },
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "index",
+        "installation/getting-started",
+        "installation/requirements",
+        "installation/configuration",
+        "api-reference/providers",
+        "api-reference/openai-compatibility",
+        "api-reference/laravel-boost"
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "concepts/architecture",
+        "concepts/agents",
+        "concepts/tools",
+        "concepts/mcp-integration",
+        "concepts/sessions-memory",
+        "concepts/dynamic-prompts",
+        "concepts/workflows",
+        "concepts/vector-rag",
+        "concepts/evaluations",
+        "concepts/tracing",
+        "concepts/web-dashboard"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/artisan-commands",
+        "api-reference/agent-class",
+        "api-reference/tool-class",
+        "api-reference/workflow-class",
+        "api-reference/evaluation-class",
+        "api-reference/events",
+        "api-reference/error-handling",
+        "api-reference/tracing-class"
+      ]
+    }
+  ],
   "anchors": [
     {
-      "anchor": "GitHub",
+      "name": "GitHub",
       "icon": "github",
       "url": "https://github.com/vizra-ai/vizra-adk"
     }
