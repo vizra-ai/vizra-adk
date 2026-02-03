@@ -16,6 +16,7 @@ use Vizra\VizraADK\Console\Commands\InstallCommand;
 use Vizra\VizraADK\Console\Commands\MakeAgentCommand;
 use Vizra\VizraADK\Console\Commands\MakeAssertionCommand;
 use Vizra\VizraADK\Console\Commands\MakeEvalCommand;
+use Vizra\VizraADK\Console\Commands\MakeToolboxCommand;
 use Vizra\VizraADK\Console\Commands\MakeToolCommand;
 use Vizra\VizraADK\Console\Commands\ManagePromptsCommand;
 use Vizra\VizraADK\Console\Commands\MCPListServersCommand;
@@ -144,6 +145,7 @@ class AgentServiceProvider extends ServiceProvider
                 MakeAgentCommand::class,
                 MakeAssertionCommand::class,
                 MakeToolCommand::class,
+                MakeToolboxCommand::class,
                 AgentChatCommand::class,
                 MakeEvalCommand::class,
                 RunEvalCommand::class,
