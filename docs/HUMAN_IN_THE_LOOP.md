@@ -306,9 +306,206 @@ protected $listen = [
 - `$rejectionReason` - string|null
 - `$resolvedBy` - string|null
 
-## Resuming After Approval
+## Complete End-to-End Flow
 
-After an interrupt is approved, you need to re-run the agent:
+This section walks through the entire HITL flow from interrupt creation to resumption.
+
+### Step 1: Agent Triggers an Interrupt
+
+When your agent calls `requireApproval()`, it:
+1. Creates an `AgentInterrupt` record in the database
+2. Throws an `InterruptException` containing the interrupt details
+
+```php
+// Inside your agent
+$this->requireApproval('Delete this user?', ['user_id' => 123]);
+// Execution halts here - InterruptException is thrown
+```
+
+### Step 2: Catch the Exception and Get the Interrupt ID
+
+The `InterruptException` contains everything you need:
+
+```php
+use Vizra\VizraADK\Exceptions\InterruptException;
+
+try {
+    $response = Agent::run('my_agent', $input, $sessionId);
+    return response()->json(['status' => 'completed', 'response' => $response]);
+
+} catch (InterruptException $e) {
+    // Get the interrupt ID from the exception
+    $interruptId = $e->getInterruptId();  // <-- This is where you get the ID!
+
+    // You can also access the full interrupt model
+    $interrupt = $e->getInterrupt();
+
+    // Or convert to array for easy JSON response
+    $interruptData = $e->toArray();
+    // Returns: ['interrupted' => true, 'interrupt_id' => '...', 'reason' => '...', 'data' => [...]]
+
+    // Store the interrupt_id and session_id for later resumption
+    // Option 1: Return to frontend (frontend stores it)
+    return response()->json([
+        'status' => 'awaiting_approval',
+        'interrupt_id' => $interruptId,        // Frontend needs this to approve/reject
+        'session_id' => $sessionId,            // Frontend needs this to resume
+        'original_input' => $input,            // Frontend needs this to resume
+        'reason' => $e->getReason(),
+        'data' => $e->getData(),
+    ], 202);
+
+    // Option 2: Store in your database for async processing
+    // PendingTask::create([
+    //     'interrupt_id' => $interruptId,
+    //     'session_id' => $sessionId,
+    //     'original_input' => $input,
+    //     'agent_name' => 'my_agent',
+    // ]);
+}
+```
+
+### Step 3: User Approves or Rejects
+
+**Via API:**
+```bash
+# Approve (using the interrupt_id from step 2)
+curl -X POST /api/vizra-adk/interrupts/01HXYZ123ABC/approve \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "admin_123"}'
+
+# Or reject
+curl -X POST /api/vizra-adk/interrupts/01HXYZ123ABC/reject \
+  -H "Content-Type: application/json" \
+  -d '{"reason": "Not authorized", "user_id": "admin_123"}'
+```
+
+**Via Code:**
+```php
+use Vizra\VizraADK\Services\InterruptManager;
+
+$manager = app(InterruptManager::class);
+
+// Approve
+$manager->approve($interruptId, $modifications, $userId);
+
+// Or reject
+$manager->reject($interruptId, 'Reason for rejection', $userId);
+```
+
+### Step 4: Resume Agent Execution
+
+After approval, re-run the agent with the **same session ID** and **same input**:
+
+```php
+use Vizra\VizraADK\Services\InterruptManager;
+use Vizra\VizraADK\Exceptions\InterruptException;
+
+public function resumeAgent(Request $request)
+{
+    $interruptId = $request->input('interrupt_id');
+    $sessionId = $request->input('session_id');
+    $originalInput = $request->input('original_input');
+    $agentName = $request->input('agent_name', 'my_agent');
+
+    // Check if the interrupt was approved
+    $manager = app(InterruptManager::class);
+    $status = $manager->checkStatus($interruptId);
+
+    if ($status['status'] === 'rejected') {
+        return response()->json([
+            'status' => 'rejected',
+            'reason' => $status['response'] ?? 'Request was rejected',
+        ], 403);
+    }
+
+    if ($status['status'] !== 'approved') {
+        return response()->json([
+            'status' => 'pending',
+            'message' => 'Interrupt has not been approved yet',
+        ], 400);
+    }
+
+    // Re-run the agent - it will continue from where it left off
+    try {
+        $response = Agent::run($agentName, $originalInput, $sessionId);
+
+        return response()->json([
+            'status' => 'completed',
+            'response' => $response,
+        ]);
+
+    } catch (InterruptException $e) {
+        // Agent hit another interrupt point
+        return response()->json([
+            'status' => 'awaiting_approval',
+            'interrupt_id' => $e->getInterruptId(),
+            'reason' => $e->getReason(),
+        ], 202);
+    }
+}
+```
+
+### Step 5: Agent Checks Approval and Continues
+
+Your agent should check if approval was already granted before requesting again:
+
+```php
+class MyAgent extends BaseLlmAgent
+{
+    public function execute(mixed $input, AgentContext $context): mixed
+    {
+        // Check if we already have approval for this action
+        $approvalKey = 'approved_delete_' . $input['user_id'];
+
+        if (!$context->getState($approvalKey)) {
+            // Check for pending/approved interrupts for this session
+            $pendingInterrupts = $this->getPendingInterrupts();
+            $alreadyApproved = $pendingInterrupts->isEmpty()
+                ? false
+                : $pendingInterrupts->first()->isApproved();
+
+            if (!$alreadyApproved) {
+                $this->requireApproval(
+                    'Delete this user?',
+                    ['user_id' => $input['user_id']]
+                );
+            }
+
+            // Mark as approved in context so we don't ask again
+            $context->setState($approvalKey, true);
+        }
+
+        // Continue with the operation
+        return $this->deleteUser($input['user_id']);
+    }
+}
+```
+
+### Alternative: Query Pending Interrupts by Session
+
+If you lose track of the interrupt ID, you can always query by session:
+
+```php
+// Get all pending interrupts for a session
+$interrupts = AgentInterrupt::forSession($sessionId)->active()->get();
+
+// Or via API
+// GET /api/vizra-adk/sessions/{sessionId}/interrupts?pending_only=true
+
+// Or via InterruptManager
+$manager = app(InterruptManager::class);
+$pending = $manager->getForSession($sessionId, pendingOnly: true);
+
+if ($pending->isNotEmpty()) {
+    $interrupt = $pending->first();
+    // Now you have the interrupt_id: $interrupt->id
+}
+```
+
+## Resuming After Approval (Simple Version)
+
+For simple cases where you just need to check and resume:
 
 ```php
 use Vizra\VizraADK\Services\InterruptManager;
