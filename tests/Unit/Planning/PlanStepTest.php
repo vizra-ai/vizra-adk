@@ -1,6 +1,6 @@
 <?php
 
-use Vizra\VizraADK\Agents\Patterns\Data\PlanStep;
+use Vizra\VizraADK\Planning\PlanStep;
 
 describe('PlanStep', function () {
     it('can be created with all properties', function () {

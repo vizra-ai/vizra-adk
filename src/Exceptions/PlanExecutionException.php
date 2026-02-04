@@ -6,7 +6,7 @@ namespace Vizra\VizraADK\Exceptions;
 
 use Exception;
 use Throwable;
-use Vizra\VizraADK\Agents\Patterns\Data\PlanStep;
+use Vizra\VizraADK\Planning\PlanStep;
 
 /**
  * Exception thrown when a plan execution fails.

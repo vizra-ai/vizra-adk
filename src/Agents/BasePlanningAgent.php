@@ -2,51 +2,30 @@
 
 declare(strict_types=1);
 
-namespace Vizra\VizraADK\Agents\Patterns;
+namespace Vizra\VizraADK\Agents;
 
 use InvalidArgumentException;
 use Throwable;
-use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\Agents\Patterns\Data\Plan;
-use Vizra\VizraADK\Agents\Patterns\Data\PlanStep;
-use Vizra\VizraADK\Agents\Patterns\Data\Reflection;
 use Vizra\VizraADK\Exceptions\PlanExecutionException;
+use Vizra\VizraADK\Execution\PlanningAgentExecutor;
+use Vizra\VizraADK\Planning\Plan;
+use Vizra\VizraADK\Planning\PlanStep;
+use Vizra\VizraADK\Planning\Reflection;
+use Vizra\VizraADK\Planning\PlanningResponse;
 use Vizra\VizraADK\Services\Tracer;
 use Vizra\VizraADK\System\AgentContext;
 
 /**
- * Abstract planning agent that implements the Plan-Execute-Reflect pattern.
+ * Abstract base class for planning agents implementing Plan-Execute-Reflect pattern.
  *
- * This agent type provides a structured approach to complex tasks:
- * 1. Generate a plan with steps and dependencies
- * 2. Execute each step respecting dependencies
- * 3. Reflect on the results
- * 4. Replan if necessary
+ * This provides the core planning infrastructure. Extend this class to create
+ * custom planning agents with specialized step execution logic.
  *
- * Extend this class and implement the abstract methods to create
- * specialized planning agents for your use case.
+ * For a ready-to-use planning agent, see the concrete `PlanningAgent` class.
  *
- * @example
- * ```php
- * class MyPlanningAgent extends PlanningAgent
- * {
- *     protected string $name = 'my-planning-agent';
- *     protected string $instructions = 'You are a planning assistant.';
- *
- *     protected function executeStep(PlanStep $step, array $previousResults, AgentContext $context): string
- *     {
- *         // Execute the step using tools or LLM calls
- *         return $this->callLlm("Execute: {$step->action}", $context);
- *     }
- *
- *     protected function synthesizeResults(Plan $plan, array $results, AgentContext $context): string
- *     {
- *         return implode("\n", $results);
- *     }
- * }
- * ```
+ * @see PlanningAgent For ready-to-use implementation
  */
-abstract class PlanningAgent extends BaseLlmAgent
+abstract class BasePlanningAgent extends BaseLlmAgent
 {
     /**
      * Maximum number of times to attempt replanning.
@@ -101,15 +80,27 @@ Be objective and thorough in your evaluation.
 PROMPT;
 
     /**
+     * Create a fluent planning agent executor.
+     *
+     * Usage: PlanningAgent::plan('Build a REST API')->maxAttempts(5)->go()
+     *
+     * @param mixed $input The task or goal
+     */
+    public static function plan(mixed $input): PlanningAgentExecutor
+    {
+        return new PlanningAgentExecutor(static::class, $input);
+    }
+
+    /**
      * Execute the planning agent.
      *
      * This method orchestrates the plan-execute-reflect loop.
      *
      * @param mixed $input The task or goal to accomplish
      * @param AgentContext $context The execution context
-     * @return mixed The final result
+     * @return PlanningResponse The response containing plan and result
      */
-    public function execute(mixed $input, AgentContext $context): mixed
+    public function execute(mixed $input, AgentContext $context): PlanningResponse
     {
         // Store context for memory access
         $this->context = $context;
@@ -119,6 +110,11 @@ PROMPT;
         $tracer = app(Tracer::class);
         $traceId = $tracer->startTrace($context, $this->getName());
 
+        $plan = null;
+        $result = null;
+        $reflection = null;
+        $attempts = 0;
+
         try {
             // Step 1: Generate initial plan
             $plan = $this->generatePlan($input, $context);
@@ -126,9 +122,9 @@ PROMPT;
 
             $this->logPlanGenerated($plan, $context);
 
-            $result = null;
-
             for ($attempt = 0; $attempt < $this->maxReplanAttempts; $attempt++) {
+                $attempts = $attempt + 1;
+
                 try {
                     // Step 2: Execute the plan
                     $result = $this->executePlan($plan, $context);
@@ -136,25 +132,33 @@ PROMPT;
                     // Step 3: Reflect on the result
                     $reflection = $this->reflect($input, $result, $plan, $context);
 
-                    $this->logReflection($reflection, $attempt + 1, $context);
+                    $this->logReflection($reflection, $attempts, $context);
 
                     // Check if result is satisfactory
                     if ($reflection->satisfactory || $reflection->score >= $this->satisfactionThreshold) {
                         $tracer->endTrace(
-                            output: ['response' => $result, 'attempts' => $attempt + 1],
+                            output: ['response' => $result, 'attempts' => $attempts],
                             status: 'success'
                         );
-                        return $result;
+
+                        return new PlanningResponse(
+                            result: $result,
+                            plan: $plan,
+                            reflection: $reflection,
+                            attempts: $attempts,
+                            success: true,
+                            input: $input
+                        );
                     }
 
                     // Step 4: Replan based on feedback
                     $plan = $this->replan($input, $result, $reflection, $context);
                     $context->setState('current_plan', $plan);
 
-                    $this->logReplanned($plan, $attempt + 1, $context);
+                    $this->logReplanned($plan, $attempts, $context);
 
                 } catch (PlanExecutionException $e) {
-                    $this->logPlanExecutionFailed($e, $attempt + 1, $context);
+                    $this->logPlanExecutionFailed($e, $attempts, $context);
 
                     // Replan based on the error
                     $plan = $this->replan($input, null, $e->getMessage(), $context);
@@ -162,17 +166,26 @@ PROMPT;
                 }
             }
 
-            // Return the last result after max attempts
+            // Return after max attempts
+            $finalResult = $result ?? "Unable to complete task after {$this->maxReplanAttempts} attempts.";
+
             $tracer->endTrace(
                 output: [
-                    'response' => $result ?? "Unable to complete task after {$this->maxReplanAttempts} attempts.",
+                    'response' => $finalResult,
                     'attempts' => $this->maxReplanAttempts,
                     'max_attempts_reached' => true,
                 ],
                 status: 'success'
             );
 
-            return $result ?? "Unable to complete task after {$this->maxReplanAttempts} attempts.";
+            return new PlanningResponse(
+                result: $finalResult,
+                plan: $plan,
+                reflection: $reflection,
+                attempts: $this->maxReplanAttempts,
+                success: false,
+                input: $input
+            );
 
         } catch (Throwable $e) {
             $tracer->failTrace($e);
@@ -182,15 +195,10 @@ PROMPT;
 
     /**
      * Generate a plan for the given input.
-     *
-     * @param mixed $input The task or goal
-     * @param AgentContext $context The execution context
-     * @return Plan The generated plan
      */
     protected function generatePlan(mixed $input, AgentContext $context): Plan
     {
         $prompt = "Create a plan for: {$input}";
-
         $response = $this->callLlmForJson($this->plannerInstructions, $prompt, $context);
 
         return Plan::fromJson($response);
@@ -198,11 +206,6 @@ PROMPT;
 
     /**
      * Execute all steps in the plan, respecting dependencies.
-     *
-     * @param Plan $plan The plan to execute
-     * @param AgentContext $context The execution context
-     * @return string The synthesized result
-     * @throws PlanExecutionException If a step fails
      */
     protected function executePlan(Plan $plan, AgentContext $context): string
     {
@@ -229,7 +232,7 @@ PROMPT;
                 $step->setCompleted(true);
                 $step->setResult($stepResult);
 
-                // Store step result in context for potential use by other steps
+                // Store step result in context
                 $context->setState("step_{$step->id}_result", $stepResult);
 
             } catch (Throwable $e) {
@@ -242,12 +245,6 @@ PROMPT;
 
     /**
      * Reflect on the execution result.
-     *
-     * @param mixed $input The original input
-     * @param string $result The execution result
-     * @param Plan $plan The executed plan
-     * @param AgentContext $context The execution context
-     * @return Reflection The reflection
      */
     protected function reflect(mixed $input, string $result, Plan $plan, AgentContext $context): Reflection
     {
@@ -267,13 +264,7 @@ PROMPT;
     }
 
     /**
-     * Create a new plan based on feedback from reflection.
-     *
-     * @param mixed $input The original input
-     * @param string|null $previousResult The previous result (if any)
-     * @param mixed $feedback The reflection or error message
-     * @param AgentContext $context The execution context
-     * @return Plan The new plan
+     * Create a new plan based on feedback.
      */
     protected function replan(mixed $input, ?string $previousResult, mixed $feedback, AgentContext $context): Plan
     {
@@ -299,28 +290,18 @@ PROMPT;
 
     /**
      * Call the LLM and expect a JSON response.
-     *
-     * @param string $systemPrompt The system prompt
-     * @param string $userPrompt The user prompt
-     * @param AgentContext $context The execution context
-     * @return string The JSON response
      */
     protected function callLlmForJson(string $systemPrompt, string $userPrompt, AgentContext $context): string
     {
-        // Create a temporary instance with JSON-focused instructions
         $originalInstructions = $this->instructions;
         $this->instructions = $systemPrompt . "\n\nIMPORTANT: Respond only with valid JSON, no additional text.";
 
-        // Add user message to context
         $context->addMessage(['role' => 'user', 'content' => $userPrompt]);
 
-        // Call parent execute to get LLM response
         $response = parent::execute($userPrompt, $context);
 
-        // Restore original instructions
         $this->instructions = $originalInstructions;
 
-        // Handle streaming response
         if ($response instanceof \Generator) {
             $text = '';
             foreach ($response as $chunk) {
@@ -336,27 +317,17 @@ PROMPT;
 
     /**
      * Extract JSON from a response that may contain additional text.
-     *
-     * @param string $response The response text
-     * @return string The extracted JSON
      */
     protected function extractJson(string $response): string
     {
-        // Try to find JSON in the response
         if (preg_match('/\{[\s\S]*\}/', $response, $matches)) {
             return $matches[0];
         }
-
-        // If no JSON found, return the original response
         return $response;
     }
 
     /**
      * Execute a single step of the plan.
-     *
-     * Implement this method to define how each step is executed.
-     * This could involve calling tools, making LLM requests, or
-     * performing any other actions needed.
      *
      * @param PlanStep $step The step to execute
      * @param array<int, string> $previousResults Results from previously completed steps
@@ -368,8 +339,6 @@ PROMPT;
     /**
      * Synthesize the results from all steps into a final result.
      *
-     * Implement this method to combine step results into the final output.
-     *
      * @param Plan $plan The executed plan
      * @param array<int, string> $results Results from all steps keyed by step ID
      * @param AgentContext $context The execution context
@@ -377,74 +346,49 @@ PROMPT;
      */
     abstract protected function synthesizeResults(Plan $plan, array $results, AgentContext $context): string;
 
-    /**
-     * Get the maximum number of replan attempts.
-     */
+    // Getters and setters
+
     public function getMaxReplanAttempts(): int
     {
         return $this->maxReplanAttempts;
     }
 
-    /**
-     * Set the maximum number of replan attempts.
-     */
     public function setMaxReplanAttempts(int $attempts): static
     {
         $this->maxReplanAttempts = $attempts;
         return $this;
     }
 
-    /**
-     * Get the satisfaction threshold.
-     */
     public function getSatisfactionThreshold(): float
     {
         return $this->satisfactionThreshold;
     }
 
-    /**
-     * Set the satisfaction threshold.
-     *
-     * @throws InvalidArgumentException If threshold is not between 0 and 1
-     */
     public function setSatisfactionThreshold(float $threshold): static
     {
         if ($threshold < 0 || $threshold > 1) {
             throw new InvalidArgumentException('Satisfaction threshold must be between 0 and 1');
         }
-
         $this->satisfactionThreshold = $threshold;
         return $this;
     }
 
-    /**
-     * Get the planner instructions.
-     */
     public function getPlannerInstructions(): string
     {
         return $this->plannerInstructions;
     }
 
-    /**
-     * Set custom planner instructions.
-     */
     public function setPlannerInstructions(string $instructions): static
     {
         $this->plannerInstructions = $instructions;
         return $this;
     }
 
-    /**
-     * Get the reflection instructions.
-     */
     public function getReflectionInstructions(): string
     {
         return $this->reflectionInstructions;
     }
 
-    /**
-     * Set custom reflection instructions.
-     */
     public function setReflectionInstructions(string $instructions): static
     {
         $this->reflectionInstructions = $instructions;
@@ -452,8 +396,66 @@ PROMPT;
     }
 
     /**
-     * Log when a plan is generated.
+     * Get tool definition for when used as a sub-agent.
      */
+    public function toToolDefinition(): array
+    {
+        return [
+            'name' => 'planning_agent',
+            'description' => $this->description ?? 'Plans and executes complex multi-step tasks with self-reflection',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'task' => [
+                        'type' => 'string',
+                        'description' => 'The task or goal to plan and execute',
+                    ],
+                    'max_attempts' => [
+                        'type' => 'integer',
+                        'description' => 'Maximum planning attempts (default: 3)',
+                    ],
+                    'threshold' => [
+                        'type' => 'number',
+                        'description' => 'Satisfaction threshold 0-1 (default: 0.8)',
+                    ],
+                ],
+                'required' => ['task'],
+            ],
+        ];
+    }
+
+    /**
+     * Execute from a tool call (sub-agent delegation).
+     */
+    public function executeFromToolCall(array $arguments, AgentContext $context): string
+    {
+        if (isset($arguments['max_attempts'])) {
+            $this->setMaxReplanAttempts((int) $arguments['max_attempts']);
+        }
+        if (isset($arguments['threshold'])) {
+            $this->setSatisfactionThreshold((float) $arguments['threshold']);
+        }
+
+        try {
+            $response = $this->execute($arguments['task'], $context);
+
+            return json_encode([
+                'success' => $response->isSuccess(),
+                'result' => $response->result(),
+                'attempts' => $response->attempts(),
+                'goal' => $response->plan()?->goal,
+                'score' => $response->reflection()?->score,
+            ]);
+        } catch (\Exception $e) {
+            return json_encode([
+                'success' => false,
+                'error' => 'Planning failed: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    // Logging methods
+
     protected function logPlanGenerated(Plan $plan, AgentContext $context): void
     {
         logger()->info('[VizraADK:planning] Plan generated', [
@@ -464,9 +466,6 @@ PROMPT;
         ]);
     }
 
-    /**
-     * Log reflection results.
-     */
     protected function logReflection(Reflection $reflection, int $attempt, AgentContext $context): void
     {
         logger()->info('[VizraADK:planning] Reflection completed', [
@@ -478,9 +477,6 @@ PROMPT;
         ]);
     }
 
-    /**
-     * Log when replanning occurs.
-     */
     protected function logReplanned(Plan $plan, int $attempt, AgentContext $context): void
     {
         logger()->info('[VizraADK:planning] Replanned', [
@@ -492,9 +488,6 @@ PROMPT;
         ]);
     }
 
-    /**
-     * Log when plan execution fails.
-     */
     protected function logPlanExecutionFailed(PlanExecutionException $e, int $attempt, AgentContext $context): void
     {
         logger()->warning('[VizraADK:planning] Plan execution failed', [

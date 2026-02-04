@@ -1,6 +1,6 @@
-# Planning Agent Pattern
+# Planning Agent
 
-The PlanningAgent pattern implements a **Plan-Execute-Reflect** workflow for handling complex, multi-step tasks. This pattern is inspired by frameworks like LangGraph and provides structured reasoning capabilities for your agents.
+The PlanningAgent implements a **Plan-Execute-Reflect** workflow for handling complex, multi-step tasks with self-evaluation and iterative improvement.
 
 ## Overview
 
@@ -19,534 +19,429 @@ This pattern is ideal for:
 
 ## Quick Start
 
-### 1. Create Your Planning Agent
+### Simple Usage
 
 ```php
-<?php
+use Vizra\VizraADK\Agents\PlanningAgent;
 
-namespace App\Agents;
+// Fluent API
+$response = PlanningAgent::plan('Build a REST API for user management')
+    ->go();
 
-use Vizra\VizraADK\Agents\Patterns\PlanningAgent;
-use Vizra\VizraADK\Agents\Patterns\Data\Plan;
-use Vizra\VizraADK\Agents\Patterns\Data\PlanStep;
-use Vizra\VizraADK\System\AgentContext;
-
-class ResearchAgent extends PlanningAgent
-{
-    protected string $name = 'research-agent';
-    protected string $description = 'Researches topics and produces comprehensive reports';
-    protected string $instructions = 'You are a thorough research assistant.';
-    protected string $model = 'gpt-4o';
-
-    // Optional: Configure behavior
-    protected int $maxReplanAttempts = 3;
-    protected float $satisfactionThreshold = 0.8;
-
-    protected function executeStep(PlanStep $step, array $previousResults, AgentContext $context): string
-    {
-        // Build context from previous steps
-        $previousContext = !empty($previousResults)
-            ? "Previous findings:\n" . implode("\n", $previousResults)
-            : '';
-
-        $prompt = "Execute this step: {$step->action}\n\n{$previousContext}";
-
-        // Use parent's LLM capabilities
-        return $this->callLlmForJson($this->instructions, $prompt, $context);
-    }
-
-    protected function synthesizeResults(Plan $plan, array $results, AgentContext $context): string
-    {
-        $prompt = "Synthesize these research findings into a coherent report:\n\n";
-        $prompt .= "Goal: {$plan->goal}\n\n";
-
-        foreach ($results as $stepId => $result) {
-            $step = $plan->getStepById($stepId);
-            $prompt .= "## {$step->action}\n{$result}\n\n";
-        }
-
-        return $this->callLlmForJson($this->instructions, $prompt, $context);
-    }
-}
+echo $response->result();
+echo $response->score();  // 0.0 - 1.0
 ```
 
-### 2. Use Your Agent
+### With Configuration
 
 ```php
-use App\Agents\ResearchAgent;
-use Vizra\VizraADK\System\AgentContext;
+$response = PlanningAgent::plan('Research quantum computing advances')
+    ->maxAttempts(5)           // Max replan attempts
+    ->threshold(0.9)           // Satisfaction threshold
+    ->forUser($user)           // User context
+    ->go();
 
-$agent = new ResearchAgent();
-$context = new AgentContext('session-123');
-
-$result = $agent->execute(
-    'Research the impact of AI on software development practices',
-    $context
-);
-
-echo $result;
+// Access detailed results
+echo $response->result();
+echo $response->plan()->goal;
+echo $response->reflection()->score;
+echo $response->attempts();
 ```
 
-## Core Concepts
+### Async/Queued Execution
+
+```php
+// Queue for background processing
+PlanningAgent::plan('Generate comprehensive market analysis')
+    ->onQueue('planning')
+    ->then(fn($response) => notify($response->result()))
+    ->go();
+
+// Dispatch info returned immediately
+// ['job_dispatched' => true, 'job_id' => '...', 'queue' => 'planning']
+```
+
+### Presets
+
+```php
+// High accuracy (5 attempts, 0.9 threshold)
+PlanningAgent::plan('Critical task')->highAccuracy()->go();
+
+// Fast execution (1 attempt, 0.6 threshold)
+PlanningAgent::plan('Quick task')->fast()->go();
+
+// Balanced (3 attempts, 0.8 threshold) - default
+PlanningAgent::plan('Normal task')->balanced()->go();
+```
+
+## Architecture
+
+```
+src/
+├── Agents/
+│   ├── BasePlanningAgent.php    # Abstract base class
+│   └── PlanningAgent.php        # Ready-to-use concrete agent
+├── Execution/
+│   └── PlanningAgentExecutor.php # Fluent builder
+├── Jobs/
+│   └── PlanningAgentJob.php     # Queue job for async
+├── Planning/
+│   ├── Plan.php                 # Plan data class
+│   ├── PlanStep.php             # Step data class
+│   ├── PlanningResponse.php     # Response wrapper
+│   └── Reflection.php           # Reflection data class
+└── Exceptions/
+    └── PlanExecutionException.php
+```
+
+## Core Classes
+
+### PlanningResponse
+
+The response from a planning execution:
+
+```php
+$response = PlanningAgent::plan('Task')->go();
+
+// Basic accessors
+$response->result();        // Final text result
+$response->isSuccess();     // Met satisfaction threshold?
+$response->isFailed();      // Didn't meet threshold after max attempts
+$response->attempts();      // Number of attempts made
+
+// Plan details
+$response->plan();          // Plan object
+$response->goal();          // Plan's goal string
+$response->steps();         // Array of PlanStep objects
+$response->stepResults();   // Results keyed by step ID
+
+// Reflection details
+$response->reflection();    // Reflection object
+$response->score();         // 0.0 - 1.0 satisfaction score
+$response->strengths();     // Array of strengths
+$response->weaknesses();    // Array of weaknesses
+$response->suggestions();   // Array of suggestions
+
+// Serialization
+$response->toArray();
+$response->toJson();
+(string) $response;         // Returns result()
+```
 
 ### Plan
 
-A `Plan` represents a structured approach to completing a task:
+Represents an execution plan:
 
 ```php
-use Vizra\VizraADK\Agents\Patterns\Data\Plan;
-use Vizra\VizraADK\Agents\Patterns\Data\PlanStep;
+use Vizra\VizraADK\Planning\Plan;
+use Vizra\VizraADK\Planning\PlanStep;
 
 $plan = new Plan(
-    goal: 'Create a comprehensive market analysis',
+    goal: 'Create a user management system',
     steps: [
-        new PlanStep(id: 1, action: 'Identify key competitors', dependencies: [], tools: ['web_search']),
-        new PlanStep(id: 2, action: 'Analyze market trends', dependencies: [], tools: ['database']),
-        new PlanStep(id: 3, action: 'Compare product features', dependencies: [1, 2], tools: []),
-        new PlanStep(id: 4, action: 'Generate final report', dependencies: [3], tools: []),
+        new PlanStep(id: 1, action: 'Design database schema', dependencies: [], tools: ['database']),
+        new PlanStep(id: 2, action: 'Create migrations', dependencies: [1], tools: []),
+        new PlanStep(id: 3, action: 'Build API endpoints', dependencies: [2], tools: ['api']),
+        new PlanStep(id: 4, action: 'Write tests', dependencies: [3], tools: ['testing']),
     ],
     successCriteria: [
-        'All major competitors identified',
-        'Market trends supported by data',
-        'Actionable recommendations provided',
+        'All CRUD operations work',
+        'Tests pass',
+        'Documentation complete',
     ]
 );
-```
 
-Plans can be serialized to/from JSON:
-
-```php
-// To JSON
-$json = $plan->toJson();
-
-// From JSON
-$plan = Plan::fromJson($jsonString);
+// Methods
+$plan->getStepById(2);          // Get specific step
+$plan->isCompleted();           // All steps done?
+$plan->getCompletedStepIds();   // [1, 2, ...]
+$plan->getExecutableSteps();    // Steps ready to run
+$plan->toJson();
 ```
 
 ### PlanStep
 
-Each step has:
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `id` | int | Unique identifier |
-| `action` | string | What this step does |
-| `dependencies` | array | IDs of steps that must complete first |
-| `tools` | array | Tools this step might use |
+Represents a single step:
 
 ```php
-use Vizra\VizraADK\Agents\Patterns\Data\PlanStep;
+use Vizra\VizraADK\Planning\PlanStep;
 
 $step = new PlanStep(
     id: 2,
-    action: 'Analyze the data',
-    dependencies: [1],  // Must wait for step 1
-    tools: ['calculator', 'database']
+    action: 'Implement authentication',
+    dependencies: [1],      // Must wait for step 1
+    tools: ['auth_tool']    // Tools this step might use
 );
 
-// Check if dependencies are satisfied
-$completedStepIds = [1, 3, 4];
-if ($step->areDependenciesSatisfied($completedStepIds)) {
-    // Safe to execute
-}
-
-// Mark as completed
+// State management
+$step->isCompleted();
 $step->setCompleted(true);
-$step->setResult('Analysis complete: found 3 anomalies');
+$step->setResult('Auth implemented successfully');
+$step->getResult();
+
+// Dependency checking
+$step->hasDependencies();
+$step->areDependenciesSatisfied([1, 3, 4]);  // true if all deps in array
+
+// Serialization
+$step->toArray();
+PlanStep::fromArray([...]);
 ```
 
 ### Reflection
 
-A `Reflection` captures the evaluation of execution results:
+Captures execution evaluation:
 
 ```php
-use Vizra\VizraADK\Agents\Patterns\Data\Reflection;
+use Vizra\VizraADK\Planning\Reflection;
 
 $reflection = new Reflection(
     satisfactory: false,
     score: 0.65,
-    strengths: ['Comprehensive data coverage', 'Clear methodology'],
-    weaknesses: ['Missing recent data', 'Conclusions too general'],
-    suggestions: ['Include 2024 statistics', 'Add specific recommendations']
+    strengths: ['Clear implementation', 'Good structure'],
+    weaknesses: ['Missing error handling', 'No tests'],
+    suggestions: ['Add try-catch blocks', 'Write unit tests']
 );
 
-// Check if improvement is needed
-if ($reflection->requiresImprovement()) {
-    // Trigger replanning
-}
-
-// Get feedback summary
-echo $reflection->getSummary();
-// Output: Weaknesses: Missing recent data, Conclusions too general
-//         Suggestions: Include 2024 statistics, Add specific recommendations
+$reflection->requiresImprovement();  // true (based on satisfactory flag)
+$reflection->getSummary();           // Formatted weaknesses + suggestions
+$reflection->toJson();
+Reflection::fromJson($json);
 ```
 
-## Configuration
+## Creating Custom Planning Agents
 
-### Replan Attempts
-
-Control how many times the agent will attempt to improve its results:
-
-```php
-class MyAgent extends PlanningAgent
-{
-    protected int $maxReplanAttempts = 5;  // Default is 3
-}
-
-// Or at runtime
-$agent->setMaxReplanAttempts(5);
-```
-
-### Satisfaction Threshold
-
-Set the score (0-1) required to consider results acceptable:
-
-```php
-class MyAgent extends PlanningAgent
-{
-    protected float $satisfactionThreshold = 0.9;  // Default is 0.8
-}
-
-// Or at runtime
-$agent->setSatisfactionThreshold(0.9);
-```
-
-### Custom Instructions
-
-Override the default prompts for planning and reflection:
-
-```php
-class MyAgent extends PlanningAgent
-{
-    protected string $plannerInstructions = <<<'PROMPT'
-    You are a strategic planner. Create detailed plans with these rules:
-    1. Each step must be independently verifiable
-    2. Include rollback procedures for risky steps
-    3. Estimate time for each step
-
-    Output as JSON: {"goal": "...", "steps": [...], "success_criteria": [...]}
-    PROMPT;
-
-    protected string $reflectionInstructions = <<<'PROMPT'
-    Evaluate the execution against business KPIs:
-    1. Was the goal achieved?
-    2. Were there any errors or issues?
-    3. What would you do differently?
-
-    Output as JSON: {"satisfactory": bool, "score": 0-1, "strengths": [], "weaknesses": [], "suggestions": []}
-    PROMPT;
-}
-
-// Or at runtime
-$agent->setPlannerInstructions('Custom planning prompt...');
-$agent->setReflectionInstructions('Custom reflection prompt...');
-```
-
-## Advanced Usage
-
-### Using Tools in Steps
-
-Integrate your tools within step execution:
-
-```php
-protected function executeStep(PlanStep $step, array $previousResults, AgentContext $context): string
-{
-    // Check if step requires specific tools
-    if (in_array('web_search', $step->tools)) {
-        $searchTool = $this->loadedTools['web_search'] ?? null;
-        if ($searchTool) {
-            $searchResults = $searchTool->execute(['query' => $step->action], $context);
-            return "Search results: {$searchResults}";
-        }
-    }
-
-    // Default: use LLM to execute
-    return $this->callLlmForJson($this->instructions, $step->action, $context);
-}
-```
-
-### Accessing Step Results
-
-Previous step results are available during execution:
-
-```php
-protected function executeStep(PlanStep $step, array $previousResults, AgentContext $context): string
-{
-    // Access specific previous step result
-    if (in_array(1, $step->dependencies)) {
-        $step1Result = $previousResults[1] ?? 'No result';
-        // Use step 1's output...
-    }
-
-    // Or from context
-    $step1Result = $context->getState('step_1_result');
-
-    return "Executed with context from dependencies";
-}
-```
-
-### Handling Failures
-
-The agent automatically handles step failures by replanning:
-
-```php
-use Vizra\VizraADK\Exceptions\PlanExecutionException;
-
-protected function executeStep(PlanStep $step, array $previousResults, AgentContext $context): string
-{
-    try {
-        $result = $this->riskyOperation($step);
-        return $result;
-    } catch (\Exception $e) {
-        // This will trigger replanning
-        throw PlanExecutionException::forStep($step, $e->getMessage(), $e);
-    }
-}
-```
-
-### Custom Plan Generation
-
-Override plan generation for specialized logic:
-
-```php
-protected function generatePlan(mixed $input, AgentContext $context): Plan
-{
-    // Use your own planning logic
-    if (str_contains($input, 'quick')) {
-        return new Plan(
-            goal: $input,
-            steps: [new PlanStep(id: 1, action: 'Quick response', dependencies: [], tools: [])],
-            successCriteria: ['Fast response provided']
-        );
-    }
-
-    // Or call parent for default LLM-based planning
-    return parent::generatePlan($input, $context);
-}
-```
-
-### Custom Reflection Logic
-
-Override reflection for domain-specific evaluation:
-
-```php
-protected function reflect(mixed $input, string $result, Plan $plan, AgentContext $context): Reflection
-{
-    // Custom validation logic
-    $hasAllSections = str_contains($result, '## Summary')
-        && str_contains($result, '## Details');
-
-    $wordCount = str_word_count($result);
-    $lengthScore = min($wordCount / 500, 1.0);  // Target 500 words
-
-    $score = ($hasAllSections ? 0.5 : 0) + ($lengthScore * 0.5);
-
-    return new Reflection(
-        satisfactory: $score >= $this->satisfactionThreshold,
-        score: $score,
-        strengths: $hasAllSections ? ['All sections present'] : [],
-        weaknesses: !$hasAllSections ? ['Missing required sections'] : [],
-        suggestions: $wordCount < 300 ? ['Add more detail'] : []
-    );
-}
-```
-
-## Tracing and Debugging
-
-The PlanningAgent integrates with Vizra ADK's tracing system:
-
-```php
-// Traces are automatically created
-$result = $agent->execute('My task', $context);
-
-// View trace in dashboard
-// php artisan vizra:dashboard
-
-// Or programmatically
-$traceId = $context->getState('trace_id');
-```
-
-Logged events include:
-- Plan generation
-- Step execution (with dependencies)
-- Reflection results
-- Replan attempts
-- Final outcome
-
-## Testing
-
-Example test for a planning agent:
-
-```php
-use App\Agents\ResearchAgent;
-use Vizra\VizraADK\System\AgentContext;
-
-it('generates a valid plan', function () {
-    $agent = new ResearchAgent();
-    $context = new AgentContext('test-session');
-
-    $plan = $agent->publicGeneratePlan('Research AI trends', $context);
-
-    expect($plan->goal)->not->toBeEmpty();
-    expect($plan->steps)->not->toBeEmpty();
-    expect($plan->steps[0])->toBeInstanceOf(PlanStep::class);
-});
-
-it('respects step dependencies', function () {
-    $agent = new ResearchAgent();
-    $context = new AgentContext('test-session');
-
-    // Create plan with dependencies
-    $plan = new Plan(
-        goal: 'Test',
-        steps: [
-            new PlanStep(id: 1, action: 'First', dependencies: [], tools: []),
-            new PlanStep(id: 2, action: 'Second', dependencies: [1], tools: []),
-        ],
-        successCriteria: []
-    );
-
-    $result = $agent->publicExecutePlan($plan, $context);
-
-    // Step 2 should have access to step 1's result
-    expect($context->getState('step_1_result'))->not->toBeNull();
-});
-```
-
-## Example: Code Review Agent
-
-A complete example of a planning agent that reviews code:
+Extend `BasePlanningAgent` for custom behavior:
 
 ```php
 <?php
 
 namespace App\Agents;
 
-use Vizra\VizraADK\Agents\Patterns\PlanningAgent;
-use Vizra\VizraADK\Agents\Patterns\Data\Plan;
-use Vizra\VizraADK\Agents\Patterns\Data\PlanStep;
+use Vizra\VizraADK\Agents\BasePlanningAgent;
+use Vizra\VizraADK\Planning\Plan;
+use Vizra\VizraADK\Planning\PlanStep;
 use Vizra\VizraADK\System\AgentContext;
 
-class CodeReviewAgent extends PlanningAgent
+class CodeReviewAgent extends BasePlanningAgent
 {
     protected string $name = 'code-review-agent';
-    protected string $description = 'Reviews code for quality, security, and best practices';
+    protected string $description = 'Reviews code for quality and security';
     protected string $instructions = 'You are an expert code reviewer.';
     protected string $model = 'gpt-4o';
+
+    // Optional: customize thresholds
     protected int $maxReplanAttempts = 2;
     protected float $satisfactionThreshold = 0.85;
 
-    protected string $plannerInstructions = <<<'PROMPT'
-    Create a code review plan. Consider:
-    1. Code style and formatting
-    2. Security vulnerabilities
-    3. Performance issues
-    4. Best practices
-    5. Test coverage
-
-    Output as JSON with goal, steps (each with id, action, dependencies, tools), and success_criteria.
-    PROMPT;
-
+    /**
+     * Execute a single step.
+     */
     protected function executeStep(PlanStep $step, array $previousResults, AgentContext $context): string
     {
         $code = $context->getUserInput();
 
-        $prompt = <<<PROMPT
-        Review this code for: {$step->action}
+        // Build prompt with previous context
+        $prompt = "Review this code for: {$step->action}\n\nCode:\n```\n{$code}\n```";
 
-        Code:
-        ```
-        {$code}
-        ```
+        if (!empty($previousResults)) {
+            $prompt .= "\n\nPrevious findings:\n" . implode("\n", $previousResults);
+        }
 
-        Previous findings:
-        {$this->formatPreviousResults($previousResults)}
-
-        Provide specific, actionable feedback.
-        PROMPT;
+        // Use tools if specified
+        if (in_array('security_scanner', $step->tools)) {
+            $scanResult = $this->runSecurityScan($code);
+            $prompt .= "\n\nSecurity scan results: {$scanResult}";
+        }
 
         return $this->callLlmForJson($this->instructions, $prompt, $context);
     }
 
+    /**
+     * Combine step results into final output.
+     */
     protected function synthesizeResults(Plan $plan, array $results, AgentContext $context): string
     {
-        $findings = implode("\n\n", array_map(
-            fn($id, $result) => "### " . $plan->getStepById($id)->action . "\n" . $result,
-            array_keys($results),
-            $results
-        ));
+        $summary = "# Code Review Report\n\n";
+        $summary .= "## Goal\n{$plan->goal}\n\n";
 
-        $prompt = <<<PROMPT
-        Create a code review summary from these findings:
-
-        {$findings}
-
-        Format as:
-        ## Summary
-        ## Critical Issues
-        ## Recommendations
-        ## Approval Status
-        PROMPT;
-
-        return $this->callLlmForJson($this->instructions, $prompt, $context);
-    }
-
-    private function formatPreviousResults(array $results): string
-    {
-        if (empty($results)) {
-            return 'None yet.';
+        foreach ($plan->steps as $step) {
+            $result = $results[$step->id] ?? 'Not completed';
+            $summary .= "## {$step->action}\n{$result}\n\n";
         }
-        return implode("\n", $results);
+
+        return $summary;
     }
 }
 ```
 
+Use your custom agent:
+
+```php
+$response = CodeReviewAgent::plan($codeToReview)
+    ->maxAttempts(3)
+    ->threshold(0.9)
+    ->go();
+```
+
+## Configuration
+
+### Environment Variables
+
+```env
+# Optional: Configure defaults
+VIZRA_PLANNING_MODEL=gpt-4o
+VIZRA_PLANNING_MAX_ATTEMPTS=3
+VIZRA_PLANNING_THRESHOLD=0.8
+```
+
+### Config File
+
+In `config/vizra-adk.php`:
+
+```php
+'planning' => [
+    'model' => env('VIZRA_PLANNING_MODEL', 'gpt-4o'),
+    'max_attempts' => env('VIZRA_PLANNING_MAX_ATTEMPTS', 3),
+    'threshold' => env('VIZRA_PLANNING_THRESHOLD', 0.8),
+],
+```
+
+## PlanningAgentExecutor Methods
+
+| Method | Description |
+|--------|-------------|
+| `plan(string $input)` | Static entry point |
+| `maxAttempts(int $n)` | Set max replan attempts |
+| `threshold(float $t)` | Set satisfaction threshold (0-1) |
+| `highAccuracy()` | Preset: 5 attempts, 0.9 threshold |
+| `fast()` | Preset: 1 attempt, 0.6 threshold |
+| `balanced()` | Preset: 3 attempts, 0.8 threshold |
+| `using(string $model)` | Override LLM model |
+| `forUser(Model $user)` | Set user context |
+| `withSession(string $id)` | Set session ID |
+| `withContext(array $data)` | Add context data |
+| `withPlannerInstructions(string $p)` | Custom planner prompt |
+| `withReflectionInstructions(string $p)` | Custom reflection prompt |
+| `async()` | Enable async execution |
+| `onQueue(string $queue)` | Dispatch to queue |
+| `delay(int $seconds)` | Delay queued execution |
+| `tries(int $n)` | Job retry attempts |
+| `timeout(int $seconds)` | Job timeout |
+| `then(Closure $cb)` | Callback on completion |
+| `go()` | Execute and return response |
+
+## Tool Integration
+
+The PlanningAgent can be used as a tool in other agents:
+
+```php
+$agent = new PlanningAgent();
+
+// Get tool definition for LLM
+$definition = $agent->toToolDefinition();
+
+// Execute from tool call
+$result = $agent->executeFromToolCall([
+    'task' => 'Analyze the market trends',
+    'max_attempts' => 3,
+    'threshold' => 0.8,
+], $context);
+```
+
+## Events
+
+The planning agent dispatches events for monitoring:
+
+```php
+// Synchronous completion
+Event::listen('planning.job.completed', function ($data) {
+    // $data['job_id'], $data['response'], etc.
+});
+
+// Agent-specific completion
+Event::listen('planning.planning_agent.completed', function ($data) {
+    // Handle completion
+});
+
+// Job failure
+Event::listen('planning.job.failed', function ($data) {
+    // $data['error'], $data['job_id']
+});
+```
+
+## Tracing
+
+Planning execution is automatically traced:
+
+```bash
+# View trace details
+php artisan vizra:trace {traceId}
+
+# Or use the dashboard
+php artisan vizra:dashboard
+```
+
+Trace includes:
+- Plan generation
+- Each step execution with dependencies
+- Reflection results
+- Replan attempts
+- Final outcome
+
 ## Best Practices
 
-1. **Keep steps atomic** - Each step should do one thing well
-2. **Use meaningful dependencies** - Only add dependencies that are truly required
-3. **Set appropriate thresholds** - Higher thresholds mean more iterations
-4. **Handle failures gracefully** - Throw `PlanExecutionException` for recoverable errors
-5. **Log important events** - Use the built-in logging for debugging
-6. **Test your synthesis logic** - The final output depends on good result combination
+1. **Set appropriate thresholds** - Higher means more iterations but better quality
+2. **Keep steps atomic** - Each step should do one thing well
+3. **Use meaningful dependencies** - Only add required dependencies
+4. **Handle failures gracefully** - The agent will replan on errors
+5. **Monitor with tracing** - Use traces to debug and optimize
+6. **Queue long tasks** - Use `onQueue()` for complex planning tasks
 
-## API Reference
+## Example: Research Agent
 
-### PlanningAgent
+```php
+use Vizra\VizraADK\Agents\BasePlanningAgent;
 
-| Method | Description |
-|--------|-------------|
-| `execute(mixed $input, AgentContext $context)` | Run the plan-execute-reflect loop |
-| `setMaxReplanAttempts(int $attempts)` | Set max replan attempts |
-| `setSatisfactionThreshold(float $threshold)` | Set satisfaction threshold (0-1) |
-| `setPlannerInstructions(string $instructions)` | Set custom planner prompt |
-| `setReflectionInstructions(string $instructions)` | Set custom reflection prompt |
+class ResearchAgent extends BasePlanningAgent
+{
+    protected string $name = 'research-agent';
+    protected string $description = 'Conducts thorough research on topics';
+    protected string $model = 'gpt-4o';
+    protected int $maxReplanAttempts = 3;
+    protected float $satisfactionThreshold = 0.85;
 
-### Plan
+    protected string $plannerInstructions = <<<'PROMPT'
+    Create a research plan with these phases:
+    1. Initial exploration
+    2. Deep dive into key areas
+    3. Cross-reference findings
+    4. Synthesize conclusions
 
-| Method | Description |
-|--------|-------------|
-| `Plan::fromJson(string $json)` | Create plan from JSON |
-| `toJson()` | Serialize to JSON |
-| `getStepById(int $id)` | Get a specific step |
-| `isComplete()` | Check if all steps are done |
+    Output as JSON with goal, steps, and success_criteria.
+    PROMPT;
 
-### PlanStep
+    protected function executeStep(PlanStep $step, array $previousResults, AgentContext $context): string
+    {
+        // Customize step execution for research
+        return parent::callLlmForJson(
+            $this->instructions,
+            "Research step: {$step->action}",
+            $context
+        );
+    }
 
-| Method | Description |
-|--------|-------------|
-| `PlanStep::fromArray(array $data)` | Create from array |
-| `areDependenciesSatisfied(array $completedIds)` | Check if ready to execute |
-| `setCompleted(bool $completed)` | Mark step as done |
-| `setResult(string $result)` | Store step result |
+    protected function synthesizeResults(Plan $plan, array $results, AgentContext $context): string
+    {
+        return "# Research Report: {$plan->goal}\n\n" . implode("\n\n", $results);
+    }
+}
 
-### Reflection
-
-| Method | Description |
-|--------|-------------|
-| `Reflection::fromJson(string $json)` | Create from JSON |
-| `requiresImprovement()` | Check if replanning needed |
-| `getSummary()` | Get feedback summary |
+// Usage
+$report = ResearchAgent::plan('Impact of AI on software development')
+    ->highAccuracy()
+    ->go();
+```
 
 ## See Also
 

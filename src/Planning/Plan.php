@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vizra\VizraADK\Agents\Patterns\Data;
+namespace Vizra\VizraADK\Planning;
 
 use JsonException;
 use JsonSerializable;
