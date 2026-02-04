@@ -30,9 +30,12 @@ use Vizra\VizraADK\Events\LlmResponseReceived;
 use Vizra\VizraADK\Events\ToolCallCompleted;
 use Vizra\VizraADK\Events\ToolCallFailed;
 use Vizra\VizraADK\Events\ToolCallInitiating;
+use Vizra\VizraADK\Exceptions\InterruptException;
 use Vizra\VizraADK\Exceptions\ToolExecutionException;
 use Vizra\VizraADK\Memory\AgentMemory;
+use Vizra\VizraADK\Models\AgentInterrupt;
 use Vizra\VizraADK\Services\AgentVectorProxy;
+use Vizra\VizraADK\Services\InterruptManager;
 use Vizra\VizraADK\Services\Tracer;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Traits\HasLogging;
@@ -1466,5 +1469,142 @@ abstract class BaseLlmAgent extends BaseAgent
     public function getSchema(): ?Schema
     {
         return null;
+    }
+
+    // =========================================================================
+    // Human-in-the-Loop (HITL) Methods
+    // =========================================================================
+
+    /**
+     * Pause execution and require human approval before continuing.
+     *
+     * This method creates an interrupt record and throws an InterruptException
+     * to halt execution. The agent can be resumed after the interrupt is approved.
+     *
+     * @param string $reason The reason approval is needed
+     * @param array $data Additional data about the action requiring approval
+     * @param string $type The type of interrupt (approval, confirmation, input, feedback)
+     * @throws InterruptException Always throws to halt execution
+     *
+     * @example
+     * ```php
+     * // In your agent's execute method or tool
+     * if ($this->shouldRequireApproval($action)) {
+     *     $this->requireApproval(
+     *         'Deleting user account',
+     *         ['user_id' => $userId, 'action' => 'delete']
+     *     );
+     * }
+     * ```
+     */
+    protected function requireApproval(string $reason, array $data = [], string $type = AgentInterrupt::TYPE_APPROVAL): never
+    {
+        if (!$this->context) {
+            throw new \RuntimeException('Cannot require approval without an active context.');
+        }
+
+        app(InterruptManager::class)->interrupt($this->context, $reason, $data, $type);
+    }
+
+    /**
+     * Request confirmation from the user before proceeding.
+     *
+     * @param string $reason The reason confirmation is needed
+     * @param array $data Data about what needs confirmation
+     * @throws InterruptException
+     */
+    protected function requireConfirmation(string $reason, array $data = []): never
+    {
+        $this->requireApproval($reason, $data, AgentInterrupt::TYPE_CONFIRMATION);
+    }
+
+    /**
+     * Request input from the user.
+     *
+     * @param string $reason The reason input is needed
+     * @param array $data Data about what input is needed (e.g., field names, validation rules)
+     * @throws InterruptException
+     */
+    protected function requireInput(string $reason, array $data = []): never
+    {
+        $this->requireApproval($reason, $data, AgentInterrupt::TYPE_INPUT);
+    }
+
+    /**
+     * Request feedback from the user.
+     *
+     * @param string $reason The reason feedback is needed
+     * @param array $data Data about what feedback is needed
+     * @throws InterruptException
+     */
+    protected function requireFeedback(string $reason, array $data = []): never
+    {
+        $this->requireApproval($reason, $data, AgentInterrupt::TYPE_FEEDBACK);
+    }
+
+    /**
+     * Check if a tool requires approval based on configuration.
+     *
+     * @param string $toolName The name of the tool
+     * @return bool True if the tool requires approval
+     */
+    protected function toolRequiresApproval(string $toolName): bool
+    {
+        return app(InterruptManager::class)->toolRequiresApproval($toolName);
+    }
+
+    /**
+     * Get the approval message for a tool from configuration.
+     *
+     * @param string $toolName The name of the tool
+     * @return string|null The approval message or null if not configured
+     */
+    protected function getToolApprovalMessage(string $toolName): ?string
+    {
+        $toolPermissions = config('vizra-adk.human_in_loop.tool_permissions', []);
+
+        if (isset($toolPermissions[$toolName]['approval_message'])) {
+            return $toolPermissions[$toolName]['approval_message'];
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if HITL is enabled in configuration.
+     *
+     * @return bool
+     */
+    protected function isHitlEnabled(): bool
+    {
+        return config('vizra-adk.human_in_loop.enabled', true);
+    }
+
+    /**
+     * Get pending interrupts for the current session.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    protected function getPendingInterrupts(): \Illuminate\Database\Eloquent\Collection
+    {
+        if (!$this->context) {
+            return collect();
+        }
+
+        return app(InterruptManager::class)->getForSession(
+            $this->context->getSessionId(),
+            true
+        );
+    }
+
+    /**
+     * Check the status of an interrupt.
+     *
+     * @param string $interruptId The interrupt ID
+     * @return array{approved: bool, modifications: array|null, response: string|null, status: string}
+     */
+    protected function checkInterruptStatus(string $interruptId): array
+    {
+        return app(InterruptManager::class)->checkStatus($interruptId);
     }
 }

@@ -128,6 +128,7 @@ return [
         'agent_memories' => 'agent_memories',
         'agent_vector_memories' => 'agent_vector_memories',
         'agent_trace_spans' => 'agent_trace_spans',
+        'agent_interrupts' => 'agent_interrupts',
     ],
 
     /**
@@ -404,6 +405,60 @@ return [
             'context_template' => "Based on the following context:\n{context}\n\nAnswer this question: {query}",
             'max_context_length' => env('VIZRA_ADK_RAG_MAX_CONTEXT', 4000),
             'include_metadata' => env('VIZRA_ADK_RAG_INCLUDE_METADATA', true),
+        ],
+    ],
+
+    /**
+     * Human-in-the-Loop (HITL) Configuration
+     * Configure human approval workflows for agent actions.
+     *
+     * This feature allows agents to pause execution and request human approval,
+     * input, or feedback before proceeding with sensitive operations.
+     */
+    'human_in_loop' => [
+        /**
+         * Enable or disable HITL functionality.
+         */
+        'enabled' => env('VIZRA_ADK_HITL_ENABLED', true),
+
+        /**
+         * Default expiration time for interrupt requests (in hours).
+         * After this time, pending interrupts will be marked as expired.
+         */
+        'default_expiration_hours' => env('VIZRA_ADK_HITL_EXPIRATION_HOURS', 24),
+
+        /**
+         * Number of days to keep resolved interrupts before cleanup.
+         */
+        'cleanup_days' => env('VIZRA_ADK_HITL_CLEANUP_DAYS', 30),
+
+        /**
+         * Tool-specific permission settings.
+         * Configure which tools require human approval before execution.
+         *
+         * Each tool can have:
+         * - require_approval: Whether the tool needs approval before execution
+         * - approval_message: Custom message to show when requesting approval
+         *
+         * Use '*' as a wildcard for default settings for all tools.
+         */
+        'tool_permissions' => [
+            // Default policy for all tools
+            '*' => [
+                'require_approval' => false,
+            ],
+
+            // Example: Require approval for database deletion tools
+            // 'delete_record' => [
+            //     'require_approval' => true,
+            //     'approval_message' => 'This action will delete a record. Please approve to continue.',
+            // ],
+
+            // Example: Require approval for email sending
+            // 'send_email' => [
+            //     'require_approval' => true,
+            //     'approval_message' => 'An email will be sent. Please review and approve.',
+            // ],
         ],
     ],
 ];
