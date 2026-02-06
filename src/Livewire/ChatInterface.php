@@ -48,6 +48,11 @@ class ChatInterface extends Component
 
     public bool $enableStreaming = false;
 
+    // Media agent properties
+    public bool $isMediaAgentSelected = false;
+
+    public ?string $selectedAgentMediaType = null; // 'image', 'audio', or null
+
     // Modal properties
     public bool $showLoadSessionModal = false;
 
@@ -133,6 +138,29 @@ class ChatInterface extends Component
                 'agent' => $agentName,
                 'session_id' => $this->sessionId,
             ]);
+        }
+
+        // Detect if this is a media agent
+        $agentClass = $this->registeredAgents[$agentName] ?? null;
+        if ($agentClass && class_exists($agentClass)) {
+            $agent = new $agentClass;
+            $this->isMediaAgentSelected = $agent instanceof \Vizra\VizraADK\Agents\BaseMediaAgent;
+
+            if ($agent instanceof \Vizra\VizraADK\Agents\ImageAgent) {
+                $this->selectedAgentMediaType = 'image';
+            } elseif ($agent instanceof \Vizra\VizraADK\Agents\AudioAgent) {
+                $this->selectedAgentMediaType = 'audio';
+            } else {
+                $this->selectedAgentMediaType = null;
+            }
+
+            // Disable streaming for media agents (they don't support it)
+            if ($this->isMediaAgentSelected) {
+                $this->enableStreaming = false;
+            }
+        } else {
+            $this->isMediaAgentSelected = false;
+            $this->selectedAgentMediaType = null;
         }
 
         // Always load agent info, context, and traces with the new session
@@ -343,7 +371,8 @@ class ChatInterface extends Component
         ];
 
         // Call the appropriate method directly via $wire
-        if ($this->enableStreaming) {
+        // Never stream for media agents
+        if ($this->enableStreaming && !$this->isMediaAgentSelected) {
             $this->js('$wire.streamAgentResponse()');
         } else {
             $this->dispatch('process-agent-response', userMessage: $userMessage);
@@ -357,15 +386,23 @@ class ChatInterface extends Component
         }
 
         try {
-            // Call the agent
-            $response = Agent::run($this->selectedAgent, $userMessage, $this->sessionId);
+            $agentClass = $this->registeredAgents[$this->selectedAgent] ?? null;
 
-            // Add agent response to chat history
-            $this->chatHistory[] = [
-                'role' => 'assistant',
-                'content' => $response,
-                'timestamp' => now()->format('H:i:s'),
-            ];
+            if ($agentClass && is_subclass_of($agentClass, \Vizra\VizraADK\Agents\BaseMediaAgent::class)) {
+                // Handle media agent execution
+                $this->processMediaAgentResponse($userMessage, $agentClass);
+            } else {
+                // Handle LLM agent execution (existing logic)
+                $response = Agent::run($this->selectedAgent, $userMessage, $this->sessionId);
+
+                // Add agent response to chat history
+                $this->chatHistory[] = [
+                    'role' => 'assistant',
+                    'type' => 'text',
+                    'content' => $response,
+                    'timestamp' => now()->format('H:i:s'),
+                ];
+            }
 
             // Refresh context data
             $this->loadContextData();
@@ -377,6 +414,7 @@ class ChatInterface extends Component
         } catch (\Exception $e) {
             $this->chatHistory[] = [
                 'role' => 'error',
+                'type' => 'text',
                 'content' => 'Error: '.$e->getMessage(),
                 'timestamp' => now()->format('H:i:s'),
             ];
@@ -389,6 +427,72 @@ class ChatInterface extends Component
 
         // Dispatch event to scroll chat to bottom
         $this->dispatch('chat-updated');
+    }
+
+    /**
+     * Process media agent response and add to chat history
+     */
+    protected function processMediaAgentResponse(string $userMessage, string $agentClass): void
+    {
+        // Execute the media agent with auto-store for persistent URLs
+        $response = $agentClass::run($userMessage)
+            ->withSession($this->sessionId)
+            ->store()
+            ->go();
+
+        if ($response instanceof \Vizra\VizraADK\Media\Responses\ImageResponse) {
+            // Get URL, falling back to data URI if storage URL isn't available
+            $url = $response->url();
+
+            // If URL is a file path (not data URI), also store data URI as fallback
+            $dataUri = null;
+            if ($url && ! str_starts_with($url, 'data:')) {
+                try {
+                    $dataUri = $response->toDataUri();
+                } catch (\Exception $e) {
+                    // Data URI generation failed, will rely on URL
+                }
+            }
+
+            $this->chatHistory[] = [
+                'role' => 'assistant',
+                'type' => 'image',
+                'content' => [
+                    'url' => $dataUri ?? $url, // Prefer data URI for reliability
+                    'stored_url' => $url, // Keep the storage URL for reference
+                    'prompt' => $response->prompt(),
+                    'provider' => $response->metadata()['provider'] ?? 'unknown',
+                    'model' => $response->metadata()['model'] ?? 'unknown',
+                ],
+                'timestamp' => now()->format('H:i:s'),
+            ];
+        } elseif ($response instanceof \Vizra\VizraADK\Media\Responses\AudioResponse) {
+            // Get URL, preferring data URI for reliability
+            $url = $response->url();
+            $dataUri = null;
+
+            if ($url && ! str_starts_with($url, 'data:')) {
+                try {
+                    $dataUri = $response->toDataUri();
+                } catch (\Exception $e) {
+                    // Data URI generation failed, will rely on URL
+                }
+            }
+
+            $this->chatHistory[] = [
+                'role' => 'assistant',
+                'type' => 'audio',
+                'content' => [
+                    'url' => $dataUri ?? $url, // Prefer data URI for reliability
+                    'stored_url' => $url,
+                    'text' => $response->text(),
+                    'voice' => $response->voice(),
+                    'format' => $response->format(),
+                    'mime_type' => $response->mimeType(),
+                ],
+                'timestamp' => now()->format('H:i:s'),
+            ];
+        }
     }
 
     public function streamAgentResponse(): void
@@ -841,6 +945,8 @@ class ChatInterface extends Component
             $this->hasRunningTraces = false;
             $this->isLoading = false;
             $this->activeTab = 'agent-info';
+            $this->isMediaAgentSelected = false;
+            $this->selectedAgentMediaType = null;
 
             // Step 3: Generate completely new session
             $oldSession = $this->sessionId;
@@ -848,6 +954,26 @@ class ChatInterface extends Component
 
             // Step 4: Set the new agent
             $this->selectedAgent = $agentName;
+
+            // Step 5: Detect if this is a media agent
+            $agentClass = $this->registeredAgents[$agentName] ?? null;
+            if ($agentClass && class_exists($agentClass)) {
+                $agent = new $agentClass;
+                $this->isMediaAgentSelected = $agent instanceof \Vizra\VizraADK\Agents\BaseMediaAgent;
+
+                if ($agent instanceof \Vizra\VizraADK\Agents\ImageAgent) {
+                    $this->selectedAgentMediaType = 'image';
+                } elseif ($agent instanceof \Vizra\VizraADK\Agents\AudioAgent) {
+                    $this->selectedAgentMediaType = 'audio';
+                } else {
+                    $this->selectedAgentMediaType = null;
+                }
+
+                // Disable streaming for media agents
+                if ($this->isMediaAgentSelected) {
+                    $this->enableStreaming = false;
+                }
+            }
 
             logger()->info('Component state completely reset', [
                 'old_session' => $oldSession,
@@ -857,7 +983,7 @@ class ChatInterface extends Component
                 'context_data_empty' => empty($this->contextData),
             ]);
 
-            // Step 5: Load fresh data for new agent
+            // Step 6: Load fresh data for new agent
             $this->loadAgentInfo();
             $this->loadContextData();
             $this->loadTraceData();
