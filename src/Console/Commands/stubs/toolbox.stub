@@ -1,0 +1,72 @@
+<?php
+
+namespace {{ namespace }};
+
+use Vizra\VizraADK\Toolboxes\BaseToolbox;
+use Vizra\VizraADK\System\AgentContext;
+
+/**
+ * {{ toolboxDescription }}
+ *
+ * This toolbox groups related tools together and can provide
+ * authorization via Laravel Gates or Policies.
+ */
+class {{ class }} extends BaseToolbox
+{
+    /**
+     * The unique identifier for this toolbox.
+     */
+    protected string $name = '{{ toolboxName }}';
+
+    /**
+     * Human-readable description of this toolbox.
+     */
+    protected string $description = '{{ toolboxDescription }}';
+
+    /**
+     * Optional Laravel Gate name for toolbox-level authorization.
+     * If set, the gate must return true for the toolbox to be accessible.
+     */
+    {{ gateProperty }}
+
+    /**
+     * Optional Laravel Policy class for toolbox-level authorization.
+     */
+    {{ policyProperty }}
+
+    /**
+     * Array of tool class names that belong to this toolbox.
+     *
+     * @var array<class-string<\Vizra\VizraADK\Contracts\ToolInterface>>
+     */
+    protected array $tools = [
+{{ toolsList }}
+    ];
+
+    /**
+     * Optional per-tool gate mappings.
+     * Keys are tool class names, values are gate names.
+     *
+     * @var array<class-string, string>
+     */
+    protected array $toolGates = [
+        // Example: ToolClass::class => 'gate-name',
+    ];
+
+    /**
+     * Determine if a tool should be included based on context conditions.
+     *
+     * Override this method to implement conditional tool inclusion.
+     *
+     * @param  class-string<\Vizra\VizraADK\Contracts\ToolInterface>  $toolClass
+     */
+    protected function shouldIncludeTool(string $toolClass, AgentContext $context): bool
+    {
+        // Example: Only include certain tools for premium users
+        // if ($toolClass === PremiumTool::class) {
+        //     return $context->getState('user_tier') === 'premium';
+        // }
+
+        return true;
+    }
+}
