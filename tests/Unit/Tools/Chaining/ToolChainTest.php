@@ -8,6 +8,7 @@ use RuntimeException;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\Memory\AgentMemory;
+use Vizra\VizraADK\Services\Tracer;
 use Vizra\VizraADK\System\AgentContext;
 use Vizra\VizraADK\Tests\Fixtures\Tools\ChainableFetchUserTool;
 use Vizra\VizraADK\Tests\Fixtures\Tools\EnrichUserTool;
@@ -571,5 +572,168 @@ class ToolChainTest extends TestCase
         $this->assertStringContainsString('Tool:', $steps[0]->describe());
         $this->assertStringContainsString('FetchUserTool', $steps[0]->describe());
         $this->assertEquals('Transform', $steps[1]->describe());
+    }
+
+    // ==========================================
+    // Tracing Tests
+    // ==========================================
+
+    public function test_tracing_creates_spans_when_trace_active(): void
+    {
+        // Create a mock tracer with an active trace
+        $tracer = Mockery::mock(Tracer::class);
+        $tracer->shouldReceive('isEnabled')->andReturn(true);
+        $tracer->shouldReceive('getCurrentTraceId')->andReturn('trace-123');
+
+        // Expect startSpan to be called for each step (2 steps: tool + transform)
+        $tracer->shouldReceive('startSpan')
+            ->with(
+                'chain_step',
+                Mockery::pattern('/^test-chain\.step_0:FetchUserTool$/'),
+                Mockery::type('array'),
+                Mockery::type('array'),
+                Mockery::type(AgentContext::class)
+            )
+            ->once()
+            ->andReturn('span-1');
+
+        $tracer->shouldReceive('startSpan')
+            ->with(
+                'chain_step',
+                Mockery::pattern('/^test-chain\.step_1:transform$/'),
+                Mockery::type('array'),
+                Mockery::type('array'),
+                Mockery::type(AgentContext::class)
+            )
+            ->once()
+            ->andReturn('span-2');
+
+        // Expect endSpan to be called for each step
+        $tracer->shouldReceive('endSpan')
+            ->with('span-1', Mockery::type('array'), 'success')
+            ->once();
+
+        $tracer->shouldReceive('endSpan')
+            ->with('span-2', Mockery::type('array'), 'success')
+            ->once();
+
+        $this->app->instance(Tracer::class, $tracer);
+
+        $chain = ToolChain::create('test-chain')
+            ->pipe(FetchUserTool::class)
+            ->transform(fn ($r) => json_decode($r, true));
+
+        $result = $chain->execute(['user_id' => 1], $this->context, $this->memory);
+
+        $this->assertTrue($result->successful());
+    }
+
+    public function test_failed_step_creates_error_span(): void
+    {
+        // Create a mock tracer with an active trace
+        $tracer = Mockery::mock(Tracer::class);
+        $tracer->shouldReceive('isEnabled')->andReturn(true);
+        $tracer->shouldReceive('getCurrentTraceId')->andReturn('trace-123');
+
+        // Expect startSpan to be called
+        $tracer->shouldReceive('startSpan')
+            ->once()
+            ->andReturn('span-1');
+
+        // Expect failSpan to be called with the exception
+        $tracer->shouldReceive('failSpan')
+            ->with('span-1', Mockery::type(RuntimeException::class))
+            ->once();
+
+        $this->app->instance(Tracer::class, $tracer);
+
+        $chain = ToolChain::create('failing-chain')
+            ->pipe(FailingTool::class);
+
+        $result = $chain->execute([], $this->context, $this->memory);
+
+        $this->assertTrue($result->failed());
+    }
+
+    public function test_skipped_steps_not_traced(): void
+    {
+        // Create a mock tracer with an active trace
+        $tracer = Mockery::mock(Tracer::class);
+        $tracer->shouldReceive('isEnabled')->andReturn(true);
+        $tracer->shouldReceive('getCurrentTraceId')->andReturn('trace-123');
+
+        // Expect startSpan to be called for 3 steps (tool + transform + condition)
+        // The fourth step (tap) should be skipped and not traced
+        $tracer->shouldReceive('startSpan')
+            ->times(3)
+            ->andReturn('span-1', 'span-2', 'span-3');
+
+        // Expect endSpan to be called for the executed steps
+        $tracer->shouldReceive('endSpan')
+            ->times(3);
+
+        $this->app->instance(Tracer::class, $tracer);
+
+        $executed = false;
+
+        $chain = ToolChain::create('skip-chain')
+            ->pipe(FetchUserTool::class)
+            ->transform(fn ($r) => json_decode($r, true))
+            ->when(fn ($data) => $data['status'] === 'inactive')  // Will be false, skip remaining
+            ->tap(function () use (&$executed) {
+                $executed = true;
+            });
+
+        $result = $chain->execute(['user_id' => 1], $this->context, $this->memory);
+
+        $this->assertTrue($result->successful());
+        $this->assertFalse($executed);
+        $this->assertGreaterThan(0, $result->getSkippedStepCount());
+    }
+
+    public function test_no_tracing_when_no_active_trace(): void
+    {
+        // Create a mock tracer with no active trace
+        $tracer = Mockery::mock(Tracer::class);
+        $tracer->shouldReceive('isEnabled')->andReturn(true);
+        $tracer->shouldReceive('getCurrentTraceId')->andReturn(null);
+
+        // Should not create any spans
+        $tracer->shouldNotReceive('startSpan');
+        $tracer->shouldNotReceive('endSpan');
+        $tracer->shouldNotReceive('failSpan');
+
+        $this->app->instance(Tracer::class, $tracer);
+
+        $chain = ToolChain::create('no-trace-chain')
+            ->pipe(FetchUserTool::class)
+            ->transform(fn ($r) => json_decode($r, true));
+
+        $result = $chain->execute(['user_id' => 1], $this->context, $this->memory);
+
+        $this->assertTrue($result->successful());
+    }
+
+    public function test_no_tracing_when_tracer_disabled(): void
+    {
+        // Create a mock tracer that is disabled
+        $tracer = Mockery::mock(Tracer::class);
+        $tracer->shouldReceive('isEnabled')->andReturn(false);
+
+        // Should not create any spans
+        $tracer->shouldNotReceive('getCurrentTraceId');
+        $tracer->shouldNotReceive('startSpan');
+        $tracer->shouldNotReceive('endSpan');
+        $tracer->shouldNotReceive('failSpan');
+
+        $this->app->instance(Tracer::class, $tracer);
+
+        $chain = ToolChain::create('disabled-trace-chain')
+            ->pipe(FetchUserTool::class)
+            ->transform(fn ($r) => json_decode($r, true));
+
+        $result = $chain->execute(['user_id' => 1], $this->context, $this->memory);
+
+        $this->assertTrue($result->successful());
     }
 }

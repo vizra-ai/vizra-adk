@@ -357,6 +357,7 @@ class AgentTraceCommand extends Command
             'llm_call' => '🧠',
             'tool_call' => '🔧',
             'sub_agent_delegation' => '👥',
+            'chain_step' => '🔗',
             default => '📄'
         };
     }

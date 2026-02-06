@@ -187,6 +187,7 @@ class TraceSpan extends Model
             'llm_call' => '🧠',
             'tool_call' => '🛠️',
             'sub_agent_delegation' => '👥',
+            'chain_step' => '🔗',
             default => '📋'
         };
     }

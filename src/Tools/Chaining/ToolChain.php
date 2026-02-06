@@ -4,9 +4,11 @@ namespace Vizra\VizraADK\Tools\Chaining;
 
 use Closure;
 use InvalidArgumentException;
+use Throwable;
 use Vizra\VizraADK\Contracts\ChainableToolInterface;
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\Memory\AgentMemory;
+use Vizra\VizraADK\Services\Tracer;
 use Vizra\VizraADK\System\AgentContext;
 
 /**
@@ -51,6 +53,16 @@ class ToolChain
      * Callback to execute after each step.
      */
     protected ?Closure $afterStep = null;
+
+    /**
+     * The tracer instance for creating spans.
+     */
+    protected ?Tracer $tracer = null;
+
+    /**
+     * The context used for tracing (stored during execution).
+     */
+    protected ?AgentContext $tracingContext = null;
 
     /**
      * Create a new ToolChain instance.
@@ -186,6 +198,13 @@ class ToolChain
         $currentValue = $initialArguments;
         $skipRemaining = false;
 
+        // Initialize tracing automatically if there's an active trace
+        $tracer = app(Tracer::class);
+        if ($tracer->isEnabled() && $tracer->getCurrentTraceId()) {
+            $this->tracer = $tracer;
+            $this->tracingContext = $context;
+        }
+
         foreach ($this->steps as $index => $step) {
             if ($skipRemaining) {
                 $result->addSkippedStep($index, $step);
@@ -199,6 +218,7 @@ class ToolChain
             }
 
             $startTime = microtime(true);
+            $spanId = $this->startStepSpan($step, $index, $currentValue);
 
             try {
                 $stepResult = $this->executeStep(
@@ -218,6 +238,7 @@ class ToolChain
                         $skipRemaining = true;
                         $currentValue = $stepResult['value'];
                         $result->addStep($index, $step, $currentValue, $duration, true);
+                        $this->endStepSpan($spanId, $currentValue, ['skipped_remaining' => true]);
 
                         continue;
                     }
@@ -227,14 +248,16 @@ class ToolChain
                 }
 
                 $result->addStep($index, $step, $currentValue, $duration);
+                $this->endStepSpan($spanId, $currentValue);
 
                 // After step callback
                 if ($this->afterStep) {
                     ($this->afterStep)($step, $index, $currentValue);
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $duration = microtime(true) - $startTime;
                 $result->addError($index, $step, $e, $duration);
+                $this->failStepSpan($spanId, $e);
 
                 if ($this->stopOnError) {
                     break;
@@ -243,6 +266,10 @@ class ToolChain
         }
 
         $result->setFinalValue($currentValue);
+
+        // Clean up tracing state
+        $this->tracer = null;
+        $this->tracingContext = null;
 
         return $result;
     }
@@ -376,5 +403,162 @@ class ToolChain
     public function count(): int
     {
         return count($this->steps);
+    }
+
+    /**
+     * Start a trace span for a chain step.
+     *
+     * @param  ToolChainStep  $step  The step being executed.
+     * @param  int  $index  The step index in the chain.
+     * @param  mixed  $input  The input to this step.
+     * @return string|null The span ID if tracing is enabled, null otherwise.
+     */
+    protected function startStepSpan(ToolChainStep $step, int $index, mixed $input): ?string
+    {
+        if (! $this->tracer) {
+            return null;
+        }
+
+        $stepName = $this->buildStepName($step, $index);
+
+        return $this->tracer->startSpan(
+            type: 'chain_step',
+            name: $stepName,
+            input: $this->prepareInputForTrace($input),
+            metadata: [
+                'chain_name' => $this->name,
+                'step_index' => $index,
+                'step_type' => $step->type,
+                'tool_class' => $step->getToolClass(),
+            ],
+            context: $this->tracingContext
+        );
+    }
+
+    /**
+     * End a trace span successfully.
+     *
+     * @param  string|null  $spanId  The span ID to end.
+     * @param  mixed  $output  The output from the step.
+     * @param  array  $extraMetadata  Additional metadata to include.
+     */
+    protected function endStepSpan(?string $spanId, mixed $output, array $extraMetadata = []): void
+    {
+        if (! $spanId || ! $this->tracer) {
+            return;
+        }
+
+        $outputData = $this->prepareOutputForTrace($output);
+
+        if (! empty($extraMetadata)) {
+            $outputData = array_merge($outputData, $extraMetadata);
+        }
+
+        $this->tracer->endSpan($spanId, $outputData, 'success');
+    }
+
+    /**
+     * End a trace span with error status.
+     *
+     * @param  string|null  $spanId  The span ID to end.
+     * @param  Throwable  $exception  The exception that caused the failure.
+     */
+    protected function failStepSpan(?string $spanId, Throwable $exception): void
+    {
+        if (! $spanId || ! $this->tracer) {
+            return;
+        }
+
+        $this->tracer->failSpan($spanId, $exception);
+    }
+
+    /**
+     * Build the name for a chain step span.
+     *
+     * @param  ToolChainStep  $step  The step.
+     * @param  int  $index  The step index.
+     * @return string The span name.
+     */
+    protected function buildStepName(ToolChainStep $step, int $index): string
+    {
+        $chainPrefix = $this->name ? "{$this->name}." : '';
+
+        return match ($step->type) {
+            ToolChainStep::TYPE_TOOL => $chainPrefix."step_{$index}:".$this->getToolShortName($step),
+            ToolChainStep::TYPE_TRANSFORM => $chainPrefix."step_{$index}:transform",
+            ToolChainStep::TYPE_CONDITION => $chainPrefix."step_{$index}:condition",
+            ToolChainStep::TYPE_TAP => $chainPrefix."step_{$index}:tap",
+            default => $chainPrefix."step_{$index}",
+        };
+    }
+
+    /**
+     * Get the short class name for a tool step.
+     *
+     * @param  ToolChainStep  $step  The tool step.
+     * @return string The short class name.
+     */
+    protected function getToolShortName(ToolChainStep $step): string
+    {
+        $className = $step->getToolClass();
+
+        if (! $className) {
+            return 'UnknownTool';
+        }
+
+        // Extract just the class name without namespace
+        $parts = explode('\\', $className);
+
+        return end($parts);
+    }
+
+    /**
+     * Prepare input data for tracing.
+     *
+     * @param  mixed  $input  The raw input.
+     * @return array The prepared input array.
+     */
+    protected function prepareInputForTrace(mixed $input): array
+    {
+        if (is_array($input)) {
+            return ['input' => $input];
+        }
+
+        if (is_string($input)) {
+            // Try to decode JSON strings
+            $decoded = json_decode($input, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return ['input' => $decoded];
+            }
+
+            return ['input' => $input];
+        }
+
+        return ['input' => $input];
+    }
+
+    /**
+     * Prepare output data for tracing.
+     *
+     * @param  mixed  $output  The raw output.
+     * @return array The prepared output array.
+     */
+    protected function prepareOutputForTrace(mixed $output): array
+    {
+        if (is_array($output)) {
+            return ['output' => $output];
+        }
+
+        if (is_string($output)) {
+            // Try to decode JSON strings
+            $decoded = json_decode($output, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return ['output' => $decoded];
+            }
+
+            return ['output' => $output];
+        }
+
+        return ['output' => $output];
     }
 }
