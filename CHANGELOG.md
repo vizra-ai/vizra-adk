@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.45] - 2026-02-06
+
+## v0.0.45 (Unreleased)
+
+### New Features
+
+**Media Generation Agents**
+- New `ImageAgent` and `AudioAgent` for generating images and audio directly from your agents
+- Fluent builder API: `ImageAgent::run('prompt')->quality('hd')->go()`
+- Built-in storage methods and queued job support for async generation
+- `DelegateToMediaAgentTool` allows LLM agents to delegate media tasks
+- Chat UI now renders media responses inline
+
+**Toolbox System**
+- Group related tools into reusable toolboxes with `ToolboxInterface`
+- Laravel Gate/Policy authorization at both toolbox and per-tool level
+- Conditional tool inclusion via `shouldIncludeTool()`
+- New artisan command: `php artisan vizra:make:toolbox`
+
+**Tool Chaining**
+- Compose sequential tool pipelines where output flows between tools
+- Fluent API with `pipe()`, `transform()`, `when()`, and `tap()` methods
+- `ChainableToolInterface` for tools with built-in chain support
+- Detailed execution results with `ToolChainResult`
+- Full tracing support for tool chain steps
+
+**Laravel Boost V2 Support**
+- Auto-discovered guidelines via `resources/boost/guidelines/core.blade.php`
+- Opt-in Skills for advanced features:
+  - `vizra-agent-creation` - Agent patterns
+  - `vizra-tool-creation` - Tool development
+  - `vizra-workflows` - Workflow orchestration
+  - `vizra-memory` - Memory and RAG
+  - `vizra-evaluation` - Testing framework
+
 ## [0.0.44] - 2026-02-02
 
 Add LLM usage aggregation and adjust agent output
