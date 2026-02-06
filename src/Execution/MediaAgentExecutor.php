@@ -374,7 +374,7 @@ class MediaAgentExecutor
             }
 
             // End trace successfully
-            $tracer->endSpan(output: [
+            $tracer->endSpan($spanId, output: [
                 'success' => true,
                 'url' => method_exists($response, 'url') ? $response->url() : null,
                 'path' => method_exists($response, 'path') ? $response->path() : null,
@@ -383,7 +383,7 @@ class MediaAgentExecutor
             return $response;
 
         } catch (\Exception $e) {
-            $tracer->failSpan($e);
+            $tracer->failSpan($spanId, $e);
             throw $e;
         }
     }
@@ -437,7 +437,7 @@ class MediaAgentExecutor
     {
         $context = new AgentContext(
             sessionId: $this->resolveSessionId(),
-            input: $this->input
+            userInput: $this->input
         );
 
         // Add user info

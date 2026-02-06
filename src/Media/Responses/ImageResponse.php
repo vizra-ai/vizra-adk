@@ -15,6 +15,8 @@ class ImageResponse
 {
     protected mixed $response;
 
+    protected mixed $image;
+
     protected string $prompt;
 
     protected string $provider;
@@ -37,6 +39,35 @@ class ImageResponse
         $this->prompt = $prompt;
         $this->provider = $provider;
         $this->model = $model;
+
+        // Extract the first image from Prism response if applicable
+        $this->image = $this->extractImage($response);
+    }
+
+    /**
+     * Extract the image object from the response
+     */
+    protected function extractImage(mixed $response): mixed
+    {
+        // Handle Prism\Prism\Images\Response which has firstImage() method
+        if (is_object($response) && method_exists($response, 'firstImage')) {
+            $image = $response->firstImage();
+            if ($image === null) {
+                throw new \RuntimeException('No images were generated in the response');
+            }
+            return $image;
+        }
+
+        // If response itself is the image object
+        return $response;
+    }
+
+    /**
+     * Check if the image has data available
+     */
+    public function hasImage(): bool
+    {
+        return $this->image !== null;
     }
 
     /**
@@ -83,7 +114,17 @@ class ImageResponse
         }
 
         // Fall back to provider URL
-        return $this->providerUrl();
+        $providerUrl = $this->providerUrl();
+        if ($providerUrl !== null) {
+            return $providerUrl;
+        }
+
+        // Final fallback: return as data URI for inline display
+        try {
+            return $this->toDataUri();
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**
@@ -91,16 +132,20 @@ class ImageResponse
      */
     public function providerUrl(): ?string
     {
-        if (is_object($this->response)) {
-            if (method_exists($this->response, 'url')) {
-                return $this->response->url();
+        if (is_object($this->image)) {
+            if (method_exists($this->image, 'url')) {
+                return $this->image->url();
             }
-            if (property_exists($this->response, 'url')) {
-                return $this->response->url;
+            if (property_exists($this->image, 'url')) {
+                return $this->image->url;
             }
         }
 
-        return $this->response['url'] ?? null;
+        if (is_array($this->image)) {
+            return $this->image['url'] ?? null;
+        }
+
+        return null;
     }
 
     /**
@@ -124,17 +169,20 @@ class ImageResponse
      */
     public function base64(): string
     {
-        if (is_object($this->response)) {
-            if (method_exists($this->response, 'base64')) {
-                return $this->response->base64();
+        if (is_object($this->image)) {
+            if (method_exists($this->image, 'base64')) {
+                $b64 = $this->image->base64();
+                if ($b64) {
+                    return $b64;
+                }
             }
-            if (property_exists($this->response, 'base64') && $this->response->base64) {
-                return $this->response->base64;
+            if (property_exists($this->image, 'base64') && $this->image->base64) {
+                return $this->image->base64;
             }
         }
 
-        if (isset($this->response['base64'])) {
-            return $this->response['base64'];
+        if (is_array($this->image) && isset($this->image['base64'])) {
+            return $this->image['base64'];
         }
 
         // Convert from raw data or URL
@@ -146,21 +194,29 @@ class ImageResponse
      */
     public function data(): string
     {
-        // Try base64 first
-        if (is_object($this->response)) {
-            if (method_exists($this->response, 'base64')) {
-                $b64 = $this->response->base64();
+        // Try rawContent method first (Prism GeneratedImage)
+        if (is_object($this->image)) {
+            if (method_exists($this->image, 'rawContent')) {
+                $content = $this->image->rawContent();
+                if ($content) {
+                    return $content;
+                }
+            }
+
+            // Try base64
+            if (method_exists($this->image, 'base64')) {
+                $b64 = $this->image->base64();
                 if ($b64) {
                     return base64_decode($b64);
                 }
             }
-            if (property_exists($this->response, 'base64') && $this->response->base64) {
-                return base64_decode($this->response->base64);
+            if (property_exists($this->image, 'base64') && $this->image->base64) {
+                return base64_decode($this->image->base64);
             }
         }
 
-        if (isset($this->response['base64'])) {
-            return base64_decode($this->response['base64']);
+        if (is_array($this->image) && isset($this->image['base64'])) {
+            return base64_decode($this->image['base64']);
         }
 
         // Fetch from URL
@@ -223,12 +279,18 @@ class ImageResponse
     }
 
     /**
-     * Guess the file extension
+     * Guess the file extension based on MIME type
      */
     protected function guessExtension(): string
     {
-        // Most AI image generation returns PNG
-        return 'png';
+        $mime = $this->mimeType();
+
+        return match ($mime) {
+            'image/jpeg', 'image/jpg' => 'jpg',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            default => 'png',
+        };
     }
 
     /**
@@ -236,6 +298,13 @@ class ImageResponse
      */
     public function mimeType(): string
     {
+        if (is_object($this->image) && method_exists($this->image, 'mimeType')) {
+            $mime = $this->image->mimeType();
+            if ($mime) {
+                return $mime;
+            }
+        }
+
         return 'image/png';
     }
 

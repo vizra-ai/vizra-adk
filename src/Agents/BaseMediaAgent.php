@@ -25,6 +25,13 @@ abstract class BaseMediaAgent extends BaseAgent
     protected string $model;
 
     /**
+     * Whether to show this agent in the Chat UI agent selector.
+     * Default is true to show all agents.
+     * Set to false to hide from the chat interface.
+     */
+    protected bool $showInChatUi = true;
+
+    /**
      * Get the provider
      */
     public function getProvider(): string
@@ -56,6 +63,50 @@ abstract class BaseMediaAgent extends BaseAgent
     {
         $this->model = $model;
         return $this;
+    }
+
+    /**
+     * Get whether to show in Chat UI
+     */
+    public function getShowInChatUi(): bool
+    {
+        return $this->showInChatUi;
+    }
+
+    /**
+     * Set whether to show in Chat UI
+     */
+    public function setShowInChatUi(bool $showInChatUi): static
+    {
+        $this->showInChatUi = $showInChatUi;
+        return $this;
+    }
+
+    /**
+     * Get instructions for this agent.
+     * Media agents return their description as instructions.
+     */
+    public function getInstructions(): string
+    {
+        return $this->description;
+    }
+
+    /**
+     * Get loaded tools for this agent.
+     * Media agents don't use tools, so this returns an empty array.
+     */
+    public function getLoadedTools(): array
+    {
+        return [];
+    }
+
+    /**
+     * Get loaded sub-agents for this agent.
+     * Media agents don't use sub-agents, so this returns an empty array.
+     */
+    public function getLoadedSubAgents(): array
+    {
+        return [];
     }
 
     /**

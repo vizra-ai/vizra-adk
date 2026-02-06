@@ -838,29 +838,100 @@ function testModalButton() {
                                                     </div>
                                                 </div>
                                             @elseif($chatMessage['role'] === 'assistant')
-                                                <!-- Assistant Message -->
-                                                <div class="group flex space-x-3">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
-                                                            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                            </svg>
+                                                @php
+                                                    $messageType = $chatMessage['type'] ?? 'text';
+                                                @endphp
+
+                                                @if($messageType === 'image')
+                                                    <!-- Image Message -->
+                                                    <div class="group flex space-x-3">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="w-8 h-8 bg-gradient-to-br from-pink-600 to-pink-700 rounded-lg flex items-center justify-center">
+                                                                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-1">
+                                                            <div class="bg-gray-800 border border-gray-700 rounded-2xl rounded-bl-md px-5 py-4 shadow-sm">
+                                                                <div class="mb-3">
+                                                                    <img
+                                                                        src="{{ $chatMessage['content']['url'] }}"
+                                                                        alt="Generated image: {{ $chatMessage['content']['prompt'] ?? '' }}"
+                                                                        class="max-w-full rounded-lg shadow-md cursor-pointer hover:opacity-90 transition-opacity"
+                                                                        onclick="window.open('{{ $chatMessage['content']['url'] }}', '_blank')"
+                                                                        loading="lazy"
+                                                                    />
+                                                                </div>
+                                                                <div class="text-xs text-gray-400 space-y-1">
+                                                                    <p class="italic">"{{ \Illuminate\Support\Str::limit($chatMessage['content']['prompt'] ?? '', 100) }}"</p>
+                                                                    <p class="text-gray-500">{{ $chatMessage['content']['provider'] ?? '' }} / {{ $chatMessage['content']['model'] ?? '' }}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex items-center mt-1 space-x-1 text-xs text-gray-500">
+                                                                <span>{{ $selectedAgent }}</span>
+                                                                <span>•</span>
+                                                                <span>{{ $chatMessage['timestamp'] }}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div class="flex-1">
-                                                        <div class="bg-gray-800 border border-gray-700 rounded-2xl rounded-bl-md px-5 py-3 shadow-sm message-bubble">
-                                                            <p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">{{ $chatMessage['content'] }}</p>
+
+                                                @elseif($messageType === 'audio')
+                                                    <!-- Audio Message -->
+                                                    <div class="group flex space-x-3">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="w-8 h-8 bg-gradient-to-br from-green-600 to-green-700 rounded-lg flex items-center justify-center">
+                                                                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                                                </svg>
+                                                            </div>
                                                         </div>
-                                                        <div class="flex items-center mt-1 space-x-1 text-xs text-gray-500">
-                                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                                            </svg>
-                                                            <span>{{ $selectedAgent }}</span>
-                                                            <span>•</span>
-                                                            <span>{{ $chatMessage['timestamp'] }}</span>
+                                                        <div class="flex-1">
+                                                            <div class="bg-gray-800 border border-gray-700 rounded-2xl rounded-bl-md px-5 py-4 shadow-sm">
+                                                                <div class="mb-3">
+                                                                    <audio controls class="w-full" preload="metadata">
+                                                                        <source src="{{ $chatMessage['content']['url'] }}" type="{{ $chatMessage['content']['mime_type'] ?? 'audio/mpeg' }}">
+                                                                        Your browser does not support the audio element.
+                                                                    </audio>
+                                                                </div>
+                                                                <div class="text-xs text-gray-400 space-y-1">
+                                                                    <p class="italic">"{{ \Illuminate\Support\Str::limit($chatMessage['content']['text'] ?? '', 100) }}"</p>
+                                                                    <p class="text-gray-500">Voice: {{ $chatMessage['content']['voice'] ?? 'default' }} | Format: {{ $chatMessage['content']['format'] ?? 'mp3' }}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex items-center mt-1 space-x-1 text-xs text-gray-500">
+                                                                <span>{{ $selectedAgent }}</span>
+                                                                <span>•</span>
+                                                                <span>{{ $chatMessage['timestamp'] }}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
+
+                                                @else
+                                                    <!-- Text Message (default) -->
+                                                    <div class="group flex space-x-3">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center">
+                                                                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-1">
+                                                            <div class="bg-gray-800 border border-gray-700 rounded-2xl rounded-bl-md px-5 py-3 shadow-sm message-bubble">
+                                                                <p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">{{ $chatMessage['content'] }}</p>
+                                                            </div>
+                                                            <div class="flex items-center mt-1 space-x-1 text-xs text-gray-500">
+                                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                                </svg>
+                                                                <span>{{ $selectedAgent }}</span>
+                                                                <span>•</span>
+                                                                <span>{{ $chatMessage['timestamp'] }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
                                             @elseif($chatMessage['role'] === 'error')
                                                 <!-- Error Message -->
                                                 <div class="group flex space-x-3">
@@ -1036,23 +1107,44 @@ function testModalButton() {
                 <!-- Message Input -->
                 @if($selectedAgent)
                     <div class="px-6 py-4 border-t border-gray-800/50 bg-gray-800/30 rounded-b-xl">
-                        <!-- Streaming Toggle -->
-                        <div class="mb-3 flex items-center space-x-2">
-                            <label class="flex items-center cursor-pointer">
-                                <input type="checkbox"
-                                       wire:model.live="enableStreaming"
-                                       class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 focus:ring-offset-gray-900">
-                                <span class="ml-2 text-sm text-gray-300">Enable streaming responses</span>
-                            </label>
-                            @if($enableStreaming)
-                                <span class="text-xs text-blue-400 flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    Streaming enabled
+                        @if(!$isMediaAgentSelected)
+                            <!-- Streaming Toggle (hidden for media agents) -->
+                            <div class="mb-3 flex items-center space-x-2">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox"
+                                           wire:model.live="enableStreaming"
+                                           class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 focus:ring-offset-gray-900">
+                                    <span class="ml-2 text-sm text-gray-300">Enable streaming responses</span>
+                                </label>
+                                @if($enableStreaming)
+                                    <span class="text-xs text-blue-400 flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Streaming enabled
+                                    </span>
+                                @endif
+                            </div>
+                        @else
+                            <!-- Media Agent Indicator -->
+                            <div class="mb-3 flex items-center space-x-2">
+                                <span class="text-xs text-gray-400 flex items-center">
+                                    @if($selectedAgentMediaType === 'image')
+                                        <svg class="w-3 h-3 mr-1 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        Image generation mode
+                                    @elseif($selectedAgentMediaType === 'audio')
+                                        <svg class="w-3 h-3 mr-1 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                        </svg>
+                                        Audio generation mode
+                                    @else
+                                        Media generation mode
+                                    @endif
                                 </span>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
 
                         <form wire:submit.prevent="sendMessage" class="flex items-center space-x-3" x-data="{ messageValue: '' }" @submit="messageValue = ''">
                             <div class="flex-1">

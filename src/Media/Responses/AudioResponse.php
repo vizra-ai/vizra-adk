@@ -15,6 +15,8 @@ class AudioResponse
 {
     protected mixed $response;
 
+    protected mixed $audio;
+
     protected string $text;
 
     protected string $voice;
@@ -45,6 +47,23 @@ class AudioResponse
         $this->format = $format;
         $this->provider = $provider;
         $this->model = $model;
+
+        // Extract the audio object from Prism response if applicable
+        $this->audio = $this->extractAudio($response);
+    }
+
+    /**
+     * Extract the audio object from the response
+     */
+    protected function extractAudio(mixed $response): mixed
+    {
+        // Handle Prism\Prism\Audio\AudioResponse which has audio property
+        if (is_object($response) && property_exists($response, 'audio')) {
+            return $response->audio;
+        }
+
+        // If response itself is the audio object
+        return $response;
     }
 
     /**
@@ -85,7 +104,16 @@ class AudioResponse
      */
     public function url(): ?string
     {
-        return $this->storedUrl;
+        if ($this->storedUrl !== null) {
+            return $this->storedUrl;
+        }
+
+        // Fallback to data URI for inline playback
+        try {
+            return $this->toDataUri();
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**
@@ -109,6 +137,15 @@ class AudioResponse
      */
     public function base64(): string
     {
+        // Try to get base64 directly from the audio object first
+        if (is_object($this->audio) && method_exists($this->audio, 'base64')) {
+            $b64 = $this->audio->base64();
+            if ($b64) {
+                return $b64;
+            }
+        }
+
+        // Fall back to encoding from raw data
         return base64_encode($this->data());
     }
 
@@ -117,17 +154,31 @@ class AudioResponse
      */
     public function data(): string
     {
-        if (is_object($this->response)) {
-            if (method_exists($this->response, 'audio')) {
-                return $this->response->audio();
+        if (is_object($this->audio)) {
+            // Try rawContent method first (Prism GeneratedAudio extends Media)
+            if (method_exists($this->audio, 'rawContent')) {
+                $content = $this->audio->rawContent();
+                if ($content) {
+                    return $content;
+                }
             }
-            if (property_exists($this->response, 'audio')) {
-                return $this->response->audio;
+
+            // Try base64 decoding
+            if (method_exists($this->audio, 'base64')) {
+                $b64 = $this->audio->base64();
+                if ($b64) {
+                    return base64_decode($b64);
+                }
+            }
+
+            // Try direct base64 property
+            if (property_exists($this->audio, 'base64') && $this->audio->base64) {
+                return base64_decode($this->audio->base64);
             }
         }
 
-        if (isset($this->response['audio'])) {
-            return $this->response['audio'];
+        if (is_array($this->audio) && isset($this->audio['audio'])) {
+            return $this->audio['audio'];
         }
 
         throw new \RuntimeException('No audio data available');
