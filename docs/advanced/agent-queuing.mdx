@@ -1,7 +1,585 @@
 ---
 title: "Agent Queuing"
-description: "Queue agents for background and async processing"
+description: "Queue agents for background and async processing with Laravel queues"
 icon: "list-check"
 ---
 
-Coming soon...
+## What is Agent Queuing?
+
+Agent Queuing allows you to execute AI agents asynchronously using Laravel's queue system. This is useful for long-running tasks, background processing, and scenarios where you don't need immediate responses.
+
+<CardGroup cols={2}>
+  <Card title="Background Processing" icon="clock">
+    Run LLM agents and media generation in the background without blocking requests
+  </Card>
+  <Card title="Laravel Integration" icon="plug">
+    Uses Laravel's native queue system - works with any queue driver (Redis, SQS, database, etc.)
+  </Card>
+  <Card title="Retry & Timeout" icon="rotate">
+    Built-in retry logic and configurable timeouts for reliable execution
+  </Card>
+  <Card title="Event-Driven" icon="bell">
+    Dispatches events on completion and failure for easy integration
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+### LLM Agent Queuing
+
+```php
+use App\Agents\MyAgent;
+
+// Queue an agent for background processing
+$result = MyAgent::ask('Analyze this large dataset...')
+    ->onQueue('agents')
+    ->go();
+
+// Returns immediately with job info
+// [
+//     'job_dispatched' => true,
+//     'job_id' => 'uuid-here',
+//     'queue' => 'agents',
+//     'agent' => 'my_agent'
+// ]
+```
+
+### Media Agent Queuing
+
+```php
+use Vizra\VizraADK\Agents\ImageAgent;
+
+// Queue image generation
+$result = ImageAgent::run('A futuristic cityscape')
+    ->onQueue('media')
+    ->then(fn($image) => $image->storeAs('cityscape.png'))
+    ->go();
+
+// [
+//     'job_dispatched' => true,
+//     'job_id' => 'uuid-here',
+//     'queue' => 'media',
+//     'agent' => 'image_agent',
+//     'prompt' => 'A futuristic cityscape'
+// ]
+```
+
+<Tip>
+When you specify a queue with `onQueue()`, async mode is automatically enabled - no need to call `async()` separately.
+</Tip>
+
+## LLM Agent Queuing
+
+LLM agents can be queued using the fluent executor API. This is useful for tasks that may take a while to complete, such as complex analysis or multi-step reasoning.
+
+### Enabling Async Execution
+
+```php
+// Method 1: Enable async mode explicitly
+MyAgent::ask('Process this...')
+    ->async()
+    ->go();
+
+// Method 2: Specify a queue (auto-enables async)
+MyAgent::ask('Process this...')
+    ->onQueue('agents')
+    ->go();
+```
+
+### Queue Configuration Options
+
+| Method | Description | Default |
+|--------|-------------|---------|
+| `async(bool $enabled = true)` | Enable/disable async execution | `false` |
+| `onQueue(string $queue)` | Specify queue name (auto-enables async) | `'default'` |
+| `delay(int $seconds)` | Delay job execution | `null` |
+| `tries(int $tries)` | Number of retry attempts | `3` |
+| `timeout(int $seconds)` | Job timeout in seconds | `300` (5 min) |
+
+### Complete LLM Agent Example
+
+```php
+use App\Agents\AnalysisAgent;
+
+$result = AnalysisAgent::ask('Analyze the quarterly sales data and generate insights')
+    ->forUser($user)                    // Associate with user
+    ->withSession('analysis-session')   // Track with session ID
+    ->withContext([                     // Add extra context
+        'report_type' => 'quarterly',
+        'department' => 'sales',
+    ])
+    ->onQueue('analysis')               // Use specific queue
+    ->delay(30)                         // Wait 30 seconds before processing
+    ->tries(5)                          // Retry up to 5 times
+    ->timeout(600)                      // 10-minute timeout
+    ->go();
+
+// Store the job ID for tracking
+$jobId = $result['job_id'];
+```
+
+## Media Agent Queuing
+
+Media agents (ImageAgent, AudioAgent) support the same queuing options plus additional features like post-generation callbacks and auto-storage.
+
+### Queue Configuration Options
+
+| Method | Description | Default |
+|--------|-------------|---------|
+| `async(bool $enabled = true)` | Enable/disable async execution | `false` |
+| `onQueue(string $queue)` | Specify queue name (auto-enables async) | `'default'` |
+| `delay(int $seconds)` | Delay job execution | `null` |
+| `tries(int $tries)` | Number of retry attempts | `3` |
+| `timeout(int $seconds)` | Job timeout in seconds | `120` (2 min) |
+| `then(Closure $callback)` | Post-generation callback | `null` |
+| `store(?string $disk)` | Auto-store with generated filename | - |
+| `storeAs(string $filename, ?string $disk)` | Auto-store with specific filename | - |
+
+### Post-Generation Callbacks
+
+Use the `then()` method to execute code after generation completes:
+
+```php
+use Vizra\VizraADK\Agents\ImageAgent;
+
+ImageAgent::run('A product photo of a leather bag')
+    ->onQueue('media')
+    ->then(function ($image) {
+        // Store the image
+        $image->storeAs('products/leather-bag.png');
+
+        // Update database
+        Product::find(123)->update([
+            'image_path' => $image->path(),
+        ]);
+
+        // Send notification
+        Notification::send($user, new ImageReady($image));
+    })
+    ->go();
+```
+
+<Warning>
+The `then()` callback must be serializable for queue processing. Avoid using `$this` or non-serializable objects inside the closure.
+</Warning>
+
+### Auto-Storage Options
+
+Configure automatic storage directly in the fluent chain:
+
+```php
+// Store with auto-generated filename (ULID)
+ImageAgent::run('A landscape photo')
+    ->onQueue('media')
+    ->store()
+    ->go();
+
+// Store with specific filename
+ImageAgent::run('A portrait photo')
+    ->onQueue('media')
+    ->storeAs('portraits/user-avatar.png')
+    ->go();
+
+// Store to a specific disk
+ImageAgent::run('A banner image')
+    ->onQueue('media')
+    ->storeAs('banners/hero.png', 's3')
+    ->go();
+```
+
+### Complete Media Agent Example
+
+```php
+use Vizra\VizraADK\Agents\ImageAgent;
+
+$result = ImageAgent::run('Professional headshot of a business executive')
+    ->forUser($user)
+    ->withSession('avatar-generation')
+    ->using('openai', 'dall-e-3')
+    ->size('1024x1024')
+    ->quality('hd')
+    ->style('natural')
+    ->onQueue('media')
+    ->delay(5)
+    ->tries(3)
+    ->timeout(180)
+    ->then(function ($image) use ($user) {
+        $image->storeAs("avatars/{$user->id}.png");
+
+        $user->update(['avatar_path' => $image->path()]);
+    })
+    ->go();
+```
+
+## Job Response & Tracking
+
+When you dispatch an agent to a queue, you receive an immediate response with job information:
+
+### LLM Agent Response
+
+```php
+$result = MyAgent::ask('...')->onQueue('agents')->go();
+
+// Returns:
+[
+    'job_dispatched' => true,
+    'job_id' => '550e8400-e29b-41d4-a716-446655440000',
+    'queue' => 'agents',
+    'agent' => 'my_agent'
+]
+```
+
+### Media Agent Response
+
+```php
+$result = ImageAgent::run('...')->onQueue('media')->go();
+
+// Returns:
+[
+    'job_dispatched' => true,
+    'job_id' => '550e8400-e29b-41d4-a716-446655440000',
+    'queue' => 'media',
+    'agent' => 'image_agent',
+    'prompt' => 'The original prompt...'
+]
+```
+
+### Retrieving Results from Cache
+
+Job results are automatically cached for retrieval:
+
+```php
+// LLM Agent results (cached for 1 hour)
+$result = cache()->get("agent_job_result:{$jobId}");
+$meta = cache()->get("agent_job_meta:{$jobId}");
+
+// Media Agent results (cached for 1 hour)
+$mediaResult = cache()->get("media_job_result:{$jobId}");
+
+// Check for failures (cached for 24 hours)
+$failure = cache()->get("agent_job_failure:{$jobId}");
+$mediaFailure = cache()->get("media_job_failure:{$jobId}");
+```
+
+### Cache Key Reference
+
+| Cache Key | TTL | Description |
+|-----------|-----|-------------|
+| `agent_job_result:{jobId}` | 1 hour | LLM agent execution result |
+| `agent_job_meta:{jobId}` | 1 hour | LLM agent job metadata |
+| `media_job_result:{jobId}` | 1 hour | Media generation result with URLs/paths |
+| `agent_job_failure:{jobId}` | 24 hours | LLM agent failure info |
+| `media_job_failure:{jobId}` | 24 hours | Media generation failure info |
+
+## Events
+
+The queuing system dispatches events on job completion and failure, allowing you to react to agent execution status.
+
+### LLM Agent Events
+
+| Event | Description |
+|-------|-------------|
+| `agent.job.completed` | Fired when any agent job completes successfully |
+| `agent.{name}.completed` | Agent-specific completion event (e.g., `agent.my_agent.completed`) |
+| `agent.job.failed` | Fired when any agent job permanently fails |
+
+### Media Agent Events
+
+| Event | Description |
+|-------|-------------|
+| `media.job.completed` | Fired when any media job completes successfully |
+| `media.{name}.completed` | Agent-specific completion event (e.g., `media.image_agent.completed`) |
+| `media.job.failed` | Fired when any media job permanently fails |
+
+### Event Listener Examples
+
+```php
+use Illuminate\Support\Facades\Event;
+
+// Listen for all agent job completions
+Event::listen('agent.job.completed', function (array $data) {
+    Log::info('Agent job completed', [
+        'job_id' => $data['job_id'],
+        'agent_class' => $data['agent_class'],
+        'result' => $data['result'],
+    ]);
+});
+
+// Listen for a specific agent
+Event::listen('agent.analysis_agent.completed', function (array $data) {
+    $result = $data['result'];
+    $sessionId = $data['session_id'];
+
+    // Process the analysis result
+    ProcessAnalysisResult::dispatch($result, $sessionId);
+});
+
+// Listen for media generation completion
+Event::listen('media.image_agent.completed', function (array $data) {
+    $response = $data['response'];
+    $jobId = $data['job_id'];
+
+    Log::info("Image generated: " . $response->url());
+});
+
+// Handle failures
+Event::listen('agent.job.failed', function (array $data) {
+    Log::error('Agent job failed', [
+        'job_id' => $data['job_id'],
+        'agent_class' => $data['agent_class'],
+        'error' => $data['error'],
+    ]);
+
+    // Notify admin or trigger alerting
+    Notification::route('slack', config('services.slack.webhook'))
+        ->notify(new AgentJobFailed($data));
+});
+```
+
+<Info>
+Event payloads include the `job_id`, `agent_class`, `session_id`, and the full `result` or `response` object. Use these to update your database, send notifications, or trigger follow-up actions.
+</Info>
+
+## Job Tagging
+
+Jobs are automatically tagged for easy filtering and monitoring with tools like Laravel Horizon.
+
+### LLM Agent Tags
+
+```php
+// Tags applied to AgentJob
+[
+    'vizra:{agent_name}',    // e.g., 'vizra:my_agent'
+    'session:{session_id}'   // e.g., 'session:user_123_abc'
+]
+```
+
+### Media Agent Tags
+
+```php
+// Tags applied to MediaGenerationJob
+[
+    'vizra:media',
+    'vizra:{agent_name}',    // e.g., 'vizra:image_agent'
+    'session:{session_id}'
+]
+```
+
+### Viewing Tags in Horizon
+
+If you're using Laravel Horizon, you can filter jobs by these tags:
+
+```php
+// In your Horizon config, jobs will appear with tags like:
+// vizra:my_agent, session:user_123_abc
+
+// Search for all jobs from a specific agent
+// Filter: vizra:analysis_agent
+
+// Search for all media generation jobs
+// Filter: vizra:media
+```
+
+## Configuration & Prerequisites
+
+### Queue Driver Configuration
+
+Agent queuing uses Laravel's standard queue system. Configure your preferred driver in `.env`:
+
+```env
+QUEUE_CONNECTION=redis
+```
+
+Supported drivers include `redis`, `database`, `sqs`, `beanstalkd`, and others.
+
+### Running Queue Workers
+
+Process queued jobs with Laravel's queue worker:
+
+```bash
+# Process all queues
+php artisan queue:work
+
+# Process specific queue
+php artisan queue:work --queue=agents
+
+# Process multiple queues with priority
+php artisan queue:work --queue=agents,media,default
+
+# With Horizon (recommended for production)
+php artisan horizon
+```
+
+### Supervisor Configuration
+
+For production, use Supervisor to keep queue workers running:
+
+```ini
+[program:agent-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path/to/artisan queue:work --queue=agents,media --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+numprocs=4
+redirect_stderr=true
+stdout_logfile=/path/to/logs/agent-worker.log
+```
+
+### Horizon Configuration
+
+For advanced monitoring and management, use Laravel Horizon:
+
+```php config/horizon.php
+'environments' => [
+    'production' => [
+        'agent-workers' => [
+            'connection' => 'redis',
+            'queue' => ['agents', 'media'],
+            'balance' => 'auto',
+            'processes' => 4,
+            'tries' => 3,
+            'timeout' => 600,
+        ],
+    ],
+],
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Dedicated Queues" icon="layer-group">
+    Separate agent and media jobs from other application jobs using dedicated queues
+  </Card>
+  <Card title="Set Appropriate Timeouts" icon="clock">
+    LLM tasks may need longer timeouts (5-10 min), while media generation is typically faster (2 min)
+  </Card>
+  <Card title="Monitor with Horizon" icon="chart-line">
+    Use Laravel Horizon for real-time monitoring, metrics, and job management
+  </Card>
+  <Card title="Handle Failures" icon="triangle-exclamation">
+    Always listen for failure events and implement appropriate error handling
+  </Card>
+</CardGroup>
+
+### Recommended Queue Structure
+
+```php
+// Separate queues by workload type
+->onQueue('agents')      // For LLM agents
+->onQueue('media')       // For image/audio generation
+->onQueue('analysis')    // For long-running analysis tasks
+```
+
+### Timeout Guidelines
+
+| Task Type | Recommended Timeout |
+|-----------|---------------------|
+| Simple LLM queries | 60-120 seconds |
+| Complex reasoning/analysis | 300-600 seconds |
+| Image generation | 120 seconds |
+| Audio generation | 180 seconds |
+| Multi-step workflows | 600+ seconds |
+
+## Complete Examples
+
+### Background Report Generation
+
+```php
+use App\Agents\ReportAgent;
+use App\Models\Report;
+
+class ReportController extends Controller
+{
+    public function generate(Request $request)
+    {
+        $report = Report::create([
+            'user_id' => $request->user()->id,
+            'status' => 'processing',
+            'type' => $request->input('type'),
+        ]);
+
+        $result = ReportAgent::ask("Generate a {$request->input('type')} report")
+            ->forUser($request->user())
+            ->withSession("report-{$report->id}")
+            ->withContext([
+                'report_id' => $report->id,
+                'date_range' => $request->input('date_range'),
+            ])
+            ->onQueue('reports')
+            ->timeout(600)
+            ->go();
+
+        $report->update(['job_id' => $result['job_id']]);
+
+        return response()->json([
+            'message' => 'Report generation started',
+            'report_id' => $report->id,
+            'job_id' => $result['job_id'],
+        ]);
+    }
+}
+
+// Event listener for completion
+Event::listen('agent.report_agent.completed', function ($data) {
+    $sessionId = $data['session_id']; // 'report-123'
+    $reportId = str_replace('report-', '', $sessionId);
+
+    Report::find($reportId)->update([
+        'status' => 'completed',
+        'content' => $data['result'],
+    ]);
+});
+```
+
+### Batch Image Generation
+
+```php
+use Vizra\VizraADK\Agents\ImageAgent;
+
+class ProductImageController extends Controller
+{
+    public function generateBatch(Request $request)
+    {
+        $products = Product::whereNull('image_path')->get();
+        $jobs = [];
+
+        foreach ($products as $product) {
+            $result = ImageAgent::run("Product photo of: {$product->name}")
+                ->forUser($request->user())
+                ->withSession("product-{$product->id}")
+                ->using('openai', 'dall-e-3')
+                ->square()
+                ->hd()
+                ->style('natural')
+                ->onQueue('media')
+                ->then(function ($image) use ($product) {
+                    $path = "products/{$product->id}.png";
+                    $image->storeAs($path);
+                    $product->update(['image_path' => $path]);
+                })
+                ->go();
+
+            $jobs[] = [
+                'product_id' => $product->id,
+                'job_id' => $result['job_id'],
+            ];
+        }
+
+        return response()->json([
+            'message' => count($jobs) . ' image generation jobs queued',
+            'jobs' => $jobs,
+        ]);
+    }
+}
+```
+
+<CardGroup cols={2}>
+  <Card title="Image Agent" icon="image" href="/agents/image-agent">
+    Learn about ImageAgent and its queuing features
+  </Card>
+  <Card title="Audio Agent" icon="volume-high" href="/agents/audio-agent">
+    Learn about AudioAgent and speech generation
+  </Card>
+</CardGroup>

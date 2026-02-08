@@ -4,4 +4,465 @@ description: "Generate speech and audio with the AudioAgent"
 icon: "volume-high"
 ---
 
-Coming soon...
+The `AudioAgent` provides text-to-speech (TTS) capabilities using AI models through Prism PHP. Convert any text into natural-sounding speech with multiple voice options and audio formats.
+
+## Quick Start
+
+Generate speech from text with just a few lines of code:
+
+```php
+use Vizra\VizraADK\Agents\AudioAgent;
+
+// Simple TTS generation
+$audio = AudioAgent::run('Welcome to our application')->go();
+
+// Save the audio
+$audio->storeAs('welcome.mp3');
+
+// Get the URL
+$url = $audio->url();
+```
+
+## Voice Selection
+
+Choose from six distinct AI voices, each with their own character:
+
+```php
+// Using the voice() method
+$audio = AudioAgent::run('Hello world')
+    ->voice('nova')
+    ->go();
+
+// Using voice preset methods
+$audio = AudioAgent::run('Hello world')
+    ->shimmer()
+    ->go();
+```
+
+### Available Voices
+
+| Voice | Description |
+|-------|-------------|
+| `alloy` | Balanced, neutral voice (default) |
+| `echo` | Warm, conversational tone |
+| `fable` | Expressive, storytelling style |
+| `onyx` | Deep, authoritative voice |
+| `nova` | Friendly, energetic delivery |
+| `shimmer` | Clear, professional sound |
+
+<Tip>
+Each voice has a shortcut method: `alloy()`, `echo()`, `fable()`, `onyx()`, `nova()`, `shimmer()`.
+</Tip>
+
+## Audio Formats
+
+Select your preferred output format based on your use case:
+
+```php
+$audio = AudioAgent::run('Your order has been confirmed')
+    ->format('wav')
+    ->go();
+```
+
+### Supported Formats
+
+| Format | Use Case |
+|--------|----------|
+| `mp3` | Web playback, general use (default) |
+| `wav` | High quality, editing workflows |
+| `opus` | Streaming, low latency |
+| `aac` | iOS/Safari compatibility |
+| `flac` | Lossless archival |
+
+## Speech Speed
+
+Adjust the speaking rate between 0.25x and 4.0x:
+
+```php
+// Slower for accessibility
+$audio = AudioAgent::run('Important instructions')
+    ->speed(0.8)
+    ->go();
+
+// Faster for summaries
+$audio = AudioAgent::run('Quick recap of today')
+    ->speed(1.5)
+    ->go();
+```
+
+## Model Selection
+
+Override the default model for different quality/speed tradeoffs:
+
+```php
+// Use HD model for higher quality
+$audio = AudioAgent::run('Premium narration content')
+    ->using('openai', 'tts-1-hd')
+    ->go();
+
+// Use mini model for faster generation
+$audio = AudioAgent::run('Quick notification')
+    ->using('openai', 'gpt-4o-mini-tts')
+    ->go();
+```
+
+### Available Models
+
+| Model | Description |
+|-------|-------------|
+| `tts-1` | Standard quality, faster generation (default) |
+| `tts-1-hd` | Higher quality, slower generation |
+| `gpt-4o-mini-tts` | Latest model with enhanced capabilities |
+
+## Storage
+
+### Auto-store with Custom Filename
+
+```php
+$audio = AudioAgent::run('Welcome message')
+    ->voice('nova')
+    ->storeAs('welcome.mp3')
+    ->go();
+
+echo $audio->url();  // Returns the stored file URL
+echo $audio->path(); // Returns the storage path
+```
+
+### Auto-store with Generated Filename
+
+```php
+$audio = AudioAgent::run('Dynamic content')
+    ->store()
+    ->go();
+
+// File stored with ULID filename like: vizra-adk/generated/audio/01HXY...mp3
+```
+
+### Store to Specific Disk
+
+```php
+$audio = AudioAgent::run('Private audio')
+    ->storeAs('private/message.mp3', 's3')
+    ->go();
+```
+
+### Manual Storage
+
+```php
+$audio = AudioAgent::run('Hello world')->go();
+
+// Store with custom filename
+$audio->storeAs('greetings/hello.mp3');
+
+// Or auto-generate filename
+$audio->store();
+```
+
+## Working with AudioResponse
+
+The `AudioResponse` object provides methods to access and manipulate the generated audio:
+
+```php
+$audio = AudioAgent::run('Sample text')
+    ->nova()
+    ->format('mp3')
+    ->go();
+
+// Access audio data
+$audio->data();      // Raw binary audio data
+$audio->base64();    // Base64-encoded audio
+$audio->toDataUri(); // Data URI for embedding (data:audio/mpeg;base64,...)
+
+// Metadata
+$audio->text();      // Original input text
+$audio->voice();     // Voice used (e.g., 'nova')
+$audio->format();    // Format (e.g., 'mp3')
+$audio->mimeType();  // MIME type (e.g., 'audio/mpeg')
+$audio->metadata();  // Full metadata array
+
+// Storage status
+$audio->isStored();  // Check if audio was stored
+$audio->url();       // Get URL (stored or data URI)
+$audio->path();      // Get storage path
+$audio->disk();      // Get storage disk used
+```
+
+### Embedding in HTML
+
+```php
+$audio = AudioAgent::run('Play this message')->go();
+
+// Using data URI (no storage needed)
+$html = '<audio controls src="' . $audio->toDataUri() . '"></audio>';
+
+// Using stored URL
+$audio->store();
+$html = '<audio controls src="' . $audio->url() . '"></audio>';
+```
+
+## Async/Queued Generation
+
+For long-running generations or batch processing, use Laravel queues:
+
+```php
+// Basic async generation
+AudioAgent::run('Long article content here...')
+    ->onQueue('media')
+    ->go();
+
+// With callback after completion
+AudioAgent::run('Order confirmation for order #12345')
+    ->shimmer()
+    ->format('mp3')
+    ->onQueue('media')
+    ->then(function ($audio) {
+        $audio->storeAs('confirmations/order-12345.mp3');
+
+        // Send notification, update database, etc.
+        Notification::send($user, new AudioReadyNotification($audio->url()));
+    })
+    ->go();
+```
+
+### Queue Options
+
+```php
+AudioAgent::run('Background audio task')
+    ->onQueue('media')        // Specify queue name
+    ->delay(60)               // Delay in seconds
+    ->tries(5)                // Retry attempts
+    ->timeout(180)            // Timeout in seconds
+    ->then(fn($audio) => $audio->store())
+    ->go();
+```
+
+### Async Return Value
+
+When using async mode, `go()` returns job information instead of the audio:
+
+```php
+$result = AudioAgent::run('Async generation')
+    ->onQueue('media')
+    ->go();
+
+// $result contains:
+// [
+//     'job_dispatched' => true,
+//     'job_id' => 'uuid-string',
+//     'queue' => 'media',
+//     'agent' => 'audio_agent',
+//     'prompt' => 'Async generation',
+// ]
+```
+
+## User Context
+
+Associate audio generation with a user for tracking and personalization:
+
+```php
+AudioAgent::run('Personal greeting')
+    ->forUser($user)
+    ->withSession('session-123')
+    ->go();
+```
+
+## Sub-agent Delegation
+
+Allow your LLM agents to generate audio by delegating to the AudioAgent:
+
+```php
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Tools\DelegateToMediaAgentTool;
+
+class AssistantAgent extends BaseLlmAgent
+{
+    protected string $name = 'assistant';
+
+    protected string $instructions = <<<'PROMPT'
+        You are a helpful assistant. When the user asks you to
+        read something aloud or create audio, use the generate_audio
+        tool to convert text to speech.
+    PROMPT;
+
+    protected array $tools = [
+        DelegateToMediaAgentTool::class,
+    ];
+
+    protected array $mediaAgents = [
+        \Vizra\VizraADK\Agents\AudioAgent::class,
+    ];
+}
+```
+
+Or create the tool directly:
+
+```php
+use Vizra\VizraADK\Tools\DelegateToMediaAgentTool;
+
+class NarratorAgent extends BaseLlmAgent
+{
+    protected function tools(): array
+    {
+        return [
+            DelegateToMediaAgentTool::forAudio(),
+        ];
+    }
+}
+```
+
+When the LLM calls the `generate_audio` tool, it can specify:
+- `text` (required): The text to convert to speech
+- `voice` (optional): Voice selection
+- `format` (optional): Output format
+
+## Configuration
+
+### Environment Variables
+
+```env
+# Provider and model
+VIZRA_ADK_AUDIO_PROVIDER=openai
+VIZRA_ADK_AUDIO_MODEL=tts-1
+
+# Defaults
+VIZRA_ADK_AUDIO_VOICE=alloy
+VIZRA_ADK_AUDIO_FORMAT=mp3
+VIZRA_ADK_AUDIO_SPEED=1.0
+```
+
+### Config File
+
+In `config/vizra-adk.php`:
+
+```php
+'media' => [
+    'audio' => [
+        'provider' => env('VIZRA_ADK_AUDIO_PROVIDER', 'openai'),
+        'model' => env('VIZRA_ADK_AUDIO_MODEL', 'tts-1'),
+        'default_voice' => env('VIZRA_ADK_AUDIO_VOICE', 'alloy'),
+        'default_format' => env('VIZRA_ADK_AUDIO_FORMAT', 'mp3'),
+        'default_speed' => env('VIZRA_ADK_AUDIO_SPEED', 1.0),
+    ],
+
+    'storage' => [
+        'disk' => env('VIZRA_ADK_MEDIA_DISK', 'public'),
+        'path' => env('VIZRA_ADK_MEDIA_PATH', 'vizra-adk/generated'),
+    ],
+],
+```
+
+## Complete Example
+
+Here's a comprehensive example showing common patterns:
+
+```php
+use Vizra\VizraADK\Agents\AudioAgent;
+
+class PodcastService
+{
+    public function generateIntro(string $episodeTitle): string
+    {
+        $text = "Welcome to today's episode: {$episodeTitle}";
+
+        $audio = AudioAgent::run($text)
+            ->using('openai', 'tts-1-hd')
+            ->nova()
+            ->format('mp3')
+            ->speed(1.0)
+            ->storeAs("podcasts/intros/{$this->slug($episodeTitle)}.mp3")
+            ->go();
+
+        return $audio->url();
+    }
+
+    public function generateChapterAudio(array $chapters): void
+    {
+        foreach ($chapters as $index => $chapter) {
+            AudioAgent::run($chapter['content'])
+                ->onyx()
+                ->format('mp3')
+                ->onQueue('podcast-generation')
+                ->then(function ($audio) use ($chapter) {
+                    $audio->storeAs("chapters/{$chapter['id']}.mp3");
+
+                    Chapter::find($chapter['id'])->update([
+                        'audio_url' => $audio->url(),
+                        'audio_generated_at' => now(),
+                    ]);
+                })
+                ->go();
+        }
+    }
+}
+```
+
+## Error Handling
+
+```php
+try {
+    $audio = AudioAgent::run('Generate this audio')
+        ->nova()
+        ->go();
+
+    $audio->store();
+
+} catch (\Exception $e) {
+    Log::error('Audio generation failed', [
+        'error' => $e->getMessage(),
+    ]);
+}
+```
+
+## API Reference
+
+### AudioAgent Methods
+
+| Method | Description |
+|--------|-------------|
+| `run(string $text)` | Static method to start fluent chain |
+| `execute($input, $context)` | Direct execution with context |
+| `toToolDefinition()` | Get tool schema for sub-agent use |
+| `executeFromToolCall($args, $context)` | Execute from LLM tool call |
+
+### MediaAgentExecutor Methods (Fluent Chain)
+
+| Method | Description |
+|--------|-------------|
+| `voice(string $voice)` | Set voice |
+| `format(string $format)` | Set output format |
+| `speed(float $speed)` | Set speech speed (0.25-4.0) |
+| `alloy()`, `echo()`, etc. | Voice presets |
+| `using(string $provider, string $model)` | Override provider/model |
+| `forUser(Model $user)` | Set user context |
+| `withSession(string $id)` | Set session ID |
+| `withContext(array $context)` | Add context data |
+| `store(?string $path, ?string $disk)` | Auto-store with path |
+| `storeAs(string $filename, ?string $disk)` | Auto-store with filename |
+| `onQueue(string $queue)` | Enable async on queue |
+| `delay(int $seconds)` | Delay queue execution |
+| `tries(int $count)` | Set retry attempts |
+| `timeout(int $seconds)` | Set timeout |
+| `then(Closure $callback)` | Callback after completion |
+| `go()` | Execute and return result |
+
+### AudioResponse Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `data()` | `string` | Raw binary audio |
+| `base64()` | `string` | Base64-encoded audio |
+| `toDataUri()` | `string` | Data URI for embedding |
+| `text()` | `string` | Original input text |
+| `voice()` | `string` | Voice used |
+| `format()` | `string` | Audio format |
+| `mimeType()` | `string` | MIME type |
+| `metadata()` | `array` | Full metadata |
+| `store(?string $disk)` | `static` | Store with auto filename |
+| `storeAs(string $filename, ?string $disk)` | `static` | Store with custom filename |
+| `url()` | `?string` | Get URL |
+| `path()` | `?string` | Get storage path |
+| `disk()` | `?string` | Get storage disk |
+| `isStored()` | `bool` | Check if stored |
+| `raw()` | `mixed` | Get raw Prism response |
+| `toArray()` | `array` | Convert to array |
+| `toJson()` | `string` | Convert to JSON |

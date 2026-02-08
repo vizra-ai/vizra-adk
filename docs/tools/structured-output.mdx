@@ -1,7 +1,604 @@
 ---
 title: "Structured Output"
-description: "Get typed, validated responses with automatic retry"
+description: "Get typed, validated responses from your agents with automatic schema enforcement"
 icon: "brackets-curly"
 ---
 
-Coming soon...
+## What Is Structured Output?
+
+Structured output lets you define exactly how you want your AI responses formatted. Instead of parsing free-form text, you get clean, predictable data structures that are ready to use in your application.
+
+<CardGroup cols={2}>
+  <Card title="Type-Safe Responses" icon="shield-check">
+    Define schemas and get responses that match your expected structure
+  </Card>
+  <Card title="No Parsing Required" icon="wand-magic-sparkles">
+    Skip the regex and string parsing - data comes pre-formatted
+  </Card>
+  <Card title="Provider Validation" icon="check-double">
+    Providers like OpenAI enforce schema compliance at generation time
+  </Card>
+  <Card title="Works With Tools" icon="screwdriver-wrench">
+    Combine structured output with tool calls for powerful workflows
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+To enable structured output, override the `getSchema()` method in your agent:
+
+```php app/Agents/MovieReviewAgent.php
+<?php
+
+namespace App\Agents;
+
+use Prism\Prism\Contracts\Schema;
+use Prism\Prism\Schema\ObjectSchema;
+use Prism\Prism\Schema\StringSchema;
+use Prism\Prism\Schema\NumberSchema;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+
+class MovieReviewAgent extends BaseLlmAgent
+{
+    protected string $name = 'movie_review_agent';
+    protected string $description = 'Generates structured movie reviews';
+    protected string $instructions = 'You are a movie critic. Analyze films and provide detailed reviews.';
+    protected string $model = 'gpt-4o';
+
+    public function getSchema(): ?Schema
+    {
+        return new ObjectSchema(
+            name: 'movie_review',
+            description: 'A structured movie review',
+            properties: [
+                new StringSchema('title', 'The movie title'),
+                new NumberSchema('rating', 'Rating from 1 to 10'),
+                new StringSchema('summary', 'Brief review summary'),
+                new StringSchema('recommendation', 'Who should watch this movie'),
+            ],
+            requiredFields: ['title', 'rating', 'summary', 'recommendation']
+        );
+    }
+}
+```
+
+When you run this agent, instead of free-form text you'll get structured data:
+
+```php Using the Structured Agent
+$agent = app(MovieReviewAgent::class);
+$response = $agent->run('Review the movie Inception', $context);
+
+// The response text contains the JSON, but you can also access it structured
+// via the underlying Prism response when using afterLlmResponse hook
+```
+
+## Available Schema Types
+
+Vizra ADK uses Prism PHP's schema system. Here are all available types:
+
+### StringSchema
+
+For text values of any length.
+
+```php
+use Prism\Prism\Schema\StringSchema;
+
+new StringSchema(
+    name: 'description',
+    description: 'A detailed product description'
+)
+```
+
+### NumberSchema
+
+For integers and floating-point numbers.
+
+```php
+use Prism\Prism\Schema\NumberSchema;
+
+new NumberSchema(
+    name: 'price',
+    description: 'Product price in USD'
+)
+```
+
+### BooleanSchema
+
+For true/false values.
+
+```php
+use Prism\Prism\Schema\BooleanSchema;
+
+new BooleanSchema(
+    name: 'in_stock',
+    description: 'Whether the product is available'
+)
+```
+
+### EnumSchema
+
+For values restricted to a specific set of options.
+
+```php
+use Prism\Prism\Schema\EnumSchema;
+
+new EnumSchema(
+    name: 'priority',
+    description: 'Task priority level',
+    options: ['low', 'medium', 'high', 'critical']
+)
+```
+
+### ArraySchema
+
+For lists of items following a specific schema.
+
+```php
+use Prism\Prism\Schema\ArraySchema;
+use Prism\Prism\Schema\StringSchema;
+
+new ArraySchema(
+    name: 'tags',
+    description: 'List of relevant tags',
+    items: new StringSchema('tag', 'A single tag')
+)
+```
+
+### ObjectSchema
+
+For complex nested structures. This should be your root schema.
+
+```php
+use Prism\Prism\Schema\ObjectSchema;
+use Prism\Prism\Schema\StringSchema;
+use Prism\Prism\Schema\NumberSchema;
+
+new ObjectSchema(
+    name: 'product',
+    description: 'Product information',
+    properties: [
+        new StringSchema('name', 'Product name'),
+        new NumberSchema('price', 'Price in USD'),
+        new StringSchema('category', 'Product category'),
+    ],
+    requiredFields: ['name', 'price']
+)
+```
+
+### AnyOfSchema
+
+For flexible data that can match one of several schemas.
+
+```php
+use Prism\Prism\Schema\AnyOfSchema;
+use Prism\Prism\Schema\StringSchema;
+use Prism\Prism\Schema\NumberSchema;
+
+new AnyOfSchema(
+    schemas: [
+        new StringSchema('text', 'A text value'),
+        new NumberSchema('number', 'A numeric value'),
+    ],
+    name: 'flexible_value',
+    description: 'Can be either text or a number'
+)
+```
+
+<Warning>
+**Provider Compatibility**: `AnyOfSchema` works with OpenAI and Gemini, but is not supported by Anthropic. Design alternative schema patterns when targeting Anthropic.
+</Warning>
+
+## Real-World Examples
+
+### Data Extraction Agent
+
+Extract structured data from unstructured text:
+
+```php app/Agents/ContactExtractorAgent.php
+<?php
+
+namespace App\Agents;
+
+use Prism\Prism\Contracts\Schema;
+use Prism\Prism\Schema\ArraySchema;
+use Prism\Prism\Schema\ObjectSchema;
+use Prism\Prism\Schema\StringSchema;
+use Prism\Prism\Schema\BooleanSchema;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+
+class ContactExtractorAgent extends BaseLlmAgent
+{
+    protected string $name = 'contact_extractor';
+    protected string $description = 'Extracts contact information from text';
+    protected string $instructions = 'Extract all contact information from the provided text. Be thorough but only include information explicitly mentioned.';
+    protected string $model = 'gpt-4o';
+
+    public function getSchema(): ?Schema
+    {
+        return new ObjectSchema(
+            name: 'extracted_contacts',
+            description: 'Extracted contact information',
+            properties: [
+                new ArraySchema(
+                    name: 'contacts',
+                    description: 'List of extracted contacts',
+                    items: new ObjectSchema(
+                        name: 'contact',
+                        description: 'A single contact',
+                        properties: [
+                            new StringSchema('name', 'Full name'),
+                            new StringSchema('email', 'Email address', nullable: true),
+                            new StringSchema('phone', 'Phone number', nullable: true),
+                            new StringSchema('company', 'Company name', nullable: true),
+                            new StringSchema('role', 'Job title or role', nullable: true),
+                        ],
+                        requiredFields: ['name', 'email', 'phone', 'company', 'role']
+                    )
+                ),
+                new NumberSchema('confidence', 'Confidence score from 0 to 1'),
+            ],
+            requiredFields: ['contacts', 'confidence']
+        );
+    }
+}
+```
+
+### Sentiment Analysis Agent
+
+Analyze text sentiment with detailed breakdown:
+
+```php app/Agents/SentimentAnalysisAgent.php
+<?php
+
+namespace App\Agents;
+
+use Prism\Prism\Contracts\Schema;
+use Prism\Prism\Schema\ArraySchema;
+use Prism\Prism\Schema\EnumSchema;
+use Prism\Prism\Schema\NumberSchema;
+use Prism\Prism\Schema\ObjectSchema;
+use Prism\Prism\Schema\StringSchema;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+
+class SentimentAnalysisAgent extends BaseLlmAgent
+{
+    protected string $name = 'sentiment_analysis';
+    protected string $description = 'Analyzes sentiment in text';
+    protected string $instructions = 'Analyze the sentiment of the provided text. Consider overall tone, specific aspects mentioned, and provide reasoning for your analysis.';
+    protected string $model = 'gpt-4o';
+
+    public function getSchema(): ?Schema
+    {
+        return new ObjectSchema(
+            name: 'sentiment_analysis',
+            description: 'Detailed sentiment analysis results',
+            properties: [
+                new EnumSchema(
+                    name: 'overall_sentiment',
+                    description: 'The overall sentiment',
+                    options: ['very_negative', 'negative', 'neutral', 'positive', 'very_positive']
+                ),
+                new NumberSchema('confidence', 'Confidence score from 0 to 1'),
+                new ArraySchema(
+                    name: 'aspects',
+                    description: 'Sentiment by aspect',
+                    items: new ObjectSchema(
+                        name: 'aspect',
+                        description: 'Sentiment for a specific aspect',
+                        properties: [
+                            new StringSchema('aspect', 'The aspect being analyzed'),
+                            new EnumSchema('sentiment', 'Sentiment for this aspect',
+                                options: ['negative', 'neutral', 'positive']
+                            ),
+                            new StringSchema('evidence', 'Quote or evidence from the text'),
+                        ],
+                        requiredFields: ['aspect', 'sentiment', 'evidence']
+                    )
+                ),
+                new StringSchema('reasoning', 'Explanation of the analysis'),
+            ],
+            requiredFields: ['overall_sentiment', 'confidence', 'aspects', 'reasoning']
+        );
+    }
+}
+```
+
+### Content Classification Agent
+
+Classify content into categories with tags:
+
+```php app/Agents/ContentClassifierAgent.php
+<?php
+
+namespace App\Agents;
+
+use Prism\Prism\Contracts\Schema;
+use Prism\Prism\Schema\ArraySchema;
+use Prism\Prism\Schema\BooleanSchema;
+use Prism\Prism\Schema\EnumSchema;
+use Prism\Prism\Schema\NumberSchema;
+use Prism\Prism\Schema\ObjectSchema;
+use Prism\Prism\Schema\StringSchema;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+
+class ContentClassifierAgent extends BaseLlmAgent
+{
+    protected string $name = 'content_classifier';
+    protected string $description = 'Classifies content into categories';
+    protected string $instructions = 'Classify the provided content. Determine its primary category, suggest relevant tags, and assess content quality.';
+    protected string $model = 'gpt-4o';
+
+    public function getSchema(): ?Schema
+    {
+        return new ObjectSchema(
+            name: 'classification',
+            description: 'Content classification results',
+            properties: [
+                new EnumSchema(
+                    name: 'primary_category',
+                    description: 'Main content category',
+                    options: ['technology', 'business', 'entertainment', 'science', 'health', 'sports', 'politics', 'other']
+                ),
+                new ArraySchema(
+                    name: 'tags',
+                    description: 'Relevant tags',
+                    items: new StringSchema('tag', 'A content tag')
+                ),
+                new ObjectSchema(
+                    name: 'quality_assessment',
+                    description: 'Content quality metrics',
+                    properties: [
+                        new NumberSchema('readability_score', 'Readability from 0 to 10'),
+                        new BooleanSchema('has_factual_claims', 'Contains factual claims'),
+                        new BooleanSchema('requires_verification', 'Needs fact-checking'),
+                    ],
+                    requiredFields: ['readability_score', 'has_factual_claims', 'requires_verification']
+                ),
+                new StringSchema('summary', 'Brief content summary'),
+            ],
+            requiredFields: ['primary_category', 'tags', 'quality_assessment', 'summary']
+        );
+    }
+}
+```
+
+## Nullable Fields
+
+Mark fields as nullable when they might not have a value:
+
+```php Nullable Fields
+new ObjectSchema(
+    name: 'user_profile',
+    description: 'User profile information',
+    properties: [
+        new StringSchema('name', 'User name'),
+        new StringSchema('email', 'Email address'),
+        new StringSchema('bio', 'User biography', nullable: true),
+        new StringSchema('website', 'Personal website', nullable: true),
+    ],
+    requiredFields: ['name', 'email', 'bio', 'website']
+)
+```
+
+<Info>
+**OpenAI Strict Mode**: When using OpenAI's strict mode, all fields must be listed in `requiredFields`. Use `nullable: true` to indicate optional fields that can have null values.
+</Info>
+
+## Nested Schemas
+
+For complex data structures, nest ObjectSchemas:
+
+```php Nested Schemas
+public function getSchema(): ?Schema
+{
+    $addressSchema = new ObjectSchema(
+        name: 'address',
+        description: 'Physical address',
+        properties: [
+            new StringSchema('street', 'Street address'),
+            new StringSchema('city', 'City name'),
+            new StringSchema('state', 'State or province'),
+            new StringSchema('postal_code', 'Postal/ZIP code'),
+            new StringSchema('country', 'Country name'),
+        ],
+        requiredFields: ['street', 'city', 'country']
+    );
+
+    return new ObjectSchema(
+        name: 'company',
+        description: 'Company information',
+        properties: [
+            new StringSchema('name', 'Company name'),
+            new StringSchema('industry', 'Industry sector'),
+            $addressSchema,  // Nested object
+            new ArraySchema(
+                name: 'locations',
+                description: 'Additional office locations',
+                items: $addressSchema  // Reuse the same schema
+            ),
+        ],
+        requiredFields: ['name', 'industry', 'address', 'locations']
+    );
+}
+```
+
+## Combining With Tools
+
+Structured output works seamlessly with tools. The agent can call tools to gather information, then return a structured response:
+
+```php app/Agents/WeatherReportAgent.php
+<?php
+
+namespace App\Agents;
+
+use App\Tools\GetWeatherTool;
+use App\Tools\GetForecastTool;
+use Prism\Prism\Contracts\Schema;
+use Prism\Prism\Schema\ArraySchema;
+use Prism\Prism\Schema\NumberSchema;
+use Prism\Prism\Schema\ObjectSchema;
+use Prism\Prism\Schema\StringSchema;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+
+class WeatherReportAgent extends BaseLlmAgent
+{
+    protected string $name = 'weather_report';
+    protected string $description = 'Generates structured weather reports';
+    protected string $instructions = 'Use the weather tools to gather data, then compile a structured weather report.';
+    protected string $model = 'gpt-4o';
+    protected int $maxSteps = 5;
+
+    protected array $tools = [
+        GetWeatherTool::class,
+        GetForecastTool::class,
+    ];
+
+    public function getSchema(): ?Schema
+    {
+        return new ObjectSchema(
+            name: 'weather_report',
+            description: 'Comprehensive weather report',
+            properties: [
+                new StringSchema('location', 'Location name'),
+                new ObjectSchema(
+                    name: 'current',
+                    description: 'Current conditions',
+                    properties: [
+                        new NumberSchema('temperature', 'Temperature in Fahrenheit'),
+                        new StringSchema('conditions', 'Weather conditions'),
+                        new NumberSchema('humidity', 'Humidity percentage'),
+                    ],
+                    requiredFields: ['temperature', 'conditions', 'humidity']
+                ),
+                new ArraySchema(
+                    name: 'forecast',
+                    description: '5-day forecast',
+                    items: new ObjectSchema(
+                        name: 'day',
+                        description: 'Daily forecast',
+                        properties: [
+                            new StringSchema('day', 'Day of week'),
+                            new NumberSchema('high', 'High temperature'),
+                            new NumberSchema('low', 'Low temperature'),
+                            new StringSchema('conditions', 'Expected conditions'),
+                        ],
+                        requiredFields: ['day', 'high', 'low', 'conditions']
+                    )
+                ),
+                new StringSchema('recommendation', 'Clothing/activity recommendation'),
+            ],
+            requiredFields: ['location', 'current', 'forecast', 'recommendation']
+        );
+    }
+}
+```
+
+<Tip>
+When using tools with structured output, set `$maxSteps` to at least 2. The agent needs multiple steps: one to call tools, and another to return the structured result.
+</Tip>
+
+## Provider Considerations
+
+Different providers have varying levels of structured output support:
+
+| Provider | Mode | Notes |
+|----------|------|-------|
+| OpenAI | Structured Mode | Native schema validation, supports strict mode |
+| Anthropic | JSON Mode | Uses tool calling internally, no native structured output |
+| Google Gemini | Structured Mode | Native JSON Schema support |
+
+### OpenAI Strict Mode
+
+Enable strict mode for tighter schema validation:
+
+```php OpenAI Strict Mode
+protected function buildPrismRequest(AgentContext $context, array $messages): TextPendingRequest|StructuredPendingRequest
+{
+    $request = parent::buildPrismRequest($context, $messages);
+
+    // Enable strict mode for OpenAI
+    return $request->withProviderOptions([
+        'schema' => [
+            'strict' => true
+        ]
+    ]);
+}
+```
+
+### Anthropic Tool Calling Mode
+
+For Anthropic, use tool calling mode for more reliable structured output:
+
+```php Anthropic Tool Calling
+protected function buildPrismRequest(AgentContext $context, array $messages): TextPendingRequest|StructuredPendingRequest
+{
+    $request = parent::buildPrismRequest($context, $messages);
+
+    // Use tool calling for more reliable parsing with Anthropic
+    return $request->withProviderOptions([
+        'use_tool_calling' => true
+    ]);
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use ObjectSchema as Root" icon="sitemap">
+    Always use ObjectSchema as your top-level schema. Providers like OpenAI require this in strict mode
+  </Card>
+  <Card title="Write Clear Descriptions" icon="pen">
+    Descriptive field descriptions help the LLM understand what data to provide
+  </Card>
+  <Card title="Mark Optional Fields Nullable" icon="circle-question">
+    Use `nullable: true` for fields that might not have values
+  </Card>
+  <Card title="Validate Responses" icon="shield">
+    Even with structured output, validate the response in your application
+  </Card>
+</CardGroup>
+
+<Warning>
+**Schema Limitations**: While structured output provides schema enforcement at generation time, it doesn't guarantee semantic correctness. Always validate that the data makes sense for your use case.
+</Warning>
+
+## API Reference
+
+### Schema Types
+
+| Schema | Purpose | Key Parameters |
+|--------|---------|----------------|
+| `StringSchema` | Text values | `name`, `description`, `nullable` |
+| `NumberSchema` | Numeric values | `name`, `description`, `nullable` |
+| `BooleanSchema` | True/false | `name`, `description`, `nullable` |
+| `EnumSchema` | Fixed options | `name`, `description`, `options`, `nullable` |
+| `ArraySchema` | Lists | `name`, `description`, `items`, `nullable` |
+| `ObjectSchema` | Complex objects | `name`, `description`, `properties`, `requiredFields`, `nullable` |
+| `AnyOfSchema` | Union types | `schemas`, `name`, `description`, `nullable` |
+
+### Agent Method
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `getSchema()` | `?Schema` | Override to return your schema. Return `null` for standard text output |
+
+### ObjectSchema Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `name` | `string` | Schema identifier |
+| `description` | `string` | Human-readable description |
+| `properties` | `array` | Array of child schemas |
+| `requiredFields` | `array` | Field names that must be present |
+| `nullable` | `bool` | Whether the entire object can be null |
+
+---
+
+<CardGroup cols={2}>
+  <Card title="Tools" icon="wrench" href="/tools/tools">
+    Learn how to create tools for your agents
+  </Card>
+  <Card title="Agents" icon="robot" href="/concepts/agents">
+    Understanding agent architecture
+  </Card>
+</CardGroup>

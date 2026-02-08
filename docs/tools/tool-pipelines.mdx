@@ -1,7 +1,815 @@
 ---
 title: "Tool Pipelines"
-description: "Chain tools together for sequential execution"
+description: "Chain tools together for powerful sequential execution with data transformation"
 icon: "diagram-project"
 ---
 
-Coming soon...
+## What Are Tool Pipelines?
+
+Tool Pipelines let you compose multiple tools into a sequential workflow where the output of one tool flows into the next. Think of it like Unix pipes for your AI tools - powerful, composable, and elegant!
+
+<CardGroup cols={2}>
+  <Card title="Sequential Execution" icon="arrow-right">
+    Tools execute in order, each building on the previous result
+  </Card>
+  <Card title="Data Transformation" icon="shuffle">
+    Transform data between steps with custom mappers
+  </Card>
+  <Card title="Conditional Logic" icon="code-branch">
+    Skip steps or branch based on intermediate results
+  </Card>
+  <Card title="Built-in Tracing" icon="timeline">
+    Automatic tracing for debugging and monitoring
+  </Card>
+</CardGroup>
+
+## Using Pipelines in Agents
+
+The most common way to use pipelines is within a tool that orchestrates other tools. This "composite tool" pattern lets you expose a single capability to your agent while handling complex multi-step logic internally.
+
+### Composite Tool Pattern
+
+Create a tool that chains multiple tools together:
+
+```php app/Tools/ProcessOrderTool.php
+<?php
+
+namespace App\Tools;
+
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\Tools\Chaining\ToolChain;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
+
+class ProcessOrderTool implements ToolInterface
+{
+    public function definition(): array
+    {
+        return [
+            'name' => 'process_order',
+            'description' => 'Validates, charges, and fulfills an order in one step',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'order_id' => [
+                        'type' => 'string',
+                        'description' => 'The order ID to process',
+                    ],
+                ],
+                'required' => ['order_id'],
+            ],
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
+    {
+        $result = ToolChain::create('process-order')
+            ->pipe(ValidateOrderTool::class)
+            ->transform(fn($result) => json_decode($result, true))
+            ->when(fn($data) => $data['valid'] === true)
+            ->pipe(ChargePaymentTool::class)
+            ->transform(fn($result) => json_decode($result, true))
+            ->pipe(FulfillOrderTool::class)
+            ->execute($arguments, $context, $memory);
+
+        if ($result->failed()) {
+            return json_encode([
+                'status' => 'error',
+                'message' => $result->getFirstError()?->getMessage(),
+            ]);
+        }
+
+        return json_encode([
+            'status' => 'success',
+            'result' => $result->value(),
+        ]);
+    }
+}
+```
+
+Then add it to your agent like any other tool:
+
+```php app/Agents/OrderAgent.php
+class OrderAgent extends BaseLlmAgent
+{
+    protected string $name = 'order_agent';
+    protected string $description = 'Handles order operations';
+
+    protected array $tools = [
+        ProcessOrderTool::class,  // The pipeline runs when the LLM calls this tool
+        CheckOrderStatusTool::class,
+        RefundOrderTool::class,
+    ];
+}
+```
+
+<Tip>
+The composite tool pattern keeps your agent's tool list clean while hiding complex orchestration logic. The LLM sees one simple tool, but behind the scenes a full pipeline executes.
+</Tip>
+
+### Pipeline in Agent Methods
+
+You can also use pipelines directly in custom agent methods:
+
+```php app/Agents/OnboardingAgent.php
+<?php
+
+namespace App\Agents;
+
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Tools\Chaining\ToolChain;
+
+class OnboardingAgent extends BaseLlmAgent
+{
+    protected string $name = 'onboarding_agent';
+
+    /**
+     * Run the full onboarding pipeline for a new user.
+     */
+    public function onboardUser(string $email): array
+    {
+        $result = ToolChain::create('user-onboarding')
+            ->pipe(CreateUserTool::class)
+            ->transform(fn($result) => json_decode($result, true))
+            ->pipe(SetupDefaultsTool::class)
+            ->pipe(SendWelcomeEmailTool::class)
+            ->tap(fn($result) => $this->memory->addFact("Onboarded user: {$email}"))
+            ->execute(
+                ['email' => $email],
+                $this->context,
+                $this->memory
+            );
+
+        return $result->toArray();
+    }
+}
+```
+
+## Creating Your First Pipeline
+
+Pipelines are created using the `ToolChain` class. Here's a simple example:
+
+```php Basic Pipeline
+use Vizra\VizraADK\Tools\Chaining\ToolChain;
+
+$result = ToolChain::create()
+    ->pipe(FetchUserTool::class)
+    ->pipe(EnrichUserTool::class)
+    ->pipe(ValidateUserTool::class)
+    ->execute(['user_id' => 123], $context, $memory);
+
+// Access the final result
+$userData = $result->value();
+```
+
+### Named Pipelines
+
+Give your pipeline a name for better debugging and tracing:
+
+```php Named Pipeline
+$result = ToolChain::create('user-onboarding')
+    ->pipe(CreateUserTool::class)
+    ->pipe(SendWelcomeEmailTool::class)
+    ->pipe(SetupDefaultsTool::class)
+    ->execute(['email' => 'user@example.com'], $context, $memory);
+
+// The name appears in traces and error messages
+echo $result->getChainName(); // "user-onboarding"
+```
+
+## Step Types
+
+Pipelines support four types of steps, each serving a specific purpose.
+
+### pipe() - Execute Tools
+
+The `pipe()` method adds a tool to the pipeline. Each tool receives the output from the previous step:
+
+```php Using pipe()
+ToolChain::create()
+    ->pipe(FetchOrderTool::class)
+    ->pipe(CalculateTaxTool::class)
+    ->pipe(ProcessPaymentTool::class)
+    ->execute(['order_id' => 'ORD-123'], $context, $memory);
+```
+
+You can pass a tool class name or an instance:
+
+```php Tool Instance
+$customTool = new MyTool($dependency);
+
+ToolChain::create()
+    ->pipe($customTool)
+    ->pipe(AnotherTool::class)
+    ->execute($args, $context, $memory);
+```
+
+### transform() - Transform Data
+
+Use `transform()` to modify data between tools without executing a full tool:
+
+```php Using transform()
+ToolChain::create()
+    ->pipe(FetchUserTool::class)
+    ->transform(fn($result) => json_decode($result, true))
+    ->transform(fn($data) => [
+        'user_id' => $data['id'],
+        'full_name' => $data['first_name'] . ' ' . $data['last_name'],
+    ])
+    ->pipe(CreateProfileTool::class)
+    ->execute(['user_id' => 123], $context, $memory);
+```
+
+<Tip>
+Transforms are perfect for reshaping data, extracting specific fields, or converting between formats.
+</Tip>
+
+### when() - Conditional Execution
+
+Add conditional logic to your pipeline with `when()`. If the condition returns `false`, remaining steps are skipped:
+
+```php Using when()
+ToolChain::create()
+    ->pipe(FetchUserTool::class)
+    ->transform(fn($result) => json_decode($result, true))
+    ->when(fn($user) => $user['is_premium'] === true)
+    ->pipe(ApplyPremiumDiscountTool::class)
+    ->pipe(SendPremiumEmailTool::class)
+    ->execute(['user_id' => 123], $context, $memory);
+```
+
+You can provide an `otherwise` callback for when the condition is false:
+
+```php Conditional with Otherwise
+ToolChain::create()
+    ->pipe(CheckInventoryTool::class)
+    ->transform(fn($result) => json_decode($result, true))
+    ->when(
+        condition: fn($inventory) => $inventory['available'] > 0,
+        otherwise: fn($inventory) => [
+            'status' => 'out_of_stock',
+            'message' => 'Item is currently unavailable',
+        ]
+    )
+    ->pipe(ProcessOrderTool::class)
+    ->execute(['product_id' => 'SKU-456'], $context, $memory);
+```
+
+### tap() - Side Effects
+
+The `tap()` method executes a callback without modifying the result. Use it for logging, debugging, or triggering side effects:
+
+```php Using tap()
+ToolChain::create()
+    ->pipe(FetchOrderTool::class)
+    ->tap(fn($result, $index) => Log::info("Step {$index} completed", [
+        'result' => $result,
+    ]))
+    ->pipe(ProcessOrderTool::class)
+    ->tap(fn($result, $index) => event(new OrderProcessed($result)))
+    ->execute(['order_id' => 'ORD-123'], $context, $memory);
+```
+
+<Info>
+The tap callback receives the current result and step index. The return value is ignored - the pipeline continues with the unchanged result.
+</Info>
+
+## Argument Mappers
+
+When tools need different argument structures, use argument mappers to transform the previous output:
+
+```php Custom Argument Mapping
+ToolChain::create()
+    ->pipe(FetchUserTool::class)
+    ->transform(fn($result) => json_decode($result, true))
+    ->pipe(
+        EnrichUserTool::class,
+        fn($user, $initialArgs) => [
+            'user_id' => $user['id'],
+            'include_history' => true,
+        ]
+    )
+    ->pipe(
+        SendNotificationTool::class,
+        fn($enrichedUser, $initialArgs) => [
+            'recipient' => $enrichedUser['email'],
+            'template' => 'welcome',
+        ]
+    )
+    ->execute(['user_id' => 123], $context, $memory);
+```
+
+The argument mapper receives two parameters:
+- `$previousResult` - The output from the previous step
+- `$initialArgs` - The original arguments passed to `execute()`
+
+## Error Handling
+
+### Default Behavior (Stop on Error)
+
+By default, pipelines stop execution when a step throws an exception:
+
+```php Default Error Behavior
+$result = ToolChain::create()
+    ->pipe(FetchDataTool::class)
+    ->pipe(ProcessDataTool::class)  // If this fails...
+    ->pipe(SaveDataTool::class)     // ...this won't run
+    ->execute($args, $context, $memory);
+
+if ($result->failed()) {
+    $error = $result->getFirstError();
+    Log::error('Pipeline failed', ['error' => $error->getMessage()]);
+}
+```
+
+### Continue on Error
+
+Use `continueOnError()` to keep the pipeline running even when steps fail:
+
+```php Continue on Error
+$result = ToolChain::create()
+    ->continueOnError()
+    ->pipe(SendEmailTool::class)      // Might fail
+    ->pipe(SendSmsTool::class)        // Continues anyway
+    ->pipe(SendPushTool::class)       // Continues anyway
+    ->execute(['user_id' => 123], $context, $memory);
+
+// Check what failed
+if ($result->hasErrors()) {
+    foreach ($result->getErrors() as $index => $errorInfo) {
+        Log::warning("Step {$index} failed", [
+            'step' => $errorInfo['step']->describe(),
+            'error' => $errorInfo['error']->getMessage(),
+        ]);
+    }
+}
+```
+
+### Throwing Errors
+
+Use `throw()` or `valueOrThrow()` for exception-based error handling:
+
+```php Throwing Errors
+// Option 1: Throw if failed
+$result = ToolChain::create()
+    ->pipe(CriticalOperationTool::class)
+    ->execute($args, $context, $memory);
+
+$result->throw(); // Throws the first error if failed
+
+// Option 2: Get value or throw
+$value = ToolChain::create()
+    ->pipe(ImportantTool::class)
+    ->execute($args, $context, $memory)
+    ->valueOrThrow(); // Returns value or throws
+```
+
+## Lifecycle Callbacks
+
+Hook into the pipeline execution with before and after callbacks:
+
+```php Lifecycle Callbacks
+ToolChain::create('order-processing')
+    ->beforeEachStep(function (ToolChainStep $step, int $index, mixed $currentValue) {
+        Log::debug("Starting step {$index}", [
+            'step' => $step->describe(),
+            'input' => $currentValue,
+        ]);
+    })
+    ->afterEachStep(function (ToolChainStep $step, int $index, mixed $result) {
+        Log::debug("Completed step {$index}", [
+            'step' => $step->describe(),
+            'output' => $result,
+        ]);
+    })
+    ->pipe(ValidateOrderTool::class)
+    ->pipe(ProcessPaymentTool::class)
+    ->pipe(FulfillOrderTool::class)
+    ->execute(['order_id' => 'ORD-123'], $context, $memory);
+```
+
+## Working with Results
+
+The `ToolChainResult` class provides rich access to execution details.
+
+### Basic Result Access
+
+```php Accessing Results
+$result = ToolChain::create()
+    ->pipe(MyTool::class)
+    ->execute($args, $context, $memory);
+
+// Get the final value
+$value = $result->value();
+// or
+$value = $result->getFinalValue();
+
+// Check status
+if ($result->successful()) {
+    // All steps completed without errors
+}
+
+if ($result->failed()) {
+    // At least one step threw an exception
+}
+```
+
+### Step-by-Step Results
+
+```php Inspecting Steps
+$result = ToolChain::create()
+    ->pipe(Step1Tool::class)
+    ->pipe(Step2Tool::class)
+    ->pipe(Step3Tool::class)
+    ->execute($args, $context, $memory);
+
+// Get all step results
+$allSteps = $result->getStepResults();
+
+// Get a specific step's result (0-indexed)
+$step2Result = $result->getStepResult(1);
+$step2Value = $result->getStepValue(1);
+
+// Count executed vs skipped steps
+echo "Executed: " . $result->getExecutedStepCount();
+echo "Skipped: " . $result->getSkippedStepCount();
+```
+
+### Timing Information
+
+```php Timing Data
+$result = ToolChain::create()
+    ->pipe(SlowTool::class)
+    ->execute($args, $context, $memory);
+
+// Total execution time
+echo $result->getDuration() . " seconds";
+echo $result->getDurationMs() . " milliseconds";
+```
+
+### Export Results
+
+```php Exporting Results
+$result = ToolChain::create('my-pipeline')
+    ->pipe(MyTool::class)
+    ->execute($args, $context, $memory);
+
+// As array
+$data = $result->toArray();
+// Returns: [
+//     'chain_name' => 'my-pipeline',
+//     'successful' => true,
+//     'final_value' => ...,
+//     'duration_ms' => 150.5,
+//     'executed_steps' => 1,
+//     'skipped_steps' => 0,
+//     'errors' => [],
+//     'steps' => [...],
+// ]
+
+// As JSON
+$json = $result->toJson(JSON_PRETTY_PRINT);
+```
+
+## Chainable Tools
+
+While any tool implementing `ToolInterface` works in pipelines, you can create tools specifically designed for chaining by implementing `ChainableToolInterface`.
+
+### The ChainableToolInterface
+
+```php app/Tools/ChainableUserFetchTool.php
+<?php
+
+namespace App\Tools;
+
+use Vizra\VizraADK\Contracts\ChainableToolInterface;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
+
+class ChainableUserFetchTool implements ChainableToolInterface
+{
+    public function definition(): array
+    {
+        return [
+            'name' => 'fetch_user',
+            'description' => 'Fetch user data by ID',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'user_id' => [
+                        'type' => 'integer',
+                        'description' => 'The user ID to fetch',
+                    ],
+                ],
+                'required' => ['user_id'],
+            ],
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
+    {
+        $user = User::find($arguments['user_id']);
+
+        return json_encode([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+        ]);
+    }
+
+    /**
+     * Describe the expected input when used in a chain.
+     */
+    public function getInputSchema(): array
+    {
+        return [
+            'type' => 'object',
+            'properties' => [
+                'user_id' => ['type' => 'integer'],
+            ],
+            'required' => ['user_id'],
+        ];
+    }
+
+    /**
+     * Describe the output format.
+     */
+    public function getOutputSchema(): array
+    {
+        return [
+            'type' => 'object',
+            'properties' => [
+                'id' => ['type' => 'integer'],
+                'name' => ['type' => 'string'],
+                'email' => ['type' => 'string'],
+            ],
+        ];
+    }
+
+    /**
+     * Transform raw JSON output for the next tool.
+     */
+    public function transformOutputForChain(string $rawOutput): mixed
+    {
+        return json_decode($rawOutput, true);
+    }
+
+    /**
+     * Accept input from the previous tool.
+     */
+    public function acceptChainInput(mixed $previousOutput, array $initialArguments): array
+    {
+        // Merge previous output with initial args
+        if (is_array($previousOutput)) {
+            return array_merge($initialArguments, $previousOutput);
+        }
+
+        return $initialArguments;
+    }
+}
+```
+
+### Using the ChainableTool Trait
+
+For simpler cases, use the `ChainableTool` trait for sensible defaults:
+
+```php app/Tools/SimpleChainableTool.php
+<?php
+
+namespace App\Tools;
+
+use Vizra\VizraADK\Contracts\ChainableToolInterface;
+use Vizra\VizraADK\Tools\Chaining\ChainableTool;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
+
+class SimpleChainableTool implements ChainableToolInterface
+{
+    use ChainableTool; // Provides default implementations
+
+    public function definition(): array
+    {
+        return [
+            'name' => 'simple_tool',
+            'description' => 'A simple chainable tool',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'input' => ['type' => 'string'],
+                ],
+            ],
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
+    {
+        return json_encode(['processed' => true, 'data' => $arguments['input']]);
+    }
+
+    // Override specific methods as needed
+    public function getOutputSchema(): array
+    {
+        return [
+            'type' => 'object',
+            'properties' => [
+                'processed' => ['type' => 'boolean'],
+                'data' => ['type' => 'string'],
+            ],
+        ];
+    }
+}
+```
+
+<Tip>
+The `ChainableTool` trait provides these defaults:
+- `getInputSchema()` - Returns `['type' => 'object']`
+- `getOutputSchema()` - Returns `['type' => 'string']`
+- `transformOutputForChain()` - Auto JSON decodes or returns raw string
+- `acceptChainInput()` - Merges previous output with initial arguments
+</Tip>
+
+## Real-World Example
+
+Here's a complete example of an order processing pipeline:
+
+```php app/Services/OrderPipeline.php
+<?php
+
+namespace App\Services;
+
+use App\Tools\ValidateOrderTool;
+use App\Tools\CheckInventoryTool;
+use App\Tools\ApplyDiscountsTool;
+use App\Tools\ProcessPaymentTool;
+use App\Tools\FulfillOrderTool;
+use App\Tools\SendConfirmationTool;
+use Vizra\VizraADK\Tools\Chaining\ToolChain;
+use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Memory\AgentMemory;
+use Illuminate\Support\Facades\Log;
+
+class OrderPipeline
+{
+    public function process(string $orderId, AgentContext $context, AgentMemory $memory): array
+    {
+        $result = ToolChain::create('order-processing')
+            // Log start of each step
+            ->beforeEachStep(fn($step, $i, $val) =>
+                Log::info("Order {$orderId}: Starting {$step->describe()}")
+            )
+
+            // Validate the order
+            ->pipe(ValidateOrderTool::class)
+            ->transform(fn($result) => json_decode($result, true))
+
+            // Check inventory - skip if validation failed
+            ->when(fn($order) => $order['valid'] === true)
+            ->pipe(CheckInventoryTool::class)
+            ->transform(fn($result) => json_decode($result, true))
+
+            // Only apply discounts if inventory is available
+            ->when(
+                condition: fn($data) => $data['in_stock'] === true,
+                otherwise: fn($data) => array_merge($data, [
+                    'status' => 'failed',
+                    'reason' => 'out_of_stock',
+                ])
+            )
+            ->pipe(
+                ApplyDiscountsTool::class,
+                fn($data, $initial) => [
+                    'order_id' => $initial['order_id'],
+                    'subtotal' => $data['subtotal'],
+                ]
+            )
+            ->transform(fn($result) => json_decode($result, true))
+
+            // Process payment
+            ->pipe(
+                ProcessPaymentTool::class,
+                fn($data, $initial) => [
+                    'order_id' => $initial['order_id'],
+                    'amount' => $data['final_total'],
+                ]
+            )
+            ->transform(fn($result) => json_decode($result, true))
+
+            // Fulfill order - log the outcome
+            ->pipe(FulfillOrderTool::class)
+            ->tap(fn($result) => Log::info("Order {$orderId} fulfilled", [
+                'result' => $result,
+            ]))
+
+            // Send confirmation (continue even if this fails)
+            ->pipe(SendConfirmationTool::class)
+
+            ->execute(['order_id' => $orderId], $context, $memory);
+
+        if ($result->failed()) {
+            Log::error("Order {$orderId} pipeline failed", [
+                'error' => $result->getFirstError()?->getMessage(),
+                'duration_ms' => $result->getDurationMs(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $result->getFirstError()?->getMessage(),
+            ];
+        }
+
+        return [
+            'success' => true,
+            'result' => $result->value(),
+            'duration_ms' => $result->getDurationMs(),
+            'steps_executed' => $result->getExecutedStepCount(),
+        ];
+    }
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Name Your Pipelines" icon="tag">
+    Always use `ToolChain::create('name')` for easier debugging and tracing
+  </Card>
+  <Card title="Transform Early" icon="arrow-right">
+    Parse JSON responses with `transform()` immediately after tools for cleaner data flow
+  </Card>
+  <Card title="Use Argument Mappers" icon="shuffle">
+    When tools have different argument structures, use argument mappers rather than modifying tools
+  </Card>
+  <Card title="Handle Errors Gracefully" icon="shield">
+    Check `$result->failed()` and handle errors appropriately
+  </Card>
+</CardGroup>
+
+<Warning>
+**Avoid side effects in transforms** - Use `tap()` for logging, metrics, or events. Keep `transform()` pure for data transformation only.
+</Warning>
+
+## API Reference
+
+### ToolChain Methods
+
+| Method | Description |
+|--------|-------------|
+| `create(?string $name)` | Create a new pipeline, optionally named |
+| `pipe(string\|ToolInterface $tool, ?Closure $mapper)` | Add a tool step |
+| `transform(Closure $fn)` | Add a data transformation step |
+| `when(Closure $condition, ?Closure $otherwise)` | Add conditional logic |
+| `tap(Closure $callback)` | Add a side-effect step |
+| `stopOnError(bool $stop = true)` | Stop pipeline on first error (default) |
+| `continueOnError()` | Continue execution even if steps fail |
+| `beforeEachStep(Closure $callback)` | Hook before each step |
+| `afterEachStep(Closure $callback)` | Hook after each step |
+| `execute(array $args, AgentContext $context, AgentMemory $memory)` | Run the pipeline |
+| `getSteps()` | Get all pipeline steps |
+| `getName()` | Get pipeline name |
+| `isEmpty()` | Check if pipeline has no steps |
+| `count()` | Get number of steps |
+
+### ToolChainResult Methods
+
+| Method | Description |
+|--------|-------------|
+| `value()` / `getFinalValue()` | Get the final output value |
+| `successful()` / `failed()` | Check execution status |
+| `hasErrors()` | Check if any errors occurred |
+| `getErrors()` | Get all errors with step info |
+| `getFirstError()` | Get the first Throwable |
+| `getStepResults()` | Get all step results |
+| `getStepResult(int $index)` | Get a specific step's result |
+| `getStepValue(int $index)` | Get a specific step's value |
+| `getDuration()` | Get total duration in seconds |
+| `getDurationMs()` | Get total duration in milliseconds |
+| `getExecutedStepCount()` | Count of executed steps |
+| `getSkippedStepCount()` | Count of skipped steps |
+| `getChainName()` | Get the pipeline name |
+| `toArray()` | Export as array |
+| `toJson(int $options)` | Export as JSON |
+| `throw()` | Throw first error if failed |
+| `valueOrThrow()` | Get value or throw on failure |
+
+### Callback Signatures
+
+| Callback | Signature |
+|----------|-----------|
+| Argument Mapper | `fn(mixed $previousResult, array $initialArgs): array` |
+| Transformer | `fn(mixed $previousResult): mixed` |
+| Condition | `fn(mixed $previousResult): bool` |
+| Otherwise | `fn(mixed $currentValue): mixed` |
+| Tap Callback | `fn(mixed $currentResult, int $stepIndex): void` |
+| Before Step | `fn(ToolChainStep $step, int $index, mixed $currentValue): void` |
+| After Step | `fn(ToolChainStep $step, int $index, mixed $result): void` |
+
+---
+
+<CardGroup cols={2}>
+  <Card title="Tools" icon="wrench" href="/concepts/tools">
+    Learn the basics of creating tools
+  </Card>
+  <Card title="Tracing" icon="timeline" href="/testing/tracing">
+    Debug pipelines with execution traces
+  </Card>
+</CardGroup>

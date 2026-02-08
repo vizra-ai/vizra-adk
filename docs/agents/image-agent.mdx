@@ -1,7 +1,494 @@
 ---
 title: "Image Agent"
-description: "Generate images with the ImageAgent"
+description: "Generate images from text descriptions using AI models like DALL-E and Imagen"
 icon: "image"
 ---
 
-Coming soon...
+## What is ImageAgent?
+
+ImageAgent is a specialized media agent that generates images from text descriptions. It integrates with providers like OpenAI (DALL-E) and Google (Imagen) through Prism PHP, offering a fluent API for configuration, built-in storage, and queue support.
+
+<CardGroup cols={2}>
+  <Card title="Multi-Provider" icon="plug">
+    Works with OpenAI DALL-E, Google Imagen, and other image generation models
+  </Card>
+  <Card title="Fluent API" icon="code">
+    Chain methods like `size()`, `quality()`, and `style()` for clean configuration
+  </Card>
+  <Card title="Built-in Storage" icon="hard-drive">
+    Store generated images directly to Laravel's filesystem with `store()` and `storeAs()`
+  </Card>
+  <Card title="Queue Support" icon="clock">
+    Process image generation asynchronously with Laravel queues
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+Generate an image with just a few lines of code:
+
+```php
+use Vizra\VizraADK\Agents\ImageAgent;
+
+// Generate and store an image
+$image = ImageAgent::run('A sunset over the ocean')
+    ->quality('hd')
+    ->go();
+
+$image->storeAs('sunset.png');
+
+echo $image->url(); // URL to the stored image
+```
+
+<Tip>
+The `run()` method returns a fluent executor - chain your configuration and call `go()` to execute!
+</Tip>
+
+## Basic Usage
+
+### Simple Generation
+
+```php
+// Generate with default settings
+$image = ImageAgent::run('A mountain landscape at dawn')->go();
+
+// Access the image
+$url = $image->url();           // Storage or provider URL
+$base64 = $image->base64();     // Base64-encoded data
+$data = $image->data();         // Raw binary data
+```
+
+### Storing Images
+
+Images can be stored to Laravel's filesystem:
+
+```php
+// Store with auto-generated filename (ULID)
+$image = ImageAgent::run('An oil painting of flowers')->go();
+$image->store();                    // Stores as e.g., 01HWXYZ123.png
+$image->store('s3');                // Store to a specific disk
+
+// Store with custom filename
+$image->storeAs('flowers.png');
+$image->storeAs('art/flowers.png', 's3');
+
+// Check storage status
+if ($image->isStored()) {
+    echo $image->path();  // vizra-adk/generated/images/flowers.png
+    echo $image->disk();  // public
+}
+```
+
+<Info>
+Images are stored in the `vizra-adk/generated/images/` directory by default. Configure this in your `vizra-adk.php` config file.
+</Info>
+
+### Auto-Store on Generation
+
+Chain storage directly in the fluent API:
+
+```php
+// Store with auto-generated name
+$image = ImageAgent::run('A futuristic city')
+    ->store()
+    ->go();
+
+// Store with specific filename
+$image = ImageAgent::run('A vintage car')
+    ->storeAs('vintage-car.png')
+    ->go();
+```
+
+## Configuration Options
+
+### Image Size
+
+Set dimensions using preset methods or custom sizes:
+
+```php
+// Preset sizes
+ImageAgent::run('...')->square()->go();     // 1024x1024
+ImageAgent::run('...')->portrait()->go();   // 1024x1792
+ImageAgent::run('...')->landscape()->go();  // 1792x1024
+
+// Custom size
+ImageAgent::run('...')->size('512x512')->go();
+```
+
+Available sizes depend on your provider:
+
+| Provider | Supported Sizes |
+|----------|-----------------|
+| OpenAI DALL-E 3 | 1024x1024, 1024x1792, 1792x1024 |
+| OpenAI DALL-E 2 | 256x256, 512x512, 1024x1024 |
+| Google Imagen | Varies by model |
+
+### Quality
+
+Control the quality level (OpenAI-specific):
+
+```php
+// Standard quality (default, faster)
+ImageAgent::run('...')->quality('standard')->go();
+
+// HD quality (more detail, slower)
+ImageAgent::run('...')->quality('hd')->go();
+ImageAgent::run('...')->hd()->go();  // Shorthand
+```
+
+### Style
+
+Set the visual style (DALL-E 3 specific):
+
+```php
+// Vivid - hyper-real, dramatic (default)
+ImageAgent::run('...')->style('vivid')->go();
+
+// Natural - more realistic, less exaggerated
+ImageAgent::run('...')->style('natural')->go();
+```
+
+### Provider & Model
+
+Override the default provider and model:
+
+```php
+// Use a specific provider and model
+ImageAgent::run('A serene lake')
+    ->using('openai', 'dall-e-3')
+    ->go();
+
+// Switch to Google Imagen
+ImageAgent::run('A colorful abstract pattern')
+    ->using('google', 'imagen-3')
+    ->go();
+```
+
+### Complete Configuration Example
+
+```php
+$image = ImageAgent::run('An oil painting of flowers')
+    ->using('openai', 'dall-e-3')
+    ->landscape()
+    ->hd()
+    ->style('natural')
+    ->storeAs('flowers.png')
+    ->go();
+```
+
+## ImageResponse Class
+
+The `ImageResponse` object provides access to all image data and metadata:
+
+### Accessing Image Data
+
+```php
+$image = ImageAgent::run('...')->go();
+
+// URLs
+$url = $image->url();              // Best available URL (stored or provider)
+$providerUrl = $image->providerUrl(); // Original URL from provider
+
+// Binary data
+$data = $image->data();            // Raw binary content
+$base64 = $image->base64();        // Base64-encoded string
+$dataUri = $image->toDataUri();    // data:image/png;base64,...
+
+// Storage info (after storing)
+$path = $image->path();            // Storage path
+$disk = $image->disk();            // Storage disk name
+```
+
+### Metadata
+
+```php
+$image = ImageAgent::run('A sunset')->go();
+
+// Access metadata
+echo $image->prompt();       // "A sunset"
+echo $image->mimeType();     // "image/png"
+echo $image->hasImage();     // true
+echo $image->isStored();     // false (until stored)
+
+// Get all metadata as array
+$metadata = $image->metadata();
+// [
+//     'prompt' => 'A sunset',
+//     'provider' => 'openai',
+//     'model' => 'dall-e-3',
+//     'url' => '...',
+//     'provider_url' => '...',
+//     'path' => null,
+//     'disk' => null,
+//     'generated_at' => '2024-01-15T10:30:00.000Z'
+// ]
+```
+
+### Serialization
+
+```php
+$image = ImageAgent::run('...')->go();
+
+// Convert to array or JSON
+$array = $image->toArray();
+$json = $image->toJson();
+
+// String casting returns URL
+echo $image;  // Outputs the URL
+```
+
+## Async & Queue Processing
+
+For long-running generations, use Laravel queues:
+
+### Basic Async
+
+```php
+// Dispatch to default queue
+$result = ImageAgent::run('A complex scene')
+    ->async()
+    ->go();
+
+// Returns immediately with job info
+// [
+//     'job_dispatched' => true,
+//     'job_id' => 'uuid-here',
+//     'queue' => 'default',
+//     'agent' => 'image_agent',
+//     'prompt' => 'A complex scene'
+// ]
+```
+
+### Queue Configuration
+
+```php
+ImageAgent::run('A detailed illustration')
+    ->onQueue('media')           // Specific queue name
+    ->delay(60)                  // Delay execution by 60 seconds
+    ->tries(5)                   // Retry up to 5 times on failure
+    ->timeout(120)               // 2-minute timeout
+    ->then(fn($image) => $image->storeAs('illustration.png'))
+    ->go();
+```
+
+<Warning>
+The `then()` callback runs after generation completes - use it to store images or trigger notifications. The callback must be serializable for queue processing.
+</Warning>
+
+### Listening for Completion
+
+Listen for media generation events:
+
+```php
+// In your EventServiceProvider or Listener
+Event::listen('media.image_agent.completed', function ($event) {
+    $jobId = $event['job_id'];
+    $response = $event['response'];
+    $sessionId = $event['session_id'];
+
+    // Process the completed image
+    Log::info("Image generated: " . $response->url());
+});
+
+// Generic event for all media types
+Event::listen('media.job.completed', function ($event) {
+    // Handle any media job completion
+});
+```
+
+## Using with LLM Agents
+
+Allow your LLM agents to generate images using the `DelegateToMediaAgentTool`:
+
+### Setup
+
+```php
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\Agents\ImageAgent;
+use Vizra\VizraADK\Tools\DelegateToMediaAgentTool;
+
+class CreativeAssistantAgent extends BaseLlmAgent
+{
+    protected string $name = 'creative_assistant';
+
+    protected string $description = 'A creative assistant that can generate images';
+
+    protected string $instructions = <<<INSTRUCTIONS
+    You are a creative assistant. When users ask for images,
+    use the generate_image tool to create them. Provide detailed,
+    descriptive prompts for best results.
+    INSTRUCTIONS;
+
+    protected array $tools = [
+        DelegateToMediaAgentTool::class,
+    ];
+
+    protected array $mediaAgents = [
+        ImageAgent::class,
+    ];
+}
+```
+
+### Quick Setup with Factory Method
+
+```php
+// In your agent's tools array
+protected array $tools = [];
+
+protected function bootTools(): void
+{
+    $this->tools[] = DelegateToMediaAgentTool::forImage();
+}
+```
+
+### How It Works
+
+When the LLM decides to generate an image, it calls the `generate_image` tool with these parameters:
+
+```json
+{
+  "name": "generate_image",
+  "parameters": {
+    "prompt": "Detailed description of the image",
+    "size": "1024x1024",
+    "quality": "hd",
+    "style": "natural"
+  }
+}
+```
+
+The tool automatically:
+1. Executes the ImageAgent with the provided parameters
+2. Stores the generated image
+3. Returns the URL and path to the LLM
+
+## Context & User Tracking
+
+Associate generations with users and sessions:
+
+```php
+ImageAgent::run('A personalized avatar')
+    ->forUser($user)              // Associate with a user model
+    ->withSession('session-123')  // Custom session ID
+    ->withContext([               // Additional context data
+        'source' => 'profile_editor',
+        'request_id' => $requestId,
+    ])
+    ->go();
+```
+
+## Configuration Reference
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VIZRA_ADK_MEDIA_ENABLED` | Enable media generation | `true` |
+| `VIZRA_ADK_MEDIA_DISK` | Storage disk for generated media | `public` |
+| `VIZRA_ADK_MEDIA_PATH` | Base path for stored media | `vizra-adk/generated` |
+| `VIZRA_ADK_IMAGE_PROVIDER` | Default image provider | `openai` |
+| `VIZRA_ADK_IMAGE_MODEL` | Default image model | `dall-e-3` |
+| `VIZRA_ADK_IMAGE_SIZE` | Default image size | `1024x1024` |
+| `VIZRA_ADK_IMAGE_QUALITY` | Default quality | `standard` |
+| `VIZRA_ADK_IMAGE_STYLE` | Default style | `vivid` |
+| `VIZRA_ADK_IMAGE_FORMAT` | Response format | `url` |
+
+### Config File
+
+```php config/vizra-adk.php
+'media' => [
+    'enabled' => env('VIZRA_ADK_MEDIA_ENABLED', true),
+
+    'storage' => [
+        'disk' => env('VIZRA_ADK_MEDIA_DISK', 'public'),
+        'path' => env('VIZRA_ADK_MEDIA_PATH', 'vizra-adk/generated'),
+    ],
+
+    'image' => [
+        'provider' => env('VIZRA_ADK_IMAGE_PROVIDER', 'openai'),
+        'model' => env('VIZRA_ADK_IMAGE_MODEL', 'dall-e-3'),
+        'default_size' => env('VIZRA_ADK_IMAGE_SIZE', '1024x1024'),
+        'default_quality' => env('VIZRA_ADK_IMAGE_QUALITY', 'standard'),
+        'default_style' => env('VIZRA_ADK_IMAGE_STYLE', 'vivid'),
+        'response_format' => env('VIZRA_ADK_IMAGE_FORMAT', 'url'),
+    ],
+],
+```
+
+### Supported Providers & Models
+
+<CardGroup cols={2}>
+  <Card title="OpenAI" icon="sparkles">
+    - **dall-e-3** - Latest, highest quality
+    - **dall-e-2** - Faster, more sizes
+    - **gpt-image-1** - Newest model
+  </Card>
+  <Card title="Google" icon="google">
+    - **imagen-3** - High quality generation
+    - **imagen-4** - Latest Imagen model
+    - **gemini-2.0-flash-preview-image-generation**
+  </Card>
+</CardGroup>
+
+## API Reference
+
+### ImageAgent Static Methods
+
+| Method | Description |
+|--------|-------------|
+| `run(string $prompt)` | Start a fluent generation chain |
+
+### MediaAgentExecutor Methods (Fluent API)
+
+| Method | Description |
+|--------|-------------|
+| `using(string $provider, string $model)` | Override provider and model |
+| `forUser(Model $user)` | Associate with a user |
+| `withSession(string $sessionId)` | Set session ID |
+| `withContext(array $context)` | Add context data |
+| `size(string $size)` | Set custom dimensions |
+| `square()` | 1024x1024 |
+| `portrait()` | 1024x1792 |
+| `landscape()` | 1792x1024 |
+| `quality(string $quality)` | Set quality level |
+| `hd()` | Shorthand for HD quality |
+| `style(string $style)` | Set visual style |
+| `store(?string $disk)` | Auto-store with generated name |
+| `storeAs(string $filename, ?string $disk)` | Auto-store with specific name |
+| `async(bool $enabled)` | Enable async processing |
+| `onQueue(string $queue)` | Specify queue name |
+| `delay(int $seconds)` | Delay execution |
+| `tries(int $tries)` | Set retry attempts |
+| `timeout(int $seconds)` | Set timeout |
+| `then(Closure $callback)` | Post-generation callback |
+| `go()` | Execute the generation |
+
+### ImageResponse Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `url()` | `?string` | Best available URL |
+| `providerUrl()` | `?string` | Original provider URL |
+| `path()` | `?string` | Storage path |
+| `disk()` | `?string` | Storage disk |
+| `base64()` | `string` | Base64-encoded data |
+| `data()` | `string` | Raw binary data |
+| `toDataUri()` | `string` | Data URI for embedding |
+| `prompt()` | `string` | Original prompt |
+| `mimeType()` | `string` | MIME type |
+| `metadata()` | `array` | All metadata |
+| `hasImage()` | `bool` | Has image data |
+| `isStored()` | `bool` | Has been stored |
+| `store(?string $disk)` | `static` | Store with auto name |
+| `storeAs(string $filename, ?string $disk)` | `static` | Store with name |
+| `toArray()` | `array` | Convert to array |
+| `toJson()` | `string` | Convert to JSON |
+
+<CardGroup cols={2}>
+  <Card title="Audio Agent" icon="volume-high" href="/agents/audio-agent">
+    Generate speech and audio with the AudioAgent
+  </Card>
+  <Card title="Agent Queuing" icon="clock" href="/advanced/agent-queuing">
+    Learn more about async agent processing
+  </Card>
+</CardGroup>

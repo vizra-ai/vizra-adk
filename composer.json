@@ -2,6 +2,12 @@
   "name": "vizra/vizra-adk",
   "version": "0.0.45",
   "description": "Vizra Agent Development Kit - A comprehensive Laravel package for building intelligent AI agents.",
+  "support": {
+    "issues": "https://github.com/vizra-ai/vizra-adk/issues",
+    "source": "https://github.com/vizra-ai/vizra-adk",
+    "docs": "https://vizra.ai/docs",
+    "chat": "https://discord.gg/CRRzmvS5MK"
+  },
   "keywords": [
     "laravel",
     "ai",

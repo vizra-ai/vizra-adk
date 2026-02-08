@@ -20,7 +20,7 @@
       },
       {
         "label": "Discord",
-        "href": "https://discord.gg/vizra"
+        "href": "https://discord.gg/CRRzmvS5MK"
       }
     ],
     "primary": {
@@ -95,7 +95,8 @@
               "concepts/workflows",
               "concepts/vector-rag",
               "concepts/dynamic-prompts",
-              "advanced/agent-queuing"
+              "advanced/agent-queuing",
+              "advanced/macros"
             ]
           },
           {
@@ -135,7 +136,7 @@
   "footer": {
     "socials": {
       "github": "https://github.com/vizra-ai/vizra-adk",
-      "discord": "https://discord.gg/vizra",
+      "discord": "https://discord.gg/CRRzmvS5MK",
       "x": "https://x.com/aaronlumsden"
     }
   }

@@ -1,7 +1,574 @@
 ---
 title: "Toolbox"
-description: "Group related tools together for better organization"
+description: "Group related tools together for better organization and authorization"
 icon: "toolbox"
 ---
 
-Coming soon...
+## What Are Toolboxes?
+
+Toolboxes let you group related tools into logical collections with built-in authorization support. Think of them as "tool bundles" that can be enabled or disabled based on user permissions, subscription tiers, or any other context.
+
+<CardGroup cols={2}>
+  <Card title="Organized Tools" icon="folder-tree">
+    Group related tools together for cleaner agent definitions
+  </Card>
+  <Card title="Built-in Authorization" icon="shield-check">
+    Use Laravel Gates and Policies at both toolbox and tool levels
+  </Card>
+  <Card title="Dynamic Loading" icon="bolt">
+    Tools are loaded on-demand based on user context
+  </Card>
+  <Card title="Runtime Flexibility" icon="shuffle">
+    Add or remove toolboxes at runtime based on conditions
+  </Card>
+</CardGroup>
+
+## Using Toolboxes in Agents
+
+The easiest way to use toolboxes is to declare them in your agent's `$toolboxes` property:
+
+```php app/Agents/CustomerAgent.php
+<?php
+
+namespace App\Agents;
+
+use App\Toolboxes\CustomerSupportToolbox;
+use App\Toolboxes\OrderManagementToolbox;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+
+class CustomerAgent extends BaseLlmAgent
+{
+    protected string $name = 'customer_agent';
+    protected string $description = 'Helps customers with support and orders';
+    protected string $instructions = 'You are a helpful customer support agent.';
+
+    protected array $toolboxes = [
+        CustomerSupportToolbox::class,
+        OrderManagementToolbox::class,
+    ];
+
+    // You can also include individual tools alongside toolboxes
+    protected array $tools = [
+        GeneralInfoTool::class,
+    ];
+}
+```
+
+When the agent loads, it automatically:
+1. Checks toolbox-level authorization for each toolbox
+2. Filters individual tools based on per-tool gates/policies
+3. Applies any conditional inclusion logic
+4. Merges authorized tools with the agent's direct tools
+
+### Runtime Toolbox Management
+
+You can add or remove toolboxes dynamically at runtime:
+
+```php Adding/Removing Toolboxes at Runtime
+// Add a toolbox based on user tier
+if ($user->isPremium()) {
+    $agent->addToolbox(PremiumFeaturesToolbox::class);
+}
+
+// Remove a toolbox if certain conditions aren't met
+if (!$user->hasVerifiedEmail()) {
+    $agent->removeToolbox(SensitiveOperationsToolbox::class);
+}
+
+// Force reload tools after changes
+$agent->forceReloadTools();
+```
+
+### Checking Toolbox Status
+
+```php Toolbox Inspection Methods
+// Check if a toolbox is registered
+if ($agent->hasToolbox(AdminToolbox::class)) {
+    // ...
+}
+
+// Get all registered toolbox classes
+$toolboxClasses = $agent->getToolboxes();
+
+// Get loaded toolbox instances (after agent initialization)
+$loadedToolboxes = $agent->getLoadedToolboxes();
+```
+
+## Creating Your First Toolbox
+
+Generate a new toolbox using the Artisan command:
+
+```bash
+php artisan vizra:make:toolbox CustomerSupportToolbox
+```
+
+You can also specify options during generation:
+
+```bash
+# With a Laravel Gate
+php artisan vizra:make:toolbox AdminToolbox --gate=admin-access
+
+# With a Laravel Policy
+php artisan vizra:make:toolbox PremiumToolbox --policy="App\Policies\SubscriptionPolicy"
+
+# With initial tools
+php artisan vizra:make:toolbox OrderToolbox --tools="App\Tools\CreateOrderTool,App\Tools\CancelOrderTool"
+```
+
+### Basic Toolbox Structure
+
+```php app/Toolboxes/CustomerSupportToolbox.php
+<?php
+
+namespace App\Toolboxes;
+
+use App\Tools\CreateTicketTool;
+use App\Tools\SearchKnowledgeBaseTool;
+use App\Tools\EscalateIssueTool;
+use Vizra\VizraADK\Toolboxes\BaseToolbox;
+
+class CustomerSupportToolbox extends BaseToolbox
+{
+    /**
+     * The unique identifier for this toolbox.
+     */
+    protected string $name = 'customer_support';
+
+    /**
+     * Human-readable description of this toolbox.
+     */
+    protected string $description = 'Tools for customer support operations';
+
+    /**
+     * Array of tool class names that belong to this toolbox.
+     */
+    protected array $tools = [
+        CreateTicketTool::class,
+        SearchKnowledgeBaseTool::class,
+        EscalateIssueTool::class,
+    ];
+}
+```
+
+## Authorization
+
+Toolboxes support a powerful multi-level authorization system using Laravel's built-in Gates and Policies.
+
+### Toolbox-Level Gates
+
+The simplest form of authorization uses a Laravel Gate:
+
+```php app/Toolboxes/AdminToolbox.php
+<?php
+
+namespace App\Toolboxes;
+
+use App\Tools\DatabaseQueryTool;
+use App\Tools\UserManagementTool;
+use App\Tools\SystemConfigTool;
+use Vizra\VizraADK\Toolboxes\BaseToolbox;
+
+class AdminToolbox extends BaseToolbox
+{
+    protected string $name = 'admin';
+    protected string $description = 'Administrative tools';
+
+    /**
+     * Gate name for toolbox-level authorization.
+     * The entire toolbox is hidden if the gate fails.
+     */
+    protected ?string $gate = 'admin-access';
+
+    protected array $tools = [
+        DatabaseQueryTool::class,
+        UserManagementTool::class,
+        SystemConfigTool::class,
+    ];
+}
+```
+
+Define the gate in your `AuthServiceProvider`:
+
+```php app/Providers/AuthServiceProvider.php
+use Illuminate\Support\Facades\Gate;
+
+public function boot(): void
+{
+    Gate::define('admin-access', function ($user) {
+        return $user->hasRole('admin');
+    });
+}
+```
+
+### Toolbox-Level Policies
+
+For more complex authorization logic, use a Policy:
+
+```php app/Toolboxes/PremiumToolbox.php
+<?php
+
+namespace App\Toolboxes;
+
+use App\Policies\SubscriptionPolicy;
+use App\Tools\AdvancedAnalyticsTool;
+use App\Tools\BulkExportTool;
+use Vizra\VizraADK\Toolboxes\BaseToolbox;
+
+class PremiumToolbox extends BaseToolbox
+{
+    protected string $name = 'premium';
+    protected string $description = 'Premium tier features';
+
+    /**
+     * Policy class for toolbox authorization.
+     */
+    protected ?string $policy = SubscriptionPolicy::class;
+
+    /**
+     * The policy ability to check (default is 'use').
+     */
+    protected ?string $policyAbility = 'accessPremiumFeatures';
+
+    protected array $tools = [
+        AdvancedAnalyticsTool::class,
+        BulkExportTool::class,
+    ];
+}
+```
+
+```php app/Policies/SubscriptionPolicy.php
+<?php
+
+namespace App\Policies;
+
+use App\Models\User;
+
+class SubscriptionPolicy
+{
+    public function accessPremiumFeatures(User $user): bool
+    {
+        return $user->subscription?->tier === 'premium'
+            && $user->subscription->isActive();
+    }
+}
+```
+
+<Info>
+When both a `$gate` and `$policy` are defined, the policy takes precedence. Only one authorization method is checked.
+</Info>
+
+### Per-Tool Gates
+
+You can apply fine-grained authorization to individual tools within a toolbox:
+
+```php app/Toolboxes/FinanceToolbox.php
+<?php
+
+namespace App\Toolboxes;
+
+use App\Tools\ViewReportsTool;
+use App\Tools\CreateInvoiceTool;
+use App\Tools\ProcessRefundTool;
+use App\Tools\DeleteTransactionTool;
+use Vizra\VizraADK\Toolboxes\BaseToolbox;
+
+class FinanceToolbox extends BaseToolbox
+{
+    protected string $name = 'finance';
+    protected string $description = 'Financial operations tools';
+
+    /**
+     * Toolbox-level gate - user must pass this to see ANY tools.
+     */
+    protected ?string $gate = 'finance-access';
+
+    protected array $tools = [
+        ViewReportsTool::class,
+        CreateInvoiceTool::class,
+        ProcessRefundTool::class,
+        DeleteTransactionTool::class,
+    ];
+
+    /**
+     * Per-tool gate mappings.
+     * Users must pass BOTH the toolbox gate AND the tool gate.
+     */
+    protected array $toolGates = [
+        ProcessRefundTool::class => 'process-refunds',
+        DeleteTransactionTool::class => 'delete-transactions',
+    ];
+}
+```
+
+### Per-Tool Policies
+
+For even more control, use policies on individual tools:
+
+```php Per-Tool Policy Configuration
+protected array $toolPolicies = [
+    DeleteTransactionTool::class => [TransactionPolicy::class, 'delete'],
+    ArchiveRecordsTool::class => [RecordPolicy::class, 'archive'],
+];
+```
+
+<Tip>
+The authorization hierarchy is:
+1. **Toolbox gate/policy** - Must pass to see any tools
+2. **Per-tool gate** - Additional check for specific tools
+3. **Per-tool policy** - Alternative to per-tool gates
+4. **`shouldIncludeTool()`** - Final conditional logic
+</Tip>
+
+## Conditional Tool Inclusion
+
+For dynamic logic that goes beyond gates and policies, override the `shouldIncludeTool()` method:
+
+```php app/Toolboxes/ContextAwareToolbox.php
+<?php
+
+namespace App\Toolboxes;
+
+use App\Tools\BasicSearchTool;
+use App\Tools\AdvancedSearchTool;
+use App\Tools\BetaFeatureTool;
+use Vizra\VizraADK\Toolboxes\BaseToolbox;
+use Vizra\VizraADK\System\AgentContext;
+
+class ContextAwareToolbox extends BaseToolbox
+{
+    protected string $name = 'context_aware';
+    protected string $description = 'Tools that adapt to user context';
+
+    protected array $tools = [
+        BasicSearchTool::class,
+        AdvancedSearchTool::class,
+        BetaFeatureTool::class,
+    ];
+
+    /**
+     * Dynamically include/exclude tools based on context.
+     */
+    protected function shouldIncludeTool(string $toolClass, AgentContext $context): bool
+    {
+        // Only include advanced search for power users
+        if ($toolClass === AdvancedSearchTool::class) {
+            return $context->getState('user_tier') === 'power_user';
+        }
+
+        // Include beta features only for users in the beta program
+        if ($toolClass === BetaFeatureTool::class) {
+            return $context->getState('beta_tester') === true;
+        }
+
+        // Include all other tools by default
+        return true;
+    }
+}
+```
+
+<Warning>
+Authorized tools are cached per session ID for performance. If context changes mid-session and you need tools to be re-evaluated, call `$toolbox->clearCache()` or `$agent->forceReloadTools()`.
+</Warning>
+
+## Real-World Examples
+
+### Admin Toolbox with Gate
+
+```php app/Toolboxes/AdminToolbox.php
+<?php
+
+namespace App\Toolboxes;
+
+use App\Tools\UserManagementTool;
+use App\Tools\SystemSettingsTool;
+use App\Tools\ViewAuditLogTool;
+use App\Tools\DatabaseQueryTool;
+use Vizra\VizraADK\Toolboxes\BaseToolbox;
+
+class AdminToolbox extends BaseToolbox
+{
+    protected string $name = 'admin';
+    protected string $description = 'Administrative tools for system management';
+
+    protected ?string $gate = 'admin-panel';
+
+    protected array $tools = [
+        UserManagementTool::class,
+        SystemSettingsTool::class,
+        ViewAuditLogTool::class,
+        DatabaseQueryTool::class,
+    ];
+
+    // Restrict dangerous tools to super admins only
+    protected array $toolGates = [
+        DatabaseQueryTool::class => 'database-access',
+    ];
+}
+```
+
+### Multi-Tenant Toolbox
+
+```php app/Toolboxes/TenantToolbox.php
+<?php
+
+namespace App\Toolboxes;
+
+use App\Tools\TenantReportsTool;
+use App\Tools\TenantSettingsTool;
+use App\Tools\CrossTenantSearchTool;
+use Vizra\VizraADK\Toolboxes\BaseToolbox;
+use Vizra\VizraADK\System\AgentContext;
+
+class TenantToolbox extends BaseToolbox
+{
+    protected string $name = 'tenant';
+    protected string $description = 'Multi-tenant management tools';
+
+    protected array $tools = [
+        TenantReportsTool::class,
+        TenantSettingsTool::class,
+        CrossTenantSearchTool::class,
+    ];
+
+    protected function shouldIncludeTool(string $toolClass, AgentContext $context): bool
+    {
+        // Cross-tenant search only for users managing multiple tenants
+        if ($toolClass === CrossTenantSearchTool::class) {
+            $tenantIds = $context->getState('managed_tenant_ids', []);
+            return count($tenantIds) > 1;
+        }
+
+        return true;
+    }
+}
+```
+
+### Feature-Flagged Toolbox
+
+```php app/Toolboxes/ExperimentalToolbox.php
+<?php
+
+namespace App\Toolboxes;
+
+use App\Tools\AiSummaryTool;
+use App\Tools\VoiceInputTool;
+use App\Tools\ImageAnalysisTool;
+use Vizra\VizraADK\Toolboxes\BaseToolbox;
+use Vizra\VizraADK\System\AgentContext;
+use Illuminate\Support\Facades\Feature;
+
+class ExperimentalToolbox extends BaseToolbox
+{
+    protected string $name = 'experimental';
+    protected string $description = 'Experimental features in development';
+
+    protected array $tools = [
+        AiSummaryTool::class,
+        VoiceInputTool::class,
+        ImageAnalysisTool::class,
+    ];
+
+    protected function shouldIncludeTool(string $toolClass, AgentContext $context): bool
+    {
+        // Map tool classes to feature flags
+        $featureFlags = [
+            AiSummaryTool::class => 'ai-summary',
+            VoiceInputTool::class => 'voice-input',
+            ImageAnalysisTool::class => 'image-analysis',
+        ];
+
+        $flag = $featureFlags[$toolClass] ?? null;
+
+        if ($flag === null) {
+            return true;
+        }
+
+        // Use Laravel Pennant or similar feature flag system
+        $userId = $context->getState('user_id');
+        return Feature::for($userId)->active($flag);
+    }
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Group by Domain" icon="layer-group">
+    Organize tools by business domain (orders, payments, support) rather than technical function
+  </Card>
+  <Card title="Use Gates for Simple Checks" icon="key">
+    Gates are perfect for role-based checks. Use policies for complex business logic
+  </Card>
+  <Card title="Keep Toolboxes Focused" icon="bullseye">
+    A toolbox should have 3-8 related tools. Split large toolboxes into smaller ones
+  </Card>
+  <Card title="Prefer Toolbox Auth" icon="shield">
+    Use toolbox-level authorization when possible. Per-tool auth adds complexity
+  </Card>
+</CardGroup>
+
+<Tip>
+**Naming Convention**: Use descriptive names ending in `Toolbox` - e.g., `CustomerSupportToolbox`, `PaymentProcessingToolbox`, `AdminToolbox`.
+</Tip>
+
+## API Reference
+
+### BaseToolbox Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `$name` | `string` | Unique identifier for the toolbox |
+| `$description` | `string` | Human-readable description |
+| `$tools` | `array` | Array of tool class names |
+| `$gate` | `?string` | Laravel Gate name for toolbox auth |
+| `$policy` | `?string` | Laravel Policy class for toolbox auth |
+| `$policyAbility` | `?string` | Policy ability to check (default: `'use'`) |
+| `$toolGates` | `array` | Per-tool gate mappings |
+| `$toolPolicies` | `array` | Per-tool policy mappings |
+
+### BaseToolbox Methods
+
+| Method | Description |
+|--------|-------------|
+| `name(): string` | Get the toolbox name |
+| `description(): string` | Get the toolbox description |
+| `tools(): array` | Get the array of tool class names |
+| `authorize(AgentContext $context): bool` | Check toolbox-level authorization |
+| `authorizedTools(AgentContext $context): array` | Get instantiated, authorized tools |
+| `getGate(): ?string` | Get the configured gate name |
+| `getPolicy(): ?string` | Get the configured policy class |
+| `getToolGates(): array` | Get per-tool gate mappings |
+| `clearCache(): void` | Clear the authorized tools cache |
+
+### Agent Toolbox Methods
+
+| Method | Description |
+|--------|-------------|
+| `addToolbox(string $toolboxClass): static` | Add a toolbox at runtime |
+| `removeToolbox(string $toolboxClass): static` | Remove a toolbox |
+| `getToolboxes(): array` | Get registered toolbox class names |
+| `hasToolbox(string $toolboxClass): bool` | Check if toolbox is registered |
+| `getLoadedToolboxes(): array` | Get loaded toolbox instances |
+| `forceReloadTools(): void` | Clear cache and reload all tools |
+
+### Artisan Command
+
+```bash
+php artisan vizra:make:toolbox {name} [options]
+
+Options:
+  -g, --gate=GATE        Laravel Gate name for authorization
+  -p, --policy=POLICY    Laravel Policy class for authorization
+  -t, --tools=TOOLS      Comma-separated tool class names
+```
+
+---
+
+<CardGroup cols={2}>
+  <Card title="Tools" icon="wrench" href="/tools/tools">
+    Learn the basics of creating tools
+  </Card>
+  <Card title="Tool Pipelines" icon="diagram-project" href="/tools/tool-pipelines">
+    Chain tools together for sequential workflows
+  </Card>
+</CardGroup>
