@@ -53,8 +53,9 @@ abstract class BaseAgent
      * Usage: CustomerSupportAgent::run('Where is my order?')->forUser($user)->go()
      *
      * @param  mixed  $input  The input for the agent.
+     * @return AgentExecutor|object The executor instance for fluent chaining.
      */
-    public static function run(mixed $input): AgentExecutor
+    public static function run(mixed $input): object
     {
         return new AgentExecutor(static::class, $input);
     }

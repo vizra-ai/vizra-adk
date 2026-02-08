@@ -22,6 +22,7 @@ use Prism\Prism\ValueObjects\Messages\UserMessage;
 use Prism\Prism\ValueObjects\ProviderTool;
 use Prism\Prism\ValueObjects\Usage;
 use Throwable;
+use Vizra\VizraADK\Contracts\ToolboxInterface;
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\Events\AgentResponseGenerated;
 use Vizra\VizraADK\Events\LLmCallFailed;
@@ -102,6 +103,20 @@ abstract class BaseLlmAgent extends BaseAgent
 
     /** @var array<class-string<BaseLlmAgent>> */
     protected array $subAgents = [];
+
+    /**
+     * Array of toolbox class names that provide grouped tools.
+     *
+     * @var array<class-string<\Vizra\VizraADK\Contracts\ToolboxInterface>>
+     */
+    protected array $toolboxes = [];
+
+    /**
+     * Loaded toolbox instances keyed by class name.
+     *
+     * @var array<class-string, \Vizra\VizraADK\Contracts\ToolboxInterface>
+     */
+    protected array $loadedToolboxes = [];
 
     /** @var array<string> */
     protected array $mcpServers = [];
@@ -453,13 +468,16 @@ abstract class BaseLlmAgent extends BaseAgent
             return;
         }
 
-        // Load traditional tools
+        // Load traditional tools first (direct tools take precedence)
         foreach ($this->tools as $toolClass) {
             if (class_exists($toolClass) && is_subclass_of($toolClass, ToolInterface::class)) {
                 $toolInstance = app($toolClass); // Resolve from container
                 $this->loadedTools[$toolInstance->definition()['name']] = $toolInstance;
             }
         }
+
+        // Load tools from toolboxes (respecting authorization)
+        $this->loadToolboxes();
 
         // Load MCP tools if the discovery service is available
         if (app()->bound(\Vizra\VizraADK\Services\MCP\MCPToolDiscovery::class)) {
@@ -503,6 +521,146 @@ abstract class BaseLlmAgent extends BaseAgent
 
                 $subAgentInstance = app($subAgentClass); // Resolve from container
                 $this->loadedSubAgents[$name] = $subAgentInstance;
+            }
+        }
+    }
+
+    /**
+     * Load tools from all registered toolboxes.
+     *
+     * Toolboxes are instantiated, authorized against the current context,
+     * and their tools are loaded into the agent's tool collection.
+     * Direct tools take precedence over toolbox tools with the same name.
+     */
+    protected function loadToolboxes(): void
+    {
+        $context = $this->getContextForToolboxAuthorization();
+
+        foreach ($this->toolboxes as $toolboxClass) {
+            if (! class_exists($toolboxClass)) {
+                $this->logWarning('Toolbox class {class} does not exist', [
+                    'class' => $toolboxClass,
+                ], 'toolbox');
+
+                continue;
+            }
+
+            if (! is_subclass_of($toolboxClass, ToolboxInterface::class)) {
+                $this->logWarning('Toolbox class {class} does not implement ToolboxInterface', [
+                    'class' => $toolboxClass,
+                ], 'toolbox');
+
+                continue;
+            }
+
+            try {
+                // Resolve toolbox from container
+                $toolbox = app($toolboxClass);
+                $this->loadedToolboxes[$toolboxClass] = $toolbox;
+
+                // Get authorized tools from the toolbox
+                $authorizedTools = $context
+                    ? $toolbox->authorizedTools($context)
+                    : $toolbox->authorizedTools(new AgentContext('system'));
+
+                // Add tools to loaded tools (skip if direct tool already exists with same name)
+                foreach ($authorizedTools as $toolName => $tool) {
+                    if (! isset($this->loadedTools[$toolName])) {
+                        $this->loadedTools[$toolName] = $tool;
+                    }
+                }
+            } catch (\Exception $e) {
+                $this->logWarning('Failed to load toolbox {class}: {error}', [
+                    'class' => $toolboxClass,
+                    'error' => $e->getMessage(),
+                ], 'toolbox');
+            }
+        }
+    }
+
+    /**
+     * Get the context to use for toolbox authorization.
+     *
+     * Override this method in subclasses to provide custom context resolution.
+     */
+    protected function getContextForToolboxAuthorization(): ?AgentContext
+    {
+        return $this->context;
+    }
+
+    /**
+     * Add a toolbox to this agent at runtime.
+     *
+     * @param  class-string<ToolboxInterface>  $toolboxClass
+     * @return $this
+     */
+    public function addToolbox(string $toolboxClass): static
+    {
+        if (! in_array($toolboxClass, $this->toolboxes)) {
+            $this->toolboxes[] = $toolboxClass;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Remove a toolbox from this agent.
+     *
+     * @param  class-string<ToolboxInterface>  $toolboxClass
+     * @return $this
+     */
+    public function removeToolbox(string $toolboxClass): static
+    {
+        $this->toolboxes = array_filter($this->toolboxes, fn ($t) => $t !== $toolboxClass);
+        unset($this->loadedToolboxes[$toolboxClass]);
+
+        return $this;
+    }
+
+    /**
+     * Get the list of registered toolbox class names.
+     *
+     * @return array<class-string<ToolboxInterface>>
+     */
+    public function getToolboxes(): array
+    {
+        return $this->toolboxes;
+    }
+
+    /**
+     * Check if a toolbox is registered with this agent.
+     *
+     * @param  class-string<ToolboxInterface>  $toolboxClass
+     */
+    public function hasToolbox(string $toolboxClass): bool
+    {
+        return in_array($toolboxClass, $this->toolboxes);
+    }
+
+    /**
+     * Get all loaded toolbox instances.
+     *
+     * @return array<class-string, ToolboxInterface>
+     */
+    public function getLoadedToolboxes(): array
+    {
+        return $this->loadedToolboxes;
+    }
+
+    /**
+     * Force reload all tools, including those from toolboxes.
+     *
+     * Clears the loaded tools cache and reloads everything.
+     */
+    public function forceReloadTools(): void
+    {
+        $this->loadedTools = [];
+        $this->loadedToolboxes = [];
+
+        // Clear toolbox caches
+        foreach ($this->loadedToolboxes as $toolbox) {
+            if (method_exists($toolbox, 'clearCache')) {
+                $toolbox->clearCache();
             }
         }
     }
