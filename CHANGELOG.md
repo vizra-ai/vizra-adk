@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.46] - 2026-02-25
+
+fix: Streaming broken with Prism 0.99+ — API mismatch and state leak
+
+fix:Return structured output - This pull request introduces support for structured output in agents, allowing them to return structured data when a schema is defined and the response includes structured content. If structured data is not available, agents will fall back to returning plain text, preserving backward compatibility. Comprehensive unit tests have been added to verify these behaviors.
+
+Integration of new documentation
+
 ## [0.0.45] - 2026-02-06
 
 ## v0.0.45 (Unreleased)
