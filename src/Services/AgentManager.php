@@ -155,6 +155,12 @@ class AgentManager
             Event::dispatch(new AgentExecutionFinished($context, $agentName)); // Dispatch finished even on error
             throw $e;
         } finally {
+            // Clear streaming state to prevent it leaking into future non-streaming calls.
+            // AgentExecutor saves streaming=true to context state, and execute() reads it
+            // to enable streaming. Without this cleanup, subsequent non-streaming calls on
+            // the same session would return a Generator where a string is expected.
+            $context->setState('streaming', null);
+
             // Save context (state and full conversation history)
             $this->stateManager->saveContext($context, $agentName);
         }
