@@ -1074,8 +1074,11 @@ abstract class BaseLlmAgent extends BaseAgent
                 throw new \RuntimeException('afterLlmResponse hook modified the response to an incompatible type.');
             }
 
-            // Get the final response text - Prism has already executed any tools
+            // Get the final response - prefer structured data when available (enables schema-based agents)
             $assistantResponseContent = $processedResponse->text ?: '';
+            $structured = $processedResponse instanceof StructuredResponse && ! empty($processedResponse->structured)
+                ? $processedResponse->structured
+                : null;
 
             $context->addMessage([
                 'role' => 'assistant',
@@ -1084,8 +1087,8 @@ abstract class BaseLlmAgent extends BaseAgent
 
             Event::dispatch(new AgentResponseGenerated($context, $this->getName(), $assistantResponseContent));
 
-            // Store the result
-            $result = $assistantResponseContent;
+            // Return structured data when available, otherwise text (backward compatible)
+            $result = $structured !== null ? $structured : $assistantResponseContent;
 
             // End the trace with success
             // Tool spans will still be able to end because we preserved their trace IDs
