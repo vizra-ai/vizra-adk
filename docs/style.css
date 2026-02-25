@@ -1,5 +1,6 @@
 .nav-logo{
-       width: 138px;
-    height: 50px;
+    width: 100px;
+    height: 36px;
     transform: translateX(-30px);
+    margin-left: 24px;
 }
