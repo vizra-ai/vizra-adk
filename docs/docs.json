@@ -131,5 +131,10 @@
       "discord": "https://discord.gg/CRRzmvS5MK",
       "x": "https://x.com/aaronlumsden"
     }
+  },
+  "integrations": {
+    "ga4": {
+        "measurementId": "G-8X888FYD3F"
+    }
   }
 }
