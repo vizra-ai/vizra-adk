@@ -4,7 +4,8 @@
   "name": "Vizra ADK",
   "logo": {
     "dark": "/images/logo.jpg",
-    "light": "/images/logo.jpg"
+    "light": "/images/logo.jpg",
+    "href": "https://vizra.ai"
   },
   "favicon": "/favicon.svg",
   "colors": {
