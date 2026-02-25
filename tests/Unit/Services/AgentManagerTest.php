@@ -86,6 +86,10 @@ it('can run agent', function () {
         ->once()
         ->andReturn('test response');
 
+    $mockContext->shouldReceive('setState')
+        ->with('streaming', null)
+        ->once();
+
     $this->mockRegistry
         ->shouldReceive('getAgent')
         ->with($agentName)
