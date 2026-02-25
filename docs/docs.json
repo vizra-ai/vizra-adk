@@ -3,8 +3,8 @@
   "theme": "mint",
   "name": "Vizra ADK",
   "logo": {
-    "dark": "/vizra-logo.svg",
-    "light": "/vizra-logo.svg",
+    "dark": "/images/logo.svg",
+    "light": "/images/logo.svg",
     "href": "https://vizra.ai"
   },
   "favicon": "/favicon.svg",
