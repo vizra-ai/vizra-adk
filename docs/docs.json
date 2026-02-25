@@ -82,14 +82,6 @@
             ]
           },
           {
-            "group": "Examples",
-            "pages": [
-              "examples/overview",
-              "examples/customer-support-agent",
-              "examples/shopping-assistant"
-            ]
-          },
-          {
             "group": "Advanced Features",
             "pages": [
               "concepts/workflows",
