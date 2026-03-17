@@ -1,6 +1,10 @@
 ---
-name: "Vizra ADK Workflows"
-description: "Orchestrate complex multi-agent workflows - sequential, parallel, conditional, and loop patterns"
+name: vizra-workflows
+description: >
+  Orchestrate multi-agent workflows with sequential, parallel, conditional,
+  and loop patterns using Vizra ADK. Use when the user says "workflow",
+  "multi-agent", "pipeline", "orchestrate agents", or needs to chain,
+  branch, or parallelize Vizra ADK agents.
 ---
 
 # Vizra ADK Workflow Patterns
@@ -183,48 +187,6 @@ $report = $researchPipeline->run([
 ]);
 ```
 
-### Customer Service Escalation
-
-```php
-$customerService = ConditionalWorkflow::create()
-    // Initial classification
-    ->addStep('classify', TicketClassifierAgent::class)
-    // Route based on complexity
-    ->branch(
-        condition: fn($r) => $r['complexity'] === 'simple',
-        then: SequentialWorkflow::create()
-            ->addStep('respond', AutoResponderAgent::class)
-            ->addStep('close', TicketCloserAgent::class),
-        else: ConditionalWorkflow::create()
-            ->branch(
-                condition: fn($r) => $r['requires_human'],
-                then: HumanEscalationAgent::class,
-                else: SequentialWorkflow::create()
-                    ->addStep('research', IssueResearchAgent::class)
-                    ->addStep('respond', DetailedResponderAgent::class)
-            )
-    );
-```
-
-### Data Processing Pipeline
-
-```php
-$dataPipeline = SequentialWorkflow::create()
-    // Validate incoming data
-    ->addStep('validate', DataValidationAgent::class)
-    // Process each record
-    ->addStep('process', LoopWorkflow::create()
-        ->forEach(
-            items: fn($ctx) => $ctx['records'],
-            agent: RecordProcessorAgent::class
-        )
-    )
-    // Aggregate results
-    ->addStep('aggregate', AggregationAgent::class)
-    // Generate summary
-    ->addStep('summarize', SummaryAgent::class);
-```
-
 ## Error Handling in Workflows
 
 ```php
@@ -269,37 +231,6 @@ $workflow = SequentialWorkflow::create()
         return FinalizeAgent::run($result)
             ->withParameters(['duration' => $duration])
             ->go();
-    });
-```
-
-## Performance Optimization
-
-### Use Parallel for Independent Tasks
-
-```php
-// Good: Independent tasks run in parallel
-$workflow = ParallelWorkflow::create()
-    ->addTask('email', SendEmailAgent::class)
-    ->addTask('sms', SendSmsAgent::class)
-    ->addTask('push', SendPushAgent::class);
-
-// Bad: Sequential when not needed
-$workflow = SequentialWorkflow::create()
-    ->addStep('email', SendEmailAgent::class)
-    ->addStep('sms', SendSmsAgent::class)
-    ->addStep('push', SendPushAgent::class);
-```
-
-### Set Appropriate Timeouts
-
-```php
-$workflow = ParallelWorkflow::create()
-    ->addTask('fast', FastAgent::class)
-    ->addTask('slow', SlowAgent::class)
-    ->timeout(60)
-    ->onTimeout(function ($completedTasks) {
-        // Handle partial results
-        return $completedTasks;
     });
 ```
 
