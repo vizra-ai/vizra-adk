@@ -129,6 +129,14 @@ class AgentSession extends Model
     }
 
     /**
+     * Get the database connection for the model.
+     */
+    public function getConnectionName()
+    {
+        return config('vizra-adk.database_connection') ?? parent::getConnectionName();
+    }
+
+    /**
      * Override table name from config if provided.
      */
     public function getTable()
