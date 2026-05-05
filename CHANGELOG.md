@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.47] - 2026-05-05
+
+### Fixed
+- Add `getConnectionName()` override to `AgentSession`, `AgentMessage`, and `AgentMemory` models so static Eloquent calls (e.g. `firstOrCreate`, `updateOrCreate` in `StateManager`) respect the configured `vizra-adk.database_connection` instead of falling back to the default connection. (#105, thanks @rohitp-bsf)
+
 ## [0.0.46] - 2026-02-25
 
 fix: Streaming broken with Prism 0.99+ — API mismatch and state leak
