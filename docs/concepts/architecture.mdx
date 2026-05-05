@@ -1,0 +1,301 @@
+---
+title: "Architecture"
+description: "Understand the technical architecture of Vizra ADK - how agents, tools, context, and services work together"
+icon: "sitemap"
+---
+
+This page explains the internal architecture of Vizra ADK, helping you understand how the various components interact to power your AI agents.
+
+## Package Structure
+
+```
+vizra-adk/src/
+├── Agents/           # Agent base classes and workflows
+├── Contracts/        # Interfaces (ToolInterface, etc.)
+├── Console/Commands/ # Artisan commands
+├── Events/           # Laravel events for agent lifecycle
+├── Exceptions/       # Custom exception classes
+├── Execution/        # AgentExecutor for fluent execution
+├── Facades/          # Agent and Workflow facades
+├── Memory/           # Memory management
+├── Models/           # Eloquent models (sessions, messages, traces)
+├── Providers/        # Service providers and embedding providers
+├── Services/         # Core services (Manager, Registry, Tracer)
+├── System/           # AgentContext
+└── Tools/            # Built-in tools and MCP wrapper
+```
+
+## Core Components
+
+### Agent Hierarchy
+
+```
+BaseAgent (abstract)
+├── BaseLlmAgent (abstract)
+│   └── GenericLlmAgent (for ad-hoc definitions)
+│
+└── BaseWorkflowAgent (abstract)
+    ├── SequentialWorkflow
+    ├── ParallelWorkflow
+    ├── ConditionalWorkflow
+    └── LoopWorkflow
+```
+
+**BaseAgent** defines the core contract - every agent must have a `name`, `description`, and implement `execute()`.
+
+**BaseLlmAgent** extends this with LLM-specific features: system prompts, tool registration, model selection, and conversation handling.
+
+**BaseWorkflowAgent** provides orchestration capabilities without LLM overhead - pure PHP logic for complex multi-agent coordination.
+
+### Service Container Bindings
+
+Vizra ADK registers these singletons in Laravel's service container:
+
+| Service | Purpose |
+|---------|---------|
+| `AgentRegistry` | Stores and retrieves agent class mappings |
+| `AgentBuilder` | Fluent builder for configuring agents |
+| `AgentManager` | Central facade for running agents |
+| `StateManager` | Loads and persists agent context |
+| `MemoryManager` | Manages conversation history |
+| `Tracer` | Records execution spans for debugging |
+
+Access via dependency injection or the `Agent` facade:
+
+```php
+use Vizra\VizraADK\Facades\Agent;
+
+// Via facade
+$agent = Agent::named('customer_support');
+
+// Via container
+$manager = app(AgentManager::class);
+```
+
+## Request Lifecycle
+
+When you run an agent, here's what happens:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  1. AgentExecutor::run($input)                                  │
+│     └─> Builds execution configuration (user, session, params)  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  2. AgentExecutor::go()                                         │
+│     └─> Resolves session ID, loads/creates AgentContext         │
+│     └─> Dispatches AgentExecutionStarting event                 │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  3. AgentManager::run()                                         │
+│     └─> Gets agent from AgentRegistry                           │
+│     └─> Calls agent->execute($input, $context)                  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  4. BaseLlmAgent::execute()                                     │
+│     └─> Builds system prompt                                    │
+│     └─> Sends to LLM via Prism PHP                              │
+│     └─> Handles tool calls in a loop                            │
+│     └─> Returns final response                                  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  5. StateManager::saveContext()                                 │
+│     └─> Persists conversation history                           │
+│     └─> Saves state to database                                 │
+│     └─> Dispatches AgentExecutionFinished event                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## AgentContext
+
+`AgentContext` is the carrier object that flows through the entire execution:
+
+```php
+class AgentContext
+{
+    protected ?string $sessionId;
+    protected mixed $userInput;
+    protected array $state = [];
+    protected Collection $conversationHistory;
+}
+```
+
+It provides:
+- **Session tracking** - Links conversations across requests
+- **State storage** - Key-value store for execution data
+- **Conversation history** - Full message history for context
+
+Tools receive the context and can read/write state:
+
+```php
+public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
+{
+    // Read state
+    $userId = $context->getState('user_id');
+
+    // Write state
+    $context->setState('last_order_id', $orderId);
+
+    return json_encode(['success' => true]);
+}
+```
+
+## Tool Execution Flow
+
+When an LLM decides to call a tool:
+
+```
+┌──────────────────────────────────────┐
+│  LLM Response with tool_calls        │
+│  [{ name: "lookup_order", args: {}}] │
+└──────────────────────────────────────┘
+                    │
+                    ▼
+┌──────────────────────────────────────┐
+│  ToolCallInitiating Event            │
+│  (for logging/tracing)               │
+└──────────────────────────────────────┘
+                    │
+                    ▼
+┌──────────────────────────────────────┐
+│  Tool::execute($args, $context)      │
+│  Returns JSON string result          │
+└──────────────────────────────────────┘
+                    │
+                    ▼
+┌──────────────────────────────────────┐
+│  ToolCallCompleted Event             │
+│  Result sent back to LLM             │
+└──────────────────────────────────────┘
+                    │
+                    ▼
+┌──────────────────────────────────────┐
+│  Loop continues until LLM            │
+│  returns final text response         │
+└──────────────────────────────────────┘
+```
+
+## Event System
+
+Vizra ADK fires Laravel events at key points:
+
+| Event | When Fired |
+|-------|------------|
+| `AgentExecutionStarting` | Before agent execution begins |
+| `AgentExecutionFinished` | After execution completes |
+| `AgentResponseGenerated` | When final response is ready |
+| `LlmCallInitiating` | Before each LLM API call |
+| `LlmResponseReceived` | After LLM responds |
+| `ToolCallInitiating` | Before tool execution |
+| `ToolCallCompleted` | After tool returns |
+| `ToolCallFailed` | When tool throws exception |
+| `MemoryUpdated` | When memory is modified |
+| `StateUpdated` | When context state changes |
+
+Listen to these events for logging, analytics, or custom behavior:
+
+```php
+// In EventServiceProvider
+protected $listen = [
+    AgentExecutionFinished::class => [
+        LogAgentMetrics::class,
+    ],
+];
+```
+
+## Database Schema
+
+Vizra ADK creates these tables:
+
+| Table | Purpose |
+|-------|---------|
+| `agent_sessions` | Tracks conversation sessions |
+| `agent_messages` | Stores message history |
+| `agent_memories` | Persistent memory storage |
+| `agent_trace_spans` | Execution traces for debugging |
+| `agent_vector_memories` | Vector embeddings for RAG |
+| `agent_prompt_versions` | Prompt versioning |
+| `agent_prompt_usage` | Tracks which prompt versions are used |
+
+## LLM Integration
+
+Vizra ADK uses [Prism PHP](https://prismphp.org) for LLM communication:
+
+```
+Your Agent
+    │
+    ▼
+Vizra ADK (BaseLlmAgent)
+    │
+    ▼
+Prism PHP
+    │
+    ├──▶ OpenAI
+    ├──▶ Anthropic
+    ├──▶ Google Gemini
+    └──▶ Ollama
+```
+
+Configure providers in `config/vizra-adk.php`:
+
+```php
+'providers' => [
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+    ],
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+    ],
+],
+```
+
+## Extending the Architecture
+
+### Custom Service Providers
+
+Register custom services that integrate with Vizra ADK:
+
+```php
+class MyAgentServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        // Register custom tools globally
+        Agent::macro('withAnalytics', function ($tracker) {
+            // Custom behavior
+            return $this;
+        });
+    }
+}
+```
+
+### Custom Base Agents
+
+Create your own base agent with shared behavior:
+
+```php
+abstract class MyBaseAgent extends BaseLlmAgent
+{
+    protected function getSystemPrompt(): string
+    {
+        return "Company-wide instructions...\n\n" .
+               $this->getAgentSpecificPrompt();
+    }
+
+    abstract protected function getAgentSpecificPrompt(): string;
+}
+```
+
+## Next Steps
+
+- [Agents](/concepts/agents) - Learn how to build agents
+- [Tools](/concepts/tools) - Give agents capabilities
+- [Sessions & Memory](/concepts/sessions-memory) - Understand persistence

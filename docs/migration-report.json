@@ -1,0 +1,74 @@
+{
+  "timestamp": "2026-02-02T21:09:56.151Z",
+  "docsPath": "/Users/aaronlumsden/Desktop/web/projects/vizra/vizra-adk/docs",
+  "adkSrcPath": "/Users/aaronlumsden/Desktop/web/projects/vizra/vizra-adk/src",
+  "issues": [
+    {
+      "type": "unconverted-blade",
+      "file": "concepts/agents.mdx",
+      "pattern": "Blade control structures (@if, @foreach)",
+      "matches": [
+        "@if(",
+        "@if(",
+        "@if("
+      ],
+      "message": "Found Blade control structures (@if, @foreach) in concepts/agents.mdx: @if(, @if(, @if("
+    },
+    {
+      "type": "unconverted-blade",
+      "file": "concepts/agents.mdx",
+      "pattern": "Blade variables ({{ $var }})",
+      "matches": [
+        "{{ $a",
+        "{{ $u",
+        "{{ $t"
+      ],
+      "message": "Found Blade variables ({{ $var }}) in concepts/agents.mdx: {{ $a, {{ $u, {{ $t"
+    },
+    {
+      "type": "unconverted-blade",
+      "file": "concepts/dynamic-prompts.mdx",
+      "pattern": "Blade control structures (@if, @foreach)",
+      "matches": [
+        "@if(",
+        "@if(",
+        "@foreach("
+      ],
+      "message": "Found Blade control structures (@if, @foreach) in concepts/dynamic-prompts.mdx: @if(, @if(, @foreach("
+    },
+    {
+      "type": "unconverted-blade",
+      "file": "concepts/dynamic-prompts.mdx",
+      "pattern": "Blade variables ({{ $var }})",
+      "matches": [
+        "{{ $a",
+        "{{ $u",
+        "{{ $t"
+      ],
+      "message": "Found Blade variables ({{ $var }}) in concepts/dynamic-prompts.mdx: {{ $a, {{ $u, {{ $t"
+    }
+  ],
+  "warnings": [
+    {
+      "type": "undocumented-command",
+      "command": "vizra:boost:install",
+      "message": "Command may not be documented: vizra:boost:install"
+    },
+    {
+      "type": "undocumented-command",
+      "command": "vizra:mcp:servers",
+      "message": "Command may not be documented: vizra:mcp:servers"
+    },
+    {
+      "type": "undocumented-command",
+      "command": "vizra:make:assertion",
+      "message": "Command may not be documented: vizra:make:assertion"
+    },
+    {
+      "type": "undocumented-event",
+      "event": "LLmCallFailed",
+      "message": "Event may not be documented: LLmCallFailed"
+    }
+  ],
+  "passed": 26
+}

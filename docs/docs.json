@@ -1,0 +1,141 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Vizra ADK",
+  "logo": {
+    "dark": "/images/logo.svg",
+    "light": "/images/logo.svg",
+    "href": "https://vizra.ai"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#6366F1",
+    "light": "#818CF8",
+    "dark": "#4F46E5"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/vizra-ai/vizra-adk"
+      },
+      {
+        "label": "Discord",
+        "href": "https://discord.gg/CRRzmvS5MK"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "/installation/getting-started"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "grok",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "index",
+              "installation/getting-started",
+              "installation/requirements",
+              "installation/configuration"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/architecture",
+              "concepts/agents",
+              "concepts/tools",
+              "concepts/sessions-memory"
+            ]
+          },
+          {
+            "group": "Agents",
+            "pages": [
+              "agents/overview",
+              "agents/audio-agent",
+              "agents/image-agent"
+            ]
+          },
+          {
+            "group": "Tools",
+            "pages": [
+              "tools/toolbox",
+              "tools/tool-pipelines",
+              "tools/structured-output"
+            ]
+          },
+          {
+            "group": "Advanced Features",
+            "pages": [
+              "concepts/workflows",
+              "concepts/vector-rag",
+              "concepts/dynamic-prompts",
+              "advanced/agent-queuing",
+              "advanced/macros"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/providers",
+              "integrations/openai-compatibility",
+              "integrations/mcp",
+              "integrations/laravel-boost"
+            ]
+          },
+          {
+            "group": "Testing & Observability",
+            "pages": [
+              "testing/evaluations",
+              "testing/tracing",
+              "testing/web-dashboard"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "api-reference/artisan-commands",
+              "api-reference/agent-class",
+              "api-reference/tool-class",
+              "api-reference/workflow-class",
+              "api-reference/evaluation-class",
+              "api-reference/events",
+              "api-reference/error-handling",
+              "api-reference/tracing-class"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/vizra-ai/vizra-adk",
+      "discord": "https://discord.gg/CRRzmvS5MK",
+      "x": "https://x.com/aaronlumsden"
+    }
+  },
+  "integrations": {
+    "ga4": {
+        "measurementId": "G-8X888FYD3F"
+    }
+  }
+}

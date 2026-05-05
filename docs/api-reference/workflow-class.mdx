@@ -1,0 +1,412 @@
+---
+title: "Workflow Class Reference"
+description: "Orchestrate agents like a conductor. The BaseWorkflowAgent turns you into a master of AI coordination - chain agents together, create complex flows, and build intelligent automation pipelines."
+icon: "diagram-project"
+---
+
+## Class Overview
+
+```php
+namespace Vizra\VizraADK\Agents;
+
+abstract class BaseWorkflowAgent extends BaseAgent
+{
+    // Workflow agents extend this class
+}
+```
+
+## BaseWorkflowAgent Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `$steps` | array | `[]` | Array of workflow steps |
+| `$results` | array | `[]` | Step execution results |
+| `$timeout` | int | `300` | Workflow timeout (seconds) |
+| `$retryAttempts` | int | `0` | Default retry attempts |
+| `$retryDelay` | int | `1000` | Retry delay (milliseconds) |
+
+## Key Methods
+
+### executeWorkflow()
+
+```php
+abstract protected function executeWorkflow(mixed $input, AgentContext $context): mixed
+```
+
+Each workflow type must implement this method to define its execution logic.
+
+### addAgent()
+
+```php
+public function addAgent(
+    string $agentClass,
+    mixed $params = null,
+    array $options = []
+): static
+```
+
+Add an agent step to the workflow using the agent class name.
+
+## Workflow Methods
+
+### Configuration Methods
+
+```php
+// Set timeout for the entire workflow
+$workflow->timeout(300); // 5 minutes
+
+// Set retry policy
+$workflow->retryOnFailure(3, 1000); // 3 attempts, 1s delay
+
+// Set callbacks
+$workflow->onSuccess(function($result, $stepResults) {
+    Log::info('Success!', ['result' => $result]);
+});
+
+$workflow->onFailure(function(\Throwable $e, $stepResults) {
+    Log::error('Failed: ' . $e->getMessage());
+});
+
+$workflow->onComplete(function($result, $success, $stepResults) {
+    // Always runs
+});
+```
+
+### Result Access Methods
+
+```php
+// Get all results
+$allResults = $workflow->getResults();
+
+// Get specific step result
+$stepResult = $workflow->getStepResult(DataProcessor::class);
+
+// Reset workflow for reuse
+$workflow->reset();
+```
+
+## Workflow Types
+
+### Sequential Workflow
+
+```php
+use Vizra\VizraADK\Agents\SequentialWorkflow;
+use App\Agents\AnalyzerAgent;
+use App\Agents\ProcessorAgent;
+use App\Agents\ValidatorAgent;
+use App\Agents\CleanupAgent;
+
+$workflow = new SequentialWorkflow();
+
+// Add steps in sequence
+$workflow
+    ->start(AnalyzerAgent::class, 'Analyze input')
+    ->then(ProcessorAgent::class, fn($prev) => "Process: " . $prev)
+    ->when(ValidatorAgent::class, fn($input, $results) =>
+        $results[ProcessorAgent::class]['status'] === 'needs_validation'
+    )
+    ->finally(CleanupAgent::class); // Always runs
+
+// Create context and execute
+use Vizra\VizraADK\System\AgentContext;
+
+$context = new AgentContext('session-123');
+$result = $workflow->execute('Input data', $context);
+```
+
+### Parallel Workflow
+
+```php
+use Vizra\VizraADK\Agents\ParallelWorkflow;
+use App\Agents\EmailSender;
+use App\Agents\SmsSender;
+use App\Agents\WebhookCaller;
+
+$workflow = new ParallelWorkflow();
+$workflow
+    ->agents([
+        EmailSender::class => 'Send email notification',
+        SmsSender::class => 'Send SMS',
+        WebhookCaller::class => 'Call webhook'
+    ])
+    ->waitForAll(); // or waitForAny()
+```
+
+### Conditional Workflow
+
+```php
+use Vizra\VizraADK\Agents\ConditionalWorkflow;
+use App\Agents\UrgentHandler;
+use App\Agents\SupportAgent;
+use App\Agents\DefaultHandler;
+
+$workflow = new ConditionalWorkflow();
+$workflow
+    ->when(
+        fn($input) => $input['priority'] === 'high',
+        UrgentHandler::class
+    )
+    ->when(
+        fn($input) => $input['type'] === 'support',
+        SupportAgent::class
+    )
+    ->otherwise(DefaultHandler::class);
+```
+
+### Loop Workflow
+
+```php
+use Vizra\VizraADK\Agents\LoopWorkflow;
+use App\Agents\ProcessorAgent;
+use App\Agents\ItemProcessor;
+
+// While loop
+$workflow = new LoopWorkflow();
+$workflow->while(
+    ProcessorAgent::class,
+    fn($result) => $result['continue'] === true,
+    10 // max iterations
+);
+
+// For each loop
+$items = ['item1', 'item2', 'item3'];
+$workflow = new LoopWorkflow();
+$workflow->forEach(ItemProcessor::class, $items);
+```
+
+## Step Parameters
+
+### Dynamic Parameters
+
+```php
+// Static parameters
+$workflow->addAgent('agent_name', 'Static input');
+
+// Dynamic parameters with closure
+$workflow->addAgent(
+    'processor',
+    fn($input, $results, $context) => [
+        'data' => $results['previous_agent'],
+        'mode' => $context->getState('processing_mode')
+    ]
+);
+
+// Step options
+$workflow->addAgent('risky_agent', 'Input', [
+    'retries' => 5,
+    'timeout' => 60,
+    'condition' => fn() => config('app.env') === 'production'
+]);
+```
+
+## Creating Custom Workflows
+
+```php
+use App\Agents\FirstAgent;
+
+class CustomWorkflow extends BaseWorkflowAgent
+{
+    protected string $name = 'custom_workflow';
+    protected string $description = 'Custom workflow implementation';
+
+    protected function executeWorkflow(mixed $input, AgentContext $context): mixed
+    {
+        // Custom workflow logic
+        $result1 = $this->executeStep([
+            'agent' => 'first_agent',
+            'params' => $input,
+            'retries' => 2
+        ], $input, $context);
+
+        // Access previous results
+        $allResults = $this->getResults();
+
+        return [
+            'workflow_type' => 'custom',
+            'results' => $allResults
+        ];
+    }
+}
+```
+
+## Running Workflows
+
+### Basic Execution
+
+```php
+use Vizra\VizraADK\System\AgentContext;
+
+// Workflows are agents, so they run like any agent
+$workflow = new SequentialWorkflow();
+$workflow
+    ->then('agent1')
+    ->then('agent2');
+
+// Create context (required)
+$context = new AgentContext('session-123');
+
+// Execute with input and context
+$result = $workflow->execute('Process this data', $context);
+```
+
+### Using the Workflow Facade
+
+```php
+use Vizra\VizraADK\Facades\Workflow;
+use Vizra\VizraADK\System\AgentContext;
+
+// Create context
+$context = new AgentContext('session-123');
+
+// Create and execute in one go
+$result = Workflow::sequential('agent1', 'agent2', 'agent3')
+    ->execute('Input data', $context);
+
+// With callbacks
+$workflow = Workflow::sequential('agent1', 'agent2')
+    ->onSuccess(function($result) {
+        Log::info('Workflow completed!', ['result' => $result]);
+    });
+
+$result = $workflow->execute('Start', $context);
+```
+
+## Workflow Results
+
+### Sequential Workflow Results
+
+```json
+// Sequential workflow returns
+{
+    "final_result": "Last agent output",
+    "step_results": {
+        "agent1": "First result",
+        "agent2": "Second result"
+    },
+    "workflow_type": "sequential"
+}
+```
+
+### Parallel Workflow Results
+
+```json
+// Parallel workflow returns
+{
+    "results": {
+        "agent1": "Result 1",
+        "agent2": "Result 2"
+    },
+    "completed": ["agent1", "agent2"],
+    "workflow_type": "parallel"
+}
+```
+
+### Error Handling
+
+```php
+// Set retry policy for all steps
+$workflow->retryOnFailure(3, 1000);
+
+// Handle errors with callbacks
+$workflow->onFailure(function(\Throwable $e, $stepResults) {
+    // Log the error
+    Log::error('Workflow failed', [
+        'error' => $e->getMessage(),
+        'completed_steps' => array_keys($stepResults)
+    ]);
+
+    // Perform cleanup
+    CleanupService::rollback($stepResults);
+});
+```
+
+## Complete Example
+
+```php OrderProcessingWorkflow.php
+<?php
+
+namespace App\Workflows;
+
+use Vizra\VizraADK\Agents\SequentialWorkflow;
+use Vizra\VizraADK\System\AgentContext;
+use App\Agents\OrderValidator;
+use App\Agents\InventoryChecker;
+use App\Agents\PaymentProcessor;
+use App\Agents\ShippingCreator;
+use App\Agents\NotificationSender;
+use App\Agents\OrderLogger;
+
+class OrderProcessingWorkflow extends SequentialWorkflow
+{
+    protected string $name = 'order_processor';
+    protected string $description = 'Process customer orders through fulfillment';
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Configure workflow
+        $this->timeout(300) // 5 minutes
+             ->retryOnFailure(2, 2000); // 2 retries, 2s delay
+
+        // Define the workflow steps
+        $this
+            ->start(OrderValidator::class, fn($input) => [
+                'order_id' => $input['order_id']
+            ])
+            ->then(InventoryChecker::class, fn($prevResult) =>
+                $prevResult['items']
+            )
+            ->when(
+                PaymentProcessor::class,
+                fn($input, $results) =>
+                    $results[InventoryChecker::class]['available'] === true,
+                fn($input, $results) => [
+                    'amount' => $results[OrderValidator::class]['total'],
+                    'payment_method' => $input['payment_method']
+                ]
+            )
+            ->then(ShippingCreator::class)
+            ->then(NotificationSender::class, 'Send order confirmation')
+            ->finally(OrderLogger::class); // Always runs
+
+        // Set callbacks
+        $this->onSuccess(function($result, $stepResults) {
+            Log::info('Order processed successfully', [
+                'order_id' => $stepResults[OrderValidator::class]['order_id']
+            ]);
+        });
+
+        $this->onFailure(function(\Throwable $e, $stepResults) {
+            // Rollback any completed steps
+            if (isset($stepResults[PaymentProcessor::class])) {
+                PaymentService::refund(
+                    $stepResults[PaymentProcessor::class]['transaction_id']
+                );
+            }
+        });
+    }
+}
+```
+
+<Note>
+**Workflow Best Practices:**
+- Workflows are agents - they extend BaseWorkflowAgent
+- Use the appropriate workflow type for your use case
+- Set reasonable timeouts and retry limits
+- Leverage callbacks for monitoring and debugging
+- Pass results between steps using closures
+- Handle errors at both step and workflow levels
+- Test workflows with various input scenarios
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Evaluation Class" icon="flask-vial" href="/api-reference/evaluation-class">
+    Evaluation class reference
+  </Card>
+  <Card title="Workflow Concepts" icon="lightbulb" href="/concepts/workflows">
+    Learn more about workflows
+  </Card>
+</CardGroup>

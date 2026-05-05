@@ -32,7 +32,16 @@ class InstallCommand extends Command
         $this->comment('Configure your LLM provider API keys in .env and in config/vizra-adk.php if needed.');
 
         $this->showDashboardInfo();
+        $this->showDiscordInvite();
         $this->askForGitHubStar();
+    }
+
+    protected function showDiscordInvite(): void
+    {
+        $this->line('');
+        $this->info('💬 Join Our Community!');
+        $this->comment('Connect with other developers, get help, and share your projects:');
+        $this->line('   <fg=cyan>https://discord.gg/CRRzmvS5MK</fg=cyan>');
     }
 
     protected function showDashboardInfo(): void

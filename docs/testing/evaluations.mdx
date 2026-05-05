@@ -1,0 +1,598 @@
+---
+title: "Evaluations"
+description: "Transform your AI agents from unpredictable to reliable. Test, validate, and perfect your agents with automated quality assurance."
+icon: "flask"
+---
+
+<Info>
+**Why Testing Matters** - Just like you wouldn't ship code without tests, don't deploy AI agents without evaluations! **Evaluations give you confidence** that your agents will handle real-world scenarios gracefully, consistently, and professionally.
+</Info>
+
+## What Are Evaluations?
+
+Think of evaluations as **unit tests for your AI agents**! They help you:
+
+<CardGroup cols={2}>
+  <Card title="CSV-Based Testing" icon="chart-bar">
+    Define test cases in simple CSV files - no complex setup required!
+  </Card>
+  <Card title="Automated Validation" icon="robot">
+    Run hundreds of tests automatically with built-in assertions
+  </Card>
+  <Card title="LLM-as-Judge" icon="gavel">
+    Use AI to evaluate subjective qualities like helpfulness
+  </Card>
+  <Card title="Result Tracking" icon="chart-line">
+    Export results to CSV for analysis and CI/CD integration
+  </Card>
+</CardGroup>
+
+## Creating Your First Evaluation
+
+### Step 1: Generate the Evaluation Class
+
+Let's create an evaluation to test a customer support agent! Run this magical command:
+
+```bash Terminal
+php artisan vizra:make:eval CustomerSupportEvaluation
+```
+
+<Tip>
+**Double Magic! What Gets Created** - This single command creates **two files** for you:
+- `app/Evaluations/CustomerSupportEvaluation.php` - Your evaluation class
+- `app/Evaluations/data/customer_support_evaluation.csv` - Empty CSV with headers ready for test data
+
+No need to manually create the CSV file - it's all set up and ready for you to add test cases!
+</Tip>
+
+**Boom!** This creates your evaluation class in `app/Evaluations/CustomerSupportEvaluation.php`:
+
+```php app/Evaluations/CustomerSupportEvaluation.php
+<?php
+
+namespace App\Evaluations;
+
+use Vizra\VizraADK\Evaluations\BaseEvaluation;
+
+class CustomerSupportEvaluation extends BaseEvaluation
+{
+    public string $name = 'customer_support_eval';
+
+    public string $description = 'Evaluate customer support agent responses';
+
+    public string $agentName = 'customer_support'; // Agent alias
+
+    public string $csvPath = 'app/Evaluations/data/customer_support_tests.csv';
+
+    public function preparePrompt(array $csvRowData): string
+    {
+        // Use the 'prompt' column from CSV by default
+        return $csvRowData[$this->getPromptCsvColumn()] ?? '';
+    }
+
+    public function evaluateRow(array $csvRowData, string $llmResponse): array
+    {
+        // Reset assertions for this row
+        $this->resetAssertionResults();
+
+        // Run assertions based on test type
+        if ($csvRowData['test_type'] === 'greeting') {
+            $this->assertResponseContains($llmResponse, 'help');
+            $this->assertResponseHasPositiveSentiment($llmResponse);
+        }
+
+        // Return evaluation results
+        $allPassed = collect($this->assertionResults)
+            ->every(fn($r) => $r['status'] === 'pass');
+
+        return [
+            'row_data' => $csvRowData,
+            'llm_response' => $llmResponse,
+            'assertions' => $this->assertionResults,
+            'final_status' => $allPassed ? 'pass' : 'fail',
+        ];
+    }
+}
+```
+
+### Step 2: Add Your Test Data
+
+Now for the fun part - adding test scenarios! The CSV file was automatically created with standard headers. Let's populate it with different customer interactions:
+
+```csv app/Evaluations/data/customer_support_evaluation.csv
+prompt,expected_response,description
+"Hello, I need help",help,"Greeting test - should offer assistance"
+"Where is my order #12345?",order,"Order inquiry - should help track order"
+"I want to return this product",return,"Return request - should explain process"
+"This is terrible service!",sorry,"Complaint - should be empathetic"
+```
+
+<Tip>
+**Pro Tip: Customize Your CSV Structure!** - The auto-generated CSV starts with standard headers, but you can customize it for your needs:
+- `prompt` - The input to send to your agent (required)
+- `expected_response` - What you expect in the response
+- `description` - Human-readable test description
+- `test_type` - Add this to categorize tests for different assertion logic
+- `context` - Add background information for the test
+- Add any custom columns you need!
+
+The command creates the basic structure - feel free to add more columns as your evaluation needs grow!
+</Tip>
+
+## Your Assertion Toolbox
+
+Vizra ADK provides a **rich collection of assertions** to validate every aspect of your agent's responses!
+
+### Content Assertions
+
+```php
+// Check if response contains text
+$this->assertResponseContains($llmResponse, 'expected text');
+$this->assertResponseDoesNotContain($llmResponse, 'unwanted');
+
+// Pattern matching
+$this->assertResponseMatchesRegex($llmResponse, '/pattern/');
+
+// Position checks
+$this->assertResponseStartsWith($llmResponse, 'Hello');
+$this->assertResponseEndsWith($llmResponse, '.');
+
+// Multiple checks
+$this->assertContainsAnyOf($llmResponse, ['yes', 'sure', 'okay']);
+$this->assertContainsAllOf($llmResponse, ['thank', 'you']);
+```
+
+### Length & Structure
+
+```php
+// Response length
+$this->assertResponseLengthBetween($llmResponse, 50, 500);
+
+// Word count
+$this->assertWordCountBetween($llmResponse, 10, 100);
+
+// Format validation
+$this->assertResponseIsValidJson($llmResponse);
+$this->assertJsonHasKey($llmResponse, 'result');
+$this->assertResponseIsValidXml($llmResponse);
+```
+
+### Quality Checks
+
+```php
+// Sentiment analysis
+$this->assertResponseHasPositiveSentiment($llmResponse);
+
+// Writing quality
+$this->assertGrammarCorrect($llmResponse);
+$this->assertReadabilityLevel($llmResponse, 12);
+$this->assertNoRepetition($llmResponse, 0.3);
+```
+
+### Safety & Security
+
+```php
+// Content safety
+$this->assertNotToxic($llmResponse);
+
+// Privacy protection
+$this->assertNoPII($llmResponse);
+
+// General safety
+$this->assertResponseIsNotEmpty($llmResponse);
+```
+
+## LLM as Judge - The Ultimate Quality Check
+
+Sometimes you need another AI to evaluate subjective qualities. That's where **LLM-as-Judge** comes in!
+
+<Info>
+**When to Use LLM Judge?** - Perfect for evaluating:
+- Helpfulness and professionalism
+- Empathy and emotional intelligence
+- Creativity and originality
+- Accuracy of complex responses
+- Overall response quality
+</Info>
+
+### Using LLM Judge Assertions
+
+<Tip>
+**New Fluent Judge Interface!** - We've introduced a cleaner, more intuitive syntax for judge assertions:
+</Tip>
+
+```php app/Evaluations/CustomerSupportEvaluation.php
+public function evaluateRow(array $csvRowData, string $llmResponse): array
+{
+    $this->resetAssertionResults();
+
+    // Simple pass/fail evaluation
+    $this->judge($llmResponse)
+        ->using(PassFailJudgeAgent::class)
+        ->expectPass();
+
+    // Quality score evaluation
+    $this->judge($llmResponse)
+        ->using(QualityJudgeAgent::class)
+        ->expectMinimumScore(7.5);
+
+    // Multi-dimensional evaluation
+    $this->judge($llmResponse)
+        ->using(ComprehensiveJudgeAgent::class)
+        ->expectMinimumScore([
+            'accuracy' => 8,
+            'helpfulness' => 7,
+            'clarity' => 7
+        ]);
+
+    // Return results...
+}
+```
+
+### Three Judge Patterns
+
+**1. Pass/Fail Judge**
+
+For binary decisions - returns `{"pass": true/false, "reasoning": "..."}`
+
+```php
+$this->judge($response)
+    ->using(PassFailJudgeAgent::class)
+    ->expectPass();
+```
+
+**2. Quality Score Judge**
+
+For numeric ratings - returns `{"score": 8.5, "reasoning": "..."}`
+
+```php
+$this->judge($response)
+    ->using(QualityJudgeAgent::class)
+    ->expectMinimumScore(7.0);
+```
+
+**3. Comprehensive Judge**
+
+For multi-dimensional evaluation - returns `{"scores": {...}, "reasoning": "..."}`
+
+```php
+$this->judge($response)
+    ->using(ComprehensiveJudgeAgent::class)
+    ->expectMinimumScore([
+        'accuracy' => 8,
+        'helpfulness' => 7,
+        'clarity' => 7
+    ]);
+```
+
+## Running Your Evaluations
+
+Time to put your agent to the test! Let's see how it performs!
+
+### Running from CLI
+
+```bash Terminal
+# Run evaluation by class name
+php artisan vizra:run:eval CustomerSupportEvaluation
+
+# Save results to CSV for analysis
+php artisan vizra:run:eval CustomerSupportEvaluation --output=results.csv
+
+# Results are saved to storage/app/evaluations/ by default
+```
+
+### What You'll See
+
+Watch the magic happen with a beautiful progress bar and detailed results!
+
+```text Console Output
+Running evaluation: customer_support_eval
+Description: Evaluate customer support agent responses
+Processing 4 rows from CSV using agent 'customer_support'...
+████████████████████████████████████████ 4/4
+Evaluation processing complete.
+
+┌─────┬──────────────┬──────────────────────────┬─────────────────┬───────┐
+│ Row │ Final Status │ LLM Response Summary     │ Assertions Count│ Error │
+├─────┼──────────────┼──────────────────────────┼─────────────────┼───────┤
+│ 1   │ ✅ pass      │ Hello! I'd be happy to...│ 2               │       │
+│ 2   │ ✅ pass      │ I can help you track...  │ 1               │       │
+│ 3   │ ❌ fail      │ Sure, let me assist...   │ 2               │       │
+│ 4   │ ✅ pass      │ I understand your...     │ 3               │       │
+└─────┴──────────────┴──────────────────────────┴─────────────────┴───────┘
+
+Summary: Total Rows: 4, Passed: 3 (75%), Failed: 1 (25%), Errors: 0
+```
+
+## Advanced Example - Putting It All Together
+
+Ready for the full experience? Here's a **complete evaluation implementation** that showcases all the techniques!
+
+```php app/Evaluations/CustomerSupportEvaluation.php
+<?php
+
+namespace App\Evaluations;
+
+use Vizra\VizraADK\Evaluations\BaseEvaluation;
+
+class CustomerSupportEvaluation extends BaseEvaluation
+{
+    public string $name = 'customer_support_eval';
+    public string $description = 'Comprehensive customer support evaluation';
+    public string $agentName = 'customer_support';
+    public string $csvPath = 'app/Evaluations/data/customer_support_tests.csv';
+
+    public function preparePrompt(array $csvRowData): string
+    {
+        // Get the base prompt
+        $prompt = $csvRowData[$this->getPromptCsvColumn()] ?? '';
+
+        // Add context if available
+        if (isset($csvRowData['context'])) {
+            $prompt = "Context: " . $csvRowData['context'] . "\n\n" . $prompt;
+        }
+
+        return $prompt;
+    }
+
+    public function evaluateRow(array $csvRowData, string $llmResponse): array
+    {
+        $this->resetAssertionResults();
+
+        // Basic content checks
+        if (isset($csvRowData['expected_contains'])) {
+            $this->assertResponseContains(
+                $llmResponse,
+                $csvRowData['expected_contains']
+            );
+        }
+
+        // Test type specific assertions
+        switch ($csvRowData['test_type'] ?? '') {
+            case 'greeting':
+                $this->assertResponseHasPositiveSentiment($llmResponse);
+                $this->assertWordCountBetween($llmResponse, 10, 50);
+                break;
+
+            case 'complaint':
+                $this->assertResponseContains($llmResponse, 'sorry');
+                $this->assertNotToxic($llmResponse);
+                $this->assertLlmJudge(
+                    $llmResponse,
+                    'Is this response empathetic and de-escalating?',
+                    'llm_judge',
+                    'pass'
+                );
+                break;
+
+            case 'technical':
+                $this->assertReadabilityLevel($llmResponse, 12);
+                $this->assertGrammarCorrect($llmResponse);
+                break;
+        }
+
+        // General quality checks
+        $this->assertResponseIsNotEmpty($llmResponse);
+        $this->assertNoPII($llmResponse);
+
+        // Determine final status
+        $allPassed = collect($this->assertionResults)
+            ->every(fn($r) => $r['status'] === 'pass');
+
+        return [
+            'row_data' => $csvRowData,
+            'llm_response' => $llmResponse,
+            'assertions' => $this->assertionResults,
+            'final_status' => $allPassed ? 'pass' : 'fail',
+        ];
+    }
+}
+```
+
+## Analyzing Your Results
+
+### CSV Output Structure
+
+When you export results with `--output`, you get a comprehensive CSV report!
+
+**CSV Columns Explained:**
+- **Evaluation Name** - The name of your evaluation
+- **Row Index** - Which test case from your CSV
+- **Final Status** - pass, fail, or error
+- **LLM Response** - What your agent actually said
+- **Assertions (JSON)** - Detailed results of each check
+
+## Creating Custom Assertions
+
+Need something specific? Create your own reusable assertion classes!
+
+### Simple Example: Product Name Assertion
+
+Let's create a simple assertion that checks if a product name is mentioned:
+
+```php app/Evaluations/Assertions/ContainsProductAssertion.php
+<?php
+
+namespace App\Evaluations\Assertions;
+
+use Vizra\VizraADK\Evaluations\Assertions\BaseAssertion;
+
+class ContainsProductAssertion extends BaseAssertion
+{
+    public function assert(string $response, ...$params): array
+    {
+        $productName = $params[0] ?? '';
+
+        if (empty($productName)) {
+            return $this->result(false, 'Product name parameter is required');
+        }
+
+        $contains = stripos($response, $productName) !== false;
+
+        return $this->result(
+            $contains,
+            "Response should mention the product '{$productName}'",
+            "contains '{$productName}'",
+            $contains ? "found '{$productName}'" : "product not mentioned"
+        );
+    }
+}
+```
+
+### Using Your Custom Assertion
+
+```php app/Evaluations/ProductReviewEvaluation.php
+use App\Evaluations\Assertions\ContainsProductAssertion;
+
+class ProductReviewEvaluation extends BaseEvaluation
+{
+    private ContainsProductAssertion $productAssertion;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->productAssertion = new ContainsProductAssertion();
+    }
+
+    public function evaluateRow(array $csvRowData, string $llmResponse): array
+    {
+        $this->resetAssertionResults();
+
+        // Use your custom assertion
+        $this->assertCustom(ContainsProductAssertion::class, $llmResponse, 'MacBook Pro');
+
+        // Mix with built-in assertions
+        $this->assertWordCountBetween($llmResponse, 50, 200);
+
+        // Determine final status
+        $allPassed = collect($this->assertionResults)
+            ->every(fn($r) => $r['status'] === 'pass');
+
+        return [
+            'assertions' => $this->assertionResults,
+            'final_status' => $allPassed ? 'pass' : 'fail',
+        ];
+    }
+}
+```
+
+<Tip>
+**Pro Tip: CSV-Driven Custom Assertions!** - You can even specify custom assertions in your CSV files:
+
+```csv
+prompt,assertion_class,assertion_params
+"Tell me about the new iPhone",ContainsProductAssertion,"[\"iPhone\"]"
+"Describe the MacBook features",ContainsProductAssertion,"[\"MacBook\"]"
+```
+
+Then use them dynamically in your evaluation:
+
+```php
+if (isset($csvRowData['assertion_class'])) {
+    $params = json_decode($csvRowData['assertion_params'] ?? '[]', true);
+    $this->assertCustom($csvRowData['assertion_class'], $llmResponse, ...$params);
+}
+```
+</Tip>
+
+### Generate Assertion Classes with Artisan
+
+Creating new assertions is super easy with our generator command!
+
+```bash Terminal
+php artisan vizra:make:assertion EmailValidationAssertion
+```
+
+This creates a ready-to-use assertion class with helpful boilerplate!
+
+### Built-in Custom Assertions
+
+Vizra ADK comes with several ready-to-use custom assertions:
+
+<CardGroup cols={2}>
+  <Card title="ContainsProductAssertion" icon="box">
+    Check if a product name is mentioned
+  </Card>
+  <Card title="JsonSchemaAssertion" icon="file-code">
+    Validate JSON structure against a schema
+  </Card>
+  <Card title="PriceFormatAssertion" icon="dollar-sign">
+    Verify price formatting in any currency
+  </Card>
+  <Card title="EmailFormatAssertion" icon="envelope">
+    Check for valid email addresses
+  </Card>
+</CardGroup>
+
+## CI/CD Integration
+
+Make testing automatic! Here's how to add evaluations to your CI/CD pipeline!
+
+```yaml .github/workflows/evaluate.yml
+# Evaluate agents on every push
+name: Evaluate Agents
+on: [push, pull_request]
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup PHP & Dependencies
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Install Dependencies
+        run: composer install
+
+      - name: Run Evaluations
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          php artisan vizra:run:eval CustomerSupportEvaluation --output=results.csv
+
+      - name: Check Results
+        run: |
+          # Add your own pass/fail logic based on CSV results
+          php artisan app:check-eval-results storage/app/evaluations/results.csv
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v2
+        with:
+          name: evaluation-results
+          path: storage/app/evaluations/
+```
+
+## Best Practices for Awesome Evaluations
+
+<CardGroup cols={2}>
+  <Card title="Organization" icon="clipboard-list">
+    - **CSV Organization** - Use clear test types and descriptive columns
+    - **Thorough Testing** - Combine multiple assertion types
+    - **LLM Judge** - Use for subjective quality checks
+    - **CI/CD Integration** - Run evaluations on every push
+  </Card>
+  <Card title="Quality" icon="chart-line">
+    - **Track Progress** - Monitor performance over time
+    - **Real Data** - Include actual user queries
+    - **Edge Cases** - Test error scenarios too
+    - **Consistency** - Use the same criteria across agents
+  </Card>
+</CardGroup>
+
+---
+
+## You're Ready to Test Like a Pro!
+
+With evaluations, you can ship AI agents with confidence! Your agents will be tested, validated, and ready for real-world challenges. Happy testing!
+
+<CardGroup cols={2}>
+  <Card title="Next: Tracing" icon="magnifying-glass" href="/concepts/tracing">
+    Learn about debugging with traces
+  </Card>
+  <Card title="Evaluation API Reference" icon="book" href="/api/evaluation-class">
+    Detailed evaluation class documentation
+  </Card>
+</CardGroup>

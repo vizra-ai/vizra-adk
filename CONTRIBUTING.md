@@ -381,8 +381,8 @@ Look for issues labeled `good-first-issue` on GitHub.
 
 ### Resources
 - [GitHub Issues](https://github.com/vizra-ai/vizra-adk/issues)
-- [Discord Community](https://discord.gg/vizra) (when available)
-- [Documentation](https://vizra.ai/docs) (when available)
+- [Discord Community](https://discord.gg/CRRzmvS5MK)
+- [Documentation](https://vizra.ai/docs)
 
 ### Questions?
 - Check existing issues and discussions

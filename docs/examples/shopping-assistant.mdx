@@ -1,0 +1,366 @@
+---
+title: "Shopping Assistant"
+description: "Build a personal shopping assistant with cart management and preference learning"
+icon: "bag-shopping"
+---
+
+<Frame>
+  <iframe
+    width="100%"
+    height="400"
+    src="https://www.youtube.com/embed/VIDEO_ID"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</Frame>
+
+## Overview
+
+This example demonstrates how to build a personal shopping assistant that:
+
+- Maintains shopping cart state across conversations
+- Learns and remembers user preferences
+- Provides personalized product recommendations
+- Tracks budget and spending
+- Uses context hooks for dynamic behavior
+
+## Agent Definition
+
+```php
+<?php
+
+namespace App\Agents;
+
+use Generator;
+use Prism\Prism\Text\Response as TextResponse;
+use Prism\Prism\Structured\Response as StructuredResponse;
+use Vizra\VizraADK\Agents\BaseLlmAgent;
+use Vizra\VizraADK\System\AgentContext;
+
+class PersonalShoppingAssistantAgent extends BaseLlmAgent
+{
+    protected string $name = 'shopping_assistant';
+
+    protected string $description = 'A personal shopping assistant that helps users find products while maintaining cart state and preferences';
+
+    protected string $model = 'gpt-4o';
+
+    protected ?float $temperature = 0.7;
+
+    protected ?int $maxTokens = 1000;
+
+    protected array $tools = [
+        \App\Tools\CartManagerTool::class,
+        \App\Tools\ProductSearchTool::class,
+    ];
+
+    protected string $instructions = <<<'PROMPT'
+    You are a friendly and helpful personal shopping assistant.
+    Your goal is to help users find the perfect products within
+    their budget while learning their preferences.
+
+    Key responsibilities:
+    - Help users build a shopping cart within their specified budget
+    - Learn and remember user preferences throughout the conversation
+    - Provide personalized product recommendations
+    - Keep track of cart contents and remaining budget
+    - Use the cart_manager tool to add/remove items
+
+    Always be helpful, friendly, and budget-conscious.
+    PROMPT;
+
+    /**
+     * Inject context into the system prompt
+     */
+    public function getInstructionsWithMemory(AgentContext $context): string
+    {
+        $instructions = parent::getInstructionsWithMemory($context);
+
+        // Get current context state
+        $cart = $context->getState('cart', []);
+        $budget = $context->getState('budget');
+        $preferences = $context->getState('preferences', []);
+        $totalSpent = $context->getState('total_spent', 0);
+
+        // Build context summary
+        $contextSummary = $this->buildContextSummary($cart, $budget, $preferences, $totalSpent);
+
+        return $instructions . "\n\n" . $contextSummary;
+    }
+
+    /**
+     * After each response, extract and update context from JSON
+     */
+    public function afterLlmResponse(
+        TextResponse|StructuredResponse|Generator $response,
+        AgentContext $context,
+        $request = null
+    ): mixed {
+        if ($response instanceof TextResponse) {
+            $this->parseStructuredResponse($response->text, $context);
+        }
+
+        return $response;
+    }
+}
+```
+
+### Context Summary Builder
+
+The agent dynamically injects shopping context into prompts:
+
+```php
+private function buildContextSummary(
+    array $cart,
+    ?float $budget,
+    array $preferences,
+    float $totalSpent
+): string {
+    $summary = "\n=== CURRENT CONTEXT ===\n";
+
+    if ($budget !== null) {
+        $remaining = $budget - $totalSpent;
+        $summary .= "Budget: $" . number_format($budget, 2) . "\n";
+        $summary .= "Spent: $" . number_format($totalSpent, 2) . "\n";
+        $summary .= "Remaining: $" . number_format($remaining, 2) . "\n\n";
+    }
+
+    if (!empty($cart)) {
+        $summary .= "Current Cart:\n";
+        foreach ($cart as $item) {
+            $summary .= "- {$item['name']}: $" . number_format($item['price'], 2) . "\n";
+        }
+    } else {
+        $summary .= "Cart: Empty\n";
+    }
+
+    if (!empty($preferences)) {
+        $summary .= "\nUser Preferences:\n";
+        foreach ($preferences as $category => $prefs) {
+            if (is_array($prefs)) {
+                $summary .= "- {$category}: " . implode(', ', $prefs) . "\n";
+            } else {
+                $summary .= "- {$category}: {$prefs}\n";
+            }
+        }
+    }
+
+    $summary .= "========================\n";
+
+    return $summary;
+}
+```
+
+### Response Parser
+
+Extract structured data from LLM responses to update context:
+
+```php
+private function parseStructuredResponse(string $responseText, AgentContext $context): void
+{
+    // Look for JSON in the response
+    if (preg_match('/\{.*"context_update".*\}/s', $responseText, $matches)) {
+        $jsonData = json_decode($matches[0], true);
+
+        if (json_last_error() === JSON_ERROR_NONE && isset($jsonData['context_update'])) {
+            $this->updateContextFromJson($jsonData['context_update'], $context);
+        }
+    }
+}
+
+private function updateContextFromJson(array $contextUpdate, AgentContext $context): void
+{
+    if (isset($contextUpdate['shopping_goals']['budget'])) {
+        $context->setState('budget', (float) $contextUpdate['shopping_goals']['budget']);
+    }
+
+    if (isset($contextUpdate['preferences'])) {
+        $currentPreferences = $context->getState('preferences', []);
+        $context->setState('preferences', array_merge($currentPreferences, $contextUpdate['preferences']));
+    }
+}
+```
+
+## Cart Manager Tool
+
+```php
+<?php
+
+namespace App\Tools;
+
+use Vizra\VizraADK\Contracts\ToolInterface;
+use Vizra\VizraADK\System\AgentContext;
+
+class CartManagerTool implements ToolInterface
+{
+    public function definition(): array
+    {
+        return [
+            'name' => 'cart_manager',
+            'description' => 'Manage the shopping cart - add items, remove items, or get cart summary',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'action' => [
+                        'type' => 'string',
+                        'enum' => ['add', 'remove', 'clear', 'summary'],
+                        'description' => 'The action to perform on the cart',
+                    ],
+                    'item' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'name' => ['type' => 'string'],
+                            'price' => ['type' => 'number'],
+                            'quantity' => ['type' => 'integer'],
+                        ],
+                        'description' => 'Item details (required for add/remove)',
+                    ],
+                ],
+                'required' => ['action'],
+            ],
+        ];
+    }
+
+    public function execute(array $arguments, AgentContext $context): string
+    {
+        $action = $arguments['action'];
+        $cart = $context->getState('cart', []);
+
+        switch ($action) {
+            case 'add':
+                $item = $arguments['item'];
+                $cart[] = $item;
+                $context->setState('cart', $cart);
+                $this->updateTotal($context);
+                return json_encode([
+                    'success' => true,
+                    'message' => "Added {$item['name']} to cart",
+                    'cart_total' => $context->getState('total_spent'),
+                ]);
+
+            case 'remove':
+                $itemName = $arguments['item']['name'];
+                $cart = array_filter($cart, fn($i) => $i['name'] !== $itemName);
+                $context->setState('cart', array_values($cart));
+                $this->updateTotal($context);
+                return json_encode([
+                    'success' => true,
+                    'message' => "Removed {$itemName} from cart",
+                ]);
+
+            case 'clear':
+                $context->setState('cart', []);
+                $context->setState('total_spent', 0);
+                return json_encode(['success' => true, 'message' => 'Cart cleared']);
+
+            case 'summary':
+                return json_encode([
+                    'items' => $cart,
+                    'total' => $context->getState('total_spent', 0),
+                    'item_count' => count($cart),
+                ]);
+        }
+
+        return json_encode(['error' => 'Unknown action']);
+    }
+
+    private function updateTotal(AgentContext $context): void
+    {
+        $cart = $context->getState('cart', []);
+        $total = array_sum(array_map(
+            fn($item) => $item['price'] * ($item['quantity'] ?? 1),
+            $cart
+        ));
+        $context->setState('total_spent', $total);
+    }
+}
+```
+
+## Key Concepts Demonstrated
+
+### Context State Management
+
+The agent uses `AgentContext` to maintain state across the conversation:
+
+```php
+// Get state with default value
+$cart = $context->getState('cart', []);
+
+// Set state
+$context->setState('budget', 200.00);
+
+// State persists across tool calls and LLM interactions
+```
+
+### Lifecycle Hooks
+
+Override lifecycle methods to inject dynamic behavior:
+
+```php
+// Inject context into prompts
+public function getInstructionsWithMemory(AgentContext $context): string
+
+// Process responses and extract data
+public function afterLlmResponse($response, AgentContext $context): mixed
+```
+
+## Usage Example
+
+```php
+use Vizra\VizraADK\Facades\Agent;
+
+$agent = Agent::get('shopping_assistant');
+
+// Start a shopping session
+$response = $agent->run(
+    "Hi! I'm looking for gifts for my family. I have a budget of $200.",
+    userId: 'user_123',
+    sessionId: 'shopping_session_789'
+);
+
+// The agent remembers the budget
+$response = $agent->run(
+    "My mom loves gardening and my brother is into tech gadgets.",
+    userId: 'user_123',
+    sessionId: 'shopping_session_789'
+);
+
+// Preferences are tracked and used for recommendations
+$response = $agent->run(
+    "What would you recommend for my mom?",
+    userId: 'user_123',
+    sessionId: 'shopping_session_789'
+);
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use higher temperature for recommendations">
+    Shopping assistants benefit from more creative responses (0.7 temperature) to provide varied and interesting product suggestions.
+  </Accordion>
+
+  <Accordion title="Leverage context for personalization">
+    Store and use customer preferences, past purchases, and browsing history to provide personalized recommendations.
+  </Accordion>
+
+  <Accordion title="Keep cart state in context">
+    Use `AgentContext` state to maintain cart contents across the conversation without requiring database persistence for every interaction.
+  </Accordion>
+
+  <Accordion title="Extract structured data from responses">
+    Use the `afterLlmResponse` hook to parse structured data from LLM outputs and update context automatically.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Dynamic Prompts" icon="wand-magic-sparkles" href="/concepts/dynamic-prompts">
+    Learn how to create prompts that adapt based on context
+  </Card>
+  <Card title="Tool Pipelines" icon="diagram-project" href="/tools/tool-pipelines">
+    Chain multiple tools together for complex operations
+  </Card>
+</CardGroup>

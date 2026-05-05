@@ -46,6 +46,7 @@ class AgentChatCommand extends Command
         // Generate a unique session ID for this chat session
         $sessionId = Str::uuid()->toString();
         $this->info("Chat session started with ID: <comment>{$sessionId}</comment>. Type 'exit' or 'quit' to end.");
+        $this->comment('Need help? Join our Discord community: https://discord.gg/CRRzmvS5MK');
         $this->newLine();
 
         while (true) {

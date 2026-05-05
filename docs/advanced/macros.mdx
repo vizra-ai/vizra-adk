@@ -1,22 +1,37 @@
-# Laravel Macros and Mixins Support
-
-Vizra ADK now supports Laravel's powerful macros and mixins pattern, allowing you to extend the package's functionality with custom methods without modifying the core code.
+---
+title: "Macros & Mixins"
+description: "Extend Vizra ADK with custom methods using Laravel's powerful macros and mixins pattern"
+icon: "puzzle-piece"
+---
 
 ## What are Macros?
 
-Macros allow you to add custom methods to classes at runtime. This is useful for:
-- Adding custom tracking or analytics
-- Integrating with third-party services
-- Adding domain-specific functionality
-- Creating reusable patterns across your application
+Macros allow you to add custom methods to classes at runtime. This is a powerful extensibility pattern borrowed from Laravel that lets you extend Vizra ADK's functionality without modifying the core code.
+
+<CardGroup cols={2}>
+  <Card title="Custom Tracking" icon="chart-line">
+    Add analytics and tracking to your agents
+  </Card>
+  <Card title="Third-party Integrations" icon="plug">
+    Integrate with external services seamlessly
+  </Card>
+  <Card title="Domain Logic" icon="building">
+    Add business-specific functionality
+  </Card>
+  <Card title="Reusable Patterns" icon="recycle">
+    Create patterns you can use across your app
+  </Card>
+</CardGroup>
 
 ## Supported Classes
 
 The following Vizra ADK classes support macros:
 
-- `AgentManager` - Access via `Agent` facade
-- `AgentBuilder` - Fluent builder interface
-- `WorkflowManager` - Access via `Workflow` facade
+| Class | Access | Description |
+|-------|--------|-------------|
+| `AgentManager` | `Agent` facade | Central agent management |
+| `AgentBuilder` | Fluent builder | Agent configuration and registration |
+| `WorkflowManager` | `Workflow` facade | Workflow orchestration |
 
 ## Basic Usage
 
@@ -24,18 +39,26 @@ The following Vizra ADK classes support macros:
 
 Register macros in your `AppServiceProvider::boot()` method:
 
-```php
+```php app/Providers/AppServiceProvider.php
+<?php
+
+namespace App\Providers;
+
 use Vizra\VizraADK\Services\AgentBuilder;
 use Vizra\VizraADK\Facades\Agent;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\ServiceProvider;
 
-public function boot(): void
+class AppServiceProvider extends ServiceProvider
 {
-    // Add a tracking macro for analytics
-    AgentBuilder::macro('track', function (Model $model) {
-        $this->trackedModel = $model;
-        return $this; // Return $this for method chaining
-    });
+    public function boot(): void
+    {
+        // Add a tracking macro for analytics
+        AgentBuilder::macro('track', function (Model $model) {
+            $this->trackedModel = $model;
+            return $this; // Return $this for method chaining
+        });
+    }
 }
 ```
 
@@ -55,6 +78,10 @@ $response = CustomerSupportAgent::run('User input')
     ->forUser($user)
     ->go();
 ```
+
+<Tip>
+  **Always return `$this`** from your macros to maintain the fluent interface and enable method chaining.
+</Tip>
 
 ## Real-World Examples
 
@@ -157,10 +184,14 @@ AnalyticsAgent::run('User input')->go();
 
 ## Using Mixins
 
-Mixins allow you to add multiple macros at once:
+Mixins allow you to add multiple macros at once by grouping related functionality in a class:
 
-```php
-use Vizra\VizraADK\Services\AgentBuilder;
+```php app/Mixins/AnalyticsMixin.php
+<?php
+
+namespace App\Mixins;
+
+use Illuminate\Database\Eloquent\Model;
 
 class AnalyticsMixin
 {
@@ -187,14 +218,23 @@ class AnalyticsMixin
         };
     }
 }
+```
 
-// Register the mixin in your service provider
+Register the mixin in your service provider:
+
+```php app/Providers/AppServiceProvider.php
+use Vizra\VizraADK\Services\AgentBuilder;
+use App\Mixins\AnalyticsMixin;
+
 public function boot(): void
 {
     AgentBuilder::mixin(new AnalyticsMixin());
 }
+```
 
-// Use the mixed-in methods
+Now use all the mixed-in methods:
+
+```php
 $agentName = Agent::define('analytics-agent')
     ->track($unit)
     ->recordActivity('agent_created')
@@ -205,40 +245,46 @@ $agentName = Agent::define('analytics-agent')
 Agent::named($agentName)->run('User input')->go();
 ```
 
+<Info>
+  Mixins are ideal when you have a group of related macros that logically belong together, such as analytics, auditing, or domain-specific operations.
+</Info>
+
 ## Advanced Patterns
 
 ### Integration with Events
 
-Combine macros with Laravel events:
+Combine macros with Laravel events for powerful side effects:
 
 ```php
+use App\Events\AgentTracked;
+
 AgentBuilder::macro('trackWithEvent', function (Model $model) {
     $this->trackedModel = $model;
-    
+
     // Fire an event when the agent is used
     event(new AgentTracked($model, $this));
-    
+
     return $this;
 });
 ```
 
 ### Dynamic Configuration
 
-Load configuration dynamically:
+Load configuration dynamically from your models:
 
 ```php
 AgentBuilder::macro('configureFor', function (Model $model) {
     // Load model-specific configuration
     $config = $model->agentConfiguration ?? [];
-    
+
     if (isset($config['model'])) {
         $this->model($config['model']);
     }
-    
+
     if (isset($config['instructions'])) {
         $this->instructions($config['instructions']);
     }
-    
+
     return $this;
 });
 
@@ -253,7 +299,7 @@ MyAgent::run('User input')->go();
 
 ### Workflow Macros
 
-Add custom workflow types:
+Add custom workflow types using the `WorkflowManager`:
 
 ```php
 use Vizra\VizraADK\Facades\Workflow;
@@ -273,18 +319,35 @@ $result = Workflow::retryable(UnreliableAgent::class, 5)->go();
 
 ## Best Practices
 
-1. **Always return `$this`** - This maintains the fluent interface
-2. **Register in service providers** - Keep macro registration in `AppServiceProvider::boot()`
-3. **Use descriptive names** - Make macro purpose clear from the name
-4. **Document your macros** - Help other developers understand what they do
-5. **Consider scope** - Macros are global, so namespace them if needed
-6. **Test your macros** - Write tests to ensure they work as expected
+<CardGroup cols={2}>
+  <Card title="Return $this" icon="link">
+    Always return `$this` to maintain the fluent interface
+  </Card>
+  <Card title="Register Early" icon="clock">
+    Register macros in `AppServiceProvider::boot()`
+  </Card>
+  <Card title="Descriptive Names" icon="tag">
+    Use clear, descriptive names for your macros
+  </Card>
+  <Card title="Document Well" icon="book">
+    Document macros for other developers on your team
+  </Card>
+</CardGroup>
+
+Additional tips:
+
+- **Consider scope** - Macros are global, so namespace them if needed to avoid conflicts
+- **Test your macros** - Write tests to ensure macros work as expected
+- **Group related macros** - Use mixins to organize related functionality
 
 ## Testing Macros
 
-```php
+Test your macros using Pest or PHPUnit:
+
+```php tests/Feature/MacroTest.php
 use Vizra\VizraADK\Services\AgentBuilder;
 use Vizra\VizraADK\Facades\Agent;
+use App\Models\Unit;
 
 it('can track models with macro', function () {
     AgentBuilder::macro('track', function (Model $model) {
@@ -299,8 +362,17 @@ it('can track models with macro', function () {
 });
 ```
 
+<Tip>
+  The full test suite for macro support is available at `tests/Feature/MacroSupportTest.php` with 10 comprehensive tests covering all major use cases.
+</Tip>
+
 ## Learn More
 
-- [Laravel Macros Documentation](https://laravel.com/docs/11.x/helpers#method-macro)
-- [Laravel Macros and Mixins Article](https://coderden.dev/posts/laravel-macros-and-mixin)
-- [Vizra ADK Documentation](https://vizra.ai/docs)
+<CardGroup cols={2}>
+  <Card title="Laravel Macros Docs" icon="laravel" href="https://laravel.com/docs/11.x/helpers#method-macro">
+    Official Laravel documentation on macros
+  </Card>
+  <Card title="Agent Builder API" icon="book" href="/api-reference/agent-class">
+    Complete AgentBuilder reference
+  </Card>
+</CardGroup>

@@ -14,6 +14,7 @@
   <a href="LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="https://www.php.net"><img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4.svg" alt="PHP"></a>
   <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-11.0%2B-FF2D20.svg" alt="Laravel"></a>
+  <a href="https://discord.gg/CRRzmvS5MK"><img src="https://img.shields.io/badge/Discord-Join%20Community-5865F2.svg?logo=discord&logoColor=white" alt="Discord"></a>
 </p>
 
 Vizra ADK is a comprehensive Laravel package for building autonomous AI agents that can reason, use tools, and maintain persistent memory. Create intelligent, interactive agents that integrate seamlessly with your Laravel application.
@@ -186,6 +187,7 @@ Take your agents to the next level with **Vizra Cloud** - our professional evalu
 
 ## 🤝 Community & Support
 
+- **[Discord Community](https://discord.gg/CRRzmvS5MK)** - Join our Discord for help, discussions, and updates
 - **[GitHub Discussions](https://github.com/vizra-ai/vizra-adk/discussions)** - Ask questions, share ideas
 - **[GitHub Issues](https://github.com/vizra-ai/vizra-adk/issues)** - Report bugs, request features
 - **[Twitter/X](https://twitter.com/aaronlumsden)** - Latest updates and tips

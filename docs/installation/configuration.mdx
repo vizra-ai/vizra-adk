@@ -1,0 +1,404 @@
+---
+title: "Configuration"
+description: "Customize your perfect AI agent setup with Vizra ADK's flexible configuration system"
+icon: "gear"
+---
+
+<Info>
+Think of configuration as painting your masterpiece! With Vizra ADK, you have all the colors (options) at your fingertips. Let's make your AI agents work exactly how you want them to!
+</Info>
+
+## Your Configuration Hub
+
+After installing Vizra ADK, your shiny new configuration file lives at:
+
+```bash
+config/vizra-adk.php
+```
+
+<Tip>
+Haven't published it yet? No worries! Run this magic command:
+
+```bash Terminal
+php artisan vendor:publish --tag=vizra-adk-config
+```
+</Tip>
+
+## Choose Your AI Provider
+
+<CardGroup cols={2}>
+  <Card title="Default Provider" icon="crosshairs">
+    Pick your favorite AI companion! Set it in your `.env` file:
+
+    ```bash .env
+    VIZRA_ADK_DEFAULT_PROVIDER=openai
+    ```
+  </Card>
+  <Card title="Available Providers" icon="sparkles">
+    Choose from these amazing AI providers:
+    - `openai` - GPT models
+    - `anthropic` - Claude models
+    - `gemini` - Google's finest
+  </Card>
+</CardGroup>
+
+### Pick Your Model
+
+Choose the AI model that powers your agents' brilliance:
+
+```bash .env
+VIZRA_ADK_DEFAULT_MODEL=gemini-pro
+```
+
+<Tabs>
+  <Tab title="OpenAI Models">
+    - `gpt-4-turbo`
+    - `gpt-3.5-turbo`
+  </Tab>
+  <Tab title="Anthropic Models">
+    - `claude-3-opus-20240229`
+    - `claude-3-sonnet-20240229`
+  </Tab>
+  <Tab title="Google Models">
+    - `gemini-pro`
+    - `gemini-1.5-pro`
+  </Tab>
+</Tabs>
+
+### Fine-Tune Your AI's Personality
+
+Adjust these dials to make your AI agents more creative or focused!
+
+```bash .env
+# Default generation parameters
+VIZRA_ADK_DEFAULT_TEMPERATURE=0.7      # null uses provider default
+VIZRA_ADK_DEFAULT_MAX_TOKENS=2000     # null uses provider default
+VIZRA_ADK_DEFAULT_TOP_P=0.9           # null uses provider default
+```
+
+| Parameter | Description |
+|-----------|-------------|
+| **Temperature** | Controls creativity: 0 = focused, 1 = wild imagination! |
+| **Max Tokens** | Maximum response length. More tokens = longer answers! |
+| **Top P** | Controls diversity. Lower = more focused responses! |
+
+### Your API Keys
+
+Time to connect to the AI magic! Add your provider API keys:
+
+```bash .env
+# OpenAI
+OPENAI_API_KEY=your-openai-api-key
+
+# Anthropic Claude
+ANTHROPIC_API_KEY=your-anthropic-api-key
+
+# Google Gemini
+GOOGLE_API_KEY=your-google-api-key
+```
+
+<Warning>
+**Security First!** Never commit API keys to your repository! Keep them safe in your `.env` file and add it to `.gitignore`.
+</Warning>
+
+## The Complete Configuration Blueprint
+
+Here's your complete configuration file in all its glory!
+
+```php config/vizra-adk.php
+return [
+    /**
+     * Default LLM provider to use with Prism-PHP.
+     *
+     * Supported providers:
+     * - 'openai' - OpenAI (GPT-4, GPT-3.5, etc.)
+     * - 'anthropic' - Anthropic (Claude models)
+     * - 'gemini' or 'google' - Google Gemini
+     * - 'deepseek' - DeepSeek AI
+     * - 'ollama' - Ollama (local models)
+     * - 'mistral' - Mistral AI
+     * - 'groq' - Groq (Fast inference)
+     * - 'xai' or 'grok' - xAI (Grok models)
+     */
+    'default_provider' => env('VIZRA_ADK_DEFAULT_PROVIDER', 'openai'),
+
+    /**
+     * Default LLM model to use with Prism-PHP.
+     */
+    'default_model' => env('VIZRA_ADK_DEFAULT_MODEL', 'gemini-1.5-flash'),
+
+    /**
+     * Default generation parameters for LLM requests.
+     */
+    'default_generation_params' => [
+        'temperature' => env('VIZRA_ADK_DEFAULT_TEMPERATURE', null),
+        'max_tokens' => env('VIZRA_ADK_DEFAULT_MAX_TOKENS', null),
+        'top_p' => env('VIZRA_ADK_DEFAULT_TOP_P', null),
+    ],
+
+    /**
+     * Sub-agent delegation settings.
+     */
+    'max_delegation_depth' => env('VIZRA_ADK_MAX_DELEGATION_DEPTH', 5),
+
+    /**
+     * Database table names used by the package.
+     */
+    'tables' => [
+        'agent_sessions' => 'agent_sessions',
+        'agent_messages' => 'agent_messages',
+        'agent_memories' => 'agent_memories',
+        'agent_vector_memories' => 'agent_vector_memories',
+        'agent_trace_spans' => 'agent_trace_spans',
+    ],
+
+    /**
+     * Tracing configuration.
+     */
+    'tracing' => [
+        'enabled' => env('VIZRA_ADK_TRACING_ENABLED', true),
+        'cleanup_days' => env('VIZRA_ADK_TRACING_CLEANUP_DAYS', 30),
+    ],
+
+    /**
+     * Namespaces for user-defined classes.
+     */
+    'namespaces' => [
+        'agents' => 'App\\Agents',
+        'tools' => 'App\\Tools',
+        'evaluations' => 'App\\Evaluations',
+    ],
+
+    /**
+     * Routes configuration.
+     */
+    'routes' => [
+        'enabled' => true,
+        'prefix' => 'api/vizra-adk',
+        'middleware' => ['api'],
+        'web' => [
+            'enabled' => env('VIZRA_ADK_WEB_ENABLED', true),
+            'prefix' => 'vizra',
+            'middleware' => ['web'],
+        ],
+    ],
+
+    /**
+     * OpenAI API Compatibility Configuration
+     */
+    'openai_model_mapping' => [
+        'gpt-4' => env('VIZRA_ADK_OPENAI_GPT4_AGENT', 'chat_agent'),
+        'gpt-4-turbo' => env('VIZRA_ADK_OPENAI_GPT4_TURBO_AGENT', 'chat_agent'),
+        'gpt-3.5-turbo' => env('VIZRA_ADK_OPENAI_GPT35_AGENT', 'chat_agent'),
+    ],
+
+    'default_chat_agent' => env('VIZRA_ADK_DEFAULT_CHAT_AGENT', 'chat_agent'),
+
+    /**
+     * Model Context Protocol (MCP) Configuration
+     */
+    'mcp_servers' => [
+        'filesystem' => [
+            'command' => 'npx',
+            'args' => [
+                '@modelcontextprotocol/server-filesystem',
+                env('MCP_FILESYSTEM_PATH', storage_path('app')),
+            ],
+            'enabled' => env('MCP_FILESYSTEM_ENABLED', false),
+            'timeout' => 30,
+        ],
+        // ... more servers
+    ],
+];
+```
+
+## Agent Teamwork Settings
+
+Let your agents work together! Control how deep the delegation rabbit hole goes:
+
+```bash .env
+# Maximum depth for nested sub-agent delegation
+VIZRA_ADK_MAX_DELEGATION_DEPTH=5
+```
+
+<Note>
+This clever safety net prevents your agents from playing endless "pass the task" - avoiding infinite loops and keeping your app responsive!
+</Note>
+
+## Database Architecture
+
+Vizra ADK organizes your AI data in these neat tables:
+
+| Table | Purpose |
+|-------|---------|
+| `agent_sessions` | Keeps track of all your conversation sessions |
+| `agent_messages` | Stores the complete message history |
+| `agent_memories` | Your agents' long-term memories live here |
+| `agent_vector_memories` | Vector embeddings for semantic search |
+| `agent_trace_spans` | Debug traces for when you need to investigate |
+
+<Tip>
+Got naming conflicts? No worries! You can customize these table names in your config file.
+</Tip>
+
+## Debug Like a Detective
+
+Turn on tracing to see exactly what your agents are thinking!
+
+```bash .env
+# Enable/disable tracing
+VIZRA_ADK_TRACING_ENABLED=true
+
+# Days to keep trace data before cleanup
+VIZRA_ADK_TRACING_CLEANUP_DAYS=30
+```
+
+Keep your database tidy by removing old traces:
+
+```bash Terminal
+php artisan vizra:trace:cleanup --days=7
+```
+
+## Web Dashboard Settings
+
+Toggle your beautiful web dashboard on or off:
+
+```bash .env
+# Enable/disable web interface
+VIZRA_ADK_WEB_ENABLED=true
+```
+
+Your dashboard lives at these URLs:
+
+| Dashboard | URL |
+|-----------|-----|
+| Main Dashboard | `/vizra` |
+| Chat Interface | `/vizra/chat` |
+| Evaluation Runner | `/vizra/eval` |
+
+## OpenAI API Compatibility
+
+Make your Vizra agents work seamlessly with OpenAI-compatible clients! Map OpenAI model names to your custom agents:
+
+```php config/vizra-adk.php
+'openai_model_mapping' => [
+    'gpt-4' => env('VIZRA_ADK_OPENAI_GPT4_AGENT', 'chat_agent'),
+    'gpt-4-turbo' => env('VIZRA_ADK_OPENAI_GPT4_TURBO_AGENT', 'chat_agent'),
+    'gpt-3.5-turbo' => env('VIZRA_ADK_OPENAI_GPT35_AGENT', 'chat_agent'),
+],
+
+'default_chat_agent' => env('VIZRA_ADK_DEFAULT_CHAT_AGENT', 'chat_agent'),
+```
+
+<Tip>
+This lets any OpenAI-compatible application use your Vizra agents! Just point them to your `/api/vizra-adk/chat/completions` endpoint.
+</Tip>
+
+## Model Context Protocol (MCP) Servers
+
+Supercharge your agents with MCP servers! These give your agents access to external tools and services:
+
+<CardGroup cols={2}>
+  <Card title="Filesystem Server" icon="folder">
+    ```bash .env
+    MCP_FILESYSTEM_ENABLED=true
+    MCP_FILESYSTEM_PATH=/path/to/allowed/dir
+    ```
+    Let agents read and write files safely!
+  </Card>
+  <Card title="GitHub Server" icon="github">
+    ```bash .env
+    MCP_GITHUB_ENABLED=true
+    GITHUB_TOKEN=your-github-token
+    ```
+    Access repos, issues, and PRs!
+  </Card>
+  <Card title="PostgreSQL Server" icon="database">
+    ```bash .env
+    MCP_POSTGRES_ENABLED=true
+    MCP_POSTGRES_URL=postgresql://...
+    ```
+    Query and manage databases!
+  </Card>
+  <Card title="Brave Search Server" icon="magnifying-glass">
+    ```bash .env
+    MCP_BRAVE_SEARCH_ENABLED=true
+    BRAVE_API_KEY=your-brave-api-key
+    ```
+    Search the web for real-time info!
+  </Card>
+</CardGroup>
+
+### Custom MCP Servers
+
+You can even add your own MCP servers:
+
+```php config/vizra-adk.php
+'custom_api' => [
+    'command' => 'python',
+    'args' => ['/path/to/your/mcp-server.py'],
+    'enabled' => true,
+    'timeout' => 60,
+],
+```
+
+## The Configuration Priority Game
+
+When multiple configs compete, here's who takes the crown (from highest to lowest priority):
+
+| Priority | Source | Example |
+|----------|--------|---------|
+| 1st | Runtime Methods | `$agent->setTemperature(0.2)` |
+| 2nd | Agent Class Properties | `protected ?float $temperature = 0.7;` |
+| 3rd | Environment Variables | `VIZRA_ADK_DEFAULT_TEMPERATURE=0.5` |
+| 4th | Config File Defaults | `config/vizra-adk.php` |
+
+## Organize Your Code
+
+Keep your code neat and tidy with these default namespaces:
+
+| Type | Namespace |
+|------|-----------|
+| Agents | `App\Agents` |
+| Tools | `App\Tools` |
+| Evaluations | `App\Evaluations` |
+
+<Tip>
+**Feeling creative?** You can totally customize these namespaces in your config file to match your project's vibe!
+</Tip>
+
+## Environment Magic
+
+Different settings for different environments? We've got you covered!
+
+<Tabs>
+  <Tab title="Local Development">
+    ```bash .env.local
+    VIZRA_ADK_TRACING_ENABLED=true
+    VIZRA_ADK_DEFAULT_MODEL=gpt-3.5-turbo
+    VIZRA_ADK_WEB_ENABLED=true
+    ```
+    Debug everything, use cheaper models!
+  </Tab>
+  <Tab title="Production">
+    ```bash .env.production
+    VIZRA_ADK_TRACING_ENABLED=false
+    VIZRA_ADK_DEFAULT_MODEL=gpt-4-turbo
+    VIZRA_ADK_WEB_ENABLED=false
+    ```
+    Optimized for performance & security!
+  </Tab>
+</Tabs>
+
+## You're All Set!
+
+Congratulations! Your Vizra ADK is now perfectly configured. Time to build some amazing AI agents!
+
+<CardGroup cols={2}>
+  <Card title="Build Your First Agent" icon="robot" href="/concepts/agents">
+    Learn how to create intelligent agents that can think, remember, and solve problems!
+  </Card>
+  <Card title="Master the CLI" icon="terminal" href="/api-reference/artisan-commands">
+    Discover powerful Artisan commands to supercharge your development workflow!
+  </Card>
+</CardGroup>

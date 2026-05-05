@@ -1,0 +1,77 @@
+---
+title: "Laravel Boost Integration"
+description: "Use Laravel Boost's AI-powered development assistant to generate Vizra ADK agents with full understanding of the framework's capabilities."
+icon: "rocket"
+---
+
+## What is Laravel Boost?
+
+Laravel Boost is an AI-powered development assistant from the Laravel team that understands your project's structure and helps you write better code faster. Vizra ADK integrates seamlessly with Boost through a comprehensive guideline system.
+
+<Card title="Learn more about Laravel Boost" icon="github" href="https://github.com/laravel/boost">
+  GitHub Repository
+</Card>
+
+## Quick Start
+
+### 1. Install Laravel Boost
+
+First, ensure you have Laravel Boost installed in your project:
+
+```bash Terminal
+composer require laravel/boost --dev
+```
+
+### 2. Install Vizra ADK Guidelines
+
+Run the Boost installation command from your Vizra ADK package:
+
+```bash Terminal
+php artisan vizra:boost:install
+```
+
+This command copies the Vizra ADK guidelines to your project's `resources/boost/guidelines` directory.
+
+### 3. Start Using Boost with Vizra ADK
+
+Now Laravel Boost understands your Vizra ADK agents and can help you:
+
+- Generate new agents with proper structure and naming
+- Create tools that implement the correct interface
+- Build complex workflows with the Workflow facade
+- Implement memory and context management
+- Write evaluations and assertions
+- Debug and troubleshoot common issues
+
+## Example Usage
+
+Ask Laravel Boost to help you create a Vizra ADK agent:
+
+<Note>
+**Example prompt:**
+
+"Create a customer support agent that uses memory to track conversation context and can search our knowledge base"
+</Note>
+
+Laravel Boost will generate a complete agent with proper inheritance, tool implementation, and memory configuration based on the Vizra ADK guidelines.
+
+## Available Guidelines
+
+The integration includes comprehensive guidelines for:
+
+<CardGroup cols={2}>
+  <Card title="Core Components" icon="cube">
+    - Agent creation and configuration
+    - Tool implementation
+    - Workflow patterns
+  </Card>
+  <Card title="Advanced Features" icon="stars">
+    - Memory and context management
+    - Sub-agent delegation
+    - Evaluation framework
+  </Card>
+</CardGroup>
+
+<Tip>
+Laravel Boost works best when you provide clear, specific requirements. The more context you give about your agent's purpose, the better the generated code will be.
+</Tip>
