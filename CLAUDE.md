@@ -6,7 +6,7 @@ Vizra ADK is a comprehensive Laravel package for building intelligent AI agents 
 **Package Name**: vizra/vizra-adk  
 **Version**: 0.0.17  
 **PHP**: ^8.2  
-**Laravel**: ^11.0 | ^12.0  
+**Laravel**: ^11.0 | ^12.0 | ^13.0  
 **License**: MIT
 
 ## Key Concepts

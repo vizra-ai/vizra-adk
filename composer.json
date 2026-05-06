@@ -45,15 +45,15 @@
   ],
   "require": {
     "php": "^8.2",
-    "laravel/framework": "^11.0|^12.0",
-    "prism-php/prism": "^0.99.0",
+    "laravel/framework": "^11.0|^12.0|^13.0",
+    "prism-php/prism": "^0.99.20",
     "league/csv": "^9.23",
-    "livewire/livewire": "^3.0"
+    "livewire/livewire": "^3.7.11"
   },
   "require-dev": {
-    "orchestra/testbench": "^9.0",
-    "pestphp/pest": "^3.0",
-    "pestphp/pest-plugin-laravel": "^3.0"
+    "orchestra/testbench": "^9.0|^10.0|^11.0",
+    "pestphp/pest": "^4.0",
+    "pestphp/pest-plugin-laravel": "^4.0"
   },
   "autoload": {
     "psr-4": {
