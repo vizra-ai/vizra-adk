@@ -48,7 +48,7 @@
     "laravel/framework": "^11.0|^12.0|^13.0",
     "prism-php/prism": "^0.99.20",
     "league/csv": "^9.23",
-    "livewire/livewire": "^3.7.11"
+    "livewire/livewire": "^3.7.11|^4.0"
   },
   "require-dev": {
     "orchestra/testbench": "^9.0|^10.0|^11.0",
