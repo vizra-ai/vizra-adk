@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.48] - 2026-05-18
+
+allow Livewire 3.x and 4.x (^3.7.11|^4.0)
+add Laravel 13 support with Pest 4 and Testbench 11
+
 ## [0.0.47] - 2026-05-05
 
 ### Fixed
