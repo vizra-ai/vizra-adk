@@ -1,3 +1,42 @@
+> ## ⚠️ This package is no longer maintained
+>
+> **Vizra ADK is retired as of August 2026. `v0.0.48` is the final release.**
+> There will be no further releases, bug fixes, or security patches. Issues and
+> pull requests are not being monitored or responded to.
+>
+> **It still works.** Nothing has been taken down — `v0.0.48` runs on PHP 8.2+
+> and Laravel 11, 12, and 13, and Packagist will keep serving it. If the ADK
+> does what you need, pin it and carry on:
+>
+> ```json
+> "vizra/vizra-adk": "0.0.48"
+> ```
+>
+> Be aware that its dependencies will age out from under it — `prism-php/prism`
+> is pinned at `^0.99.20`, and future Laravel versions are untested.
+>
+> ### What happened
+>
+> Vizra has moved to [**vizra/evals**](https://github.com/vizra-ai/vizra-evals),
+> an evaluation framework for AI agents built on the official Laravel AI SDK and
+> Pest.
+>
+> **Evals is not a drop-in replacement for the ADK.** It is a different tool: the
+> ADK builds agents, evals tests them. There is no migration path, because there
+> is nothing to migrate to.
+>
+> ### If you need to move off the ADK
+>
+> - **To build agents** — use the official [Laravel AI SDK](https://laravel.com/docs/ai)
+>   directly. It is the foundation Vizra now builds on.
+> - **To evaluate agents** — see [vizra/evals](https://github.com/vizra-ai/vizra-evals).
+> - **To keep the ADK alive** — fork it. This is MIT licensed and forks are
+>   genuinely welcome. If you maintain a community fork, open a discussion and it
+>   can be linked from here.
+>
+> Thank you to everyone who used, reported, and contributed to this package.
+
+---
 <p align="center">
   <img src="https://vizra.ai/img/vizra-logo.svg" alt="Vizra Logo" width="200">
 </p>
