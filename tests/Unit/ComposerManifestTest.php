@@ -16,11 +16,13 @@ it('marks the package as abandoned', function () {
     expect(composerManifest())->toHaveKey('abandoned');
 });
 
-it('points the abandonment notice at the retirement post', function () {
+it('names laravel/ai as the replacement', function () {
     $abandoned = composerManifest()['abandoned'];
 
-    // A string, not `true` — `true` prints "No replacement was suggested".
+    // A package name, not `true` — `true` prints "No replacement was suggested".
+    // The README sends agent-builders to the official Laravel AI SDK, and the
+    // Composer notice has to say the same thing.
     expect($abandoned)
         ->toBeString()
-        ->toBe('https://vizra.ai/blog/i-retired-a-laravel-package-with-38000-installs-heres-what-i-built-instead');
+        ->toBe('laravel/ai');
 });
