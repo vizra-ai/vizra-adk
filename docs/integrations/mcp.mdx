@@ -4,6 +4,12 @@ description: "Supercharge your agents with Model Context Protocol. Connect to fi
 icon: "plug"
 ---
 
+<Warning>
+**Vizra ADK is no longer maintained** and this page is no longer published on the docs site. It is kept here for anyone still running `v0.0.48`.
+
+This page used to document the `@modelcontextprotocol/server-github` and `@modelcontextprotocol/server-postgres` servers. Both were archived by the MCP project in 2025 and are deprecated on npm, and **the PostgreSQL server has an unpatched SQL injection** — stacked statements escape its `BEGIN READ ONLY` transaction, so the read-only guarantee it advertises does not hold ([Datadog Security Labs, August 2025](https://securitylabs.datadoghq.com/articles/mcp-vulnerability-case-study-SQL-injection-in-the-postgresql-mcp-server/)). Neither will be patched. Both have been removed from this page, and no replacements are recommended here — check the state of any MCP server yourself before pointing an agent at your data.
+</Warning>
+
 ## What is MCP?
 
 Model Context Protocol (MCP) is like **"USB-C for AI applications"** - a universal standard that lets your agents connect to external data sources and tools. Instead of building custom integrations for every service, you can use the growing ecosystem of MCP servers!
@@ -112,59 +118,9 @@ Access local files and directories with comprehensive file operations.
 - `list_directory` - List directory contents
 - `search_files` - Search for files and content
 
-### GitHub Server
+### Other Servers
 
-Comprehensive GitHub integration for repository management and automation.
-
-<CardGroup cols={2}>
-  <Card title="Installation">
-    ```bash
-    npm install -g @modelcontextprotocol/server-github
-    ```
-  </Card>
-  <Card title="Configuration">
-    ```php
-    'github' => [
-        'command' => 'npx',
-        'args' => ['@modelcontextprotocol/server-github', '--token', env('GITHUB_TOKEN')],
-        'enabled' => !empty(env('GITHUB_TOKEN')),
-    ],
-    ```
-  </Card>
-</CardGroup>
-
-**Available Tools:**
-- `create_issue` - Create GitHub issues
-- `search_repositories` - Search repos
-- `get_file_contents` - Read files from repos
-- `list_issues` - List repository issues
-
-### PostgreSQL Server
-
-Direct database access for queries and data manipulation.
-
-<CardGroup cols={2}>
-  <Card title="Installation">
-    ```bash
-    npm install -g @modelcontextprotocol/server-postgres
-    ```
-  </Card>
-  <Card title="Configuration">
-    ```php
-    'postgres' => [
-        'command' => 'npx',
-        'args' => ['@modelcontextprotocol/server-postgres', '--connection-string', env('DATABASE_URL')],
-        'enabled' => !empty(env('DATABASE_URL')),
-    ],
-    ```
-  </Card>
-</CardGroup>
-
-**Available Tools:**
-- `query` - Execute SQL queries
-- `describe_table` - Get table schema
-- `list_tables` - List all tables
-- `get_schema` - Get database schema
+The MCP ecosystem has servers for GitHub, databases, search and most other things, but the set is churning and servers get archived. Two that this page used to document — `@modelcontextprotocol/server-github` and `@modelcontextprotocol/server-postgres` — are archived and unpatched; see the warning at the top. Check a server's own repository for its current state before you configure it, and prefer one that is actively maintained.
 
 ## Advanced Configuration
 
@@ -189,7 +145,7 @@ Vizra ADK supports two transport types for MCP servers:
     Remote MCP servers via HTTP/SSE. Perfect for cloud services, microservices, and shared resources.
 
     ```php
-    'github_remote' => [
+    'remote' => [
         'transport' => 'http',
         'url' => 'https://mcp.example.com/api',
         'api_key' => env('MCP_API_KEY'),
@@ -206,13 +162,10 @@ Use environment variables to control MCP servers across different environments:
 ```bash .env
 # Enable/disable servers per environment
 MCP_FILESYSTEM_ENABLED=true
-MCP_GITHUB_ENABLED=true
-MCP_POSTGRES_ENABLED=false
+MCP_REMOTE_ENABLED=false
 
 # Server-specific configuration
-GITHUB_TOKEN=your_github_token_here
-DATABASE_URL=postgresql://user:pass@localhost/db
-BRAVE_API_KEY=your_brave_search_key
+MCP_API_KEY=your_remote_server_key
 MCP_NPX_PATH="/path/to/npx"  # Optional: specify npx path if not in PATH
 ```
 
@@ -225,18 +178,12 @@ MCP_NPX_PATH="/path/to/npx"  # Optional: specify npx path if not in PATH
         'timeout' => 30,
     ],
 
-    'github' => [
-        'command' => 'npx',
-        'args' => ['@modelcontextprotocol/server-github', '--token', env('GITHUB_TOKEN')],
-        'enabled' => env('MCP_GITHUB_ENABLED', false) && !empty(env('GITHUB_TOKEN')),
+    'remote' => [
+        'transport' => 'http',
+        'url' => env('MCP_REMOTE_URL'),
+        'api_key' => env('MCP_API_KEY'),
+        'enabled' => env('MCP_REMOTE_ENABLED', false) && !empty(env('MCP_REMOTE_URL')),
         'timeout' => 45,
-    ],
-
-    'postgres' => [
-        'command' => 'npx',
-        'args' => ['@modelcontextprotocol/server-postgres', '--connection-string', env('DATABASE_URL')],
-        'enabled' => env('MCP_POSTGRES_ENABLED', false) && !empty(env('DATABASE_URL')),
-        'timeout' => 30,
     ],
 ],
 ```
@@ -253,12 +200,11 @@ class DeveloperAssistantAgent extends BaseLlmAgent
     protected string $instructions = 'You are a comprehensive development assistant with access to:
 
     **File System**: Read, write, and search project files
-    **GitHub**: Manage repositories, issues, and pull requests
-    **Database**: Query and analyze data directly
+    **Remote server**: Whatever tools your HTTP MCP server exposes
 
     Use these tools together to provide powerful development support!';
 
-    protected array $mcpServers = ['filesystem', 'github', 'postgres'];
+    protected array $mcpServers = ['filesystem', 'remote'];
 }
 ```
 
@@ -287,12 +233,12 @@ class CodeReviewAgent extends BaseLlmAgent
 
     1. Read code files to understand implementations
     2. Search for patterns and potential issues
-    3. Create GitHub issues for problems found
+    3. Write your findings to a review file
     4. Suggest improvements and best practices
 
     Always provide constructive feedback with specific examples.';
 
-    protected array $mcpServers = ['filesystem', 'github'];
+    protected array $mcpServers = ['filesystem'];
 }
 ```
 
@@ -301,28 +247,8 @@ class CodeReviewAgent extends BaseLlmAgent
 - **Agent:** "I'll examine the authentication code for you..."
   - Uses filesystem tools to read auth files
   - Analyzes code for security issues
-  - Creates GitHub issue for potential vulnerability
-- **Agent:** "Found 3 areas for improvement. Created issue #42 for the critical security concern."
-
-### Data Analysis Assistant
-
-```php Data Analysis Agent
-class DataAnalystAgent extends BaseLlmAgent
-{
-    protected string $name = 'data_analyst';
-
-    protected string $instructions = 'You are a data analysis expert. You can:
-
-    1. Query databases to extract insights
-    2. Generate reports and save them as files
-    3. Create data visualizations and charts
-    4. Identify trends and anomalies in data
-
-    Always explain your analysis methodology and findings clearly.';
-
-    protected array $mcpServers = ['postgres', 'filesystem'];
-}
-```
+  - Writes the findings to `storage/app/reviews/auth.md`
+- **Agent:** "Found 3 areas for improvement. The critical one is in the token refresh path — details in the review file."
 
 ## Security Best Practices
 
