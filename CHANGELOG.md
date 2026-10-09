@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Removed
+- **Breaking:** the `github`, `postgres`, `brave_search` and `slack` example entries in `config/vizra-adk.php`. All four invoked `@modelcontextprotocol/server-*` packages that the MCP project archived during 2025 and that will not be fixed again; the PostgreSQL one carries an unpatched SQL injection and defaulted its connection string to the host app's own `DATABASE_URL`. All four shipped `enabled => false`, so only an app that opted in with `MCP_GITHUB_ENABLED`, `MCP_POSTGRES_ENABLED`, `MCP_BRAVE_SEARCH_ENABLED` or `MCP_SLACK_ENABLED` *and* never published the config file loses a server. `filesystem` and `github_http` remain as the stdio and HTTP examples.
+
 ## [0.0.48] - 2026-05-18
 
 allow Livewire 3.x and 4.x (^3.7.11|^4.0)

@@ -306,28 +306,25 @@ Supercharge your agents with MCP servers! These give your agents access to exter
     ```
     Let agents read and write files safely!
   </Card>
-  <Card title="GitHub Server" icon="github">
+  <Card title="Remote Server over HTTP" icon="globe">
     ```bash .env
-    MCP_GITHUB_ENABLED=true
-    GITHUB_TOKEN=your-github-token
+    MCP_GITHUB_HTTP_ENABLED=true
+    MCP_GITHUB_HTTP_URL=https://example.com/api/mcp
+    MCP_GITHUB_HTTP_API_KEY=your-api-key
     ```
-    Access repos, issues, and PRs!
-  </Card>
-  <Card title="PostgreSQL Server" icon="database">
-    ```bash .env
-    MCP_POSTGRES_ENABLED=true
-    MCP_POSTGRES_URL=postgresql://...
-    ```
-    Query and manage databases!
-  </Card>
-  <Card title="Brave Search Server" icon="magnifying-glass">
-    ```bash .env
-    MCP_BRAVE_SEARCH_ENABLED=true
-    BRAVE_API_KEY=your-brave-api-key
-    ```
-    Search the web for real-time info!
+    Talk to a server you host yourself!
   </Card>
 </CardGroup>
+
+<Warning>
+The config file used to ship `github`, `postgres`, `brave_search` and `slack` entries,
+driven by `MCP_GITHUB_ENABLED`, `MCP_POSTGRES_ENABLED`, `MCP_BRAVE_SEARCH_ENABLED` and
+`MCP_SLACK_ENABLED`. Those four `@modelcontextprotocol/server-*` packages were archived
+by the MCP project during 2025 and will not be fixed again — the PostgreSQL one carries
+an unpatched SQL injection — so the entries have been removed. Setting those env vars
+now does nothing. If you published the config file before this change, delete the four
+entries from your own copy.
+</Warning>
 
 ### Custom MCP Servers
 
