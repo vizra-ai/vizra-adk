@@ -215,19 +215,6 @@ return [
             'timeout' => 30,
         ],
 
-        // STDIO transport example - GitHub MCP server
-        'github' => [
-            'transport' => 'stdio',
-            'command' => env('MCP_NPX_PATH', 'npx'),
-            'args' => [
-                '@modelcontextprotocol/server-github',
-                '--token',
-                env('GITHUB_TOKEN', ''),
-            ],
-            'enabled' => env('MCP_GITHUB_ENABLED', false) && ! empty(env('GITHUB_TOKEN')),
-            'timeout' => 45,
-        ],
-
         // HTTP transport example - remote MCP server via HTTP/SSE
         'github_http' => [
             'transport' => 'http',
@@ -241,38 +228,15 @@ return [
             ],
         ],
 
-        'postgres' => [
-            'command' => env('MCP_NPX_PATH', 'npx'),
-            'args' => [
-                '@modelcontextprotocol/server-postgres',
-                '--connection-string',
-                env('MCP_POSTGRES_URL', env('DATABASE_URL', '')),
-            ],
-            'enabled' => env('MCP_POSTGRES_ENABLED', false) && ! empty(env('DATABASE_URL')),
-            'timeout' => 30,
-        ],
-
-        'brave_search' => [
-            'command' => env('MCP_NPX_PATH', 'npx'),
-            'args' => [
-                '@modelcontextprotocol/server-brave-search',
-                '--api-key',
-                env('BRAVE_API_KEY', ''),
-            ],
-            'enabled' => env('MCP_BRAVE_SEARCH_ENABLED', false) && ! empty(env('BRAVE_API_KEY')),
-            'timeout' => 30,
-        ],
-
-        'slack' => [
-            'command' => env('MCP_NPX_PATH', 'npx'),
-            'args' => [
-                '@modelcontextprotocol/server-slack',
-                '--bot-token',
-                env('SLACK_BOT_TOKEN', ''),
-            ],
-            'enabled' => env('MCP_SLACK_ENABLED', false) && ! empty(env('SLACK_BOT_TOKEN')),
-            'timeout' => 30,
-        ],
+        // Removed: 'github', 'postgres', 'brave_search' and 'slack' shipped here as
+        // examples, each invoking a @modelcontextprotocol/server-* package through npx.
+        // All four of those packages were archived by the MCP project during 2025 and
+        // are deprecated on npm; none will receive another fix. The Postgres one also
+        // carries an unpatched SQL injection (stacked statements escape its BEGIN READ
+        // ONLY transaction), and it defaulted its connection string to the host app's
+        // own DATABASE_URL - so enabling it was one env var away from pointing an
+        // unpatched server at production. Configure your own entries below instead, and
+        // check a server's repository for its current state before you do.
 
         // Example custom MCP server
         // 'custom_api' => [

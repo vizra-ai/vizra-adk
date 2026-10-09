@@ -2,6 +2,14 @@
 
 This guide explains how to implement dynamic, per-tenant MCP (Model Context Protocol) server configurations in multi-tenant applications using Vizra ADK.
 
+> **About the examples below.** They use `@modelcontextprotocol/server-github`,
+> `-slack` and `-postgres` as running examples because those entries used to ship in
+> the package's config file. They no longer do: all three were archived by the MCP
+> project during 2025 and will not be fixed again, and the PostgreSQL one carries an
+> unpatched SQL injection. Do not copy them as-is — substitute a server you have
+> checked is maintained. The mechanism this guide documents, the per-tenant credential
+> override through `AgentContext`, is unaffected and works with any server.
+
 ## Overview
 
 Vizra ADK provides a mechanism to override MCP server configurations at runtime through the `AgentContext`. This allows you to use tenant-specific API keys, tokens, and other credentials without modifying global configuration files.
